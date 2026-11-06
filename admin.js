@@ -1,0 +1,762 @@
+/* 엉클데이 관리자 — 로그인, 대시보드, 예약, 정산, 후기, 계정 */
+const RECOVERY = /type=recovery/.test(location.hash);   // 비밀번호 재설정 메일의 링크로 들어왔는지 (주소가 지워지기 전에 확인)
+const ON = typeof SUPA !== "undefined" && SUPA.url && SUPA.key;
+const sb = ON ? supabase.createClient(SUPA.url, SUPA.key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }) : null;
+let ME = { email: "", id: "" };
+let BOOKINGS = []; window.BOOKINGS = BOOKINGS;
+let SETTLES = [], RVS = [];
+const ST = {
+  requested: "접수 (업체 확인 전)", confirmed: "업체 확정", rejected: "업체 불가", visited: "방문 완료",
+  settled: "정산 완료", cancelled: "취소", noshow: "노쇼"
+};
+const ST_SHORT = { requested: "접수", confirmed: "확정", rejected: "불가", visited: "방문완료", settled: "정산완료", cancelled: "취소", noshow: "노쇼" };
+const SRC = { web: "사이트", kakao: "카톡", phone: "전화", etc: "기타" };
+const LANG_KO = { ko: "한국어", en: "영어", vi: "베트남어", ja: "일본어", zh: "중국어" };
+
+/* ===== 작은 도구 ===== */
+const vnToday = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_Minh" }).format(new Date());
+const vnMonth = () => vnToday().slice(0, 7);
+const addMonth = (m, d) => { const [y, mo] = m.split("-").map(Number); const x = new Date(Date.UTC(y, mo - 1 + d, 1)); return x.toISOString().slice(0, 7); };
+const monthKo = m => m ? `${m.slice(0, 4)}년 ${+m.slice(5, 7)}월` : "";
+const vnd = n => n == null || n === "" ? "-" : "₫" + Math.round(+n).toLocaleString("en-US");
+const krw = n => { const r = SITE.rates && SITE.rates.ko; return r && n ? `약 ₩${(Math.round(n * r.rate / 100) * 100).toLocaleString("en-US")}` : ""; };
+const num = v => { const x = String(v ?? "").replace(/[^\d.]/g, ""); return x === "" ? null : +x; };
+const dt = ts => { if (!ts) return ""; const d = new Date(ts); return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
+const dayKo = d => d ? `${+d.slice(5, 7)}/${+d.slice(8, 10)}(${DAYS[new Date(d + "T00:00:00").getDay()]})` : "-";
+const shopById = id => shops.find(s => s.id === id);
+const shopName = b => { const s = shopById(b.shop_id); return s ? s.name.ko : (b.shop_name || "(업체 없음)"); };
+const siteUrl = path => new URL(path, location.href).href;
+const copy = async (text, msg = "복사했어요") => { try { await navigator.clipboard.writeText(text); toast(msg); return true; } catch (e) { prompt("복사해서 쓰세요", text); return false; } };
+const stBadge = s => `<span class="st ${s}">${ST_SHORT[s] || s}</span>`;
+const isOpenSt = s => s === "requested" || s === "confirmed";
+const hoursSince = ts => ts ? (Date.now() - new Date(ts).getTime()) / 36e5 : 0;
+
+async function q(promise, what = "저장") {
+  const r = await promise;
+  if (r.error) { dbErr(r.error, what); throw r.error; }
+  return r.data;
+}
+async function logEvent(id, action, detail = {}) {
+  const r = await sb.from("booking_events").insert({ booking_id: id, action, detail });
+  if (r.error) console.error(r.error);
+}
+async function updBooking(id, patch, what) {
+  const row = await q(sb.from("bookings").update(patch).eq("id", id).select().single(), what);
+  const i = BOOKINGS.findIndex(b => b.id === id); if (i >= 0) BOOKINGS[i] = row; else BOOKINGS.unshift(row);
+  return row;
+}
+
+/* ===== 불러오기 ===== */
+async function loadBookings() {
+  BOOKINGS = await q(sb.from("bookings").select("*").order("created_at", { ascending: false }).limit(5000), "예약 불러오기");
+  window.BOOKINGS = BOOKINGS;
+}
+async function loadSettles() { SETTLES = await q(sb.from("settlements").select("*").order("billed_at", { ascending: false }), "정산 불러오기"); }
+async function loadReviews() { RVS = await q(sb.from("reviews").select("*").order("created_at", { ascending: false }).limit(500), "후기 불러오기"); }
+async function loadAll() { await Promise.all([loadShops(), loadBookings(), loadSettles(), loadReviews()]); }
+
+/* ===== 할 일 (놓치면 안 되는 것) ===== */
+const TODO = [
+  ["notSent", "📨", "업체에 아직 안 알린 새 예약", b => b.status === "requested" && !b.sent_to_shop_at],
+  ["noReply", "⏳", "업체 답이 3시간 넘게 없음", b => b.status === "requested" && b.sent_to_shop_at && hoursSince(b.sent_to_shop_at) > 3],
+  ["tellCust", "📣", "확정됐는데 손님에게 안내 안 함", b => b.status === "confirmed" && !b._custTold],
+  ["custSaid", "🙋", "손님은 '다녀왔어요'를 눌렀는데 방문 완료 처리가 안 됨", b => b.customer_visit_at && isOpenSt(b.status)],
+  ["pastOpen", "📆", "방문일이 지났는데 결과(방문·노쇼)가 없음", b => isOpenSt(b.status) && b.visit_date && b.visit_date < vnToday()],
+  ["noAmount", "💸", "방문 완료인데 결제 금액이 비어 있음", b => b.status === "visited" && b.paid_amount == null],
+  ["rejected", "🔁", "업체가 불가 — 손님에게 다른 시간·업체 안내 필요", b => b.status === "rejected"]
+];
+
+/* ===== 탭 ===== */
+let TAB = "dash";
+function showTab(t) {
+  TAB = t;
+  document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
+  document.querySelectorAll("[data-pane]").forEach(p => p.hidden = p.dataset.pane !== t);
+  if (location.hash.slice(1) !== t) history.replaceState(null, "", "#" + t);
+  ({ dash: drawDash, bk: drawBookings, settle: drawSettle, shops: drawList, rv: drawReviews, acc: drawAccount })[t]();
+  drawCounts();
+}
+function drawCounts() {
+  const n = BOOKINGS.filter(b => b.status === "requested").length;
+  $("cntBk").textContent = n || "";
+  const r = RVS.filter(x => x.status === "pending").length;
+  $("cntRv").textContent = r || "";
+  document.title = (n ? `(${n}) ` : "") + "엉클데이 관리자";
+}
+window.onShopsChanged = () => { if (TAB !== "shops") showTab(TAB); };
+
+/* ===== 대시보드 ===== */
+let dashMonth = null;
+function monthStats(m, shopId) {
+  const inM = BOOKINGS.filter(b => (b.visit_date || "").startsWith(m) && (!shopId || b.shop_id === shopId));
+  const done = inM.filter(b => b.status === "visited" || b.status === "settled");
+  return {
+    all: inM.length,
+    active: inM.filter(b => !["cancelled", "rejected"].includes(b.status)).length,
+    done: done.length,
+    paid: done.reduce((t, b) => t + (+b.paid_amount || 0), 0),
+    comm: done.reduce((t, b) => t + (+b.commission || 0), 0),
+    unsettled: done.filter(b => b.status === "visited").reduce((t, b) => t + (+b.commission || 0), 0),
+    noshow: inM.filter(b => b.status === "noshow").length,
+    cancel: inM.filter(b => b.status === "cancelled").length
+  };
+}
+function drawDash() {
+  dashMonth = dashMonth || vnMonth();
+  const today = vnToday();
+  const todays = BOOKINGS.filter(b => b.visit_date === today && !["cancelled", "rejected"].includes(b.status));
+  const st = monthStats(dashMonth);
+  const owed = BOOKINGS.filter(b => b.status === "visited").reduce((t, b) => t + (+b.commission || 0), 0);
+  const billed = SETTLES.filter(s => s.status === "billed").reduce((t, s) => t + (+s.total_commission || 0), 0);
+  const months = [...new Set([vnMonth(), ...BOOKINGS.map(b => (b.visit_date || "").slice(0, 7)).filter(Boolean)])].sort().reverse();
+  const todos = TODO.map(([k, ic, label, f]) => [k, ic, label, BOOKINGS.filter(f).length]);
+  const pendRv = RVS.filter(r => r.status === "pending").length;
+  // 업체별 이번 달
+  const byShop = {};
+  BOOKINGS.filter(b => (b.visit_date || "").startsWith(dashMonth)).forEach(b => { (byShop[b.shop_id || "-"] = byShop[b.shop_id || "-"] || []).push(b); });
+  const rows = Object.entries(byShop).map(([id, arr]) => ({ id, name: arr[0] ? shopName(arr[0]) : id, ...monthStats(dashMonth, id === "-" ? null : id), rate: rateOf(id) }))
+    .sort((a, b) => b.comm - a.comm || b.all - a.all);
+  $("tab-dash").innerHTML = `
+    <h2 class="sec">오늘 <small>${dayKo(today)} · 베트남 시간 기준</small></h2>
+    <div class="kpis">
+      <div class="kpi click ${BOOKINGS.filter(b => b.status === "requested").length ? "alert" : ""}" data-go="requested"><small>새 예약 (업체 확인 전)</small><b>${BOOKINGS.filter(b => b.status === "requested").length}</b><em>눌러서 보기</em></div>
+      <div class="kpi click" data-go="today"><small>오늘 방문 예정</small><b>${todays.length}</b><em>${todays.reduce((t, b) => t + b.people, 0)}명</em></div>
+      <div class="kpi money"><small>받을 수수료 (정산서 전)</small><b>${vnd(owed)}</b><em>${krw(owed)}</em></div>
+      <div class="kpi money"><small>청구했는데 입금 전</small><b>${vnd(billed)}</b><em>${krw(billed)}</em></div>
+    </div>
+
+    <h2 class="sec">할 일 <small>업체와 손님 사이에서 놓치면 기록이 비는 일이에요</small></h2>
+    <div class="todo">${todos.map(([k, ic, label, n]) => `<div class="todo-row ${n ? "" : "zero"}" data-todo="${k}"><span class="ic">${ic}</span><b>${label}</b><span class="n" style="${n ? "color:var(--danger)" : ""}">${n}</span></div>`).join("")}
+      <div class="todo-row ${pendRv ? "" : "zero"}" data-tab-go="rv"><span class="ic">⭐</span><b>게시를 기다리는 손님 후기</b><span class="n" style="${pendRv ? "color:var(--danger)" : ""}">${pendRv}</span></div></div>
+
+    <h2 class="sec">월별 실적 <select class="month-pick" id="dashMonth">${months.map(m => `<option value="${m}" ${m === dashMonth ? "selected" : ""}>${monthKo(m)}</option>`).join("")}</select> <small>방문일 기준</small></h2>
+    <div class="kpis">
+      <div class="kpi"><small>예약</small><b>${st.active}</b><em>취소 ${st.cancel} · 노쇼 ${st.noshow}</em></div>
+      <div class="kpi"><small>방문 완료</small><b>${st.done}</b><em>${st.active ? Math.round(st.done / st.active * 100) : 0}% 방문</em></div>
+      <div class="kpi"><small>손님 결제액 합계</small><b>${vnd(st.paid)}</b><em>${krw(st.paid)}</em></div>
+      <div class="kpi money"><small>수수료</small><b>${vnd(st.comm)}</b><em>${krw(st.comm)}${st.unsettled ? ` · 미정산 ${vnd(st.unsettled)}` : ""}</em></div>
+    </div>
+    <h2 class="sec">업체별 <small>${monthKo(dashMonth)}</small></h2>
+    ${rows.length ? `<div class="tscroll"><table class="t"><thead><tr><th>업체</th><th class="num">수수료율</th><th class="num">예약</th><th class="num">방문</th><th class="num">결제액</th><th class="num">수수료</th><th class="num">미정산</th></tr></thead><tbody>
+      ${rows.map(r => `<tr class="click" data-shop="${esc(r.id)}"><td><b>${esc(r.name)}</b></td><td class="num">${r.rate ? r.rate + "%" : `<span style="color:var(--danger)">미정</span>`}</td><td class="num">${r.active}</td><td class="num">${r.done}</td><td class="num">${vnd(r.paid)}</td><td class="num"><b>${vnd(r.comm)}</b></td><td class="num">${r.unsettled ? vnd(r.unsettled) : "-"}</td></tr>`).join("")}
+      </tbody><tfoot><tr><td>합계</td><td></td><td class="num">${st.active}</td><td class="num">${st.done}</td><td class="num">${vnd(st.paid)}</td><td class="num">${vnd(st.comm)}</td><td class="num">${vnd(st.unsettled)}</td></tr></tfoot></table></div>`
+      : `<div class="todo"><div class="empty">이 달에는 예약이 없어요.</div></div>`}
+    <p class="hint" style="margin:14px 0 40px">수수료 = 손님이 업체에 낸 금액 × 업체 수수료율. 방문 완료 처리할 때 결제 금액을 넣으면 자동으로 계산돼요.</p>`;
+  $("dashMonth").onchange = e => { dashMonth = e.target.value; drawDash(); };
+  $("tab-dash").querySelectorAll("[data-todo]").forEach(r => r.onclick = () => { if (r.classList.contains("zero")) return; bkF = { ...BKF0, st: "all", todo: r.dataset.todo }; showTab("bk"); });
+  $("tab-dash").querySelectorAll("[data-tab-go]").forEach(r => r.onclick = () => { if (!r.classList.contains("zero")) showTab(r.dataset.tabGo); });
+  $("tab-dash").querySelectorAll("[data-go]").forEach(r => r.onclick = () => {
+    bkF = r.dataset.go === "today" ? { ...BKF0, st: "all", from: today, to: today } : { ...BKF0, st: "requested" }; showTab("bk"); });
+  $("tab-dash").querySelectorAll("[data-shop]").forEach(r => r.onclick = () => { bkF = { ...BKF0, st: "all", shop: r.dataset.shop === "-" ? "" : r.dataset.shop, from: dashMonth + "-01", to: dashMonth + "-31" }; showTab("bk"); });
+}
+
+/* ===== 예약 목록 ===== */
+const BKF0 = { st: "open", shop: "", q: "", from: "", to: "", todo: "" };
+let bkF = { ...BKF0 };
+const ST_GROUPS = [["open", "진행 중", b => isOpenSt(b.status)], ["requested", "접수", b => b.status === "requested"], ["confirmed", "확정", b => b.status === "confirmed"],
+  ["visited", "방문완료·정산 전", b => b.status === "visited"], ["settled", "정산완료", b => b.status === "settled"],
+  ["closed", "취소·불가·노쇼", b => ["cancelled", "rejected", "noshow"].includes(b.status)], ["all", "전체", () => true]];
+function filteredBookings() {
+  const g = ST_GROUPS.find(x => x[0] === bkF.st) || ST_GROUPS[0];
+  const qq = bkF.q.trim().toLowerCase().replace(/\s/g, "");
+  const td = bkF.todo ? TODO.find(t => t[0] === bkF.todo) : null;
+  return BOOKINGS.filter(b => g[2](b) && (!td || td[3](b)) && (!bkF.shop || b.shop_id === bkF.shop) &&
+    (!bkF.from || (b.visit_date || "") >= bkF.from) && (!bkF.to || (b.visit_date || "") <= bkF.to) &&
+    (!qq || [b.code, b.customer_name, b.contact, shopName(b), b.menu_name].join(" ").toLowerCase().replace(/\s/g, "").includes(qq)));
+}
+function drawBookings() {
+  const list = filteredBookings();
+  const sortKey = b => (isOpenSt(b.status) ? "0" : "1") + (b.visit_date || "9999") + (b.visit_time || "");
+  if (bkF.st === "open" || bkF.st === "requested" || bkF.st === "confirmed") list.sort((a, b) => sortKey(a).localeCompare(sortKey(b)));
+  const td = bkF.todo ? TODO.find(t => t[0] === bkF.todo) : null;
+  const shopOpts = [...new Set(BOOKINGS.map(b => b.shop_id).filter(Boolean))].map(id => [id, shopName({ shop_id: id })]).sort((a, b) => a[1].localeCompare(b[1]));
+  $("tab-bk").innerHTML = `
+    <div class="pill-filter">${ST_GROUPS.map(([k, n, f]) => `<button data-st="${k}" class="${bkF.st === k && !bkF.todo ? "on" : ""}">${n}<em>${BOOKINGS.filter(f).length}</em></button>`).join("")}</div>
+    ${td ? `<div class="notice warn" style="margin:0 0 8px"><span class="grow">${td[1]} <b>${td[2]}</b> 만 보는 중</span><button class="btn sm" id="tdOff">전체 보기</button></div>` : ""}
+    <div class="toolbar" style="margin-top:6px">
+      <input type="search" id="bkQ" placeholder="예약번호, 손님 이름, 연락처, 업체" value="${esc(bkF.q)}">
+      <select id="bkShop"><option value="">업체 전체</option>${shopOpts.map(([id, n]) => `<option value="${esc(id)}" ${bkF.shop === id ? "selected" : ""}>${esc(n)}</option>`).join("")}</select>
+      <label class="hint">방문일 <input type="date" id="bkFrom" value="${bkF.from}"> ~ <input type="date" id="bkTo" value="${bkF.to}"></label>
+      <button class="btn main" id="bkNew">＋ 예약 직접 등록</button>
+      <button class="btn" id="bkExp">⬇ 엑셀(CSV)</button>
+    </div>
+    <div class="tscroll"><table class="t"><thead><tr><th>예약번호</th><th>방문</th><th>업체</th><th class="hide-m">메뉴</th><th>손님</th><th>상태</th><th title="📨 업체에 알림 · 🏪 업체 답 · 📣 손님 안내 · 🙋 손님 방문 확인 · ⭐ 후기">흔적</th><th class="num">결제 / 수수료</th></tr></thead><tbody>
+    ${list.map(b => `<tr class="click" data-b="${b.id}">
+      <td><span class="bk-code">${esc(b.code)}</span><br><span class="src">${SRC[b.source] || b.source} · ${dt(b.created_at)}</span></td>
+      <td><b>${dayKo(b.visit_date)}</b><br>${esc(b.visit_time || "")}</td>
+      <td>${esc(shopName(b))}</td>
+      <td class="hide-m">${esc(b.menu_name || "-")} <span class="hint">× ${b.people}</span></td>
+      <td>${esc(b.customer_name || "")}<br><span class="hint">${esc(b.contact || "")}</span></td>
+      <td>${stBadge(b.status)}</td>
+      <td>${marks(b)}</td>
+      <td class="num">${b.paid_amount != null ? vnd(b.paid_amount) + `<br><b style="color:var(--main)">${vnd(b.commission)}</b>` : `<span class="hint">${b.list_price ? "예상 " + vnd(b.list_price) : "-"}</span>`}</td>
+    </tr>`).join("") || `<tr><td colspan="8"><div class="empty">조건에 맞는 예약이 없어요.</div></td></tr>`}
+    </tbody></table></div>
+    <p class="hint" style="margin:12px 0 40px">흔적: 📨 업체에 알림 · 🏪 업체가 링크로 답함 · 📣 손님에게 안내 · 🙋 손님이 방문 확인 · ⭐ 후기. 흔적이 많을수록 "엉클데이 손님"이라는 근거가 단단해져요.</p>`;
+  $("tab-bk").querySelectorAll("[data-st]").forEach(b => b.onclick = () => { bkF.st = b.dataset.st; bkF.todo = ""; drawBookings(); });
+  if ($("tdOff")) $("tdOff").onclick = () => { bkF.todo = ""; drawBookings(); };
+  let t; $("bkQ").oninput = e => { clearTimeout(t); t = setTimeout(() => { bkF.q = e.target.value; const pos = e.target.selectionStart; drawBookings(); $("bkQ").focus(); $("bkQ").setSelectionRange(pos, pos); }, 250); };
+  $("bkShop").onchange = e => { bkF.shop = e.target.value; drawBookings(); };
+  $("bkFrom").onchange = e => { bkF.from = e.target.value; drawBookings(); };
+  $("bkTo").onchange = e => { bkF.to = e.target.value; drawBookings(); };
+  $("bkNew").onclick = () => newBooking();
+  $("bkExp").onclick = () => exportBookings(list);
+  $("tab-bk").querySelectorAll("[data-b]").forEach(r => r.onclick = () => openBooking(r.dataset.b));
+}
+const TOLD = new Set();   // 손님 안내 기록이 있는 예약 (이벤트에서)
+function marks(b) {
+  const rv = RVS.some(r => r.booking_id === b.id);
+  const m = [["📨", b.sent_to_shop_at, "업체에 알림"], ["🏪", b.shop_replied_at, "업체가 링크로 답함"], ["📣", TOLD.has(b.id), "손님에게 안내"], ["🙋", b.customer_visit_at, "손님 방문 확인"], ["⭐", rv, "후기"]];
+  return `<span class="marks">${m.map(([i, on, t]) => `<i class="${on ? "on" : ""}" title="${t}${on && typeof on === "string" ? " " + dt(on) : ""}">${i}</i>`).join("")}</span>`;
+}
+async function loadTold() {
+  const r = await sb.from("booking_events").select("booking_id").in("action", ["sent_to_customer"]);
+  if (!r.error) { TOLD.clear(); r.data.forEach(x => TOLD.add(x.booking_id)); }
+  BOOKINGS.forEach(b => b._custTold = TOLD.has(b.id));
+}
+function exportBookings(list) {
+  const H = [["code", "예약번호"], ["created_at", "접수시각"], ["source", "경로"], ["status", "상태"], ["visit_date", "방문일"], ["visit_time", "시간"], ["shop", "업체"], ["menu_name", "메뉴"], ["people", "인원"],
+    ["customer_name", "손님"], ["contact", "연락처"], ["list_price", "예상금액"], ["paid_amount", "결제금액"], ["commission_rate", "수수료율"], ["commission", "수수료"],
+    ["sent_to_shop_at", "업체알림"], ["shop_replied_at", "업체답변"], ["customer_visit_at", "손님방문확인"], ["admin_memo", "메모"]];
+  const rows = list.map(b => H.map(([k]) => k === "shop" ? shopName(b) : k === "status" ? ST_SHORT[b.status] : k === "source" ? SRC[b.source] || b.source : b[k] ?? "").map(csvCell).join(","));
+  saveFile(`엉클데이_예약_${vnToday()}.csv`, "﻿" + H.map(h => h[1]).join(",") + "\r\n" + rows.join("\r\n") + "\r\n");
+}
+
+/* ===== 업체·손님에게 보낼 메시지 ===== */
+function shopMsg(b, l) {
+  const s = shopById(b.shop_id);
+  const m = s && (s.menu || []).find(x => x.name.ko === b.menu_name);
+  const mn = m ? (m.name[l] || m.name.en || m.name.ko) : b.menu_name;
+  const link = siteUrl("partner.html#" + b.shop_token);
+  const d = b.visit_date ? b.visit_date.split("-").reverse().join("/") : "-";
+  const nat = { ko: { ko: "한국", en: "Korea", vi: "Hàn Quốc" }, en: { ko: "영어권", en: "English", vi: "nói tiếng Anh" }, vi: { ko: "베트남", en: "Vietnam", vi: "Việt Nam" } }[b.lang] || {};
+  if (l === "vi") return `[Uncle Day] Đặt lịch mới · ${b.code}
+📅 ${d} lúc ${b.visit_time || "-"}
+💆 ${mn}${b.menu_min ? ` (${b.menu_min} phút)` : ""} × ${b.people} người
+👤 Khách: ${b.customer_name}${nat.vi ? ` (${nat.vi})` : ""}${b.note ? `\n📝 Ghi chú: ${b.note}` : ""}${b.list_price ? `\n💰 Giá dự kiến: ${vnd(b.list_price)}` : ""}
+
+👉 Vui lòng bấm link để NHẬN hoặc TỪ CHỐI lịch:
+${link}
+Sau khi khách đến, mở lại link này và nhập số tiền khách đã thanh toán. Cảm ơn!`;
+  if (l === "en") return `[Uncle Day] New booking · ${b.code}
+📅 ${d} at ${b.visit_time || "-"}
+💆 ${mn}${b.menu_min ? ` (${b.menu_min} min)` : ""} × ${b.people}
+👤 Guest: ${b.customer_name}${nat.en ? ` (${nat.en})` : ""}${b.note ? `\n📝 Notes: ${b.note}` : ""}${b.list_price ? `\n💰 Estimated: ${vnd(b.list_price)}` : ""}
+
+👉 Please tap to ACCEPT or DECLINE:
+${link}
+After the guest visits, open the link again and enter the amount paid. Thank you!`;
+  return `[엉클데이] 새 예약 · ${b.code}
+📅 ${dayKo(b.visit_date)} ${b.visit_time || ""}
+💆 ${b.menu_name}${b.menu_min ? ` (${b.menu_min}분)` : ""} × ${b.people}명
+👤 손님: ${b.customer_name}${b.note ? `\n📝 요청: ${b.note}` : ""}${b.list_price ? `\n💰 예상 금액: ${vnd(b.list_price)}` : ""}
+
+👉 아래 링크에서 수락/불가를 눌러 주세요:
+${link}
+손님이 다녀간 뒤 같은 링크에서 결제 금액을 넣어 주세요. 감사합니다!`;
+}
+function custMsg(b) {
+  const link = siteUrl("booking.html#" + b.customer_token);
+  const s = shopById(b.shop_id);
+  const l = ["ko", "en", "vi"].includes(b.lang) ? b.lang : "en";
+  const sn = s ? (s.name[l] || s.name.en || s.name.ko) : b.shop_name;
+  const ad = s && s.address ? (s.address[l] || s.address.en || s.address.ko || "") : "";
+  const d = b.visit_date ? (l === "ko" ? dayKo(b.visit_date) : b.visit_date.split("-").reverse().join("/")) : "-";
+  const T = {
+    ko: { ok: "예약이 확정됐어요 ✅", req: "예약 요청을 받았어요. 업체에 확인하고 다시 연락드릴게요.", no: "요청하신 시간은 업체 사정으로 예약이 어려워요 🙏 다른 시간이나 비슷한 업체를 안내해 드릴게요.",
+      code: "예약번호", shop: "업체", at: "일시", menu: "메뉴", ppl: n => n + "명", vo: "예약확인증", tail: "도착하면 예약확인증을 업체에 보여 주세요. 결제는 업체에서 직접 하시면 돼요." },
+    en: { ok: "Your booking is confirmed ✅", req: "We received your request and are checking with the shop.", no: "Sorry, the shop can't take that time 🙏 We'll suggest another time or a similar shop.",
+      code: "Booking no.", shop: "Shop", at: "Date", menu: "Service", ppl: n => n + (n > 1 ? " guests" : " guest"), vo: "Voucher", tail: "Show the voucher when you arrive. You pay the shop directly." },
+    vi: { ok: "Lịch hẹn đã được xác nhận ✅", req: "Chúng tôi đã nhận yêu cầu và đang kiểm tra với cơ sở.", no: "Xin lỗi, cơ sở không nhận được khung giờ này 🙏 Chúng tôi sẽ đề xuất giờ khác.",
+      code: "Mã đặt lịch", shop: "Cơ sở", at: "Thời gian", menu: "Dịch vụ", ppl: n => n + " người", vo: "Phiếu đặt lịch", tail: "Đưa phiếu cho cơ sở khi đến. Thanh toán trực tiếp tại cơ sở." }
+  }[l];
+  const head = b.status === "confirmed" ? T.ok : b.status === "rejected" ? T.no : T.req;
+  return `[Uncle Day] ${head}
+${T.code}: ${b.code}
+${T.shop}: ${sn}${ad ? `\n📍 ${ad}` : ""}
+${T.at}: ${d} ${b.visit_time || ""}
+${T.menu}: ${(() => { const m = s && s.menu.find(x => x.name.ko === b.menu_name); return m ? (m.name[l] || m.name.en || m.name.ko) : b.menu_name; })()} · ${T.ppl(b.people)}
+${T.vo}: ${link}
+${b.status === "confirmed" ? T.tail : ""}`.trim();
+}
+const zaloLink = v => { const d = String(v || "").replace(/[^\d]/g, ""); return /^https?:/.test(v || "") ? v : d ? `https://zalo.me/${d.startsWith("84") ? "0" + d.slice(2) : d}` : ""; };
+
+/* ===== 예약 상세 ===== */
+async function openBooking(id) {
+  let b = BOOKINGS.find(x => x.id === id); if (!b) return;
+  let evs = [];
+  const pv = PRIV[b.shop_id] || { contract: {} };
+  const ct = pv.contract || {};
+  let msgLang = ct.msgLang || "vi";
+  const shop = shopById(b.shop_id);
+  $("layer").innerHTML = `<div class="overlay" id="ov"><div class="panel" role="dialog" aria-label="예약 상세">
+    <div class="panel-head"><h2><span class="bk-code">${esc(b.code)}</span> · ${esc(b.customer_name || "")}</h2><span id="pSt"></span><button class="btn" id="pCancel">닫기</button></div>
+    <div class="panel-body">
+      <div class="box"><h3>진행 상태</h3>
+        <div class="btn-row" id="stBtns"></div>
+        <div class="calc">
+          <label class="f"><span>손님이 업체에 낸 금액 (₫)</span><input id="paid" inputmode="numeric" placeholder="${b.list_price ? Number(b.list_price).toLocaleString("en-US") : "0"}"></label>
+          <label class="f"><span>수수료율 (%)</span><input id="rate" type="number" min="0" max="100" step="0.5"></label>
+          <div class="f"><span>수수료</span><div class="out" id="commOut"></div></div>
+        </div>
+        <div class="btn-row"><button class="btn sm" id="saveAmt">금액 저장</button><span class="hint" id="amtHint"></span></div>
+      </div>
+
+      <div class="box"><h3>🔗 연결 흔적 <small>엉클데이가 연결한 손님이라는 근거</small></h3><div class="trace" id="trace"></div></div>
+
+      <div class="two">
+        <div class="box"><h3>🏪 업체에 알리기</h3>
+          <div class="hint">${esc(shop ? shop.name.ko : b.shop_name || "")}${ct.person ? " · " + esc(ct.person) : ""}${ct.phone ? " · " + esc(ct.phone) : ""}${!ct.phone && !ct.zalo && !ct.kakao ? ` · <span style="color:var(--danger)">업체 연락처가 없어요 (업체 수정 → 계약·정산)</span>` : ""}</div>
+          <div class="btn-row">${[["vi", "베트남어"], ["en", "영어"], ["ko", "한국어"]].map(([k, n]) => `<button class="btn sm ${k === msgLang ? "main" : ""}" data-ml="${k}">${n}</button>`).join("")}</div>
+          <pre class="msg-prev" id="shopMsg"></pre>
+          <div class="btn-row">
+            <button class="btn main" id="copyShop">📋 메시지 복사 (보낸 걸로 기록)</button>
+            ${zaloLink(ct.zalo || ct.phone) ? `<a class="btn" href="${esc(zaloLink(ct.zalo || ct.phone))}" target="_blank" rel="noopener">잘로 열기</a>` : ""}
+            <a class="btn sm" href="partner.html#${esc(b.shop_token)}" target="_blank" rel="noopener">업체 화면 미리보기</a>
+          </div>
+          <div class="hint">업체는 링크에서 로그인 없이 <b>수락 / 불가 / 방문 완료(+금액)</b>만 눌러요. 누르면 시간과 함께 아래 기록에 남아요.</div>
+        </div>
+        <div class="box"><h3>🙋 손님에게 안내</h3>
+          <div class="hint">${esc(b.contact || "")} · ${LANG_KO[b.lang] || b.lang}</div>
+          <pre class="msg-prev" id="custMsg"></pre>
+          <div class="btn-row">
+            <button class="btn main" id="copyCust">📋 안내 메시지 복사 (보낸 걸로 기록)</button>
+            <button class="btn sm" id="copyVo">예약확인증 링크만 복사</button>
+            <a class="btn sm" href="booking.html#${esc(b.customer_token)}" target="_blank" rel="noopener">예약확인증 보기</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="box"><h3>예약 정보</h3>
+        <div class="three">
+          <label class="f"><span>업체</span><select id="eShop">${shops.map(s => `<option value="${esc(s.id)}" ${s.id === b.shop_id ? "selected" : ""}>${esc(s.name.ko)}</option>`).join("")}${!shop ? `<option value="" selected>${esc(b.shop_name || "(없음)")}</option>` : ""}</select></label>
+          <label class="f"><span>메뉴</span><input id="eMenu" list="eMenuList" value="${esc(b.menu_name || "")}"><datalist id="eMenuList"></datalist></label>
+          <label class="f"><span>인원</span><input id="ePeople" type="number" min="1" max="30" value="${b.people}"></label>
+        </div>
+        <div class="three">
+          <label class="f"><span>방문일</span><input id="eDate" type="date" value="${esc(b.visit_date || "")}"></label>
+          <label class="f"><span>시간</span><input id="eTime" type="time" value="${esc(b.visit_time || "")}"></label>
+          <label class="f"><span>예상 금액 (₫)</span><input id="eList" inputmode="numeric" value="${b.list_price ?? ""}"></label>
+        </div>
+        <div class="three">
+          <label class="f"><span>손님 이름</span><input id="eName" value="${esc(b.customer_name || "")}"></label>
+          <label class="f"><span>연락처</span><input id="eContact" value="${esc(b.contact || "")}"></label>
+          <label class="f"><span>손님 언어 · 경로</span><div style="display:flex;gap:6px"><select id="eLang">${Object.entries(LANG_KO).map(([k, n]) => `<option value="${k}" ${k === b.lang ? "selected" : ""}>${n}</option>`).join("")}</select><select id="eSrc">${Object.entries(SRC).map(([k, n]) => `<option value="${k}" ${k === b.source ? "selected" : ""}>${n}</option>`).join("")}</select></div></label>
+        </div>
+        <label class="f"><span>손님 요청사항 (업체에도 보여요)</span><textarea id="eNote">${esc(b.note || "")}</textarea></label>
+        <label class="f"><span>관리자 메모 (우리만 봐요)</span><textarea id="eMemo">${esc(b.admin_memo || "")}</textarea></label>
+        <div class="btn-row"><button class="btn main" id="saveInfo">정보 저장</button></div>
+      </div>
+
+      <div class="box"><h3>기록 <small>누가 언제 무엇을 했는지 — 지울 수 없어요</small></h3>
+        <div style="display:flex;gap:8px"><input id="memoIn" placeholder="통화·메시지 내용 등을 남겨요 (예: 업체 매니저와 통화, 14시 확정)" style="flex:1;min-width:0;padding:9px 11px;border:1px solid var(--line);border-radius:9px"><button class="btn" id="memoAdd">남기기</button></div>
+        <ul class="tl" id="tl"><li>불러오는 중…</li></ul>
+      </div>
+    </div></div></div>`;
+  const close = () => { $("layer").innerHTML = ""; if (TAB === "bk") drawBookings(); else if (TAB === "dash") drawDash(); drawCounts(); };
+  $("pCancel").onclick = close;
+  $("ov").onclick = e => { if (e.target.id === "ov") close(); };
+
+  const fillMenus = () => { const s = shopById($("eShop").value); $("eMenuList").innerHTML = s ? s.menu.map(m => `<option value="${esc(m.name.ko)}">`).join("") : ""; };
+  fillMenus(); $("eShop").onchange = fillMenus;
+
+  function drawTop() {
+    $("pSt").innerHTML = stBadge(b.status);
+    const locked = b.status === "settled";
+    const btns = [["requested", "접수로"], ["confirmed", "✅ 업체 확정"], ["rejected", "업체 불가"], ["visited", "🙌 방문 완료"], ["noshow", "노쇼"], ["cancelled", "취소"]];
+    $("stBtns").innerHTML = locked ? `<span class="hint">정산이 끝난 예약이라 상태와 금액을 바꿀 수 없어요. (정산 탭에서 입금 확인을 취소하면 바꿀 수 있어요)</span>`
+      : btns.map(([k, n]) => `<button class="btn st-btn ${b.status === k ? "cur" : ""}" data-st="${k}">${n}</button>`).join("");
+    $("paid").value = b.paid_amount != null ? Number(b.paid_amount).toLocaleString("en-US") : "";
+    $("rate").value = b.commission_rate;
+    $("paid").disabled = $("rate").disabled = $("saveAmt").disabled = locked;
+    calc();
+    $("amtHint").textContent = b.settlement_id ? "정산서에 들어간 예약이에요." : "";
+    $("stBtns").querySelectorAll("[data-st]").forEach(x => x.onclick = () => setStatus(x.dataset.st));
+    $("shopMsg").textContent = shopMsg(b, msgLang);
+    $("custMsg").textContent = custMsg(b);
+    drawTrace();
+  }
+  function calc() {
+    const p = num($("paid").value), r = +$("rate").value || 0;
+    $("commOut").textContent = p == null ? "금액을 넣어 주세요" : `${vnd(Math.round(p * r / 100))} ${krw(Math.round(p * r / 100))}`;
+  }
+  $("paid").oninput = () => { const v = num($("paid").value); $("paid").value = v == null ? "" : v.toLocaleString("en-US"); calc(); };
+  $("rate").oninput = calc;
+  async function setStatus(st) {
+    if (st === b.status) return;
+    const patch = { status: st };
+    if (st === "visited") {
+      const p = num($("paid").value);
+      if (p == null) { toast("손님이 낸 금액을 먼저 넣어 주세요. (모르면 0)", 3500); $("paid").focus(); return; }
+      patch.paid_amount = p; patch.commission_rate = +$("rate").value || 0;
+    }
+    try { b = await updBooking(b.id, patch, "상태 변경"); toast(`${ST[st]}(으)로 바꿨어요`); drawTop(); loadEvents(); } catch (e) {}
+  }
+  $("saveAmt").onclick = async () => {
+    try { b = await updBooking(b.id, { paid_amount: num($("paid").value), commission_rate: +$("rate").value || 0 }, "금액 저장"); toast("금액을 저장했어요"); drawTop(); loadEvents(); } catch (e) {}
+  };
+  document.querySelectorAll("[data-ml]").forEach(x => x.onclick = () => {
+    msgLang = x.dataset.ml; document.querySelectorAll("[data-ml]").forEach(y => y.classList.toggle("main", y === x)); $("shopMsg").textContent = shopMsg(b, msgLang); });
+  $("copyShop").onclick = async () => {
+    await copy(shopMsg(b, msgLang), "업체 메시지를 복사했어요. 잘로·카톡에 붙여 넣어 보내 주세요.");
+    if (!b.sent_to_shop_at) b = await updBooking(b.id, { sent_to_shop_at: new Date().toISOString() }).catch(() => b);
+    await logEvent(b.id, "sent_to_shop", { lang: msgLang }); drawTop(); loadEvents();
+  };
+  $("copyCust").onclick = async () => {
+    await copy(custMsg(b), "손님 안내 메시지를 복사했어요.");
+    await logEvent(b.id, "sent_to_customer", { status: b.status }); TOLD.add(b.id); b._custTold = true; loadEvents(); drawTrace();
+  };
+  $("copyVo").onclick = () => copy(siteUrl("booking.html#" + b.customer_token), "예약확인증 링크를 복사했어요");
+  $("saveInfo").onclick = async () => {
+    const sid = $("eShop").value, s = shopById(sid);
+    const m = s && s.menu.find(x => x.name.ko === $("eMenu").value.trim());
+    const ppl = Math.max(1, +$("ePeople").value || 1);
+    const patch = { menu_name: $("eMenu").value.trim(), people: ppl, visit_date: $("eDate").value || null, visit_time: $("eTime").value || null,
+      customer_name: $("eName").value.trim(), contact: $("eContact").value.trim(), lang: $("eLang").value, source: $("eSrc").value,
+      note: $("eNote").value, admin_memo: $("eMemo").value, list_price: num($("eList").value) };
+    if (m) { patch.menu_min = m.min; patch.unit_price = m.price; if (patch.menu_name !== b.menu_name || ppl !== b.people) patch.list_price = m.price * ppl; }
+    if (sid && sid !== b.shop_id) { patch.shop_id = sid; patch.shop_name = s.name.ko; if (b.status !== "settled") patch.commission_rate = rateOf(sid); }
+    try { b = await updBooking(b.id, patch, "정보 저장"); toast("저장했어요"); $("eList").value = b.list_price ?? ""; drawTop(); loadEvents(); } catch (e) {}
+  };
+  $("memoAdd").onclick = async () => { const v = $("memoIn").value.trim(); if (!v) return; await logEvent(b.id, "memo", { memo: v }); $("memoIn").value = ""; loadEvents(); };
+  $("memoIn").onkeydown = e => { if (e.key === "Enter") $("memoAdd").onclick(); };
+
+  function drawTrace() {
+    const rv = RVS.find(r => r.booking_id === b.id);
+    const told = evs.find(e => e.action === "sent_to_customer");
+    const st = SETTLES.find(s => s.id === b.settlement_id);
+    const rows = [
+      [true, `예약 접수 — ${SRC[b.source] || b.source} · ${dt(b.created_at)}`],
+      [!!b.sent_to_shop_at, b.sent_to_shop_at ? `업체에 예약 알림 · ${dt(b.sent_to_shop_at)}` : "업체에 예약 알림 (아직)"],
+      [!!b.shop_replied_at, b.shop_replied_at ? `업체가 링크로 직접 답함 · ${dt(b.shop_replied_at)}` : "업체가 링크로 직접 답함 (아직 — 관리자가 대신 처리해도 돼요)"],
+      [!!told, told ? `손님에게 안내 · ${dt(told.at)}` : "손님에게 안내 (아직)"],
+      [!!b.customer_visit_at, b.customer_visit_at ? `손님이 직접 '다녀왔어요' · ${dt(b.customer_visit_at)}` : "손님이 직접 방문 확인 (선택)"],
+      [!!rv, rv ? `손님 후기 ${"★".repeat(rv.stars)}` : "손님 후기 (선택)"],
+      [!!st, st ? `정산서 ${monthKo(st.month)} · ${st.status === "paid" ? "입금 완료" : "청구됨"}` : "정산 (방문 완료 후)"]
+    ];
+    $("trace").innerHTML = rows.map(([ok, t]) => `<div><span class="${ok ? "y" : "n"}">${ok ? "✓" : "○"}</span><span>${esc(t)}</span></div>`).join("");
+  }
+  const EVN = { created: "예약 접수", status: "상태 변경", edit: "정보 수정", sent_to_shop: "업체에 메시지 보냄", sent_to_customer: "손님에게 안내 보냄", customer_visited: "손님이 '다녀왔어요' 누름", shop_memo: "업체 메모", memo: "메모" };
+  const FN = { status: "상태", paid_amount: "결제 금액", commission_rate: "수수료율", visit_date: "방문일", visit_time: "시간", people: "인원", menu_name: "메뉴", shop_id: "업체", customer_name: "이름", contact: "연락처", settlement_id: "정산서", source: "경로" };
+  const fv = (k, v) => v == null ? "없음" : k === "status" ? ST_SHORT[v] || v : k === "paid_amount" ? vnd(v) : k === "commission_rate" ? v + "%" : k === "settlement_id" ? "연결됨" : k === "source" ? SRC[v] || v : String(v);
+  async function loadEvents() {
+    const r = await sb.from("booking_events").select("*").eq("booking_id", b.id).order("at", { ascending: false });
+    evs = r.data || [];
+    $("tl").innerHTML = evs.map(e => {
+      const who = e.actor === "업체" ? "shop" : e.actor === "손님" ? "cust" : e.actor.startsWith("관리자") ? "adm" : "";
+      let d = "";
+      if (e.action === "status" || e.action === "edit") d = Object.entries(e.detail || {}).map(([k, [a, c]]) => `${FN[k] || k}: ${esc(fv(k, a))} → <b>${esc(fv(k, c))}</b>`).join("<br>");
+      else if (e.detail && e.detail.memo) d = esc(e.detail.memo);
+      else if (e.action === "sent_to_shop") d = `${{ vi: "베트남어", en: "영어", ko: "한국어" }[e.detail.lang] || ""} 메시지`;
+      else if (e.action === "created") d = `${SRC[e.detail.source] || e.detail.source || ""}`;
+      return `<li><time>${dt(e.at)}</time><div><span class="who ${who}">${esc(e.actor)}</span> · ${EVN[e.action] || e.action}${d ? `<br>${d}` : ""}</div></li>`;
+    }).join("") || `<li>기록이 없어요</li>`;
+    drawTrace();
+  }
+  drawTop(); loadEvents();
+}
+
+/* ===== 예약 직접 등록 (카톡·전화로 받은 예약) ===== */
+function newBooking() {
+  const d = document.createElement("div"); d.className = "overlay center";
+  const live = shops.filter(isPub).concat(shops.filter(s => !isPub(s)));
+  d.innerHTML = `<div class="modal" style="width:min(720px,calc(100% - 32px))"><h2>예약 직접 등록</h2><p class="hint">카카오톡·전화로 받은 예약도 여기에 넣어야 수수료 기록이 남아요.</p>
+    <div style="display:grid;gap:10px;margin-top:10px">
+      <div class="two"><label class="f"><span>업체 <em>*</em></span><select id="nShop">${live.map(s => `<option value="${esc(s.id)}">${esc(s.name.ko)} · ${esc(cityName(s.city))}</option>`).join("")}</select></label>
+        <label class="f"><span>메뉴 <em>*</em></span><select id="nMenu"></select></label></div>
+      <div id="nCustomWrap" class="two" hidden><label class="f"><span>메뉴 이름</span><input id="nMenuName"></label><label class="f"><span>1인 가격 (₫)</span><input id="nPrice" inputmode="numeric"></label></div>
+      <div class="three"><label class="f"><span>방문일 <em>*</em></span><input type="date" id="nDate" value="${vnToday()}"></label>
+        <label class="f"><span>시간</span><input type="time" id="nTime"></label>
+        <label class="f"><span>인원</span><input type="number" id="nPpl" value="1" min="1" max="30"></label></div>
+      <div class="three"><label class="f"><span>손님 이름 <em>*</em></span><input id="nName"></label>
+        <label class="f"><span>연락처</span><input id="nContact" placeholder="카톡 ID, 전화"></label>
+        <label class="f"><span>경로 · 언어</span><div style="display:flex;gap:6px"><select id="nSrc"><option value="kakao">카톡</option><option value="phone">전화</option><option value="etc">기타</option><option value="web">사이트</option></select><select id="nLang">${Object.entries(LANG_KO).map(([k, n]) => `<option value="${k}">${n}</option>`).join("")}</select></div></label></div>
+      <label class="f"><span>요청사항</span><textarea id="nNote"></textarea></label>
+      <label class="f"><span>상태</span><select id="nSt"><option value="requested">접수 (업체 확인 전)</option><option value="confirmed">업체 확정</option><option value="visited">이미 방문 완료</option></select></label>
+      <div class="err-text" id="nErr"></div>
+    </div>
+    <div class="btns"><button class="btn" data-no>취소</button><button class="btn main" data-yes>등록</button></div></div>`;
+  document.body.appendChild(d);
+  const $$ = id => d.querySelector("#" + id);
+  const fill = () => { const s = shopById($$("nShop").value); $$("nMenu").innerHTML = (s ? s.menu.map((m, i) => `<option value="${i}">${esc(m.name.ko)} · ${m.price ? vnd(m.price) : "가격 상담"}</option>`).join("") : "") + `<option value="custom">직접 입력</option>`; $$("nCustomWrap").hidden = $$("nMenu").value !== "custom"; };
+  fill(); $$("nShop").onchange = fill; $$("nMenu").onchange = () => $$("nCustomWrap").hidden = $$("nMenu").value !== "custom";
+  d.querySelector("[data-no]").onclick = () => d.remove();
+  d.querySelector("[data-yes]").onclick = async () => {
+    const s = shopById($$("nShop").value);
+    const mi = $$("nMenu").value;
+    const m = mi === "custom" ? { name: { ko: $$("nMenuName").value.trim() }, min: null, price: num($$("nPrice").value) } : s.menu[+mi];
+    if (!$$("nName").value.trim()) { $$("nErr").textContent = "손님 이름을 적어 주세요."; return; }
+    if (!m || !m.name.ko) { $$("nErr").textContent = "메뉴를 골라 주세요."; return; }
+    const ppl = Math.max(1, +$$("nPpl").value || 1);
+    const row = { shop_id: s.id, shop_name: s.name.ko, menu_name: m.name.ko, menu_min: m.min || null, unit_price: m.price || null, people: ppl,
+      list_price: m.price ? m.price * ppl : null, visit_date: $$("nDate").value || null, visit_time: $$("nTime").value || null,
+      customer_name: $$("nName").value.trim(), contact: $$("nContact").value.trim(), note: $$("nNote").value, lang: $$("nLang").value,
+      source: $$("nSrc").value, status: $$("nSt").value, commission_rate: rateOf(s.id) };
+    try {
+      const b = await q(sb.from("bookings").insert(row).select().single(), "예약 등록");
+      BOOKINGS.unshift(b); d.remove(); toast(`${b.code} 예약을 등록했어요`); openBooking(b.id);
+    } catch (e) {}
+  };
+}
+
+/* ===== 정산 ===== */
+let setMonth = null;
+function drawSettle() {
+  const months = [...new Set([vnMonth(), addMonth(vnMonth(), -1), ...BOOKINGS.map(b => (b.visit_date || "").slice(0, 7)).filter(Boolean)])].sort().reverse();
+  setMonth = setMonth || addMonth(vnMonth(), -1);
+  const pend = BOOKINGS.filter(b => b.status === "visited" && !b.settlement_id && (b.visit_date || "").startsWith(setMonth));
+  const groups = {};
+  pend.forEach(b => (groups[b.shop_id || "-"] = groups[b.shop_id || "-"] || []).push(b));
+  const older = BOOKINGS.filter(b => b.status === "visited" && !b.settlement_id && (b.visit_date || "") < setMonth + "-01");
+  const openInM = BOOKINGS.filter(b => isOpenSt(b.status) && (b.visit_date || "").startsWith(setMonth) && (b.visit_date || "") < vnToday());
+  // 업체별 받을 돈
+  const owe = {};
+  BOOKINGS.filter(b => b.status === "visited" && !b.settlement_id).forEach(b => { const k = b.shop_id || "-"; owe[k] = owe[k] || { unb: 0, bil: 0 }; owe[k].unb += +b.commission || 0; });
+  SETTLES.filter(s => s.status === "billed").forEach(s => { const k = s.shop_id || "-"; owe[k] = owe[k] || { unb: 0, bil: 0 }; owe[k].bil += +s.total_commission || 0; });
+  $("tab-settle").innerHTML = `
+    <h2 class="sec">정산할 내역 <select class="month-pick" id="setMonth">${months.map(m => `<option value="${m}" ${m === setMonth ? "selected" : ""}>${monthKo(m)}</option>`).join("")}</select> <small>방문 완료 · 아직 정산서에 안 들어간 예약</small></h2>
+    ${openInM.length ? `<div class="notice warn" style="margin:0 0 10px"><span class="grow">이 달에 방문일이 지났는데 결과가 없는 예약이 <b>${openInM.length}건</b> 있어요. 방문 완료나 노쇼로 정리해야 정산에 들어가요.</span><button class="btn sm" id="goOpen">보기</button></div>` : ""}
+    ${older.length ? `<div class="notice warn" style="margin:0 0 10px"><span class="grow">이전 달에 정산 안 된 방문 완료가 <b>${older.length}건</b> 있어요.</span><button class="btn sm" id="goOlder">그 달로</button></div>` : ""}
+    ${Object.keys(groups).length ? `<div class="tscroll"><table class="t"><thead><tr><th>업체</th><th class="num">건수</th><th class="num">결제액 합계</th><th class="num">수수료</th><th></th></tr></thead><tbody>
+      ${Object.entries(groups).map(([id, arr]) => {
+        const miss = arr.filter(b => b.paid_amount == null).length;
+        return `<tr><td><b>${esc(shopName(arr[0]))}</b>${rateOf(id) ? ` <span class="hint">${rateOf(id)}%</span>` : ""}${miss ? `<br><span class="err-text">금액 미입력 ${miss}건 — 먼저 넣어 주세요</span>` : ""}</td>
+          <td class="num">${arr.length}</td><td class="num">${vnd(arr.reduce((t, b) => t + (+b.paid_amount || 0), 0))}</td>
+          <td class="num"><b>${vnd(arr.reduce((t, b) => t + (+b.commission || 0), 0))}</b></td>
+          <td class="num"><button class="btn sm" data-list="${esc(id)}">내역</button> <button class="btn sm main" data-mk="${esc(id)}" ${miss || id === "-" ? "disabled" : ""}>정산서 만들기</button></td></tr>`; }).join("")}
+      </tbody></table></div>` : `<div class="todo"><div class="empty">${monthKo(setMonth)}에 정산할 방문 완료 예약이 없어요.</div></div>`}
+
+    <h2 class="sec">업체별 받을 수수료 <small>지금까지 전체</small></h2>
+    ${Object.keys(owe).length ? `<div class="tscroll"><table class="t"><thead><tr><th>업체</th><th class="num">정산서 만들기 전</th><th class="num">청구함 · 입금 전</th><th class="num">합계</th></tr></thead><tbody>
+      ${Object.entries(owe).map(([id, o]) => `<tr><td>${esc(shopName({ shop_id: id === "-" ? null : id, shop_name: "(업체 없음)" }))}</td><td class="num">${vnd(o.unb)}</td><td class="num">${vnd(o.bil)}</td><td class="num"><b>${vnd(o.unb + o.bil)}</b></td></tr>`).join("")}
+      </tbody></table></div>` : `<div class="todo"><div class="empty">받을 수수료가 없어요.</div></div>`}
+
+    <h2 class="sec">정산서 <small>만든 순서</small></h2>
+    ${SETTLES.length ? `<div class="tscroll"><table class="t"><thead><tr><th>정산 월</th><th>업체</th><th class="num">건수</th><th class="num">결제액</th><th class="num">수수료</th><th>상태</th><th></th></tr></thead><tbody>
+      ${SETTLES.map(s => `<tr style="${s.status === "void" ? "opacity:.45" : ""}"><td>${monthKo(s.month)}</td><td><b>${esc(s.shop_name || s.shop_id || "")}</b><br><span class="hint">${dt(s.billed_at)} 청구</span></td>
+        <td class="num">${s.booking_count}</td><td class="num">${vnd(s.total_paid)}</td><td class="num"><b>${vnd(s.total_commission)}</b></td>
+        <td>${s.status === "paid" ? `<span class="st settled">입금 완료</span><br><span class="hint">${dt(s.paid_at)}</span>` : s.status === "void" ? `<span class="st cancelled">취소됨</span>` : `<span class="st requested">입금 대기</span>`}</td>
+        <td class="num">${s.status !== "void" ? `<button class="btn sm" data-view="${s.id}">정산서</button> ${s.status === "billed" ? `<button class="btn sm main" data-paid="${s.id}">입금 확인</button> <button class="btn sm danger" data-void="${s.id}">취소</button>` : `<button class="btn sm" data-unpaid="${s.id}">입금 취소</button>`}` : ""}</td></tr>`).join("")}
+      </tbody></table></div>` : `<div class="todo"><div class="empty">아직 만든 정산서가 없어요.</div></div>`}
+    <p class="hint" style="margin:14px 0 40px">순서: 방문 완료(금액 입력) → 월말에 <b>정산서 만들기</b> → 업체에 정산서 보내기 → 수수료가 들어오면 <b>입금 확인</b>. 정산서에 들어간 예약은 금액을 바꿀 수 없어요.</p>`;
+  $("setMonth").onchange = e => { setMonth = e.target.value; drawSettle(); };
+  if ($("goOlder")) $("goOlder").onclick = () => { setMonth = older.map(b => b.visit_date.slice(0, 7)).sort()[0]; drawSettle(); };
+  if ($("goOpen")) $("goOpen").onclick = () => { bkF = { ...BKF0, st: "all", todo: "pastOpen" }; showTab("bk"); };
+  $("tab-settle").querySelectorAll("[data-list]").forEach(x => x.onclick = () => { bkF = { ...BKF0, st: "visited", shop: x.dataset.list === "-" ? "" : x.dataset.list, from: setMonth + "-01", to: setMonth + "-31" }; showTab("bk"); });
+  $("tab-settle").querySelectorAll("[data-mk]").forEach(x => x.onclick = () => confirmBox(`${shopName({ shop_id: x.dataset.mk })} ${monthKo(setMonth)} 정산서를 만들까요?`, async () => {
+    const r = await sb.rpc("create_settlement", { p_shop: x.dataset.mk, p_month: setMonth });
+    if (r.error) { dbErr(r.error, "정산서 만들기"); return; }
+    await Promise.all([loadSettles(), loadBookings()]); drawSettle(); viewStatement(r.data);
+  }, "들어간 예약은 금액을 바꿀 수 없게 잠겨요. 잘못 만들면 '취소'로 풀 수 있어요.", "만들기", false));
+  $("tab-settle").querySelectorAll("[data-view]").forEach(x => x.onclick = () => viewStatement(x.dataset.view));
+  const rpcThen = async (fn, args, msg) => { const r = await sb.rpc(fn, args); if (r.error) { dbErr(r.error); return; } await Promise.all([loadSettles(), loadBookings()]); drawSettle(); toast(msg); };
+  $("tab-settle").querySelectorAll("[data-paid]").forEach(x => x.onclick = () => confirmBox("수수료 입금을 확인했나요?", () => rpcThen("settlement_paid", { p_id: x.dataset.paid, p_paid: true }, "입금 완료로 바꿨어요 ✅"), "들어간 예약이 모두 '정산 완료'로 바뀌어요.", "입금 확인", false));
+  $("tab-settle").querySelectorAll("[data-unpaid]").forEach(x => x.onclick = () => confirmBox("입금 확인을 취소할까요?", () => rpcThen("settlement_paid", { p_id: x.dataset.unpaid, p_paid: false }, "입금 전으로 되돌렸어요"), "", "되돌리기"));
+  $("tab-settle").querySelectorAll("[data-void]").forEach(x => x.onclick = () => confirmBox("이 정산서를 취소할까요?", () => rpcThen("settlement_void", { p_id: x.dataset.void }, "정산서를 취소했어요. 예약은 다시 '정산할 내역'으로 돌아가요."), "취소 기록은 남아요.", "정산서 취소"));
+}
+function viewStatement(id) {
+  const s = SETTLES.find(x => x.id === id); if (!s) return;
+  const list = BOOKINGS.filter(b => b.settlement_id === id).sort((a, b) => (a.visit_date || "").localeCompare(b.visit_date || ""));
+  const ct = (PRIV[s.shop_id] || {}).contract || {};
+  let L = ct.msgLang === "ko" ? "ko" : ct.msgLang === "en" ? "en" : "vi";
+  const T = {
+    vi: { t: "BẢNG QUYẾT TOÁN HOA HỒNG", shop: "Cơ sở", per: "Kỳ", date: "Ngày lập", code: "Mã", day: "Ngày", svc: "Dịch vụ", ppl: "Khách", paid: "Khách trả", rate: "%", comm: "Hoa hồng", tot: "Tổng", due: "Số tiền hoa hồng cần thanh toán", st: "Trạng thái", paidSt: "Đã thanh toán", billed: "Chờ thanh toán", note: "Vui lòng kiểm tra và thanh toán. Mọi thắc mắc xin liên hệ Uncle Day." },
+    en: { t: "COMMISSION STATEMENT", shop: "Shop", per: "Period", date: "Issued", code: "No.", day: "Date", svc: "Service", ppl: "Guests", paid: "Paid", rate: "%", comm: "Commission", tot: "Total", due: "Commission due", st: "Status", paidSt: "Paid", billed: "Awaiting payment", note: "Please review and transfer the commission. Contact Uncle Day with any questions." },
+    ko: { t: "수수료 정산서", shop: "업체", per: "정산 기간", date: "발행일", code: "예약번호", day: "방문일", svc: "메뉴", ppl: "인원", paid: "결제액", rate: "%", comm: "수수료", tot: "합계", due: "정산 수수료", st: "상태", paidSt: "입금 완료", billed: "입금 대기", note: "확인 후 입금 부탁드려요. 문의는 엉클데이로 주세요." }
+  };
+  const draw = () => {
+    const t = T[L];
+    const shop = shopById(s.shop_id);
+    const sn = shop ? (shop.name[L] || shop.name.en || shop.name.ko) : s.shop_name;
+    const html = `<div class="stmt">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><img src="images/logo-full.webp" alt="Uncle Day" style="height:46px"><h1>${t.t}</h1></div>
+      <div class="meta"><div><b>${t.shop}:</b> ${esc(sn)}<br><b>${t.per}:</b> ${esc(s.month)}</div><div><b>${t.date}:</b> ${new Date(s.billed_at).toLocaleDateString("en-CA")}<br><b>${t.st}:</b> ${s.status === "paid" ? t.paidSt : t.billed}</div></div>
+      <table><thead><tr><th>${t.code}</th><th>${t.day}</th><th>${t.svc}</th><th class="num">${t.ppl}</th><th class="num">${t.paid}</th><th class="num">${t.rate}</th><th class="num">${t.comm}</th></tr></thead>
+      <tbody>${list.map(b => { const m = shop && shop.menu.find(x => x.name.ko === b.menu_name); return `<tr><td>${esc(b.code)}</td><td>${esc(b.visit_date || "")}</td><td>${esc(m ? (m.name[L] || m.name.en || m.name.ko) : b.menu_name || "")}</td><td class="num">${b.people}</td><td class="num">${vnd(b.paid_amount)}</td><td class="num">${+b.commission_rate}</td><td class="num">${vnd(b.commission)}</td></tr>`; }).join("")}</tbody>
+      <tfoot><tr><td colspan="3">${t.tot}</td><td class="num">${list.reduce((a, b) => a + b.people, 0)}</td><td class="num">${vnd(s.total_paid)}</td><td></td><td class="num">${vnd(s.total_commission)}</td></tr></tfoot></table>
+      <p class="sum"><b>${t.due}: ${vnd(s.total_commission)}</b></p>
+      <p style="color:#555">${t.note}</p></div>`;
+    $("stmtBody").innerHTML = html; $("printArea").innerHTML = html;
+    d.querySelectorAll("[data-l]").forEach(x => x.classList.toggle("main", x.dataset.l === L));
+  };
+  const d = document.createElement("div"); d.className = "overlay center";
+  d.innerHTML = `<div class="modal" style="width:min(820px,calc(100% - 32px))">
+    <div class="btns" style="justify-content:space-between;margin:0 0 12px"><div class="btn-row">${[["vi", "베트남어"], ["en", "영어"], ["ko", "한국어"]].map(([k, n]) => `<button class="btn sm" data-l="${k}">${n}</button>`).join("")}</div>
+    <div class="btn-row"><button class="btn" data-copy>메시지로 복사</button><button class="btn main" data-print>인쇄 · PDF 저장</button><button class="btn" data-x>닫기</button></div></div>
+    <div id="stmtBody"></div></div>`;
+  document.body.appendChild(d);
+  d.querySelectorAll("[data-l]").forEach(x => x.onclick = () => { L = x.dataset.l; draw(); });
+  d.querySelector("[data-x]").onclick = () => { d.remove(); $("printArea").innerHTML = ""; };
+  d.querySelector("[data-print]").onclick = () => window.print();
+  d.querySelector("[data-copy]").onclick = () => {
+    const t = T[L];
+    copy(`[Uncle Day] ${t.t} · ${s.month}\n${list.map(b => `${b.code} ${b.visit_date} · ${vnd(b.paid_amount)} × ${+b.commission_rate}% = ${vnd(b.commission)}`).join("\n")}\n—\n${t.due}: ${vnd(s.total_commission)}`, "정산 내용을 복사했어요");
+  };
+  draw();
+}
+
+/* ===== 후기 ===== */
+function drawReviews() {
+  const pend = RVS.filter(r => r.status === "pending"), done = RVS.filter(r => r.status !== "pending").slice(0, 30);
+  const card = r => { const b = r.booking_id && BOOKINGS.find(x => x.id === r.booking_id); const s = shopById(r.shop_id);
+    return `<div class="rv-card"><div class="top"><span class="stars">${"★".repeat(r.stars)}${"☆".repeat(5 - r.stars)}</span><b>${esc(s ? s.name.ko : r.shop_id)}</b>
+      ${b ? `<span class="badge vis">✓ 예약 손님 ${esc(b.code)}</span>` : `<span class="badge wait">예약 확인 안 됨</span>`}<span class="hint">${esc(r.name || "")} · ${dt(r.created_at)} · ${LANG_KO[r.lang] || r.lang}${r.contact ? " · " + esc(r.contact) : ""}</span></div>
+      ${r.menu ? `<div class="hint">메뉴: ${esc(r.menu)}${r.visit_month ? " · " + esc(r.visit_month) + " 방문" : ""}</div>` : ""}
+      <p>${esc(r.body)}</p>
+      ${r.status === "pending" ? `<div class="btn-row"><button class="btn sm main" data-ok="${r.id}">게시</button><button class="btn sm danger" data-no="${r.id}">반려</button></div>`
+        : `<div class="hint">${r.status === "approved" ? "✅ 게시됨" : "반려됨"} · ${dt(r.decided_at)}</div>`}</div>`; };
+  $("tab-rv").innerHTML = `<h2 class="sec">게시 대기 <small>${pend.length}개</small></h2>
+    <div style="display:grid;gap:10px">${pend.map(card).join("") || `<div class="todo"><div class="empty">새로 들어온 후기가 없어요.</div></div>`}</div>
+    <h2 class="sec">처리한 후기 <small>최근 30개</small></h2><div style="display:grid;gap:10px;margin-bottom:40px">${done.map(card).join("") || `<div class="todo"><div class="empty">아직 없어요.</div></div>`}</div>`;
+  $("tab-rv").querySelectorAll("[data-ok]").forEach(x => x.onclick = async () => {
+    const r = RVS.find(y => y.id === x.dataset.ok); const s = shopById(r.shop_id);
+    if (!s) { toast("업체를 찾을 수 없어요"); return; }
+    const ns = clone(s);
+    ns.userReviews = [{ stars: r.stars, name: (r.name || "").trim() || "손님", date: r.visit_month || r.created_at.slice(0, 7), menu: r.menu || "", text: r.body.trim(), ...(r.booking_id ? { verified: true } : {}) }, ...(ns.userReviews || [])];
+    ns.rating = Math.round(ns.userReviews.reduce((t, v) => t + v.stars, 0) / ns.userReviews.length * 10) / 10; ns.reviews = ns.userReviews.length;
+    x.disabled = true;
+    try {
+      await dbSaveShop(ns); shops[shops.indexOf(s)] = ns;
+      await q(sb.from("reviews").update({ status: "approved", decided_at: new Date().toISOString() }).eq("id", r.id));
+      r.status = "approved"; r.decided_at = new Date().toISOString(); drawReviews(); drawCounts(); toast("게시했어요 ✅ 사이트에 바로 보여요.");
+    } catch (e) { x.disabled = false; dbErr(e, "게시"); }
+  });
+  $("tab-rv").querySelectorAll("[data-no]").forEach(x => x.onclick = () => confirmBox("이 후기를 반려할까요?", async () => {
+    const r = RVS.find(y => y.id === x.dataset.no);
+    try { await q(sb.from("reviews").update({ status: "rejected", decided_at: new Date().toISOString() }).eq("id", r.id)); r.status = "rejected"; r.decided_at = new Date().toISOString(); drawReviews(); drawCounts(); } catch (e) {}
+  }, "손님 화면에 나오지 않아요.", "반려"));
+}
+
+/* ===== 계정 ===== */
+async function drawAccount() {
+  $("tab-acc").innerHTML = `<div class="two" style="margin-top:16px;align-items:start">
+    <div class="box"><h3>내 계정</h3><div>${esc(ME.email)}</div>
+      <form id="pwForm" style="display:grid;gap:10px">
+        <label class="f"><span>새 비밀번호 (8자 이상)</span><input type="password" id="pw1" minlength="8" autocomplete="new-password" required></label>
+        <label class="f"><span>한 번 더</span><input type="password" id="pw2" minlength="8" autocomplete="new-password" required></label>
+        <div class="err-text" id="pwErr"></div>
+        <div class="btn-row"><button class="btn main">비밀번호 바꾸기</button><button class="btn" type="button" id="logout">로그아웃</button></div></form></div>
+    <div class="box"><h3>관리자</h3><div id="adminList" class="hint">불러오는 중…</div>
+      <form id="addAdm" style="display:flex;gap:8px"><input type="email" id="admEmail" placeholder="직원 이메일" required style="flex:1;padding:9px 11px;border:1px solid var(--line);border-radius:9px"><button class="btn">추가</button></form>
+      <div class="hint">직원 추가 순서: ① 여기에 이메일 추가 → ② Supabase → <b>Authentication → Users → Add user → Create new user</b>에서 같은 이메일과 임시 비밀번호로 계정 만들기 (Auto Confirm 켜기) → ③ 직원이 로그인한 뒤 '비밀번호 바꾸기'.</div></div>
+  </div>
+  <div class="box" style="margin:14px 0 40px"><h3>백업</h3>
+    <div class="hint">업체·예약·정산·후기 전체를 파일로 내려받아요. 한 달에 한 번 정도 받아 두면 안전해요.</div>
+    <div class="btn-row"><button class="btn" id="bkAll">⬇ 전체 백업 (JSON)</button><button class="btn" id="bkShopsJs">⬇ 사이트 기본 파일 (shops.js)</button></div></div>`;
+  $("pwForm").onsubmit = async e => {
+    e.preventDefault();
+    if ($("pw1").value !== $("pw2").value) { $("pwErr").textContent = "두 비밀번호가 달라요."; return; }
+    const r = await sb.auth.updateUser({ password: $("pw1").value });
+    if (r.error) { $("pwErr").textContent = "바꾸지 못했어요: " + r.error.message; return; }
+    $("pwErr").textContent = ""; e.target.reset(); toast("비밀번호를 바꿨어요 ✅");
+  };
+  $("logout").onclick = async () => { await sb.auth.signOut(); location.reload(); };
+  const drawAdmins = async () => {
+    const [a, e] = await Promise.all([sb.from("admins").select("*").order("created_at"), sb.from("admin_emails").select("*").order("created_at")]);
+    const active = new Set((a.data || []).map(x => x.email.toLowerCase()));
+    $("adminList").innerHTML = (a.data || []).map(x => `<div>✅ ${esc(x.email)}${x.user_id === ME.id ? " (나)" : ""}</div>`).join("") +
+      (e.data || []).filter(x => !active.has(x.email.toLowerCase())).map(x => `<div>⏳ ${esc(x.email)} <span class="hint">— 아직 로그인 안 함</span> <button class="btn sm danger" data-rm="${esc(x.email)}">빼기</button></div>`).join("");
+    $("adminList").querySelectorAll("[data-rm]").forEach(b => b.onclick = async () => { await sb.from("admin_emails").delete().eq("email", b.dataset.rm); drawAdmins(); });
+  };
+  drawAdmins();
+  $("addAdm").onsubmit = async e => { e.preventDefault(); const r = await sb.from("admin_emails").insert({ email: $("admEmail").value.trim().toLowerCase(), added_by: ME.email }); if (r.error) dbErr(r.error); else { $("admEmail").value = ""; drawAdmins(); toast("추가했어요"); } };
+  const dl = (name, text, type) => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); };
+  $("bkAll").onclick = async () => {
+    const ev = await sb.from("booking_events").select("*").order("id").limit(100000);
+    dl(`엉클데이_백업_${vnToday()}.json`, JSON.stringify({ at: new Date().toISOString(), shops: shops.map(s => ({ ...s, _meta: META[s.id], _private: PRIV[s.id] })), catImgs, bookings: BOOKINGS, events: ev.data || [], settlements: SETTLES, reviews: RVS }, null, 1), "application/json");
+  };
+  $("bkShopsJs").onclick = () => dl("shops.js", "/* 업체 목록 (데이터베이스에 연결되지 않을 때 쓰는 기본 파일) */\nconst SHOPS = " + JSON.stringify(shops.filter(isPub).map(s => splitShop(s)[0])) + ";\n", "text/javascript");
+}
+
+/* ===== 처음 한 번: 기존 업체를 데이터베이스로 옮기기 ===== */
+async function offerMigration() {
+  if (shops.length || typeof SHOPS === "undefined" || !SHOPS.length) return;
+  const n = notice("warn", `<span class="grow"><b>데이터베이스가 비어 있어요.</b> 지금 사이트에 있는 업체 ${SHOPS.length}곳(사진, 메뉴, 확인 메모 포함)과 카테고리 사진을 옮길까요?</span><button class="btn main sm" id="migBtn">옮기기</button>`, "nMig");
+  $("migBtn").onclick = async () => {
+    $("migBtn").disabled = true; $("migBtn").textContent = "옮기는 중…";
+    const notes = typeof ADMIN_NOTES !== "undefined" ? ADMIN_NOTES : {};
+    try {
+      await q(sb.from("shops").upsert(SHOPS.map((s, i) => { const d = clone(s); delete d.review; delete d.checks; return { id: s.id, data: d, sort: i, published: true, updated_by: ME.email }; })), "업체 옮기기");
+      await q(sb.from("shop_private").upsert(SHOPS.map(s => ({ shop_id: s.id, notes: notes[s.id] || {}, commission_rate: 0, contract: {} }))), "업체 메모 옮기기");
+      if (typeof CAT_IMGS !== "undefined" && Object.keys(CAT_IMGS).length) await q(sb.from("settings").upsert({ key: "cat_imgs", value: CAT_IMGS }), "카테고리 사진 옮기기");
+      await loadShops(); n.remove(); showTab("shops"); toast(`업체 ${shops.length}곳을 옮겼어요 ✅ 이제 각 업체에 수수료율을 넣어 주세요.`, 5000);
+    } catch (e) { $("migBtn").disabled = false; $("migBtn").textContent = "다시 시도"; }
+  };
+}
+
+/* ===== 로그인 ===== */
+function gate(html) { $("gate").hidden = false; $("app").hidden = true; $("tabs").hidden = true; $("gate").innerHTML = html; }
+function loginForm(msg = "") {
+  gate(`<h1>엉클데이 관리자</h1><p class="hint" style="text-align:center">이메일과 비밀번호로 로그인해요</p>
+    <form id="lf"><label class="f"><span>이메일</span><input type="email" id="lEmail" autocomplete="username" required></label>
+      <label class="f"><span>비밀번호</span><input type="password" id="lPw" autocomplete="current-password" required></label>
+      <div class="err-text" id="lErr">${msg}</div>
+      <button class="btn main" style="justify-content:center;padding:11px">로그인</button>
+      <button type="button" class="lnk" id="forgot">비밀번호를 잊었어요</button></form>
+    <p style="text-align:center;margin:16px 0 0"><a href="./" style="color:var(--sub);font-size:13px">사이트로 돌아가기</a></p>`);
+  $("lEmail").focus();
+  $("lf").onsubmit = async e => {
+    e.preventDefault(); $("lErr").textContent = "확인 중…";
+    const r = await sb.auth.signInWithPassword({ email: $("lEmail").value.trim(), password: $("lPw").value });
+    if (r.error) { $("lErr").textContent = /invalid/i.test(r.error.message) ? "이메일이나 비밀번호가 맞지 않아요." : "로그인하지 못했어요: " + r.error.message; return; }
+    afterLogin(r.data.session);
+  };
+  $("forgot").onclick = async () => {
+    const em = $("lEmail").value.trim();
+    if (!em) { $("lErr").textContent = "위에 이메일을 먼저 적어 주세요."; return; }
+    const r = await sb.auth.resetPasswordForEmail(em, { redirectTo: location.origin + location.pathname });
+    $("lErr").textContent = r.error ? "메일을 보내지 못했어요: " + r.error.message : "비밀번호 재설정 메일을 보냈어요. 메일의 링크를 눌러 주세요. (스팸함도 확인)";
+  };
+}
+function newPasswordForm() {
+  gate(`<h1>새 비밀번호 정하기</h1><form id="nf"><label class="f"><span>새 비밀번호 (8자 이상)</span><input type="password" id="n1" minlength="8" autocomplete="new-password" required></label>
+    <label class="f"><span>한 번 더</span><input type="password" id="n2" minlength="8" autocomplete="new-password" required></label><div class="err-text" id="nErr"></div>
+    <button class="btn main" style="justify-content:center;padding:11px">저장하고 들어가기</button></form>`);
+  $("nf").onsubmit = async e => {
+    e.preventDefault();
+    if ($("n1").value !== $("n2").value) { $("nErr").textContent = "두 비밀번호가 달라요."; return; }
+    const r = await sb.auth.updateUser({ password: $("n1").value });
+    if (r.error) { $("nErr").textContent = r.error.message; return; }
+    toast("비밀번호를 바꿨어요 ✅"); const s = await sb.auth.getSession(); afterLogin(s.data.session);
+  };
+}
+let started = false, recovering = false;
+async function afterLogin(session) {
+  if (!session || started) return;
+  ME = { email: session.user.email, id: session.user.id };
+  const ok = await sb.rpc("claim_admin");
+  if (ok.error || !ok.data) { gate(`<h1>관리자 권한이 없어요</h1><p class="hint" style="text-align:center">${esc(ME.email)} 계정은 관리자로 등록되지 않았어요. 기존 관리자에게 '계정 → 관리자 추가'를 부탁하세요.</p><p style="text-align:center"><button class="btn" id="lo">다른 계정으로 로그인</button></p>`); $("lo").onclick = async () => { await sb.auth.signOut(); location.reload(); }; return; }
+  started = true;
+  gate(`<h1>불러오는 중…</h1>`);
+  try { await loadAll(); await loadTold(); }
+  catch (e) { gate(`<h1>불러오지 못했어요</h1><p class="hint" style="text-align:center">${esc(e.message || "")}<br>데이터베이스 설정(schema.sql)을 실행했는지 확인해 주세요.</p>`); started = false; return; }
+  $("gate").hidden = true; $("app").hidden = false; $("tabs").hidden = false;
+  $("me").textContent = ME.email;
+  initShops();
+  document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => showTab(b.dataset.tab));
+  const h = location.hash.slice(1);
+  showTab(["dash", "bk", "settle", "shops", "rv", "acc"].includes(h) ? h : "dash");
+  offerMigration();
+  // 1분마다 새 예약·후기 확인
+  setInterval(async () => {
+    if (document.hidden || $("layer").innerHTML) return;
+    const before = BOOKINGS.length, rvBefore = RVS.length;
+    try { await Promise.all([loadBookings(), loadReviews()]); await loadTold(); } catch (e) { return; }
+    if (BOOKINGS.length > before) toast(`🔔 새 예약 ${BOOKINGS.length - before}건이 들어왔어요`, 5000);
+    if (RVS.length > rvBefore) toast(`⭐ 새 후기가 들어왔어요`, 4000);
+    if (["dash", "bk", "rv"].includes(TAB)) showTab(TAB); else drawCounts();
+  }, 60000);
+}
+
+(async () => {
+  if (!ON) {
+    gate(`<h1>데이터베이스 연결이 필요해요</h1><p class="hint">config.js에 Supabase 주소(url)와 공개 키(key)를 넣으면 이 화면이 로그인 화면으로 바뀌어요.</p>`);
+    return;
+  }
+  sb.auth.onAuthStateChange((ev, session) => {
+    if (ev === "PASSWORD_RECOVERY") { recovering = true; newPasswordForm(); }
+  });
+  const { data } = await sb.auth.getSession();
+  if (RECOVERY || recovering) { recovering = true; newPasswordForm(); return; }
+  if (data.session) afterLogin(data.session); else loginForm();
+})();

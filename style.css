@@ -371,3 +371,30 @@ html[lang="vi"] .btn, html[lang="vi"] .price, html[lang="vi"] .best-badge, html[
 .near-msg:empty { display: none; }
 .meta .dist { color: var(--orange); font-weight: 800; }
 @media (max-width: 480px) { .near-sel { flex: 1; } }
+
+/* 온라인 예약 완료 · 예약확인증 */
+.bk-code { display: flex; flex-direction: column; gap: 2px; background: var(--cream, #FAF3E0); border-radius: 12px; padding: 12px 14px; }
+.bk-code small { color: #6b7280; font-size: 12px; }
+.bk-code b { font-size: 24px; letter-spacing: .04em; font-family: "Poppins", sans-serif; color: var(--green, #116241); }
+.voucher-wrap { padding-top: 20px; padding-bottom: 40px; max-width: 620px; }
+.voucher { display: grid; gap: 14px; }
+.voucher h1 { margin: 0; font-size: 22px; }
+.v-head { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.v-head small { color: #6b7280; }
+.v-code { font-family: "Poppins", sans-serif; font-size: 30px; letter-spacing: .04em; color: #116241; line-height: 1.1; }
+.v-st { display: inline-block; border-radius: 999px; padding: 4px 12px; font-weight: 700; font-size: 14px; background: #fff4e5; color: #9a5208; }
+.v-st.st-confirmed, .v-st.st-visited, .v-st.st-settled { background: #e6f6f3; color: #1f7a6e; }
+.v-st.st-cancelled, .v-st.st-rejected, .v-st.st-noshow { background: #fdecec; color: #9b2c2c; }
+.v-img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 12px; }
+.v-info { display: grid; grid-template-columns: 96px 1fr; gap: 10px 12px; margin: 0; }
+.v-info dt { color: #6b7280; font-size: 13px; padding-top: 2px; }
+.v-info dd { margin: 0; overflow-wrap: anywhere; }
+.v-info dd small { color: #6b7280; }
+.v-show { background: #e6f6f3; color: #1f5f55; border-radius: 10px; padding: 10px 12px; margin: 0; font-weight: 700; }
+.v-btns { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.v-btns .btn { margin: 0; }
+.v-ok { margin: 0; color: #1f7a6e; font-weight: 700; width: 100%; }
+.v-cancel { background: #fff !important; color: #c0392b !important; border: 1px solid #f1c4c4 !important; }
+.v-save { font-size: 12.5px; color: #6b7280; margin: 0; }
+.v-mine { display: flex; flex-wrap: wrap; gap: 6px; }
+@media (max-width: 520px) { .v-info { grid-template-columns: 80px 1fr; } .v-code { font-size: 26px; } }

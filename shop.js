@@ -159,7 +159,12 @@ if (!shop) {
 ${f.text}
 작성 언어: ${lang.toUpperCase()}`;
     let sent = false;
-    if (SITE.formEndpoint) {
+    if (LIVE.on) {
+      try {
+        await LIVE.rpc("submit_review", { p: { shop_id: shop.id, stars: rvStar, name: f.name, month: f.date, menu: f.menu, text: f.text, contact: f.contact, lang } });
+        sent = true;
+      } catch (err) { if (err.server) { alertBox(err.message); return; } }
+    } else if (SITE.formEndpoint) {
       try {
         const r = await fetch(SITE.formEndpoint, { method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" },
           body: JSON.stringify({ type: "review", shop: shop.id, stars: rvStar, ...f, message: msg }) });
@@ -227,6 +232,30 @@ ${f.text}
 요청사항: ${f.note || "-"}
 고객 언어: ${lang.toUpperCase()}`;
 
+    // 데이터베이스에 바로 접수 → 예약번호와 예약확인증
+    if (LIVE.on) {
+      const btn = form.querySelector('button[type="submit"]'); btn.disabled = true; btn.textContent = ui("bkSending");
+      try {
+        const r = await LIVE.rpc("create_booking", { p: { shop_id: shop.id, menu: +f.menu, date: f.date, time: f.time, people: +f.people, name: f.name, contact: f.contact, note: f.note, lang } });
+        const link = `booking.html#${r.token}`;
+        const kmsg = msg.replace("[예약 요청]", `[예약 요청] ${r.code}`);
+        form.hidden = true;
+        const done = $("done"); done.hidden = false;
+        done.innerHTML = `<h2>✅ ${ui("bkDoneTitle")}</h2>
+          <p class="bk-code"><small>${ui("vCode")}</small><b>${esc(r.code)}</b></p>
+          <p>${ui("bkDoneDesc")}</p>
+          <a class="btn big-btn" href="${link}">${ui("bkVoucher")}</a>
+          <a class="btn kakao-link" id="bkKakao" href="${SITE.kakao}" target="_blank">${ui("bkKakao")}</a>`;
+        $("bkKakao").onclick = () => { try { navigator.clipboard.writeText(kmsg + "\n" + new URL(link, location.href).href); alertBox(ui("bkKakaoCopied")); } catch (e) {} };
+        try { const k = "uncleday-my-bookings"; const a = JSON.parse(localStorage.getItem(k) || "[]"); a.unshift({ code: r.code, token: r.token, shop: shop.id, date: f.date }); localStorage.setItem(k, JSON.stringify(a.slice(0, 20))); } catch (e) {}
+        done.scrollIntoView({ behavior: "smooth" });
+        return;
+      } catch (err) {
+        btn.disabled = false; btn.textContent = ui("bookBtn");
+        if (err.server) { alertBox(err.message); return; }
+      }
+    }
+
     let sent = false;
     if (SITE.formEndpoint) {
       try {
@@ -242,7 +271,7 @@ ${f.text}
     form.hidden = true;
     const done = $("done"); done.hidden = false;
     done.innerHTML = `<h2>${ui("doneTitle")}</h2>
-      <p>${sent ? ui("doneSent") : ui("doneManual")}</p>
+      <p>${sent ? ui("doneSent") : LIVE.on ? ui("bkFail") : ui("doneManual")}</p>
       <pre id="msg"></pre>
       ${sent ? "" : `<button class="btn" id="copy">${ui("copy")}</button>
         <a class="btn kakao-link" href="${SITE.kakao}" target="_blank">${ui("viaKakao")}</a>

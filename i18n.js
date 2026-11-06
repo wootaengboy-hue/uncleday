@@ -62,3 +62,53 @@ const UI = {
     approx: "≈", lang_ko: "Tiếng Hàn", lang_en: "Tiếng Anh", lang_vi: "Tiếng Việt", lang_ja: "Tiếng Nhật", lang_zh: "Tiếng Trung"
   }
 };
+
+/* 온라인 예약 · 예약확인증 문구 */
+Object.assign(UI.ko, {
+  bkSending: "보내는 중…", bkDoneTitle: "예약 요청이 접수됐어요",
+  bkDoneDesc: "업체에 예약 가능 여부를 확인한 뒤 연락드릴게요. 예약확인증에서 진행 상황을 볼 수 있어요.",
+  bkVoucher: "예약확인증 보기", bkKakao: "카카오톡으로 예약번호 보내기", bkKakaoCopied: "예약 내용이 복사됐어요. 카카오톡 채팅창에 붙여 넣어 주세요.",
+  bkFail: "온라인 접수가 잠시 안 돼요. 아래 내용을 복사해서 카카오톡으로 보내 주세요.",
+  vTitle: "예약확인증", vCode: "예약번호", vStatus: "진행 상황", vShop: "업체", vDate: "방문 일시", vMenu: "메뉴", vPeople: "인원",
+  vPeopleN: "{n}명", vPrice: "예상 금액", vPriceNote: "결제는 업체에서 직접 해요. 엉클데이에 따로 내는 돈은 없어요.",
+  vName: "예약자", vNote: "요청사항", vShow: "업체에 도착하면 이 화면을 보여 주세요.",
+  st_requested: "업체에 확인 중이에요", st_confirmed: "예약이 확정됐어요", st_rejected: "이 시간은 예약이 어려워요. 다른 시간을 안내해 드릴게요",
+  st_visited: "방문 완료", st_settled: "방문 완료", st_cancelled: "취소된 예약이에요", st_noshow: "방문하지 않은 예약이에요",
+  vVisited: "✅ 다녀왔어요", vVisitedDone: "방문 확인 감사합니다!", vCancel: "예약 취소하기", vCancelAsk: "정말 예약을 취소할까요?", vYes: "네, 취소할게요", vNo: "아니요",
+  vReview: "✍️ 후기 남기기", vReviewed: "후기를 보내 주셔서 감사해요. 확인 후 게시할게요.",
+  vSave: "이 화면 주소를 저장해 두면 언제든 다시 볼 수 있어요.", vCopyLink: "링크 복사", vLinkCopied: "링크를 복사했어요",
+  vNotFound: "예약을 찾을 수 없어요. 예약번호와 연락처로 다시 찾아 주세요.", vFind: "예약 조회", vFindDesc: "예약번호와 예약할 때 적은 연락처를 넣어 주세요.",
+  vFindCode: "예약번호 (예: UD-1106-1234)", vFindContact: "연락처", vFindBtn: "찾기", vAsk: "카카오톡 문의", vMap: "지도 보기", vHome: "엉클데이 홈"
+});
+Object.assign(UI.en, {
+  bkSending: "Sending…", bkDoneTitle: "Your booking request is in",
+  bkDoneDesc: "We will check availability with the shop and get back to you. You can follow the progress on your booking voucher.",
+  bkVoucher: "View booking voucher", bkKakao: "Send booking no. via KakaoTalk", bkKakaoCopied: "Booking details copied. Paste them into the KakaoTalk chat.",
+  bkFail: "Online booking is temporarily unavailable. Please copy the text below and send it via KakaoTalk.",
+  vTitle: "Booking voucher", vCode: "Booking no.", vStatus: "Status", vShop: "Shop", vDate: "Date & time", vMenu: "Service", vPeople: "Guests",
+  vPeopleN: "{n}", vPrice: "Estimated price", vPriceNote: "You pay the shop directly. There is no extra fee to Uncle Day.",
+  vName: "Name", vNote: "Requests", vShow: "Show this screen when you arrive at the shop.",
+  st_requested: "Checking with the shop", st_confirmed: "Your booking is confirmed", st_rejected: "This time is not available. We will suggest another time",
+  st_visited: "Visited", st_settled: "Visited", st_cancelled: "This booking was cancelled", st_noshow: "Marked as not visited",
+  vVisited: "✅ I visited", vVisitedDone: "Thanks for confirming your visit!", vCancel: "Cancel booking", vCancelAsk: "Cancel this booking?", vYes: "Yes, cancel", vNo: "No",
+  vReview: "✍️ Write a review", vReviewed: "Thanks for your review. It will appear after we check it.",
+  vSave: "Save this page's address to come back any time.", vCopyLink: "Copy link", vLinkCopied: "Link copied",
+  vNotFound: "Booking not found. Please search with your booking number and contact.", vFind: "Find my booking", vFindDesc: "Enter your booking number and the contact you used.",
+  vFindCode: "Booking no. (e.g. UD-1106-1234)", vFindContact: "Contact", vFindBtn: "Find", vAsk: "Ask on KakaoTalk", vMap: "Map", vHome: "Uncle Day home"
+});
+Object.assign(UI.vi, {
+  bkSending: "Đang gửi…", bkDoneTitle: "Đã nhận yêu cầu đặt lịch",
+  bkDoneDesc: "Chúng tôi sẽ kiểm tra lịch với cơ sở và liên hệ lại. Bạn có thể theo dõi trên phiếu đặt lịch.",
+  bkVoucher: "Xem phiếu đặt lịch", bkKakao: "Gửi mã đặt lịch qua KakaoTalk", bkKakaoCopied: "Đã sao chép nội dung. Hãy dán vào khung chat KakaoTalk.",
+  bkFail: "Đặt lịch trực tuyến tạm thời không khả dụng. Vui lòng sao chép nội dung bên dưới và gửi qua KakaoTalk.",
+  vTitle: "Phiếu đặt lịch", vCode: "Mã đặt lịch", vStatus: "Trạng thái", vShop: "Cơ sở", vDate: "Ngày giờ", vMenu: "Dịch vụ", vPeople: "Số người",
+  vPeopleN: "{n} người", vPrice: "Giá dự kiến", vPriceNote: "Bạn thanh toán trực tiếp tại cơ sở. Không mất thêm phí cho Uncle Day.",
+  vName: "Người đặt", vNote: "Yêu cầu", vShow: "Hãy đưa màn hình này cho cơ sở khi bạn đến.",
+  st_requested: "Đang kiểm tra với cơ sở", st_confirmed: "Đã xác nhận lịch hẹn", st_rejected: "Khung giờ này không khả dụng. Chúng tôi sẽ đề xuất giờ khác",
+  st_visited: "Đã ghé", st_settled: "Đã ghé", st_cancelled: "Lịch hẹn đã hủy", st_noshow: "Không đến",
+  vVisited: "✅ Tôi đã ghé", vVisitedDone: "Cảm ơn bạn đã xác nhận!", vCancel: "Hủy lịch hẹn", vCancelAsk: "Bạn muốn hủy lịch hẹn này?", vYes: "Hủy", vNo: "Không",
+  vReview: "✍️ Viết đánh giá", vReviewed: "Cảm ơn bạn! Đánh giá sẽ hiển thị sau khi kiểm tra.",
+  vSave: "Lưu địa chỉ trang này để xem lại bất cứ lúc nào.", vCopyLink: "Sao chép liên kết", vLinkCopied: "Đã sao chép liên kết",
+  vNotFound: "Không tìm thấy lịch hẹn. Hãy tìm bằng mã đặt lịch và thông tin liên hệ.", vFind: "Tra cứu lịch hẹn", vFindDesc: "Nhập mã đặt lịch và thông tin liên hệ bạn đã dùng.",
+  vFindCode: "Mã đặt lịch (vd: UD-1106-1234)", vFindContact: "Liên hệ", vFindBtn: "Tìm", vAsk: "Hỏi qua KakaoTalk", vMap: "Bản đồ", vHome: "Trang chủ Uncle Day"
+});

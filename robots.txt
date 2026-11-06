@@ -1,5 +1,7 @@
 User-agent: *
 Allow: /
 Disallow: /admin.html
+Disallow: /booking.html
+Disallow: /partner.html
 
 Sitemap: https://www.uncleday.com/sitemap.xml

@@ -140,13 +140,15 @@ $("search").oninput = e => { state.q = e.target.value.trim(); if (!$("detail").h
 
 $("steps").innerHTML = STEPS.map(s => `<div class="card"><div class="big">${s.icon}</div><b>${tx(s.title)}</b><p>${tx(s.desc)}</p></div>`).join("");
 // 이용 후기: 업체별로 게시된 후기 중 최신 6개 (없으면 칸을 숨겨요)
-const allRevs = SHOPS.flatMap(s => (s.userReviews || []).map(r => ({ ...r, shop: s })))
-  .sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 6);
-if (allRevs.length) {
+function drawReviews() {
+  const allRevs = SHOPS.flatMap(s => (s.userReviews || []).map(r => ({ ...r, shop: s })))
+    .sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, 6);
+  $("reviews").closest("section").hidden = !allRevs.length;
   $("reviews").innerHTML = allRevs.map(r => `<a class="card rv-home" href="${shopLink(r.shop.id)}">
     <div class="rv-stars">${stars(r.stars)}</div><p>${esc(r.text.length > 90 ? r.text.slice(0, 90) + "…" : r.text)}</p>
     <small>${esc(r.name)} · ${esc(tx(r.shop.name))}</small></a>`).join("");
-} else { $("reviews").closest("section").hidden = true; }
+}
+drawReviews();
 $("faq").innerHTML = FAQ.map(f => `<details><summary>${tx(f.q)}</summary><p>${tx(f.a)}</p></details>`).join("");
 
 drawCities(); drawNear(); drawCats(); drawShops();
@@ -174,3 +176,10 @@ function route() {
 }
 addEventListener("hashchange", route);
 route();
+
+// 데이터베이스에서 새 정보가 오면 화면을 다시 그려요
+window.onLiveUpdate = () => {
+  drawCats(); drawShops(); drawReviews();
+  const m = location.hash.match(/^#\/shop\/(.+)$/);
+  if (m && !document.querySelector("#detail form:not([hidden]) input:focus, #detail textarea:focus")) renderShop(decodeURIComponent(m[1]));
+};

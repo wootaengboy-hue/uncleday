@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Uncle Day · Partner</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Noto+Sans+KR:wght@400;500;700;800&display=swap">
+<style>
+:root{--g:#116241;--bg:#FAF3E0;--navy:#0E2843;--sub:#5f6b78;--line:#EEE2CB;--or:#FD6A00}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--navy);font-family:"Poppins","Noto Sans KR",-apple-system,"Segoe UI",sans-serif;font-size:15px;line-height:1.55}
+button,input,textarea{font:inherit;color:inherit}
+.top{background:#fff;box-shadow:0 1px 4px #0001}
+.top-in{max-width:560px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:10px}
+.top img{height:40px}.grow{flex:1}
+.lg button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:3px 10px;font-weight:700;font-size:12px;cursor:pointer}
+.lg button.on{background:var(--g);border-color:var(--g);color:#fff}
+main{max-width:560px;margin:0 auto;padding:16px}
+.card{background:#fff;border-radius:16px;padding:18px;display:grid;gap:14px}
+h1{font-size:19px;margin:0}
+.code{font-size:28px;font-weight:800;letter-spacing:.04em;color:var(--g);line-height:1.1}
+.st{display:inline-block;border-radius:999px;padding:4px 12px;font-weight:700;font-size:14px;background:#fff4e5;color:#9a5208}
+.st.confirmed,.st.visited,.st.settled{background:#e6f6f3;color:#1f7a6e}
+.st.cancelled,.st.rejected,.st.noshow{background:#fdecec;color:#9b2c2c}
+dl{display:grid;grid-template-columns:110px 1fr;gap:10px 12px;margin:0}
+dt{color:var(--sub);font-size:13px;padding-top:2px}dd{margin:0;overflow-wrap:anywhere}
+.big{font-size:18px;font-weight:800}
+.btns{display:grid;gap:10px}
+.btn{border:0;border-radius:12px;padding:14px;font-weight:800;font-size:16px;cursor:pointer;background:#f1f3f5}
+.btn.ok{background:var(--g);color:#fff}.btn.no{background:#fff;border:1px solid #f1c4c4;color:#c0392b}
+.btn:disabled{opacity:.5}
+.amt{display:grid;gap:6px;background:#f7f9fb;border-radius:12px;padding:12px}
+.amt input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:20px;font-weight:700}
+.hint{font-size:13px;color:var(--sub);margin:0}
+.done{background:#e6f6f3;color:#1f5f55;border-radius:12px;padding:12px;font-weight:700;margin:0}
+textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;min-height:60px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1f2328;color:#fff;padding:10px 16px;border-radius:10px;font-weight:700;max-width:calc(100% - 32px)}
+</style>
+</head>
+<body>
+<header class="top"><div class="top-in"><img src="images/logo-full.webp" alt="Uncle Day"><span class="grow"></span><span class="lg" id="lg"></span></div></header>
+<main><div class="card" id="box"><p>…</p></div></main>
+<script src="config.js"></script>
+<script>
+const T = {
+  vi: { title: "Lịch hẹn từ Uncle Day", code: "Mã đặt lịch", status: "Trạng thái", date: "Ngày giờ", svc: "Dịch vụ", ppl: "Số khách", guest: "Tên khách", note: "Ghi chú", price: "Giá dự kiến",
+    requested: "Chờ cơ sở xác nhận", confirmed: "Đã nhận lịch", rejected: "Đã từ chối", visited: "Khách đã đến", settled: "Đã quyết toán", cancelled: "Khách đã hủy", noshow: "Khách không đến",
+    accept: "✅ Nhận lịch", reject: "Không nhận được giờ này", visited_btn: "Khách đã đến – xác nhận", noshow_btn: "Khách không đến",
+    amount: "Số tiền khách đã thanh toán (₫)", amountHint: "Nhập tổng số tiền khách trả tại cơ sở. Hoa hồng được tính theo hợp đồng.",
+    memo: "Ghi chú cho Uncle Day (không bắt buộc)", saved: "Đã lưu. Cảm ơn bạn!", needAmt: "Vui lòng nhập số tiền", notFound: "Không tìm thấy lịch hẹn. Vui lòng liên hệ Uncle Day.",
+    acceptedMsg: "Bạn đã nhận lịch này. Sau khi khách đến, hãy mở lại liên kết này để xác nhận.", closed: "Lịch hẹn này đã kết thúc.", ppln: n => n + " người",
+    help: "Có thắc mắc? Nhắn cho Uncle Day qua Zalo/KakaoTalk.", change: "Đổi lại" },
+  en: { title: "Booking from Uncle Day", code: "Booking no.", status: "Status", date: "Date & time", svc: "Service", ppl: "Guests", guest: "Guest name", note: "Notes", price: "Estimated price",
+    requested: "Waiting for your reply", confirmed: "Accepted", rejected: "Declined", visited: "Guest visited", settled: "Settled", cancelled: "Cancelled by guest", noshow: "No-show",
+    accept: "✅ Accept booking", reject: "Can't take this time", visited_btn: "Guest visited – confirm", noshow_btn: "Guest did not come",
+    amount: "Amount the guest paid (₫)", amountHint: "Enter the total the guest paid at your shop. Commission follows our agreement.",
+    memo: "Note to Uncle Day (optional)", saved: "Saved. Thank you!", needAmt: "Please enter the amount", notFound: "Booking not found. Please contact Uncle Day.",
+    acceptedMsg: "You accepted this booking. After the guest visits, open this link again to confirm.", closed: "This booking is closed.", ppln: n => n,
+    help: "Questions? Message Uncle Day on Zalo/KakaoTalk.", change: "Change" },
+  ko: { title: "엉클데이 예약", code: "예약번호", status: "상태", date: "방문 일시", svc: "메뉴", ppl: "인원", guest: "손님 이름", note: "요청사항", price: "예상 금액",
+    requested: "업체 확인 대기", confirmed: "예약 수락", rejected: "예약 불가", visited: "방문 완료", settled: "정산 완료", cancelled: "손님 취소", noshow: "노쇼",
+    accept: "✅ 예약 수락", reject: "이 시간은 불가", visited_btn: "손님 방문 완료", noshow_btn: "손님이 안 왔어요",
+    amount: "손님이 결제한 금액 (₫)", amountHint: "손님이 업체에서 낸 총금액을 적어 주세요. 수수료는 계약대로 계산돼요.",
+    memo: "엉클데이에 남길 메모 (선택)", saved: "저장했어요. 감사합니다!", needAmt: "금액을 적어 주세요", notFound: "예약을 찾을 수 없어요. 엉클데이에 문의해 주세요.",
+    acceptedMsg: "예약을 수락했어요. 손님이 다녀가면 이 링크를 다시 열어 방문 완료를 눌러 주세요.", closed: "끝난 예약이에요.", ppln: n => n + "명",
+    help: "문의는 엉클데이 잘로/카카오톡으로 주세요.", change: "바꾸기" }
+};
+let L = (() => { try { return localStorage.getItem("partner-lang") || "vi"; } catch (e) { return "vi"; } })();
+const $ = id => document.getElementById(id);
+const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const t = k => T[L][k] ?? T.en[k];
+const tk = decodeURIComponent(location.hash.slice(1));
+const nm = v => v && typeof v === "object" ? (v[L] || v.en || v.ko || "") : (v || "");
+const toast = m => { const d = document.createElement("div"); d.className = "toast"; d.textContent = m; document.body.appendChild(d); setTimeout(() => d.remove(), 2500); };
+async function rpc(name, args) {
+  const r = await fetch(`${SUPA.url}/rest/v1/rpc/${name}`, { method: "POST", headers: { apikey: SUPA.key, ...(SUPA.key.startsWith("eyJ") ? { Authorization: "Bearer " + SUPA.key } : {}), "Content-Type": "application/json" }, body: JSON.stringify(args) });
+  const j = await r.json().catch(() => null);
+  if (!r.ok) throw new Error((j && j.message) || "Error " + r.status);
+  return j;
+}
+let B = null, changing = false;
+function langs() {
+  $("lg").innerHTML = ["vi", "en", "ko"].map(l => `<button class="${l === L ? "on" : ""}" data-l="${l}">${l.toUpperCase()}</button>`).join(" ");
+  $("lg").querySelectorAll("button").forEach(b => b.onclick = () => { L = b.dataset.l; try { localStorage.setItem("partner-lang", L); } catch (e) {} document.documentElement.lang = L; langs(); draw(); });
+}
+function draw() {
+  const b = B;
+  if (!b) { $("box").innerHTML = `<p>${t("notFound")}</p>`; return; }
+  const d = b.visit_date ? b.visit_date.split("-").reverse().join("/") : "-";
+  const svc = b.menu ? nm(b.menu.name) : b.menu_name;
+  const closed = ["settled", "cancelled"].includes(b.status);
+  const showVisit = ["confirmed", "visited", "noshow"].includes(b.status) || changing;
+  $("box").innerHTML = `<h1>${t("title")}</h1>
+    <div><div class="hint">${t("code")}</div><div class="code">${esc(b.code)}</div></div>
+    <div><span class="st ${esc(b.status)}">${t(b.status)}</span></div>
+    <dl>
+      <dt>${t("date")}</dt><dd class="big">${esc(d)} ${esc(b.visit_time || "")}</dd>
+      <dt>${t("svc")}</dt><dd><b>${esc(svc)}</b>${b.menu_min ? ` · ${b.menu_min}′` : ""}</dd>
+      <dt>${t("ppl")}</dt><dd><b>${esc(t("ppln")(b.people))}</b></dd>
+      <dt>${t("guest")}</dt><dd>${esc(b.customer_name)}</dd>
+      ${b.note ? `<dt>${t("note")}</dt><dd>${esc(b.note)}</dd>` : ""}
+      ${b.list_price ? `<dt>${t("price")}</dt><dd>₫${Number(b.list_price).toLocaleString("en-US")}</dd>` : ""}
+    </dl>
+    ${closed ? `<p class="done">${t("closed")}</p>` : `
+    ${b.status === "requested" || b.status === "rejected" ? `<div class="btns">
+      <button class="btn ok" data-a="accept">${t("accept")}</button>
+      ${b.status === "requested" ? `<button class="btn no" data-a="reject">${t("reject")}</button>` : ""}</div>` : ""}
+    ${b.status === "confirmed" ? `<p class="done">${t("acceptedMsg")}</p>` : ""}
+    ${showVisit && (b.status !== "visited" || changing) ? `<div class="amt">
+      <label for="amt"><b>${t("amount")}</b></label>
+      <input id="amt" inputmode="numeric" placeholder="${b.list_price ? Number(b.list_price).toLocaleString("en-US") : "0"}" value="${b.paid_amount ? Number(b.paid_amount).toLocaleString("en-US") : ""}">
+      <p class="hint">${t("amountHint")}</p>
+      <textarea id="memo" placeholder="${t("memo")}"></textarea>
+      <button class="btn ok" data-a="visited">${t("visited_btn")}</button>
+      ${b.status === "confirmed" ? `<button class="btn no" data-a="noshow">${t("noshow_btn")}</button>` : ""}
+    </div>` : ""}
+    ${b.status === "visited" && !changing ? `<p class="done">✅ ${t("visited")} · ₫${Number(b.paid_amount || 0).toLocaleString("en-US")}</p>
+      <button class="btn" data-a="change">${t("change")}</button>` : ""}`}
+    <p class="hint">${t("help")}</p>`;
+  const amt = $("amt");
+  if (amt) amt.oninput = () => { const v = amt.value.replace(/[^\d]/g, ""); amt.value = v ? Number(v).toLocaleString("en-US") : ""; };
+  $("box").querySelectorAll("[data-a]").forEach(btn => btn.onclick = async () => {
+    const a = btn.dataset.a;
+    if (a === "change") { changing = true; draw(); return; }
+    let amount = null;
+    if (a === "visited") { amount = +String($("amt").value).replace(/[^\d]/g, ""); if (!$("amt").value) { toast(t("needAmt")); return; } }
+    btn.disabled = true;
+    try { B = await rpc("shop_reply", { t: tk, action: a, amount, memo: $("memo") ? $("memo").value : null }); changing = false; draw(); toast(t("saved")); }
+    catch (e) { btn.disabled = false; toast(e.message); }
+  });
+}
+langs();
+(async () => {
+  if (!tk || !SUPA.url) { draw(); return; }
+  try { B = await rpc("booking_for_shop", { t: tk }); } catch (e) {}
+  draw();
+})();
+</script>
+</body>
+</html>
