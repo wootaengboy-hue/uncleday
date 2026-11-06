@@ -53,6 +53,15 @@ async function loadBookings() {
 }
 async function loadSettles() { SETTLES = await q(sb.from("settlements").select("*").order("billed_at", { ascending: false }), "정산 불러오기"); }
 async function loadReviews() { RVS = await q(sb.from("reviews").select("*").order("created_at", { ascending: false }).limit(500), "후기 불러오기"); }
+// 방문 통계 (월별로 불러와 둬요)
+const STATS = {};
+async function loadStats(m, force) {
+  if (STATS[m] && !force) return STATS[m];
+  const r = await sb.from("stats_daily").select("day,shop_id,kind,n").gte("day", m + "-01").lt("day", addMonth(m, 1) + "-01").limit(50000);
+  STATS[m] = r.error ? [] : r.data;
+  return STATS[m];
+}
+const statSum = (m, kind, shop, day) => (STATS[m] || []).filter(r => r.kind === kind && (shop === undefined || r.shop_id === shop) && (!day || r.day === day)).reduce((t, r) => t + r.n, 0);
 async function loadAll() { await Promise.all([loadShops(), loadBookings(), loadSettles(), loadReviews()]); }
 
 /* ===== 할 일 (놓치면 안 되는 것) ===== */
@@ -103,6 +112,8 @@ function monthStats(m, shopId) {
 }
 function drawDash() {
   dashMonth = dashMonth || vnMonth();
+  const need = [dashMonth, vnMonth()].filter(m => !STATS[m]);
+  if (need.length) { Promise.all(need.map(m => loadStats(m))).then(() => { if (TAB === "dash") drawDash(); }); }
   const today = vnToday();
   const todays = BOOKINGS.filter(b => b.visit_date === today && !["cancelled", "rejected"].includes(b.status));
   const st = monthStats(dashMonth);
@@ -114,12 +125,18 @@ function drawDash() {
   // 업체별 이번 달
   const byShop = {};
   BOOKINGS.filter(b => (b.visit_date || "").startsWith(dashMonth)).forEach(b => { (byShop[b.shop_id || "-"] = byShop[b.shop_id || "-"] || []).push(b); });
-  const rows = Object.entries(byShop).map(([id, arr]) => ({ id, name: arr[0] ? shopName(arr[0]) : id, ...monthStats(dashMonth, id === "-" ? null : id), rate: rateOf(id) }))
-    .sort((a, b) => b.comm - a.comm || b.all - a.all);
+  (STATS[dashMonth] || []).forEach(r => { if (r.shop_id && r.kind !== "visit" && !byShop[r.shop_id]) byShop[r.shop_id] = []; });
+  const rows = Object.entries(byShop).map(([id, arr]) => ({ id, name: arr[0] ? shopName(arr[0]) : shopName({ shop_id: id, shop_name: id }), ...monthStats(dashMonth, id === "-" ? null : id), rate: rateOf(id),
+      views: statSum(dashMonth, "view", id), consult: statSum(dashMonth, "consult", id) }))
+    .sort((a, b) => b.comm - a.comm || b.active - a.active || b.views - a.views);
+  const hasSt = !!STATS[dashMonth];
+  const sv = k => hasSt ? statSum(dashMonth, k).toLocaleString() : "…";
+  const consultAll = statSum(dashMonth, "consult");
   $("tab-dash").innerHTML = `
     <h2 class="sec">오늘 <small>${dayKo(today)} · 베트남 시간 기준</small></h2>
     <div class="kpis">
       <div class="kpi click ${BOOKINGS.filter(b => b.status === "requested").length ? "alert" : ""}" data-go="requested"><small>새 예약 (업체 확인 전)</small><b>${BOOKINGS.filter(b => b.status === "requested").length}</b><em>눌러서 보기</em></div>
+      <div class="kpi"><small>오늘 사이트 방문자</small><b>${STATS[vnMonth()] ? statSum(vnMonth(), "visit", undefined, today).toLocaleString() : "…"}</b><em>업체 조회 ${STATS[vnMonth()] ? statSum(vnMonth(), "view", undefined, today).toLocaleString() : "…"}회</em></div>
       <div class="kpi click" data-go="today"><small>오늘 방문 예정</small><b>${todays.length}</b><em>${todays.reduce((t, b) => t + b.people, 0)}명</em></div>
       <div class="kpi money"><small>받을 수수료 (정산서 전)</small><b>${vnd(owed)}</b><em>${krw(owed)}</em></div>
       <div class="kpi money"><small>청구했는데 입금 전</small><b>${vnd(billed)}</b><em>${krw(billed)}</em></div>
@@ -136,17 +153,25 @@ function drawDash() {
       <div class="kpi"><small>손님 결제액 합계</small><b>${vnd(st.paid)}</b><em>${krw(st.paid)}</em></div>
       <div class="kpi money"><small>수수료</small><b>${vnd(st.comm)}</b><em>${krw(st.comm)}${st.unsettled ? ` · 미정산 ${vnd(st.unsettled)}` : ""}</em></div>
     </div>
+    <h2 class="sec">사이트 반응 <small>${monthKo(dashMonth)} · 자동 집계 (로봇 제외, 개인정보 없이 숫자만)</small></h2>
+    <div class="kpis">
+      <div class="kpi"><small>방문자</small><b>${sv("visit")}</b><em>하루 한 번씩 센 방문자 합계</em></div>
+      <div class="kpi"><small>업체 상세 조회</small><b>${sv("view")}</b><em>업체 페이지를 연 횟수</em></div>
+      <div class="kpi"><small>상담하기 클릭</small><b>${sv("consult")}</b><em>카톡 상담 버튼</em></div>
+      <div class="kpi"><small>상담 → 예약</small><b>${hasSt && consultAll ? Math.round(st.active / consultAll * 100) + "%" : "-"}</b><em>예약 ${st.active}건 ÷ 상담 클릭</em></div>
+    </div>
     <h2 class="sec">업체별 <small>${monthKo(dashMonth)}</small></h2>
-    ${rows.length ? `<div class="tscroll"><table class="t"><thead><tr><th>업체</th><th class="num">수수료율</th><th class="num">예약</th><th class="num">방문</th><th class="num">결제액</th><th class="num">수수료</th><th class="num">미정산</th></tr></thead><tbody>
-      ${rows.map(r => `<tr class="click" data-shop="${esc(r.id)}"><td><b>${esc(r.name)}</b></td><td class="num">${r.rate ? r.rate + "%" : `<span style="color:var(--danger)">미정</span>`}</td><td class="num">${r.active}</td><td class="num">${r.done}</td><td class="num">${vnd(r.paid)}</td><td class="num"><b>${vnd(r.comm)}</b></td><td class="num">${r.unsettled ? vnd(r.unsettled) : "-"}</td></tr>`).join("")}
-      </tbody><tfoot><tr><td>합계</td><td></td><td class="num">${st.active}</td><td class="num">${st.done}</td><td class="num">${vnd(st.paid)}</td><td class="num">${vnd(st.comm)}</td><td class="num">${vnd(st.unsettled)}</td></tr></tfoot></table></div>`
+    ${rows.length ? `<div class="tscroll"><table class="t"><thead><tr><th>업체</th><th class="num">수수료율</th><th class="num">조회</th><th class="num">상담</th><th class="num">예약</th><th class="num">방문</th><th class="num">결제액</th><th class="num">수수료</th><th class="num">미정산</th><th></th></tr></thead><tbody>
+      ${rows.map(r => `<tr class="click" data-shop="${esc(r.id)}"><td><b>${esc(r.name)}</b></td><td class="num">${r.rate ? r.rate + "%" : `<span style="color:var(--danger)">미정</span>`}</td><td class="num">${r.views}</td><td class="num">${r.consult}</td><td class="num">${r.active}</td><td class="num">${r.done}</td><td class="num">${vnd(r.paid)}</td><td class="num"><b>${vnd(r.comm)}</b></td><td class="num">${r.unsettled ? vnd(r.unsettled) : "-"}</td><td class="num">${r.id !== "-" ? `<button class="btn sm" data-rep="${esc(r.id)}">리포트</button>` : ""}</td></tr>`).join("")}
+      </tbody><tfoot><tr><td>합계</td><td></td><td class="num">${sv("view")}</td><td class="num">${sv("consult")}</td><td class="num">${st.active}</td><td class="num">${st.done}</td><td class="num">${vnd(st.paid)}</td><td class="num">${vnd(st.comm)}</td><td class="num">${vnd(st.unsettled)}</td><td></td></tr></tfoot></table></div>`
       : `<div class="todo"><div class="empty">이 달에는 예약이 없어요.</div></div>`}
-    <p class="hint" style="margin:14px 0 40px">수수료 = 손님이 업체에 낸 금액 × 업체 수수료율. 방문 완료 처리할 때 결제 금액을 넣으면 자동으로 계산돼요.</p>`;
+    <p class="hint" style="margin:14px 0 40px">수수료 = 손님이 업체에 낸 금액 × 업체 수수료율. 방문 완료 처리할 때 결제 금액을 넣으면 자동으로 계산돼요.<br>'리포트'는 업체에 보내는 월간 성과 보고서예요 (조회·상담·예약·방문·수수료, 베트남어·영어·한국어).</p>`;
   $("dashMonth").onchange = e => { dashMonth = e.target.value; drawDash(); };
   $("tab-dash").querySelectorAll("[data-todo]").forEach(r => r.onclick = () => { if (r.classList.contains("zero")) return; bkF = { ...BKF0, st: "all", todo: r.dataset.todo }; showTab("bk"); });
   $("tab-dash").querySelectorAll("[data-tab-go]").forEach(r => r.onclick = () => { if (!r.classList.contains("zero")) showTab(r.dataset.tabGo); });
   $("tab-dash").querySelectorAll("[data-go]").forEach(r => r.onclick = () => {
     bkF = r.dataset.go === "today" ? { ...BKF0, st: "all", from: today, to: today } : { ...BKF0, st: "requested" }; showTab("bk"); });
+  $("tab-dash").querySelectorAll("[data-rep]").forEach(b => b.onclick = e => { e.stopPropagation(); shopReport(b.dataset.rep, dashMonth); });
   $("tab-dash").querySelectorAll("[data-shop]").forEach(r => r.onclick = () => { bkF = { ...BKF0, st: "all", shop: r.dataset.shop === "-" ? "" : r.dataset.shop, from: dashMonth + "-01", to: dashMonth + "-31" }; showTab("bk"); });
 }
 
@@ -554,15 +579,16 @@ function drawSettle() {
   $("tab-settle").querySelectorAll("[data-unpaid]").forEach(x => x.onclick = () => confirmBox("입금 확인을 취소할까요?", () => rpcThen("settlement_paid", { p_id: x.dataset.unpaid, p_paid: false }, "입금 전으로 되돌렸어요"), "", "되돌리기"));
   $("tab-settle").querySelectorAll("[data-void]").forEach(x => x.onclick = () => confirmBox("이 정산서를 취소할까요?", () => rpcThen("settlement_void", { p_id: x.dataset.void }, "정산서를 취소했어요. 예약은 다시 '정산할 내역'으로 돌아가요."), "취소 기록은 남아요.", "정산서 취소"));
 }
-function viewStatement(id) {
+async function viewStatement(id) {
   const s = SETTLES.find(x => x.id === id); if (!s) return;
+  await loadStats(s.month);
   const list = BOOKINGS.filter(b => b.settlement_id === id).sort((a, b) => (a.visit_date || "").localeCompare(b.visit_date || ""));
   const ct = (PRIV[s.shop_id] || {}).contract || {};
   let L = ct.msgLang === "ko" ? "ko" : ct.msgLang === "en" ? "en" : "vi";
   const T = {
-    vi: { t: "BẢNG QUYẾT TOÁN HOA HỒNG", shop: "Cơ sở", per: "Kỳ", date: "Ngày lập", code: "Mã", day: "Ngày", svc: "Dịch vụ", ppl: "Khách", paid: "Khách trả", rate: "%", comm: "Hoa hồng", tot: "Tổng", due: "Số tiền hoa hồng cần thanh toán", st: "Trạng thái", paidSt: "Đã thanh toán", billed: "Chờ thanh toán", note: "Vui lòng kiểm tra và thanh toán. Mọi thắc mắc xin liên hệ Uncle Day." },
-    en: { t: "COMMISSION STATEMENT", shop: "Shop", per: "Period", date: "Issued", code: "No.", day: "Date", svc: "Service", ppl: "Guests", paid: "Paid", rate: "%", comm: "Commission", tot: "Total", due: "Commission due", st: "Status", paidSt: "Paid", billed: "Awaiting payment", note: "Please review and transfer the commission. Contact Uncle Day with any questions." },
-    ko: { t: "수수료 정산서", shop: "업체", per: "정산 기간", date: "발행일", code: "예약번호", day: "방문일", svc: "메뉴", ppl: "인원", paid: "결제액", rate: "%", comm: "수수료", tot: "합계", due: "정산 수수료", st: "상태", paidSt: "입금 완료", billed: "입금 대기", note: "확인 후 입금 부탁드려요. 문의는 엉클데이로 주세요." }
+    vi: { t: "BẢNG QUYẾT TOÁN HOA HỒNG", shop: "Cơ sở", per: "Kỳ", date: "Ngày lập", code: "Mã", day: "Ngày", svc: "Dịch vụ", ppl: "Khách", paid: "Khách trả", rate: "%", comm: "Hoa hồng", tot: "Tổng", due: "Số tiền hoa hồng cần thanh toán", st: "Trạng thái", paidSt: "Đã thanh toán", billed: "Chờ thanh toán", note: "Vui lòng kiểm tra và thanh toán. Mọi thắc mắc xin liên hệ Uncle Day.", ...REP_T.vi },
+    en: { t: "COMMISSION STATEMENT", shop: "Shop", per: "Period", date: "Issued", code: "No.", day: "Date", svc: "Service", ppl: "Guests", paid: "Paid", rate: "%", comm: "Commission", tot: "Total", due: "Commission due", st: "Status", paidSt: "Paid", billed: "Awaiting payment", note: "Please review and transfer the commission. Contact Uncle Day with any questions.", ...REP_T.en },
+    ko: { t: "수수료 정산서", shop: "업체", per: "정산 기간", date: "발행일", code: "예약번호", day: "방문일", svc: "메뉴", ppl: "인원", paid: "결제액", rate: "%", comm: "수수료", tot: "합계", due: "정산 수수료", st: "상태", paidSt: "입금 완료", billed: "입금 대기", note: "확인 후 입금 부탁드려요. 문의는 엉클데이로 주세요.", ...REP_T.ko }
   };
   const draw = () => {
     const t = T[L];
@@ -575,7 +601,8 @@ function viewStatement(id) {
       <tbody>${list.map(b => { const m = shop && shop.menu.find(x => x.name.ko === b.menu_name); return `<tr><td>${esc(b.code)}</td><td>${esc(b.visit_date || "")}</td><td>${esc(m ? (m.name[L] || m.name.en || m.name.ko) : b.menu_name || "")}</td><td class="num">${b.people}</td><td class="num">${vnd(b.paid_amount)}</td><td class="num">${+b.commission_rate}</td><td class="num">${vnd(b.commission)}</td></tr>`; }).join("")}</tbody>
       <tfoot><tr><td colspan="3">${t.tot}</td><td class="num">${list.reduce((a, b) => a + b.people, 0)}</td><td class="num">${vnd(s.total_paid)}</td><td></td><td class="num">${vnd(s.total_commission)}</td></tr></tfoot></table>
       <p class="sum"><b>${t.due}: ${vnd(s.total_commission)}</b></p>
-      <p style="color:#555">${t.note}</p></div>`;
+      <p style="color:#555">${t.note}</p>
+      ${perfBlock(s.shop_id, s.month, t)}</div>`;
     $("stmtBody").innerHTML = html; $("printArea").innerHTML = html;
     d.querySelectorAll("[data-l]").forEach(x => x.classList.toggle("main", x.dataset.l === L));
   };
@@ -592,6 +619,62 @@ function viewStatement(id) {
     const t = T[L];
     copy(`[Uncle Day] ${t.t} · ${s.month}\n${list.map(b => `${b.code} ${b.visit_date} · ${vnd(b.paid_amount)} × ${+b.commission_rate}% = ${vnd(b.commission)}`).join("\n")}\n—\n${t.due}: ${vnd(s.total_commission)}`, "정산 내용을 복사했어요");
   };
+  draw();
+}
+
+/* ===== 업체 월간 성과 리포트 ===== */
+const REP_T = {
+  vi: { rt: "BÁO CÁO HIỆU QUẢ THÁNG", perf: "Hiệu quả trên Uncle Day", views: "Lượt xem trang cơ sở", consult: "Lượt bấm tư vấn (KakaoTalk)", map: "Lượt bấm bản đồ",
+    bk: "Lịch hẹn qua Uncle Day", visit: "Khách đã đến", guests: "Tổng số khách", paidT: "Tổng tiền khách thanh toán", commT: "Hoa hồng",
+    src: "Số liệu được đếm tự động trên www.uncleday.com (không tính bot).", thanks: "Cảm ơn bạn đã đồng hành cùng Uncle Day!", month: "Tháng", shopL: "Cơ sở" },
+  en: { rt: "MONTHLY PERFORMANCE REPORT", perf: "Your results on Uncle Day", views: "Shop page views", consult: "Consultation clicks (KakaoTalk)", map: "Map clicks",
+    bk: "Bookings via Uncle Day", visit: "Guests visited", guests: "Total guests", paidT: "Total paid by guests", commT: "Commission",
+    src: "Counted automatically on www.uncleday.com (bots excluded).", thanks: "Thank you for partnering with Uncle Day!", month: "Month", shopL: "Shop" },
+  ko: { rt: "월간 성과 리포트", perf: "엉클데이 성과", views: "업체 페이지 조회", consult: "상담하기 클릭 (카카오톡)", map: "지도 클릭",
+    bk: "엉클데이 예약", visit: "방문 손님 (건)", guests: "방문 인원", paidT: "손님 결제액 합계", commT: "수수료",
+    src: "www.uncleday.com에서 자동으로 센 숫자예요 (로봇 제외).", thanks: "엉클데이와 함께해 주셔서 감사합니다!", month: "기간", shopL: "업체" }
+};
+function perfNums(shopId, m) {
+  const inM = BOOKINGS.filter(b => b.shop_id === shopId && (b.visit_date || "").startsWith(m));
+  const done = inM.filter(b => b.status === "visited" || b.status === "settled");
+  return { views: statSum(m, "view", shopId), consult: statSum(m, "consult", shopId), map: statSum(m, "map", shopId),
+    bk: inM.filter(b => !["cancelled", "rejected"].includes(b.status)).length, visit: done.length, guests: done.reduce((t, b) => t + b.people, 0),
+    paid: done.reduce((t, b) => t + (+b.paid_amount || 0), 0), comm: done.reduce((t, b) => t + (+b.commission || 0), 0) };
+}
+function perfBlock(shopId, m, t) {
+  const p = perfNums(shopId, m);
+  return `<h3 style="margin:22px 0 6px;font-size:15px">${t.perf} · ${esc(m)}</h3>
+    <table><tbody>${[[t.views, p.views], [t.consult, p.consult], [t.bk, p.bk], [t.visit, p.visit]].map(([a, b]) => `<tr><td>${a}</td><td class="num"><b>${Number(b).toLocaleString("en-US")}</b></td></tr>`).join("")}</tbody></table>
+    <p style="color:#777;font-size:11.5px;margin-top:6px">${t.src}</p>`;
+}
+async function shopReport(shopId, m) {
+  await loadStats(m);
+  const shop = shopById(shopId);
+  let L = ((PRIV[shopId] || {}).contract || {}).msgLang || "vi";
+  const d = document.createElement("div"); d.className = "overlay center";
+  d.innerHTML = `<div class="modal" style="width:min(720px,calc(100% - 32px))">
+    <div class="btns" style="justify-content:space-between;margin:0 0 12px"><div class="btn-row">${[["vi", "베트남어"], ["en", "영어"], ["ko", "한국어"]].map(([k, n]) => `<button class="btn sm" data-l="${k}">${n}</button>`).join("")}</div>
+    <div class="btn-row"><button class="btn" data-copy>메시지로 복사</button><button class="btn main" data-print>인쇄 · PDF 저장</button><button class="btn" data-x>닫기</button></div></div>
+    <div id="repBody"></div></div>`;
+  document.body.appendChild(d);
+  const draw = () => {
+    const t = REP_T[L], p = perfNums(shopId, m);
+    const sn = shop ? (shop.name[L] || shop.name.en || shop.name.ko) : shopId;
+    const rows = [[t.views, p.views], [t.consult, p.consult], [t.map, p.map], [t.bk, p.bk], [t.visit, p.visit], [t.guests, p.guests]];
+    const html = `<div class="stmt">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><img src="images/logo-full.webp" alt="Uncle Day" style="height:46px"><h1>${t.rt}</h1></div>
+      <div class="meta"><div><b>${t.shopL}:</b> ${esc(sn)}</div><div><b>${t.month}:</b> ${esc(m)}</div></div>
+      <table><tbody>${rows.map(([a, b]) => `<tr><td>${a}</td><td class="num"><b style="font-size:16px">${Number(b).toLocaleString("en-US")}</b></td></tr>`).join("")}
+        <tr><td>${t.paidT}</td><td class="num"><b>${vnd(p.paid)}</b></td></tr><tr><td>${t.commT}</td><td class="num">${vnd(p.comm)}</td></tr></tbody></table>
+      <p style="color:#777;font-size:12px;margin-top:10px">${t.src}</p><p class="sum">${t.thanks}</p></div>`;
+    d.querySelector("#repBody").innerHTML = html; $("printArea").innerHTML = html;
+    d.querySelectorAll("[data-l]").forEach(x => x.classList.toggle("main", x.dataset.l === L));
+    d._text = `[Uncle Day] ${t.rt} · ${m}\n${sn}\n` + rows.map(([a, b]) => `• ${a}: ${Number(b).toLocaleString("en-US")}`).join("\n") + `\n• ${t.paidT}: ${vnd(p.paid)}\n\n${t.thanks}`;
+  };
+  d.querySelectorAll("[data-l]").forEach(x => x.onclick = () => { L = x.dataset.l; draw(); });
+  d.querySelector("[data-x]").onclick = () => { d.remove(); $("printArea").innerHTML = ""; };
+  d.querySelector("[data-print]").onclick = () => window.print();
+  d.querySelector("[data-copy]").onclick = () => copy(d._text, "리포트 내용을 복사했어요. 잘로로 보내 주세요.");
   draw();
 }
 
@@ -741,7 +824,7 @@ async function afterLogin(session) {
   setInterval(async () => {
     if (document.hidden || $("layer").innerHTML) return;
     const before = BOOKINGS.length, rvBefore = RVS.length;
-    try { await Promise.all([loadBookings(), loadReviews()]); await loadTold(); } catch (e) { return; }
+    try { await Promise.all([loadBookings(), loadReviews(), loadStats(vnMonth(), true)]); await loadTold(); } catch (e) { return; }
     if (BOOKINGS.length > before) toast(`🔔 새 예약 ${BOOKINGS.length - before}건이 들어왔어요`, 5000);
     if (RVS.length > rvBefore) toast(`⭐ 새 후기가 들어왔어요`, 4000);
     if (["dash", "bk", "rv"].includes(TAB)) showTab(TAB); else drawCounts();

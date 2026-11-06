@@ -34,5 +34,23 @@ const LIVE = (() => {
       return true;
     } catch (e) { return false; }
   })();
-  return { on, rpc, ready };
+  // 방문 통계: 숫자만 세요 (개인정보·쿠키 없음). 로봇·자동화 브라우저는 세지 않아요.
+  const bot = navigator.webdriver || /bot|crawl|spider|slurp|preview|headless|lighthouse/i.test(navigator.userAgent);
+  function track(k, s) {
+    if (!on || bot) return;
+    try {
+      fetch(`${SUPA.url}/rest/v1/rpc/track`, { method: "POST", keepalive: true, headers: { ...headers, "Content-Type": "application/json" }, body: JSON.stringify({ k, s: s || null }) }).catch(() => {});
+    } catch (e) {}
+  }
+  function once(store, key) { try { if (store.getItem(key)) return false; store.setItem(key, "1"); } catch (e) {} return true; }
+  const today = new Date().toISOString().slice(0, 10);
+  if (once(localStorage, "ud-visit-" + today)) track("visit");
+  const curShop = () => { const m = location.hash.match(/^#\/shop\/(.+)$/); if (m) return decodeURIComponent(m[1]); if (/shop\.html$/.test(location.pathname)) return decodeURIComponent(location.hash.slice(1)); return null; };
+  const view = id => { if (id && once(sessionStorage, "ud-view-" + id)) track("view", id); };
+  document.addEventListener("click", e => {
+    const a = e.target.closest("a"); if (!a) return;
+    if (a.classList.contains("kakao-link")) track("consult", curShop());
+    else if (a.classList.contains("map-link")) track("map", curShop());
+  }, true);
+  return { on, rpc, ready, track, view };
 })();

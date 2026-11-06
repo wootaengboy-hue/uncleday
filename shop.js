@@ -4,6 +4,7 @@ const shopLink = id => window.SPA ? `#/shop/${encodeURIComponent(id)}` : `shop.h
 function renderShop(id) {
 const shop = SHOPS.find(s => s.id === id);
 const box = $("detail");
+if (shop && typeof LIVE !== "undefined") LIVE.view(shop.id);
 document.querySelectorAll(".cta-bar").forEach(e => e.remove());
 document.body.classList.remove("has-cta");
 
@@ -53,7 +54,7 @@ if (!shop) {
     <div class="facts">${facts.map(f => `
       <div class="fact ${f[3] ? "" : "tbd"}"><span class="fi">${f[0]}</span><div><small>${f[1]}</small><b>${f[2]}</b></div></div>`).join("")}
     </div>
-    ${shop.map ? `<p><a href="${shop.map}" target="_blank">🗺️ ${ui("map")}</a></p>` : ""}
+    ${shop.map ? `<p><a class="map-link" href="${shop.map}" target="_blank">🗺️ ${ui("map")}</a></p>` : ""}
 
     <h2>${ui("about")}</h2><p>${tx(shop.desc)}</p>
     ${shop.recommend ? `<p class="reco">👍 <b>${ui("recoFor")}</b> ${tx(shop.recommend)}</p>` : ""}
