@@ -112,3 +112,11 @@ Object.assign(UI.vi, {
   vNotFound: "Không tìm thấy lịch hẹn. Hãy tìm bằng mã đặt lịch và thông tin liên hệ.", vFind: "Tra cứu lịch hẹn", vFindDesc: "Nhập mã đặt lịch và thông tin liên hệ bạn đã dùng.",
   vFindCode: "Mã đặt lịch (vd: UD-1106-1234)", vFindContact: "Liên hệ", vFindBtn: "Tìm", vAsk: "Hỏi qua KakaoTalk", vMap: "Bản đồ", vHome: "Trang chủ Uncle Day"
 });
+
+/* 업체 페이지에서 상담하기를 누르면 복사되는 문의 문구 */
+Object.assign(UI.ko, { askCopied: "문의 문구가 복사됐어요. 카톡 채팅창에 붙여넣기 해 주세요 🙂", askCopyHint: "누르면 이 업체 문의 문구가 자동으로 복사돼요",
+  askMsg: "[엉클데이 문의] {shop}\n({city} · {cat})\n\n날짜·시간: \n인원: \n원하는 메뉴: " });
+Object.assign(UI.en, { askCopied: "Inquiry text copied. Please paste it into the KakaoTalk chat 🙂", askCopyHint: "Tapping copies an inquiry about this shop",
+  askMsg: "[Uncle Day inquiry] {shop}\n({city} · {cat})\n\nDate & time: \nGuests: \nService: " });
+Object.assign(UI.vi, { askCopied: "Đã sao chép nội dung hỏi. Hãy dán vào khung chat KakaoTalk 🙂", askCopyHint: "Bấm để tự động sao chép nội dung hỏi về cơ sở này",
+  askMsg: "[Hỏi qua Uncle Day] {shop}\n({city} · {cat})\n\nNgày giờ: \nSố người: \nDịch vụ: " });

@@ -1,6 +1,16 @@
 /* 업체 상세 + 예약 요청. 메인 화면 안에서 새로고침 없이 그려요 (shop.html 단독으로도 열려요). */
 const shopLink = id => window.SPA ? `#/shop/${encodeURIComponent(id)}` : `shop.html#${id}`;
 
+// 업체 화면에서 '상담하기'를 누르면 어느 업체를 보고 왔는지 문의 문구를 복사해 둬요 (카톡 창에 붙여넣기)
+document.addEventListener("click", e => {
+  const a = e.target.closest("a.kakao-link"); if (!a || a.id === "bkKakao") return;
+  const m = location.hash.match(/^#\/shop\/(.+)$/) || (/shop\.html$/.test(location.pathname) && [0, location.hash.slice(1)]);
+  const shop = m && SHOPS.find(s => s.id === decodeURIComponent(m[1])); if (!shop) return;
+  const c = CITIES.find(x => x.id === shop.city), k = CATEGORIES.find(x => x.id === shop.cat);
+  const text = ui("askMsg", { shop: tx(shop.name), city: c ? tx(c.name) : "", cat: k ? tx(k.name) : "" });
+  try { navigator.clipboard.writeText(text).then(() => alertBox(ui("askCopied")), () => {}); } catch (err) {}
+}, true);
+
 function renderShop(id) {
 const shop = SHOPS.find(s => s.id === id);
 const box = $("detail");
@@ -132,7 +142,7 @@ if (!shop) {
   document.querySelectorAll(".board").forEach(b => b.onclick = () => openBoard(+b.dataset.b));
 
   // 화면 아래에 항상 보이는 문의 버튼
-  document.body.insertAdjacentHTML("beforeend", `<div class="cta-bar"><a class="btn kakao-link" href="${SITE.kakao}" target="_blank">💬 ${ui("askBtn")}</a></div>`);
+  document.body.insertAdjacentHTML("beforeend", `<div class="cta-bar"><a class="btn kakao-link" href="${SITE.kakao}" target="_blank">💬 ${ui("askBtn")}</a><small class="cta-hint">${ui("askCopyHint")}</small></div>`);
   document.body.classList.add("has-cta");
 
   // 이용 후기 보내기 (확인 후 관리자 페이지에서 게시)
