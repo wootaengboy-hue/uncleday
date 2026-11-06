@@ -301,7 +301,8 @@ const cmtHtml = t => esc(t).replace(/@([\w.\-가-힣]+)/g, '<b class="mention">@
 async function commentBox(host, type, id) {
   host.innerHTML = `<div class="cmts"><div class="cmt-list"><div class="hint">불러오는 중…</div></div>
     <div class="cmt-new"><span class="av me">${esc(who(ME.email).slice(0, 1).toUpperCase())}</span>
-      <textarea rows="1" placeholder="댓글 달기… (@이름으로 언급, Ctrl+Enter로 등록)"></textarea><button type="button" class="btn sm main">등록</button></div></div>`;
+      <textarea rows="1" placeholder="댓글 달기… (@이름으로 언급, Ctrl+Enter로 등록)"></textarea><button type="button" class="btn sm main">등록</button></div>
+    ${ADMINS.length > 1 ? `<div class="hint">언급하기: ${ADMINS.filter(a => a.email !== ME.email).map(a => `<button type="button" class="mention-pick" data-m="${esc(who(a.email))}">@${esc(who(a.email))}</button>`).join(" ")}</div>` : ""}</div>`;
   const list = host.querySelector(".cmt-list"), ta = host.querySelector("textarea"), btn = host.querySelector(".cmt-new .btn");
   ta.oninput = () => { ta.style.height = "auto"; ta.style.height = Math.min(ta.scrollHeight, 160) + "px"; };
   async function load() {
@@ -332,7 +333,46 @@ async function commentBox(host, type, id) {
     btn.disabled = false; if (r.error) { dbErr(r.error, "댓글 등록"); return; }
     ta.value = ""; ta.style.height = "auto"; load();
   };
+  host.querySelectorAll(".mention-pick").forEach(m => m.onclick = () => { ta.value = (ta.value && !/\s$/.test(ta.value) ? ta.value + " " : ta.value) + "@" + m.dataset.m + " "; ta.focus(); ta.oninput(); });
   btn.onclick = send;
   ta.onkeydown = e => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && !e.isComposing) { e.preventDefault(); send(); } };
   load();
+}
+
+/* ---------- 알림 ---------- */
+let NOTIS = [], notiSeen = null;
+const NK = { mention: ["📣", "나를 언급했어요"], assign: ["👤", "담당자로 지정했어요"], ref: ["👥", "참조로 넣었어요"], comment: ["💬", "댓글을 달았어요"], done: ["✅", "완료했어요"] };
+async function loadNotis(firstTime) {
+  const r = await sb.from("notifications").select("*").order("created_at", { ascending: false }).limit(60);
+  if (r.error) return;
+  const before = new Set(NOTIS.map(n => n.id));
+  NOTIS = r.data; $("bell").hidden = false;
+  const unread = NOTIS.filter(n => !n.read_at);
+  $("cntBell").textContent = unread.length || "";
+  if (!firstTime) unread.filter(n => !before.has(n.id)).slice(0, 3).forEach(n => toast(`${NK[n.kind] ? NK[n.kind][0] : "🔔"} ${who((n.actor || "").replace(/^관리자 /, ""))}님이 ${NK[n.kind] ? NK[n.kind][1] : "알림"}: ${n.title || ""}`, 5000));
+  if (!$("noti").hidden) drawNotis();
+}
+function drawNotis() {
+  const box = $("noti");
+  box.innerHTML = `<div class="noti-h"><b>알림</b><button id="notiAll">모두 읽음</button></div>` + (NOTIS.map(n => {
+    const [ic, txt] = NK[n.kind] || ["🔔", ""];
+    return `<div class="ni ${n.read_at ? "" : "unread"}" data-n="${n.id}"><span class="ic">${ic}</span><div class="tx">
+      <b>${esc(n.title || (n.target_type === "lead" ? "영업 업체" : "할 일"))}</b>
+      <div>${esc(who((n.actor || "").replace(/^관리자 /, "")))}님이 ${txt}</div>${n.body && (n.kind === "mention" || n.kind === "comment") ? `<p>${esc(n.body)}</p>` : ""}<time>${dt(n.created_at)}</time></div><span class="dot"></span></div>`;
+  }).join("") || `<div class="empty" style="padding:24px">알림이 없어요</div>`);
+  $("notiAll").onclick = async e => { e.stopPropagation(); await sb.from("notifications").update({ read_at: new Date().toISOString() }).is("read_at", null); await loadNotis(true); drawNotis(); };
+  box.querySelectorAll("[data-n]").forEach(el => el.onclick = async () => {
+    const n = NOTIS.find(x => x.id === el.dataset.n);
+    box.hidden = true;
+    if (!n.read_at) { await sb.from("notifications").update({ read_at: new Date().toISOString() }).eq("id", n.id); n.read_at = new Date().toISOString(); $("cntBell").textContent = NOTIS.filter(x => !x.read_at).length || ""; }
+    await loadWork();
+    if (n.target_type === "task") { if (!TASKS.find(t => t.id === n.target_id)) { toast("지워진 할 일이에요"); return; } workView = "tasks"; showTab("work"); editTask(n.target_id); }
+    else { if (!leadById(n.target_id)) { toast("지워진 영업 카드예요"); return; } workView = "leads"; showTab("work"); openLead(n.target_id); }
+  });
+}
+function initNotis() {
+  $("bell").onclick = e => { e.stopPropagation(); const b = $("noti"); b.hidden = !b.hidden; if (!b.hidden) drawNotis(); };
+  document.addEventListener("click", e => { if (!$("noti").hidden && !e.target.closest(".bell-wrap")) $("noti").hidden = true; });
+  loadNotis(true);
+  setInterval(() => { if (!document.hidden) loadNotis(false); }, 30000);
 }

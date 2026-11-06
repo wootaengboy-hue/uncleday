@@ -890,6 +890,7 @@ async function afterLogin(session) {
   showTab(["dash", "work", "bk", "settle", "shops", "rv", "acc"].includes(h) ? h : "dash");
   offerMigration();
   checkImports();
+  initNotis();
   // 1분마다 새 예약·후기 확인
   setInterval(async () => {
     if (document.hidden || $("layer").innerHTML) return;

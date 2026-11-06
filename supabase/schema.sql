@@ -708,4 +708,92 @@ create policy own_update   on public.comments for update to authenticated
 create policy own_delete   on public.comments for delete to authenticated
   using (public.is_admin() and author_email = lower(auth.jwt() ->> 'email'));
 
+-- ---------------------------------------------------------------
+-- 16. 알림 (@언급, 담당자 지정, 참조, 내 일에 달린 댓글)
+-- ---------------------------------------------------------------
+create table if not exists public.notifications (
+  id               uuid primary key default gen_random_uuid(),
+  recipient_email  text not null,
+  kind             text not null,              -- mention / assign / ref / comment
+  target_type      text not null,              -- task / lead
+  target_id        uuid not null,
+  title            text,
+  body             text,
+  actor            text,
+  created_at       timestamptz not null default now(),
+  read_at          timestamptz
+);
+create index if not exists notifications_rcpt_idx on public.notifications (recipient_email, created_at desc);
+alter table public.notifications enable row level security;
+drop policy if exists own_read on public.notifications;
+drop policy if exists own_update on public.notifications;
+drop policy if exists own_delete on public.notifications;
+create policy own_read   on public.notifications for select to authenticated using (recipient_email = lower(auth.jwt() ->> 'email'));
+create policy own_update on public.notifications for update to authenticated using (recipient_email = lower(auth.jwt() ->> 'email')) with check (recipient_email = lower(auth.jwt() ->> 'email'));
+create policy own_delete on public.notifications for delete to authenticated using (recipient_email = lower(auth.jwt() ->> 'email'));
+
+create or replace function public.notify(p_to text, p_kind text, p_type text, p_id uuid, p_title text, p_body text) returns void
+language plpgsql security definer set search_path = public as $$
+declare me text := lower(coalesce(auth.jwt() ->> 'email', ''));
+begin
+  if p_to is null or lower(p_to) = me then return; end if;              -- 내가 한 일은 나에게 알리지 않아요
+  if not exists (select 1 from admins where lower(email) = lower(p_to)) then return; end if;
+  insert into notifications (recipient_email, kind, target_type, target_id, title, body, actor)
+  values (lower(p_to), p_kind, p_type, p_id, left(p_title, 200), left(p_body, 300), actor_name());
+end $$;
+revoke all on function public.notify(text, text, text, uuid, text, text) from public, anon, authenticated;
+
+create or replace function public.comments_notify() returns trigger language plpgsql security definer set search_path = public as $$
+declare t_title text; owner text; refs text[]; m text; done text[] := '{}';
+begin
+  if new.target_type = 'task' then select title, assignee, watchers into t_title, owner, refs from tasks where id = new.target_id;
+  else select name, assignee, '{}'::text[] into t_title, owner, refs from leads where id = new.target_id; end if;
+  -- @이름 언급
+  for m in select distinct lower(x[1]) from regexp_matches(new.body, '@([A-Za-z0-9._\-가-힣]+)', 'g') as x loop
+    for owner in select email from admins where lower(split_part(email, '@', 1)) = m or lower(coalesce(name, '')) = m loop
+      perform notify(owner, 'mention', new.target_type, new.target_id, t_title, new.body); done := done || lower(owner);
+    end loop;
+  end loop;
+  -- 담당자·참조자에게 새 댓글
+  if new.target_type = 'task' then select assignee into owner from tasks where id = new.target_id;
+  else select assignee into owner from leads where id = new.target_id; end if;
+  foreach m in array (array[owner] || coalesce(refs, '{}')) loop
+    if m is not null and not (lower(m) = any(done)) then perform notify(m, 'comment', new.target_type, new.target_id, t_title, new.body); done := done || lower(m); end if;
+  end loop;
+  return new;
+end $$;
+drop trigger if exists comments_notify on public.comments;
+create trigger comments_notify after insert on public.comments for each row execute function public.comments_notify();
+
+create or replace function public.tasks_notify() returns trigger language plpgsql security definer set search_path = public as $$
+declare w text;
+begin
+  if new.assignee is not null and (tg_op = 'INSERT' or new.assignee is distinct from old.assignee) then
+    perform notify(new.assignee, 'assign', 'task', new.id, new.title, '할 일 담당자로 지정됐어요');
+  end if;
+  foreach w in array coalesce(new.watchers, '{}') loop
+    if tg_op = 'INSERT' or not (w = any(coalesce(old.watchers, '{}'))) then
+      perform notify(w, 'ref', 'task', new.id, new.title, '할 일에 참조됐어요');
+    end if;
+  end loop;
+  if tg_op = 'UPDATE' and new.status = 'done' and old.status <> 'done' then
+    foreach w in array (array[new.created_by] || coalesce(new.watchers, '{}')) loop
+      perform notify(regexp_replace(coalesce(w, ''), '^관리자 ', ''), 'done', 'task', new.id, new.title, '할 일이 완료됐어요');
+    end loop;
+  end if;
+  return new;
+end $$;
+drop trigger if exists tasks_notify on public.tasks;
+create trigger tasks_notify after insert or update on public.tasks for each row execute function public.tasks_notify();
+
+create or replace function public.leads_notify() returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if new.assignee is not null and (tg_op = 'INSERT' or new.assignee is distinct from old.assignee) then
+    perform notify(new.assignee, 'assign', 'lead', new.id, new.name, '영업 업체 담당자로 지정됐어요');
+  end if;
+  return new;
+end $$;
+drop trigger if exists leads_notify on public.leads;
+create trigger leads_notify after insert or update on public.leads for each row execute function public.leads_notify();
+
 -- 끝! 아래에 'Success. No rows returned' 가 보이면 완료예요.
