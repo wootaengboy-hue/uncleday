@@ -120,3 +120,10 @@ Object.assign(UI.en, { askCopied: "Inquiry text copied. Please paste it into the
   askMsg: "[Uncle Day inquiry] {shop}\n({city} · {cat})\n\nDate & time: \nGuests: \nService: " });
 Object.assign(UI.vi, { askCopied: "Đã sao chép nội dung hỏi. Hãy dán vào khung chat KakaoTalk 🙂", askCopyHint: "Bấm để tự động sao chép nội dung hỏi về cơ sở này",
   askMsg: "[Hỏi qua Uncle Day] {shop}\n({city} · {cat})\n\nNgày giờ: \nSố người: \nDịch vụ: " });
+
+Object.assign(UI.ko, { askTitle: "카카오톡으로 문의하기", askStep: "아래 문의 문구를 복사했어요. 카톡이 열리면 채팅창에 <b>붙여넣기</b>만 하세요. (날짜·인원을 채워 주시면 더 빨라요)",
+  askCopyBtn: "다시 복사", askOpen: "카카오톡 열기 →", askCopiedShort: "복사됐어요. 카톡 채팅창에 붙여넣기 해 주세요.", askCopyFail: "자동 복사가 안 됐어요. 위 글을 길게 눌러 복사해 주세요." });
+Object.assign(UI.en, { askTitle: "Ask on KakaoTalk", askStep: "We copied the inquiry below. When KakaoTalk opens, just <b>paste</b> it into the chat. (Adding date and guests helps us reply faster)",
+  askCopyBtn: "Copy again", askOpen: "Open KakaoTalk →", askCopiedShort: "Copied. Paste it into the KakaoTalk chat.", askCopyFail: "Couldn't copy automatically. Press and hold the text above to copy it." });
+Object.assign(UI.vi, { askTitle: "Hỏi qua KakaoTalk", askStep: "Chúng tôi đã sao chép nội dung bên dưới. Khi KakaoTalk mở, chỉ cần <b>dán</b> vào khung chat. (Điền ngày và số người để được trả lời nhanh hơn)",
+  askCopyBtn: "Sao chép lại", askOpen: "Mở KakaoTalk →", askCopiedShort: "Đã sao chép. Hãy dán vào khung chat KakaoTalk.", askCopyFail: "Không tự sao chép được. Hãy nhấn giữ đoạn chữ phía trên để sao chép." });

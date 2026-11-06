@@ -1,22 +1,45 @@
 /* 업체 상세 + 예약 요청. 메인 화면 안에서 새로고침 없이 그려요 (shop.html 단독으로도 열려요). */
 const shopLink = id => window.SPA ? `#/shop/${encodeURIComponent(id)}` : `shop.html#${id}`;
 
-// 업체 화면에서 '상담하기'를 누르면 어느 업체를 보고 왔는지 문의 문구를 복사해 둬요 (카톡 창에 붙여넣기)
+// 업체 화면에서 '상담하기'를 누르면: 이 업체 문의 문구를 보여 주고 복사한 뒤, 카톡을 열어요 (카톡 창에 붙여넣기)
+function copyText(text) {
+  let ok = false;
+  try {
+    const t = document.createElement("textarea"); t.value = text;
+    t.style.cssText = "position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;font-size:16px;border:0;padding:0";
+    document.body.appendChild(t); t.focus(); t.select(); try { t.setSelectionRange(0, 99999); } catch (e) {}
+    ok = document.execCommand("copy"); t.remove();
+  } catch (err) {}
+  return ok;
+}
 document.addEventListener("click", e => {
   const a = e.target.closest("a.kakao-link"); if (!a || a.id === "bkKakao") return;
   const m = location.hash.match(/^#\/shop\/(.+)$/) || (/shop\.html$/.test(location.pathname) && [0, location.hash.slice(1)]);
   const shop = m && SHOPS.find(s => s.id === decodeURIComponent(m[1])); if (!shop) return;
+  e.preventDefault();
   const c = CITIES.find(x => x.id === shop.city), k = CATEGORIES.find(x => x.id === shop.cat);
   const text = ui("askMsg", { shop: tx(shop.name), city: c ? tx(c.name) : "", cat: k ? tx(k.name) : "" });
-  // 바로 복사 (아이폰·카톡 인앱 브라우저·http 주소에서도 되도록 두 가지 방법)
-  let ok = false;
-  try {
-    const t = document.createElement("textarea"); t.value = text; t.setAttribute("readonly", "");
-    t.style.cssText = "position:fixed;top:0;left:0;opacity:0;font-size:16px"; document.body.appendChild(t);
-    t.select(); t.setSelectionRange(0, text.length); ok = document.execCommand("copy"); t.remove();
-  } catch (err) {}
-  if (ok) alertBox(ui("askCopied"));
-  else try { navigator.clipboard.writeText(text).then(() => alertBox(ui("askCopied")), () => {}); } catch (err) {}
+  document.querySelectorAll(".ask-sheet").forEach(x => x.remove());
+  const d = document.createElement("div"); d.className = "ask-sheet";
+  d.innerHTML = `<div class="ask-box" role="dialog" aria-label="${ui("askTitle")}">
+    <b class="ask-title">💬 ${ui("askTitle")}</b>
+    <p class="ask-step">${ui("askStep")}</p>
+    <textarea class="ask-text" readonly rows="6">${esc(text)}</textarea>
+    <p class="ask-st" id="askSt"></p>
+    <div class="ask-btns"><button type="button" class="btn ask-copy">${ui("askCopyBtn")}</button>
+      <a class="btn ask-open" href="${SITE.kakao}" target="_blank" rel="noopener">${ui("askOpen")}</a></div>
+    <button type="button" class="ask-close" aria-label="close">✕</button></div>`;
+  document.body.appendChild(d);
+  const st = ok => { const el = d.querySelector("#askSt"); el.textContent = ok ? "✅ " + ui("askCopiedShort") : ui("askCopyFail"); el.className = "ask-st " + (ok ? "ok" : "no"); };
+  const doCopy = () => {
+    const ok = copyText(text); st(ok);
+    if (!ok && navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(() => st(true), () => {});
+  };
+  doCopy();                                   // 누른 순간 바로 복사
+  d.querySelector(".ask-copy").onclick = doCopy;
+  d.querySelector(".ask-open").addEventListener("click", () => { doCopy(); setTimeout(() => d.remove(), 600); });
+  d.querySelector(".ask-close").onclick = () => d.remove();
+  d.onclick = ev => { if (ev.target === d) d.remove(); };
 }, true);
 
 function renderShop(id) {
