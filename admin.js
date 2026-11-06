@@ -62,7 +62,7 @@ async function loadStats(m, force) {
   return STATS[m];
 }
 const statSum = (m, kind, shop, day) => (STATS[m] || []).filter(r => r.kind === kind && (shop === undefined || r.shop_id === shop) && (!day || r.day === day)).reduce((t, r) => t + r.n, 0);
-async function loadAll() { await Promise.all([loadShops(), loadBookings(), loadSettles(), loadReviews()]); }
+async function loadAll() { await Promise.all([loadShops(), loadBookings(), loadSettles(), loadReviews(), loadWork()]); }
 
 /* ===== 할 일 (놓치면 안 되는 것) ===== */
 const TODO = [
@@ -82,7 +82,7 @@ function showTab(t) {
   document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
   document.querySelectorAll("[data-pane]").forEach(p => p.hidden = p.dataset.pane !== t);
   if (location.hash.slice(1) !== t) history.replaceState(null, "", "#" + t);
-  ({ dash: drawDash, bk: drawBookings, settle: drawSettle, shops: drawList, rv: drawReviews, acc: drawAccount })[t]();
+  ({ dash: drawDash, work: drawWork, bk: drawBookings, settle: drawSettle, shops: drawList, rv: drawReviews, acc: drawAccount })[t]();
   drawCounts();
 }
 function drawCounts() {
@@ -91,6 +91,7 @@ function drawCounts() {
   const r = RVS.filter(x => x.status === "pending").length;
   $("cntRv").textContent = r || "";
   document.title = (n ? `(${n}) ` : "") + "엉클데이 관리자";
+  const w = workTodos().reduce((t, x) => t + x[3], 0); $("cntWork").textContent = w || "";
 }
 window.onShopsChanged = () => { if (TAB !== "shops") showTab(TAB); };
 
@@ -144,6 +145,7 @@ function drawDash() {
 
     <h2 class="sec">할 일 <small>업체와 손님 사이에서 놓치면 기록이 비는 일이에요</small></h2>
     <div class="todo">${todos.map(([k, ic, label, n]) => `<div class="todo-row ${n ? "" : "zero"}" data-todo="${k}"><span class="ic">${ic}</span><b>${label}</b><span class="n" style="${n ? "color:var(--danger)" : ""}">${n}</span></div>`).join("")}
+      ${workTodos().map(([k, ic, label, n]) => `<div class="todo-row ${n ? "" : "zero"}" data-wtodo="${k}"><span class="ic">${ic}</span><b>${label}</b><span class="n" style="${n ? "color:var(--danger)" : ""}">${n}</span></div>`).join("")}
       <div class="todo-row ${pendRv ? "" : "zero"}" data-tab-go="rv"><span class="ic">⭐</span><b>게시를 기다리는 손님 후기</b><span class="n" style="${pendRv ? "color:var(--danger)" : ""}">${pendRv}</span></div></div>
 
     <h2 class="sec">월별 실적 <select class="month-pick" id="dashMonth">${months.map(m => `<option value="${m}" ${m === dashMonth ? "selected" : ""}>${monthKo(m)}</option>`).join("")}</select> <small>방문일 기준</small></h2>
@@ -169,6 +171,7 @@ function drawDash() {
     <p class="hint" style="margin:14px 0 40px">수수료 = 손님이 업체에 낸 금액 × 업체 수수료율. 방문 완료 처리할 때 결제 금액을 넣으면 자동으로 계산돼요.<br>'리포트'는 업체에 보내는 월간 성과 보고서예요 (조회·상담·예약·방문·수수료, 베트남어·영어·한국어).</p>`;
   $("dashMonth").onchange = e => { dashMonth = e.target.value; drawDash(); };
   $("tab-dash").querySelectorAll("[data-todo]").forEach(r => r.onclick = () => { if (r.classList.contains("zero")) return; bkF = { ...BKF0, st: "all", todo: r.dataset.todo }; showTab("bk"); });
+  $("tab-dash").querySelectorAll("[data-wtodo]").forEach(r => r.onclick = () => { if (r.classList.contains("zero")) return; const t = workTodos().find(x => x[0] === r.dataset.wtodo); if (t) t[4](); });
   $("tab-dash").querySelectorAll("[data-tab-go]").forEach(r => r.onclick = () => { if (!r.classList.contains("zero")) showTab(r.dataset.tabGo); });
   $("tab-dash").querySelectorAll("[data-go]").forEach(r => r.onclick = () => {
     bkF = r.dataset.go === "today" ? { ...BKF0, st: "all", from: today, to: today } : { ...BKF0, st: "requested" }; showTab("bk"); });
@@ -884,17 +887,18 @@ async function afterLogin(session) {
   initShops();
   document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => showTab(b.dataset.tab));
   const h = location.hash.slice(1);
-  showTab(["dash", "bk", "settle", "shops", "rv", "acc"].includes(h) ? h : "dash");
+  showTab(["dash", "work", "bk", "settle", "shops", "rv", "acc"].includes(h) ? h : "dash");
   offerMigration();
   checkImports();
   // 1분마다 새 예약·후기 확인
   setInterval(async () => {
     if (document.hidden || $("layer").innerHTML) return;
     const before = BOOKINGS.length, rvBefore = RVS.length;
-    try { await Promise.all([loadBookings(), loadReviews(), loadStats(vnMonth(), true)]); await loadTold(); } catch (e) { return; }
+    try { await Promise.all([loadBookings(), loadReviews(), loadStats(vnMonth(), true), loadWork()]); await loadTold(); } catch (e) { return; }
     if (BOOKINGS.length > before) toast(`🔔 새 예약 ${BOOKINGS.length - before}건이 들어왔어요`, 5000);
     if (RVS.length > rvBefore) toast(`⭐ 새 후기가 들어왔어요`, 4000);
-    if (["dash", "bk", "rv"].includes(TAB)) showTab(TAB); else drawCounts();
+    const typing = document.activeElement && document.activeElement.closest && document.activeElement.closest("#app input, #app textarea, #app select");
+    if (["dash", "bk", "rv", "work"].includes(TAB) && !typing && !document.querySelector(".overlay")) showTab(TAB); else drawCounts();
   }, 60000);
 }
 

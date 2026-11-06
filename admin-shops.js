@@ -117,13 +117,15 @@ const blankShop = () => ({
 const slug = s => String(s || "").toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "")
   .replace(/đ/g, "d").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
 
-function openEditor(id, preset) {
+function openEditor(id, preset, opts = {}) {
   const isNew = !id;
   const orig = isNew ? null : shops.find(s => s.id === id);
   const s = isNew ? (preset ? clone(preset) : blankShop()) : clone(orig);
   const pv = clone(PRIV[preset ? preset.id : id] || { commission_rate: 0, contract: {} }); pv.contract = pv.contract || {};
   let pub = isNew ? true : isPub(orig);
   if (preset) { pub = false; }
+  if (opts.rate != null) pv.commission_rate = +opts.rate || 0;
+  if (opts.contract) Object.assign(pv.contract, opts.contract);
   ["name","desc","recommend","address"].forEach(k => s[k] = s[k] || { ko: "", en: "", vi: "" });
   s.tags = s.tags || []; s.menu = s.menu || []; s.closed = s.closed || []; s.staffLangs = s.staffLangs || [];
   let idTouched = !isNew;
@@ -445,8 +447,8 @@ function openEditor(id, preset) {
     try { await dbSaveShop(s, oldId); }
     catch (e) { btn.disabled = false; btn.textContent = "저장"; if (isNew) delete META[s.id]; dbErr(e); return; }
     if (isNew) shops.unshift(s); else shops[shops.indexOf(orig)] = s;
-    close(); drawList(); if (window.onShopsChanged) onShopsChanged();
-    toast(isNew ? "새 업체를 저장했어요 ✅ 사이트에 바로 반영돼요." : "저장했어요 ✅ 사이트에 바로 반영돼요.");
+    close(); drawList(); if (window.onShopsChanged) onShopsChanged(); if (opts.onSaved) opts.onSaved(s);
+    if (!opts.onSaved) toast(!pub ? "저장했어요 ✅ (사이트에는 아직 숨김 — '사이트에 보이기'를 켜면 나와요)" : isNew ? "새 업체를 저장했어요 ✅ 사이트에 바로 반영돼요." : "저장했어요 ✅ 사이트에 바로 반영돼요.");
   };
   if (!isNew) {
     $("delBtn").onclick = () => {

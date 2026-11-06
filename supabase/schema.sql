@@ -540,4 +540,113 @@ end $$;
 revoke all on function public.track(text, text) from public;
 grant execute on function public.track(text, text) to anon, authenticated;
 
+-- ---------------------------------------------------------------
+-- 13. 업무 관리: 할 일 보드, 업체 영업 진행
+-- ---------------------------------------------------------------
+create table if not exists public.leads (
+  id          uuid primary key default gen_random_uuid(),
+  name        text not null,
+  city        text,
+  cat         text,
+  stage       text not null default 'found'
+              check (stage in ('found','contacted','meeting','negotiating','signed','live','hold')),
+  person      text,                 -- 업체 담당자
+  contact     text,                 -- 전화·잘로·카톡
+  map         text,
+  assignee    text,                 -- 우리 쪽 담당 (관리자 이메일)
+  next_action text,
+  next_date   date,
+  rate        numeric(5,2),         -- 제안·합의 수수료율
+  memo        text,
+  shop_id     text references public.shops(id) on update cascade on delete set null,
+  sort        double precision not null default 0,
+  created_by  text,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+create table if not exists public.lead_logs (
+  id       bigserial primary key,
+  lead_id  uuid not null references public.leads(id) on delete cascade,
+  at       timestamptz not null default now(),
+  actor    text not null default 'system',
+  kind     text not null default 'memo',
+  body     text,
+  detail   jsonb not null default '{}'::jsonb
+);
+create index if not exists lead_logs_lead_idx on public.lead_logs (lead_id, at);
+create table if not exists public.tasks (
+  id          uuid primary key default gen_random_uuid(),
+  title       text not null,
+  memo        text,
+  status      text not null default 'todo' check (status in ('todo','doing','done')),
+  assignee    text,
+  due         date,
+  priority    int not null default 1 check (priority between 0 and 2),
+  shop_id     text references public.shops(id) on update cascade on delete set null,
+  lead_id     uuid references public.leads(id) on delete set null,
+  sort        double precision not null default 0,
+  created_by  text,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now(),
+  done_at     timestamptz
+);
+
+create or replace function public.tasks_before() returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  new.updated_at := now();
+  if tg_op = 'INSERT' then new.created_by := actor_name(); new.created_at := now(); end if;
+  if new.status = 'done' and (tg_op = 'INSERT' or old.status is distinct from 'done') then new.done_at := now(); end if;
+  if new.status <> 'done' then new.done_at := null; end if;
+  return new;
+end $$;
+drop trigger if exists tasks_before on public.tasks;
+create trigger tasks_before before insert or update on public.tasks for each row execute function public.tasks_before();
+
+create or replace function public.leads_before() returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  new.updated_at := now();
+  if tg_op = 'INSERT' then new.created_by := actor_name(); new.created_at := now(); end if;
+  return new;
+end $$;
+drop trigger if exists leads_before on public.leads;
+create trigger leads_before before insert or update on public.leads for each row execute function public.leads_before();
+
+-- 영업 단계·담당자·업체 연결이 바뀌면 자동으로 기록
+create or replace function public.leads_log() returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if tg_op = 'INSERT' then
+    insert into lead_logs (lead_id, kind, body, detail) values (new.id, 'created', null, jsonb_build_object('stage', new.stage));
+  else
+    if new.stage is distinct from old.stage then
+      insert into lead_logs (lead_id, kind, detail) values (new.id, 'stage', jsonb_build_object('from', old.stage, 'to', new.stage));
+    end if;
+    if new.assignee is distinct from old.assignee then
+      insert into lead_logs (lead_id, kind, detail) values (new.id, 'assignee', jsonb_build_object('from', old.assignee, 'to', new.assignee));
+    end if;
+    if new.shop_id is distinct from old.shop_id and new.shop_id is not null then
+      insert into lead_logs (lead_id, kind, detail) values (new.id, 'shop', jsonb_build_object('shop_id', new.shop_id));
+    end if;
+  end if;
+  return new;
+end $$;
+drop trigger if exists leads_log on public.leads;
+create trigger leads_log after insert or update on public.leads for each row execute function public.leads_log();
+
+create or replace function public.lead_logs_before() returns trigger language plpgsql security definer set search_path = public as $$
+begin new.actor := actor_name(); new.at := now(); return new; end $$;
+drop trigger if exists lead_logs_before on public.lead_logs;
+create trigger lead_logs_before before insert on public.lead_logs for each row execute function public.lead_logs_before();
+
+alter table public.leads     enable row level security;
+alter table public.lead_logs enable row level security;
+alter table public.tasks     enable row level security;
+drop policy if exists admin_all on public.leads;
+create policy admin_all on public.leads for all to authenticated using (public.is_admin()) with check (public.is_admin());
+drop policy if exists admin_all on public.tasks;
+create policy admin_all on public.tasks for all to authenticated using (public.is_admin()) with check (public.is_admin());
+drop policy if exists admin_read on public.lead_logs;
+drop policy if exists admin_insert on public.lead_logs;
+create policy admin_read   on public.lead_logs for select to authenticated using (public.is_admin());
+create policy admin_insert on public.lead_logs for insert to authenticated with check (public.is_admin());
+
 -- 끝! 아래에 'Success. No rows returned' 가 보이면 완료예요.
