@@ -136,7 +136,7 @@ function drawDash() {
     <h2 class="sec">오늘 <small>${dayKo(today)} · 베트남 시간 기준</small></h2>
     <div class="kpis">
       <div class="kpi click ${BOOKINGS.filter(b => b.status === "requested").length ? "alert" : ""}" data-go="requested"><small>새 예약 (업체 확인 전)</small><b>${BOOKINGS.filter(b => b.status === "requested").length}</b><em>눌러서 보기</em></div>
-      <div class="kpi"><small>오늘 사이트 방문자</small><b>${STATS[vnMonth()] ? statSum(vnMonth(), "visit", undefined, today).toLocaleString() : "…"}</b><em>업체 조회 ${STATS[vnMonth()] ? statSum(vnMonth(), "view", undefined, today).toLocaleString() : "…"}회</em></div>
+      <div class="kpi"><small>오늘 사이트 방문</small><b>${STATS[vnMonth()] ? statSum(vnMonth(), "hit", undefined, today).toLocaleString() : "…"}회</b><em>방문자 ${STATS[vnMonth()] ? statSum(vnMonth(), "visit", undefined, today).toLocaleString() : "…"}명 · 업체 조회 ${STATS[vnMonth()] ? statSum(vnMonth(), "view", undefined, today).toLocaleString() : "…"}회</em></div>
       <div class="kpi click" data-go="today"><small>오늘 방문 예정</small><b>${todays.length}</b><em>${todays.reduce((t, b) => t + b.people, 0)}명</em></div>
       <div class="kpi money"><small>받을 수수료 (정산서 전)</small><b>${vnd(owed)}</b><em>${krw(owed)}</em></div>
       <div class="kpi money"><small>청구했는데 입금 전</small><b>${vnd(billed)}</b><em>${krw(billed)}</em></div>
@@ -155,7 +155,8 @@ function drawDash() {
     </div>
     <h2 class="sec">사이트 반응 <small>${monthKo(dashMonth)} · 자동 집계 (로봇 제외, 개인정보 없이 숫자만)</small></h2>
     <div class="kpis">
-      <div class="kpi"><small>방문자</small><b>${sv("visit")}</b><em>하루 한 번씩 센 방문자 합계</em></div>
+      <div class="kpi"><small>총 방문 수</small><b>${sv("hit")}</b><em>페이지를 연 횟수 (새로고침·재방문 포함)</em></div>
+      <div class="kpi"><small>방문자</small><b>${sv("visit")}</b><em>같은 사람은 하루 1명으로 센 합계</em></div>
       <div class="kpi"><small>업체 상세 조회</small><b>${sv("view")}</b><em>업체 페이지를 연 횟수</em></div>
       <div class="kpi"><small>상담하기 클릭</small><b>${sv("consult")}</b><em>카톡 상담 버튼</em></div>
       <div class="kpi"><small>상담 → 예약</small><b>${hasSt && consultAll ? Math.round(st.active / consultAll * 100) + "%" : "-"}</b><em>예약 ${st.active}건 ÷ 상담 클릭</em></div>

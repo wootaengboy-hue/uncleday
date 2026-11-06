@@ -514,7 +514,7 @@ create policy "uncleday admin write" on storage.objects for all to authenticated
 
 -- ---------------------------------------------------------------
 -- 12. 방문 통계 (날짜·업체별 숫자만 세요. 개인정보는 저장하지 않아요)
---   visit 사이트 방문자(브라우저당 하루 1번) / view 업체 상세 조회 / consult 상담하기 클릭 / map 지도 클릭
+--   visit 방문자(브라우저당 하루 1번) / hit 방문 수(페이지를 열 때마다) / view 업체 상세 조회 / consult 상담하기 클릭 / map 지도 클릭
 -- ---------------------------------------------------------------
 create table if not exists public.stats_daily (
   day      date not null,
@@ -531,7 +531,7 @@ create or replace function public.track(k text, s text default null) returns voi
 language plpgsql security definer set search_path = public as $$
 declare sid text := left(coalesce(s, ''), 80);
 begin
-  if k not in ('visit', 'view', 'consult', 'map') then return; end if;
+  if k not in ('visit', 'hit', 'view', 'consult', 'map') then return; end if;
   if sid <> '' and not exists (select 1 from shops where id = sid) then sid := ''; end if;
   insert into stats_daily (day, shop_id, kind, n)
   values ((now() at time zone 'Asia/Ho_Chi_Minh')::date, sid, k, 1)

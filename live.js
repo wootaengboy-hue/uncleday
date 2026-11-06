@@ -45,6 +45,7 @@ const LIVE = (() => {
   function once(store, key) { try { if (store.getItem(key)) return false; store.setItem(key, "1"); } catch (e) {} return true; }
   const today = new Date().toISOString().slice(0, 10);
   if (once(localStorage, "ud-visit-" + today)) track("visit");
+  track("hit");
   const curShop = () => { const m = location.hash.match(/^#\/shop\/(.+)$/); if (m) return decodeURIComponent(m[1]); if (/shop\.html$/.test(location.pathname)) return decodeURIComponent(location.hash.slice(1)); return null; };
   const view = id => { if (id && once(sessionStorage, "ud-view-" + id)) track("view", id); };
   document.addEventListener("click", e => {
