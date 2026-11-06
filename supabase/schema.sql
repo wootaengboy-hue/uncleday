@@ -652,4 +652,22 @@ drop policy if exists admin_insert on public.lead_logs;
 create policy admin_read   on public.lead_logs for select to authenticated using (public.is_admin());
 create policy admin_insert on public.lead_logs for insert to authenticated with check (public.is_admin());
 
+-- ---------------------------------------------------------------
+-- 14. 메모 템플릿 (관리자가 저장해 두고 불러 쓰는 양식)
+-- ---------------------------------------------------------------
+create table if not exists public.templates (
+  id          uuid primary key default gen_random_uuid(),
+  name        text not null,
+  body        text not null,
+  created_by  text,
+  created_at  timestamptz not null default now()
+);
+create or replace function public.templates_before() returns trigger language plpgsql security definer set search_path = public as $$
+begin new.created_by := actor_name(); new.created_at := now(); return new; end $$;
+drop trigger if exists templates_before on public.templates;
+create trigger templates_before before insert on public.templates for each row execute function public.templates_before();
+alter table public.templates enable row level security;
+drop policy if exists admin_all on public.templates;
+create policy admin_all on public.templates for all to authenticated using (public.is_admin()) with check (public.is_admin());
+
 -- 끝! 아래에 'Success. No rows returned' 가 보이면 완료예요.

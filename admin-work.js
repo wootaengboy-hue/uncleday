@@ -80,17 +80,18 @@ function taskCard(x) {
   const sh = x.shop_id && shopById(x.shop_id), ld = x.lead_id && leadById(x.lead_id);
   return `<div class="kcard pri${x.priority} ${x.status === "done" ? "done" : ""}" draggable="true" data-id="${x.id}">
     <div class="kt">${esc(x.title)}</div>
-    ${x.memo ? `<div class="km">${esc(x.memo.length > 70 ? x.memo.slice(0, 70) + "…" : x.memo)}</div>` : ""}
+    ${x.memo ? (() => { const t = richText(x.memo); const ck = (x.memo.match(/<li[^>]*>/g) || []).length && /class="check"/.test(x.memo) ? [((x.memo.match(/<ul class="check">[\s\S]*?<\/ul>/g) || []).join("").match(/<li data-done/g) || []).length, ((x.memo.match(/<ul class="check">[\s\S]*?<\/ul>/g) || []).join("").match(/<li/g) || []).length] : null;
+      return `${t ? `<div class="km">${esc(t.length > 70 ? t.slice(0, 70) + "…" : t)}</div>` : ""}${ck && ck[1] ? `<div class="km ckp"><span style="width:${Math.round(ck[0] / ck[1] * 100)}%"></span><em>☑ ${ck[0]}/${ck[1]}</em></div>` : ""}`; })() : ""}
     <div class="kchips">${x.status !== "done" ? dueTag(x.due) : ""}<span class="chip">👤 ${esc(who(x.assignee))}</span>${(x.watchers || []).length ? `<span class="chip ref" title="참조: ${esc(x.watchers.join(", "))}">👥 ${esc(x.watchers.map(who).join(", "))}</span>` : ""}${sh ? `<span class="chip">🏪 ${esc(sh.name.ko)}</span>` : ""}${ld ? `<span class="chip">🤝 ${esc(ld.name)}</span>` : ""}</div></div>`;
 }
 function editTask(id, preset = {}) {
   const x = id ? TASKS.find(y => y.id === id) : { title: "", memo: "", status: "todo", assignee: "", due: null, priority: 1, shop_id: null, lead_id: null, watchers: [], ...preset };
   let refs = [...(x.watchers || [])];
   const d = document.createElement("div"); d.className = "overlay center";
-  d.innerHTML = `<div class="modal" style="width:min(620px,calc(100% - 32px))"><h2>${id ? "할 일" : "새 할 일"}</h2>
+  d.innerHTML = `<div class="modal task-modal" style="width:min(760px,calc(100% - 32px))"><h2>${id ? "할 일" : "새 할 일"}</h2>
     <div style="display:grid;gap:10px;margin-top:8px">
       <label class="f"><span>제목 <em>*</em></span><input id="tTitle" value="${esc(x.title)}" placeholder="예: 다한스파 계약서 받기"></label>
-      <label class="f"><span>메모</span><textarea id="tMemo" rows="4">${esc(x.memo || "")}</textarea></label>
+      <div class="f"><span>내용</span><div id="tMemo" class="re"></div></div>
       <div class="three">
         <label class="f"><span>상태</span><select id="tSt">${TASK_COLS.map(([k, n]) => `<option value="${k}" ${x.status === k ? "selected" : ""}>${n}</option>`).join("")}</select></label>
         <label class="f"><span>마감일</span><input type="date" id="tDue" value="${esc(x.due || "")}"></label>
@@ -106,6 +107,7 @@ function editTask(id, preset = {}) {
     </div>
     <div class="btns">${id ? `<button class="btn danger" data-del style="margin-right:auto">삭제</button>` : ""}<button class="btn" data-no>닫기</button><button class="btn main" data-yes>저장</button></div></div>`;
   document.body.appendChild(d);
+  const ed = richEditor(d.querySelector("#tMemo"), x.memo || "", { onTemplate: t => { const ti = d.querySelector("#tTitle"); if (!ti.value.trim()) ti.value = t.name.replace(/^[^\s가-힣A-Za-z0-9]+\s*/, ""); } });
   d.querySelector("#tTitle").focus();
   const drawRefs = () => {
     const box = d.querySelector("#tRefs"), owner = d.querySelector("#tWho").value;
@@ -117,7 +119,7 @@ function editTask(id, preset = {}) {
   d.querySelector("#tWho").onchange = () => { refs = refs.filter(v => v !== d.querySelector("#tWho").value); drawRefs(); };
   d.querySelector("[data-no]").onclick = () => d.remove();
   d.querySelector("[data-yes]").onclick = async () => {
-    const row = { title: d.querySelector("#tTitle").value.trim(), memo: d.querySelector("#tMemo").value, status: d.querySelector("#tSt").value, due: d.querySelector("#tDue").value || null,
+    const row = { title: d.querySelector("#tTitle").value.trim(), memo: ed.get(), status: d.querySelector("#tSt").value, due: d.querySelector("#tDue").value || null,
       priority: +d.querySelector("#tPri").value, assignee: d.querySelector("#tWho").value || null, shop_id: d.querySelector("#tShop").value || null, lead_id: d.querySelector("#tLead").value || null, watchers: refs.filter(v => v !== (d.querySelector("#tWho").value || "")) };
     if (!row.title) { toast("제목을 적어 주세요"); return; }
     try {
@@ -205,7 +207,7 @@ async function openLead(id) {
           <label class="f"><span>수수료율 (%)</span><input type="number" id="lRate" min="0" max="100" step="0.5" value="${l.rate ?? ""}" placeholder="제안·합의"></label></div>
         <div class="two"><label class="f"><span>우리 담당자</span><select id="lWho">${adminOpts(l.assignee)}</select></label>
           <label class="f"><span>구글 지도 링크</span><input id="lMap" value="${esc(l.map || "")}"></label></div>
-        <label class="f"><span>메모</span><textarea id="lMemo" rows="3">${esc(l.memo || "")}</textarea></label>
+        <div class="f"><span>메모 <small class="hint">— 미팅 노트, 조건 등 ('/' 또는 📄 템플릿)</small></span><div id="lMemo" class="re"></div></div>
         <div class="btn-row"><button class="btn main" id="lSave">저장</button><span class="grow"></span>
           <span id="lShopBox"></span>
           <button class="btn danger sm" id="lDel">삭제</button></div>
@@ -218,6 +220,7 @@ async function openLead(id) {
     </div></div></div>`;
   const close = () => { $("layer").innerHTML = ""; if (TAB === "work") drawWork(); };
   $("pCancel").onclick = close; $("ov").onclick = e => { if (e.target.id === "ov") close(); };
+  const led = richEditor($("lMemo"), l.memo || "");
   const save = async (patch, msg = "저장했어요") => {
     try { const r = await q(sb.from("leads").update(patch).eq("id", l.id).select().single()); LEADS[LEADS.indexOf(l)] = r; l = r; toast(msg); drawHead(); loadLog(); } catch (e) {}
   };
@@ -246,7 +249,7 @@ async function openLead(id) {
   $("lTaskAdd").onclick = () => editTask(null, { lead_id: l.id, shop_id: l.shop_id, assignee: ME.email, _after: drawHead });
   $("lSave").onclick = () => save({ name: $("lName").value.trim() || l.name, city: $("lCity").value || null, cat: $("lCat").value || null, person: $("lPerson").value.trim() || null,
     contact: $("lContact").value.trim() || null, rate: $("lRate").value === "" ? null : +$("lRate").value, assignee: $("lWho").value || null, map: $("lMap").value.trim() || null,
-    memo: $("lMemo").value, next_action: $("lNext").value.trim() || null, next_date: $("lDate").value || null });
+    memo: led.get(), next_action: $("lNext").value.trim() || null, next_date: $("lDate").value || null });
   $("lNext").onchange = $("lDate").onchange = () => save({ next_action: $("lNext").value.trim() || null, next_date: $("lDate").value || null }, "다음 할 일을 저장했어요");
   $("lDel").onclick = () => confirmBox(`'${l.name}' 영업 카드를 지울까요?`, async () => {
     const r = await sb.from("leads").delete().eq("id", l.id); if (r.error) { dbErr(r.error, "삭제"); return; }
