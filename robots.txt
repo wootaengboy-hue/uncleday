@@ -3,5 +3,6 @@ Allow: /
 Disallow: /admin.html
 Disallow: /booking.html
 Disallow: /partner.html
+Disallow: /imports/
 
 Sitemap: https://www.uncleday.com/sitemap.xml

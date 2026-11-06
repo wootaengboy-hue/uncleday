@@ -1,0 +1,1048 @@
+{
+ "id": "2026-11-06-danang",
+ "title": "다낭 업체 20곳 정보 보강 (구글 즐겨찾기)",
+ "created": "2026-11-06",
+ "shops": [
+  {
+   "id": "aura-beauty",
+   "cat": "skin",
+   "city": "danang",
+   "verified": false,
+   "name": {
+    "ko": "아우라 뷰티",
+    "en": "Aura Beauty",
+    "vi": "Aura Beauty"
+   },
+   "tags": [],
+   "desc": {
+    "ko": "다낭의 피부관리 숍이에요.",
+    "en": "A skincare shop in Da Nang.",
+    "vi": "Cơ sở chăm sóc da tại Đà Nẵng."
+   },
+   "map": "https://maps.app.goo.gl/XxHZqVqW6Jsi8m2R6",
+   "open": "",
+   "close": "",
+   "menu": [],
+   "review": [
+    "인터넷에서 주소·영업시간·가격을 찾지 못했어요. 구글 지도 링크와 업체에 직접 확인해 주세요.",
+    "대표 사진을 넣어 주세요."
+   ]
+  },
+  {
+   "id": "mouse-hair-salon",
+   "cat": "hair",
+   "city": "danang",
+   "verified": false,
+   "name": {
+    "ko": "마우스 헤어살롱",
+    "en": "MOUSE Hair Salon",
+    "vi": "MOUSE Hair Salon Đà Nẵng"
+   },
+   "tags": [
+    {
+     "ko": "남성 커트",
+     "en": "Men's haircut",
+     "vi": "Cắt tóc nam"
+    },
+    {
+     "ko": "염색·펌",
+     "en": "Color & perm",
+     "vi": "Nhuộm & uốn"
+    },
+    {
+     "ko": "매직·케라틴",
+     "en": "Straightening & keratin",
+     "vi": "Duỗi & keratin"
+    }
+   ],
+   "desc": {
+    "ko": "남성 커트, 염색, 매직 스트레이트가 주력인 미용실이에요. 케라틴·콜라겐 헤어 케어도 해요.",
+    "en": "A hair salon known for men's cuts, coloring and straightening, with keratin and collagen hair treatments.",
+    "vi": "Salon tóc nổi bật với cắt tóc nam, nhuộm và duỗi tóc, có phục hồi keratin và collagen."
+   },
+   "map": "https://maps.app.goo.gl/iK3z9pNxzBZew13G7",
+   "open": "08:00",
+   "close": "21:00",
+   "menu": [],
+   "review": [
+    "메뉴와 가격이 공개돼 있지 않아요. 업체에 받아서 넣어 주세요.",
+    "대표 사진을 넣어 주세요."
+   ],
+   "address": {
+    "ko": "140 Trần Cao Vân, Thanh Khê, Đà Nẵng",
+    "en": "140 Tran Cao Van, Thanh Khe, Da Nang",
+    "vi": "140 Trần Cao Vân, Thanh Khê, Đà Nẵng"
+   }
+  },
+  {
+   "id": "soul-skin-spa",
+   "cat": "skin",
+   "city": "danang",
+   "verified": false,
+   "name": {
+    "ko": "소울 스킨 스파",
+    "en": "SOUL Skin Spa",
+    "vi": "SOUL Skin Spa Đà Nẵng"
+   },
+   "tags": [
+    {
+     "ko": "기미·여드름 관리",
+     "en": "Melasma & acne care",
+     "vi": "Trị nám & mụn"
+    },
+    {
+     "ko": "재생·디톡스",
+     "en": "Rejuvenation & detox",
+     "vi": "Trẻ hóa & thải độc da"
+    },
+    {
+     "ko": "헤드스파",
+     "en": "Head spa",
+     "vi": "Gội đầu dưỡng sinh"
+    }
+   ],
+   "desc": {
+    "ko": "기미, 여드름, 주근깨 관리와 피부 재생·디톡스 관리를 하는 피부관리 숍이에요. 베트남식 헤드스파도 있어요.",
+    "en": "A skincare spa for melasma, acne and freckles, plus rejuvenation and detox facials. Vietnamese-style head spa is also available.",
+    "vi": "Spa chăm sóc da chuyên trị nám, mụn, tàn nhang, trẻ hóa và thải độc da, có gội đầu dưỡng sinh."
+   },
+   "map": "https://maps.app.goo.gl/wbGxWjHzkP9c8Q6j8",
+   "open": "09:00",
+   "close": "21:00",
+   "menu": [
+    {
+     "name": {
+      "ko": "기본 피부관리",
+      "en": "Basic facial",
+      "vi": "Chăm sóc da cơ bản"
+     },
+     "min": 0,
+     "price": 399000
+    },
+    {
+     "name": {
+      "ko": "피부 재생·회복 관리",
+      "en": "Skin repair facial",
+      "vi": "Tái tạo, phục hồi da"
+     },
+     "min": 0,
+     "price": 599000
+    },
+    {
+     "name": {
+      "ko": "안티에이징 재생 관리",
+      "en": "Anti-aging rejuvenation",
+      "vi": "Phục hồi trẻ hóa da"
+     },
+     "min": 0,
+     "price": 749000
+    },
+    {
+     "name": {
+      "ko": "집중 피부관리",
+      "en": "Intensive facial",
+      "vi": "Chăm sóc da chuyên sâu"
+     },
+     "min": 0,
+     "price": 799000
+    },
+    {
+     "name": {
+      "ko": "남성 피부관리",
+      "en": "Men's facial",
+      "vi": "Chăm sóc da cho nam"
+     },
+     "min": 0,
+     "price": 600000
+    },
+    {
+     "name": {
+      "ko": "여드름 집중 관리",
+      "en": "Intensive acne care",
+      "vi": "Chăm sóc da mụn chuyên sâu"
+     },
+     "min": 0,
+     "price": 950000
+    },
+    {
+     "name": {
+      "ko": "모공·피부 디톡스 관리",
+      "en": "Pore & detox care",
+      "vi": "Xử lý lỗ chân lông, thải độc da"
+     },
+     "min": 0,
+     "price": 849000
+    },
+    {
+     "name": {
+      "ko": "기미 집중 관리",
+      "en": "Intensive melasma care",
+      "vi": "Ủ nám chuyên sâu"
+     },
+     "min": 0,
+     "price": 799000
+    }
+   ],
+   "review": [
+    "가격은 업체 공식 사이트 가격표(정가) 기준이고 시간은 나와 있지 않아요. 10회 패키지 가격도 따로 있어요.",
+    "대표 사진을 넣어 주세요."
+   ],
+   "address": {
+    "ko": "71 Lý Thường Kiệt, Thạch Thang, Hải Châu, Đà Nẵng",
+    "en": "71 Ly Thuong Kiet, Thach Thang, Hai Chau, Da Nang",
+    "vi": "71 Lý Thường Kiệt, Thạch Thang, Hải Châu, Đà Nẵng"
+   }
+  },
+  {
+   "id": "coleni-beauty",
+   "cat": "skin",
+   "city": "danang",
+   "verified": false,
+   "name": {
+    "ko": "콜레니 뷰티",
+    "en": "Coleni Beauty - Facial Spa",
+    "vi": "Coleni Beauty - Facial Spa"
+   },
+   "tags": [
+    {
+     "ko": "하이드라페이셜",
+     "en": "HydraFacial",
+     "vi": "HydraFacial"
+    },
+    {
+     "ko": "피지·각질 딥클렌징",
+     "en": "Deep pore cleansing",
+     "vi": "Làm sạch sâu"
+    },
+    {
+     "ko": "수분 관리",
+     "en": "Hydration care",
+     "vi": "Cấp ẩm"
+    }
+   ],
+   "desc": {
+    "ko": "하이드라페이셜, 피지 딥클렌징, 수분 관리처럼 메뉴와 가격이 잘 정리된 페이셜 전문 숍이에요. 여드름·흉터·기미 관리와 마이크로니들링(SkinPen)도 해요.",
+    "en": "A facial specialist with a clear menu: HydraFacial, deep sebum cleansing and hydration care. Also treats acne, scars and melasma, and offers SkinPen microneedling.",
+    "vi": "Spa chuyên chăm sóc da mặt với bảng dịch vụ rõ ràng: HydraFacial, làm sạch bã nhờn, cấp ẩm. Có trị mụn, sẹo, nám và lăn kim SkinPen."
+   },
+   "map": "https://maps.app.goo.gl/nfpbGa2KHB9Xjd8z6",
+   "open": "09:00",
+   "close": "20:30",
+   "menu": [
+    {
+     "name": {
+      "ko": "하이드라페이셜 산소 클렌징",
+      "en": "HydraFacial oxygen cleansing",
+      "vi": "Hydrafacial Oxygen Cleaning"
+     },
+     "min": 90,
+     "price": 1200000
+    },
+    {
+     "name": {
+      "ko": "효소 클렌징",
+      "en": "Enzyme cleansing",
+      "vi": "Enzyme Cleansing"
+     },
+     "min": 90,
+     "price": 700000
+    },
+    {
+     "name": {
+      "ko": "피지 딥클렌징",
+      "en": "Deep sebum cleansing",
+      "vi": "Deep Sebum Cleansing"
+     },
+     "min": 120,
+     "price": 1500000
+    },
+    {
+     "name": {
+      "ko": "버블 디톡스",
+      "en": "Bubble detox",
+      "vi": "Bubble Detox"
+     },
+     "min": 80,
+     "price": 600000
+    },
+    {
+     "name": {
+      "ko": "글로우 부스트 디톡스",
+      "en": "Glow boost detox",
+      "vi": "Glow Boost Detox"
+     },
+     "min": 90,
+     "price": 800000
+    },
+    {
+     "name": {
+      "ko": "히알루 엑스트라 수분 관리",
+      "en": "Hyalu Xtra hydration",
+      "vi": "Hyalu Xtra"
+     },
+     "min": 100,
+     "price": 1500000
+    },
+    {
+     "name": {
+      "ko": "더마 클래식",
+      "en": "Derma Classic",
+      "vi": "Derma Classic"
+     },
+     "min": 45,
+     "price": 500000
+    },
+    {
+     "name": {
+      "ko": "더마 콜레니 시그니처",
+      "en": "Derma Coleni Signature",
+      "vi": "Derma Coleni Signature"
+     },
+     "min": 110,
+     "price": 1500000
+    }
+   ],
+   "review": [
+    "가격은 업체 공식 사이트 메뉴 기준이에요. 최신 가격인지 확인해 주세요.",
+    "대표 사진을 넣어 주세요."
+   ],
+   "address": {
+    "ko": "06 Nguyễn Chí Thanh, Thạch Thang, Hải Châu, Đà Nẵng",
+    "en": "06 Nguyen Chi Thanh, Thach Thang, Hai Chau, Da Nang",
+    "vi": "06 Nguyễn Chí Thanh, Thạch Thang, Hải Châu, Đà Nẵng"
+   }
+  },
+  {
+   "id": "hieu-dep",
+   "cat": "skin",
+   "city": "danang",
+   "verified": false,
+   "name": {
+    "ko": "히에우뎁",
+    "en": "Hieu Dep Da Nang",
+    "vi": "Hiệu Đẹp - Đà Nẵng"
+   },
+   "tags": [],
+   "desc": {
+    "ko": "하이쩌우 시내 골목에 있는 뷰티숍이에요.",
+    "en": "A beauty shop in central Hai Chau.",
+    "vi": "Cơ sở làm đẹp tại trung tâm Hải Châu."
+   },
+   "map": "https://maps.app.goo.gl/nKF9xJ7tF6TaKiubA",
+   "open": "09:00",
+   "close": "21:00",
+   "menu": [],
+   "review": [
+    "어떤 관리를 하는지(피부관리·시술 등) 확인되지 않았어요. 메뉴와 가격이 공개돼 있지 않아요. 업체에 받아서 넣어 주세요.",
+    "대표 사진을 넣어 주세요."
+   ],
+   "address": {
+    "ko": "49/11 Phan Bội Châu, Thạch Thang, Hải Châu, Đà Nẵng",
+    "en": "49/11 Phan Boi Chau, Thach Thang, Hai Chau, Da Nang",
+    "vi": "49/11 Phan Bội Châu, Thạch Thang, Hải Châu, Đà Nẵng"
+   }
+  },
+  {
+   "id": "nq-spa",
+   "cat": "skin",
+   "city": "danang",
+   "verified": false,
+   "name": {
+    "ko": "NQ 스파",
+    "en": "NQ Spa",
+    "vi": "NQ Spa Đà Nẵng"
+   },
+   "tags": [
+    {
+     "ko": "피부 분석 후 맞춤 관리",
+     "en": "Skin scan & custom facial",
+     "vi": "Soi da & chăm sóc riêng"
+    },
+    {
+     "ko": "여드름·미백",
+     "en": "Acne & brightening",
+     "vi": "Trị mụn & dưỡng trắng"
+    },
+    {
+     "ko": "헤드스파",
+     "en": "Head spa",
+     "vi": "Gội đầu dưỡng sinh"
+    }
+   ],
+   "desc": {
+    "ko": "기기로 피부를 먼저 분석한 뒤 맞춤 관리를 해요. 여드름, 미백, 재생 관리와 헤드스파, 제모도 있어요.",
+    "en": "They scan your skin first, then customize the facial. Acne, brightening and repair care, plus head spa and hair removal.",
+    "vi": "Soi da bằng máy trước rồi chăm sóc theo nhu cầu. Có trị mụn, dưỡng trắng, phục hồi, gội đầu dưỡng sinh và triệt lông."
+   },
+   "map": "https://maps.app.goo.gl/ZFbw2NVfjBLbv2mF6",
+   "open": "08:30",
+   "close": "20:30",
+   "menu": [],
+   "review": [
+    "메뉴와 가격이 공개돼 있지 않아요. 업체에 받아서 넣어 주세요.",
+    "대표 사진을 넣어 주세요."
+   ],
+   "address": {
+    "ko": "89 Nguyễn Chí Thanh, Thạch Thang, Hải Châu, Đà Nẵng",
+    "en": "89 Nguyen Chi Thanh, Thach Thang, Hai Chau, Da Nang",
+    "vi": "89 Nguyễn Chí Thanh, Thạch Thang, Hải Châu, Đà Nẵng"
+   }
+  },
+  {
+   "id": "emly-beauty",
+   "cat": "skin",
+   "city": "danang",
+   "verified": false,
+   "name": {
+    "ko": "엠리 뷰티",
+    "en": "EMLY Beauty",
+    "vi": "EMLY BEAUTY"
+   },
+   "tags": [
+    {
+     "ko": "피부관리",
+     "en": "Skincare",
+     "vi": "Chăm sóc da"
+    },
+    {
+     "ko": "제모",
+     "en": "Hair removal",
+     "vi": "Triệt lông"
+    },
+    {
+     "ko": "헤드스파",
+     "en": "Head spa",
+     "vi": "Gội đầu dưỡng sinh"
+    }
+   ],
+   "desc": {
+    "ko": "피부관리, 제모, 헤드스파를 하는 뷰티숍이에요.",
+    "en": "A beauty spa for skincare, hair removal and head spa.",
+    "vi": "Spa chăm sóc da, triệt lông và gội đầu dưỡng sinh."
+   },
+   "map": "https://maps.app.goo.gl/H79GG9BGVnZPa9Rq7",
+   "open": "",
+   "close": "",
+   "menu": [],
+   "review": [
+    "영업시간을 확인해 주세요. 메뉴와 가격이 공개돼 있지 않아요. 업체에 받아서 넣어 주세요.",
+    "대표 사진을 넣어 주세요."
+   ],
+   "address": {
+    "ko": "80 Phan Thanh, Thạc Gián, Thanh Khê, Đà Nẵng",
+    "en": "80 Phan Thanh, Thac Gian, Thanh Khe, Da Nang",
+    "vi": "80 Phan Thanh, Thạc Gián, Thanh Khê, Đà Nẵng"
+   }
+  },
+  {
+   "id": "foxy-md-clinic",
+   "cat": "skin",
+   "city": "danang",
+   "verified": false,
+   "name": {
+    "ko": "폭시 MD 피부과",
+    "en": "Foxy M.D Dermatology & Aesthetic Clinic",
+    "vi": "Phòng Khám Da Liễu Foxy M.D"
+   },
+   "tags": [
+    {
+     "ko": "피부과 의사 진료",
+     "en": "Dermatologist-led",
+     "vi": "Bác sĩ da liễu"
+    },
+    {
+     "ko": "여드름·흉터·기미",
+     "en": "Acne · scars · melasma",
+     "vi": "Mụn · sẹo · nám"
+    },
+    {
+     "ko": "필러·보톡스·실리프팅",
+     "en": "Filler · Botox · thread lift",
+     "vi": "Filler · Botox · căng chỉ"
+    }
+   ],
+   "desc": {
+    "ko": "피부과 의사(Dr. Hưng)가 운영하는 클리닉이에요. 여드름·흉터·기미 치료, 안티에이징 페이셜과 필러·보톡스·실리프팅·HIFU 같은 시술을 해요.",
+    "en": "A dermatology clinic led by Dr. Hung. Treats acne, scars and melasma, with anti-aging facials and procedures such as filler, Botox, thread lift and HIFU.",
+    "vi": "Phòng khám da liễu do bác sĩ Hưng phụ trách. Điều trị mụn, sẹo, nám; chăm sóc chống lão hóa; filler, Botox, căng chỉ, HIFU."
+   },
+   "map": "https://maps.app.goo.gl/WCof3jQLqsRKiFM47",
+   "open": "",
+   "close": "",
+   "menu": [],
+   "review": [
+    "주소가 두 곳으로 나와요 (248 Trần Cao Vân / 288 Nguyễn Văn Linh). 구글 지도로 확인해 주세요.",
+    "영업시간을 확인해 주세요. 가격은 상담 후 안내라고 돼 있어요.",
+    "대표 사진을 넣어 주세요."
+   ],
+   "address": {
+    "ko": "248 Trần Cao Vân, Thanh Khê, Đà Nẵng",
+    "en": "248 Tran Cao Van, Thanh Khe, Da Nang",
+    "vi": "248 Trần Cao Vân, Thanh Khê, Đà Nẵng"
+   }
+  },
+  {
+   "id": "miti-nail-spa",
+   "cat": "skin",
+   "city": "danang",
+   "verified": false,
+   "name": {
+    "ko": "미티 네일&스파 (명품토탈케어)",
+    "en": "MITI Nail & Spa",
+    "vi": "MITI Nail & Spa"
+   },
+   "tags": [
+    {
+     "ko": "한시장 도보 1분",
+     "en": "1 min walk to Han Market",
+     "vi": "1 phút đi bộ tới chợ Hàn"
+    },
+    {
+     "ko": "네일·스파·이발",
+     "en": "Nails · spa · barber",
+     "vi": "Nail · spa · cắt tóc nam"
+    },
+    {
+     "ko": "헤드스파",
+     "en": "Head spa",
+     "vi": "Gội đầu dưỡng sinh"
+    }
+   ],
+   "desc": {
+    "ko": "한시장에서 걸어서 1분 거리예요. 네일, 스파, 이발을 한곳에서 할 수 있고 관광객용 헤드스파 프로그램도 있어요.",
+    "en": "One minute's walk from Han Market. Nails, spa and barber services in one place, plus a head spa program for travelers.",
+    "vi": "Cách chợ Hàn 1 phút đi bộ. Nail, spa và cắt tóc nam ở một nơi, có gói gội đầu dưỡng sinh cho du khách."
+   },
+   "map": "https://maps.app.goo.gl/39FEDYNfHfpXm8GZ9",
+   "open": "",
+   "close": "",
+   "menu": [],
+   "review": [
+    "정확한 주소와 영업시간을 확인해 주세요. 메뉴와 가격이 공개돼 있지 않아요. 업체에 받아서 넣어 주세요.",
+    "한국어 응대가 되는지 확인해 주세요.",
+    "대표 사진을 넣어 주세요."
+   ]
+  },
+  {
+   "id": "face-wash-fox",
+   "cat": "skin",
+   "city": "danang",
+   "verified": false,
+   "name": {
+    "ko": "페이스워시폭스",
+    "en": "Face Wash Fox",
+    "vi": "Face Wash Fox - Đà Nẵng"
+   },
+   "tags": [
+    {
+     "ko": "기기 세안 전문 체인",
+     "en": "Tech face-wash chain",
+     "vi": "Chuỗi rửa mặt công nghệ"
+    },
+    {
+     "ko": "딥클렌징",
+     "en": "Deep cleansing",
+     "vi": "Làm sạch sâu"
+    },
+    {
+     "ko": "여드름·수분 관리",
+     "en": "Acne & hydration",
+     "vi": "Trị mụn & cấp ẩm"
+    }
+   ],
+   "desc": {
+    "ko": "베트남 여러 도시에 지점이 있는 '기기 세안' 전문 체인이에요. 짧은 시간에 딥클렌징과 여드름·수분 관리를 받을 수 있어요.",
+    "en": "A Vietnamese chain specializing in tech-assisted face washing. Quick deep cleansing, acne and hydration care.",
+    "vi": "Chuỗi rửa mặt công nghệ có nhiều chi nhánh. Làm sạch sâu, trị mụn và cấp ẩm nhanh gọn."
+   },
+   "map": "https://maps.app.goo.gl/CfkDGzE2UUh8gNoL8",
+   "open": "",
+   "close": "",
+   "menu": [
+    {
+     "name": {
+      "ko": "딥클렌징",
+      "en": "Deep Cleanse",
+      "vi": "Deep Cleanse"
+     },
+     "min": 40,
+     "price": 489000
+    },
+    {
+     "name": {
+      "ko": "크라이오(쿨링) 클렌징",
+      "en": "Cryo Cleanse",
+      "vi": "Cryo Cleanse"
+     },
+     "min": 40,
+     "price": 519000
+    },
+    {
+     "name": {
+      "ko": "루미글로우 클렌징 (톤업)",
+      "en": "Lumiglow Cleanse",
+      "vi": "Lumiglow Cleanse"
+     },
+     "min": 40,
+     "price": 519000
+    },
+    {
+     "name": {
+      "ko": "딥클렌징+여드름 관리 콤보",
+      "en": "Deep cleanse + acne care combo",
+      "vi": "Combo 7: Sạch sâu + Chăm sóc da mụn"
+     },
+     "min": 50,
+     "price": 809000
+    },
+    {
+     "name": {
+      "ko": "딥클렌징+진정 관리 콤보",
+      "en": "Deep cleanse + soothing combo",
+      "vi": "Combo 8: Sạch sâu + Làm dịu da nhạy cảm"
+     },
+     "min": 50,
+     "price": 829000
+    },
+    {
+     "name": {
+      "ko": "딥클렌징+탄력·눈가·톤업 콤보",
+      "en": "Deep cleanse + firming, eye & glow combo",
+      "vi": "Combo 4: Sạch sâu + Săn chắc + Mắt + Sáng da"
+     },
+     "min": 50,
+     "price": 1079000
+    },
+    {
+     "name": {
+      "ko": "풀 케어 콤보 (수분·톤업·탄력·눈가)",
+      "en": "Full care combo",
+      "vi": "Combo 9: Sạch sâu + Cấp ẩm + Sáng da + Săn chắc + Mắt"
+     },
+     "min": 55,
+     "price": 1378000
+    }
+   ],
+   "review": [
+    "다낭 지점이 두 곳이에요 (177 Trần Phú / 아이온몰). 즐겨찾기한 지점이 어디인지 확인해 주세요.",
+    "영업시간을 확인해 주세요. 가격은 공식 사이트 일반가 기준이에요 (회원가는 더 싸요).",
+    "대표 사진을 넣어 주세요."
+   ],
+   "address": {
+    "ko": "177 Trần Phú, Hải Châu, Đà Nẵng",
+    "en": "177 Tran Phu, Hai Chau, Da Nang",
+    "vi": "177 Trần Phú, Hải Châu, Đà Nẵng"
+   }
+  },
+  {
+   "id": "skin-bar",
+   "cat": "skin",
+   "city": "danang",
+   "verified": false,
+   "name": {
+    "ko": "스킨바 에스테틱 스튜디오",
+    "en": "Skin Bar - Aesthetic Studio",
+    "vi": "Skin Bar - Aesthetic Studio"
+   },
+   "tags": [
+    {
+     "ko": "1:1 맞춤 페이셜",
+     "en": "Personalized facial",
+     "vi": "Chăm sóc da cá nhân hóa"
+    },
+    {
+     "ko": "상담 후 관리",
+     "en": "Consultation first",
+     "vi": "Tư vấn trước khi làm"
+    }
+   ],
+   "desc": {
+    "ko": "피부 상태를 상담한 뒤 1:1 맞춤 페이셜을 해 주는 스튜디오예요.",
+    "en": "A studio offering personalized facials after a skin consultation.",
+    "vi": "Studio chăm sóc da mặt cá nhân hóa sau khi tư vấn."
+   },
+   "map": "https://maps.app.goo.gl/Qqtj2ukGdRTEM3MH9",
+   "open": "09:30",
+   "close": "19:00",
+   "menu": [],
+   "review": [
+    "메뉴와 가격이 공개돼 있지 않아요. 업체에 받아서 넣어 주세요.",
+    "대표 사진을 넣어 주세요."
+   ],
+   "address": {
+    "ko": "30 Hoàng Văn Thụ, Hải Châu, Đà Nẵng",
+    "en": "30 Hoang Van Thu, Hai Chau, Da Nang",
+    "vi": "30 Hoàng Văn Thụ, Hải Châu, Đà Nẵng"
+   }
+  },
+  {
+   "id": "soon-spa",
+   "cat": "skin",
+   "city": "danang",
+   "verified": false,
+   "name": {
+    "ko": "순 스파",
+    "en": "SOON SPA - Skincare",
+    "vi": "SOON SPA - Skincare"
+   },
+   "tags": [],
+   "desc": {
+    "ko": "다낭의 피부관리 숍이에요.",
+    "en": "A skincare spa in Da Nang.",
+    "vi": "Spa chăm sóc da tại Đà Nẵng."
+   },
+   "map": "https://maps.app.goo.gl/rNtQ9fCqsyhWhqnM8",
+   "open": "",
+   "close": "",
+   "menu": [],
+   "review": [
+    "인터넷에서 주소·영업시간·가격을 찾지 못했어요. 구글 지도 링크와 업체에 직접 확인해 주세요.",
+    "대표 사진을 넣어 주세요."
+   ]
+  },
+  {
+   "id": "happy-skin",
+   "cat": "skin",
+   "city": "danang",
+   "verified": false,
+   "name": {
+    "ko": "해피스킨",
+    "en": "Happy Skin Da Nang",
+    "vi": "Happy Skin Đà Nẵng"
+   },
+   "tags": [
+    {
+     "ko": "여드름 치료",
+     "en": "Acne treatment",
+     "vi": "Trị mụn"
+    },
+    {
+     "ko": "필링",
+     "en": "Peeling",
+     "vi": "Peel da"
+    },
+    {
+     "ko": "기미 관리",
+     "en": "Melasma care",
+     "vi": "Trị nám"
+    }
+   ],
+   "desc": {
+    "ko": "의료 기준 여드름 관리를 내세우는 피부 전문 숍이에요. 기미 관리, 필링, 메조 관리와 DPL 제모도 해요. 트립어드바이저 후기에서 가격이 합리적이라는 평이 많아요.",
+    "en": "A skin specialist focused on medical-standard acne care, plus melasma care, peels, meso and DPL hair removal. Reviewers often mention fair prices.",
+    "vi": "Chuyên trị mụn chuẩn y khoa, trị nám, peel da, meso và triệt lông DPL. Nhiều đánh giá khen giá hợp lý."
+   },
+   "map": "https://maps.app.goo.gl/PgFbsGvAsV7NBdin9",
+   "open": "09:00",
+   "close": "19:00",
+   "menu": [],
+   "review": [
+    "주소가 두 곳으로 나와요 (16 Lê Quý Đôn 2층 / 17 Trần Quốc Toản). 구글 지도로 확인해 주세요.",
+    "영업시간은 금요일 기준(09:00~19:00)이에요. 메뉴와 가격이 공개돼 있지 않아요. 업체에 받아서 넣어 주세요.",
+    "대표 사진을 넣어 주세요."
+   ],
+   "address": {
+    "ko": "Tầng 2, 16 Lê Quý Đôn, Hải Châu, Đà Nẵng",
+    "en": "2F, 16 Le Quy Don, Hai Chau, Da Nang",
+    "vi": "Tầng 2, 16 Lê Quý Đôn, Hải Châu, Đà Nẵng"
+   }
+  },
+  {
+   "id": "the-tien-con2our",
+   "cat": "skin",
+   "city": "danang",
+   "verified": false,
+   "name": {
+    "ko": "더티엔 (Con2our by JH)",
+    "en": "The Tien - Con2our by JH",
+    "vi": "The Tien - Con2our by JH"
+   },
+   "tags": [],
+   "desc": {
+    "ko": "다낭의 얼굴 관리 숍이에요.",
+    "en": "A facial care shop in Da Nang.",
+    "vi": "Cơ sở chăm sóc da mặt tại Đà Nẵng."
+   },
+   "map": "https://maps.app.goo.gl/Skaum6q7b1eZovbW9",
+   "open": "",
+   "close": "",
+   "menu": [],
+   "review": [
+    "인터넷에서 주소·영업시간·가격을 찾지 못했어요. 구글 지도 링크와 업체에 직접 확인해 주세요.",
+    "어떤 관리(윤곽 관리 등)를 하는지 확인해 주세요.",
+    "대표 사진을 넣어 주세요."
+   ]
+  },
+  {
+   "id": "dany-style",
+   "cat": "hair",
+   "city": "danang",
+   "verified": false,
+   "name": {
+    "ko": "대니 스타일 헤어",
+    "en": "Dany Style Hair Salon",
+    "vi": "Viện Tóc Dany Style - Đà Nẵng"
+   },
+   "tags": [
+    {
+     "ko": "커트·염색·펌",
+     "en": "Cut · color · perm",
+     "vi": "Cắt · nhuộm · uốn"
+    },
+    {
+     "ko": "매직",
+     "en": "Straightening",
+     "vi": "Duỗi tóc"
+    }
+   ],
+   "desc": {
+    "ko": "커트, 염색, 펌·매직을 하는 미용실이에요. 기본 커트는 샴푸와 드라이까지 포함돼요.",
+    "en": "A hair salon for cuts, coloring, perms and straightening. Basic cuts include wash and blow-dry.",
+    "vi": "Viện tóc cắt, nhuộm, uốn và duỗi. Cắt cơ bản gồm gội và sấy."
+   },
+   "map": "https://maps.app.goo.gl/UtKd8eQJaSe55hUMA",
+   "open": "08:00",
+   "close": "20:00",
+   "menu": [
+    {
+     "name": {
+      "ko": "기본 커트 (샴푸·드라이 포함)",
+      "en": "Basic cut (wash & blow-dry)",
+      "vi": "Cắt cơ bản (gội, sấy)"
+     },
+     "min": 0,
+     "price": 100000
+    },
+    {
+     "name": {
+      "ko": "펌·매직 (부터)",
+      "en": "Perm / straightening (from)",
+      "vi": "Uốn / duỗi (từ)"
+     },
+     "min": 0,
+     "price": 300000
+    },
+    {
+     "name": {
+      "ko": "염색+펌·매직+케어 콤보 (부터)",
+      "en": "Color + perm + care combo (from)",
+      "vi": "Combo nhuộm + uốn/duỗi + phục hồi (từ)"
+     },
+     "min": 0,
+     "price": 500000
+    }
+   ],
+   "review": [
+    "가격은 블로그 글 기준 참고 가격이에요. 업체 가격표로 확인해 주세요. 일요일은 09:00에 열어요.",
+    "대표 사진을 넣어 주세요."
+   ],
+   "address": {
+    "ko": "616B Núi Thành, Hòa Cường, Hải Châu, Đà Nẵng",
+    "en": "616B Nui Thanh, Hoa Cuong, Hai Chau, Da Nang",
+    "vi": "616B Núi Thành, Hòa Cường, Hải Châu, Đà Nẵng"
+   }
+  },
+  {
+   "id": "an-spa",
+   "cat": "skin",
+   "city": "danang",
+   "verified": false,
+   "name": {
+    "ko": "안스파",
+    "en": "Ans Spa",
+    "vi": "Ans Spa"
+   },
+   "tags": [
+    {
+     "ko": "다낭 시내",
+     "en": "Downtown Da Nang",
+     "vi": "Trung tâm Đà Nẵng"
+    },
+    {
+     "ko": "90분 이상 무료 픽업",
+     "en": "Free pickup for 90 min+",
+     "vi": "Đón miễn phí từ 90 phút"
+    }
+   ],
+   "desc": {
+    "ko": "다낭 시내에 있는 마사지 숍이에요. 한국 여행사에서 90분 이상 받으면 무료 픽업을 해 준다고 안내하고 있어요.",
+    "en": "A massage spa in downtown Da Nang. Korean travel agencies note free pickup for treatments of 90 minutes or more.",
+    "vi": "Spa massage ở trung tâm Đà Nẵng. Có đón miễn phí cho liệu trình từ 90 phút."
+   },
+   "map": "https://maps.app.goo.gl/qrzozTqjGvDR6Tyh7",
+   "open": "11:00",
+   "close": "21:00",
+   "menu": [],
+   "review": [
+    "트립어드바이저의 'Ans Spa'(다낭)와 같은 곳으로 보고 넣었어요. 주소를 확인해 주세요.",
+    "영업시간은 금요일 기준(11:00~21:00)이에요. 메뉴와 가격이 공개돼 있지 않아요. 업체에 받아서 넣어 주세요.",
+    "사장님이 한국인이라는 후기가 있어요. 한국어 응대가 되는지 확인해 주세요.",
+    "무료 픽업 조건이 지금도 같은지 확인해 주세요.",
+    "대표 사진을 넣어 주세요."
+   ]
+  },
+  {
+   "id": "ada-tran-spa",
+   "cat": "skin",
+   "city": "danang",
+   "verified": false,
+   "name": {
+    "ko": "에이다 트란 스파",
+    "en": "Ada Tran Spa Massage & Face Skincare",
+    "vi": "Ada Tran Spa Massage & Face Skincare"
+   },
+   "tags": [
+    {
+     "ko": "마사지+얼굴 관리",
+     "en": "Massage + facial",
+     "vi": "Massage + chăm sóc da mặt"
+    }
+   ],
+   "desc": {
+    "ko": "마사지와 얼굴 피부관리를 함께 하는 스파예요.",
+    "en": "A spa offering both massage and facial skincare.",
+    "vi": "Spa massage kết hợp chăm sóc da mặt."
+   },
+   "map": "https://maps.app.goo.gl/kTtuQcfvaFSSdGV8A",
+   "open": "",
+   "close": "",
+   "menu": [],
+   "review": [
+    "인터넷에서 주소·영업시간·가격을 찾지 못했어요. 구글 지도 링크와 업체에 직접 확인해 주세요.",
+    "대표 사진을 넣어 주세요."
+   ]
+  },
+  {
+   "id": "waxing-danang",
+   "cat": "body",
+   "city": "danang",
+   "verified": false,
+   "name": {
+    "ko": "다낭 제모소 (Waxing Đà Nẵng)",
+    "en": "Waxing Da Nang",
+    "vi": "Waxing Đà Nẵng"
+   },
+   "tags": [
+    {
+     "ko": "브라질리언 왁싱",
+     "en": "Brazilian wax",
+     "vi": "Wax Brazil"
+    },
+    {
+     "ko": "남녀 전신 왁싱",
+     "en": "Full-body wax for men & women",
+     "vi": "Wax toàn thân nam & nữ"
+    },
+    {
+     "ko": "한국인 후기 많음",
+     "en": "Popular with Koreans",
+     "vi": "Nhiều khách Hàn"
+    }
+   ],
+   "desc": {
+    "ko": "브라질리언 왁싱과 남녀 전신 왁싱 전문점이에요. 다리, 겨드랑이, 눈썹, 코·귀 왁싱도 하고 시술 뒤 진정 마스크를 해 줘요.",
+    "en": "A waxing specialist for Brazilian and full-body waxing for men and women, including legs, underarms, brows, nose and ears, with a soothing mask afterward.",
+    "vi": "Chuyên wax Brazil và wax toàn thân cho nam và nữ: chân, nách, chân mày, mũi, tai; đắp mặt nạ làm dịu sau khi wax."
+   },
+   "map": "https://maps.app.goo.gl/uph3B7JLTVZDDLXy8",
+   "open": "09:00",
+   "close": "20:00",
+   "menu": [],
+   "review": [
+    "영업시간은 금요일 기준(09:00~20:00)이에요. 다른 요일도 확인해 주세요. 메뉴와 가격이 공개돼 있지 않아요. 업체에 받아서 넣어 주세요.",
+    "대표 사진을 넣어 주세요."
+   ],
+   "address": {
+    "ko": "168 Nguyễn Duy Hiệu, An Hải Đông, Sơn Trà, Đà Nẵng",
+    "en": "168 Nguyen Duy Hieu, An Hai Dong, Son Tra, Da Nang",
+    "vi": "168 Nguyễn Duy Hiệu, An Hải Đông, Sơn Trà, Đà Nẵng"
+   }
+  },
+  {
+   "id": "nguon-spa",
+   "cat": "skin",
+   "city": "danang",
+   "verified": false,
+   "name": {
+    "ko": "응우온 스파",
+    "en": "Nguon Spa Da Nang",
+    "vi": "Nguồn Spa - Trần Bạch Đằng"
+   },
+   "tags": [
+    {
+     "ko": "베트남식 헤드스파",
+     "en": "Vietnamese head spa",
+     "vi": "Gội đầu dưỡng sinh"
+    },
+    {
+     "ko": "밤 11시까지",
+     "en": "Open until 11 pm",
+     "vi": "Mở đến 23h"
+    },
+    {
+     "ko": "구글 후기 1500개 이상",
+     "en": "1500+ Google reviews",
+     "vi": "1500+ đánh giá Google"
+    }
+   ],
+   "desc": {
+    "ko": "베트남식 헤드스파(건강 샴푸) 전문점이에요. 오일 두피 마사지와 헤어 트리트먼트, 마사지를 해요. 밤 11시까지 열어요.",
+    "en": "A Vietnamese head spa specialist with oil scalp massage, hair treatments and massage. Open until 11 pm.",
+    "vi": "Chuyên gội đầu dưỡng sinh với massage da đầu bằng tinh dầu, phục hồi tóc và massage. Mở đến 23h."
+   },
+   "map": "https://maps.app.goo.gl/GWrpehjREHHYQAnm7",
+   "open": "09:00",
+   "close": "23:00",
+   "menu": [],
+   "review": [
+    "메뉴와 가격이 공개돼 있지 않아요. 업체에 받아서 넣어 주세요.",
+    "대표 사진을 넣어 주세요."
+   ],
+   "address": {
+    "ko": "15 Trần Bạch Đằng, Sơn Trà, Đà Nẵng",
+    "en": "15 Tran Bach Dang, Son Tra, Da Nang",
+    "vi": "15 Trần Bạch Đằng, Sơn Trà, Đà Nẵng"
+   },
+   "geo": [
+    16.058869,
+    108.24481
+   ]
+  },
+  {
+   "id": "nha-spa",
+   "cat": "skin",
+   "city": "danang",
+   "verified": false,
+   "name": {
+    "ko": "냐 스파",
+    "en": "NHÃ SPA",
+    "vi": "NHÃ SPA - Gội đầu dưỡng sinh và Spa chăm sóc da"
+   },
+   "tags": [
+    {
+     "ko": "헤드스파",
+     "en": "Head spa",
+     "vi": "Gội đầu dưỡng sinh"
+    },
+    {
+     "ko": "피부관리",
+     "en": "Skincare",
+     "vi": "Chăm sóc da"
+    }
+   ],
+   "desc": {
+    "ko": "베트남식 헤드스파와 피부관리를 하는 스파예요.",
+    "en": "A spa for Vietnamese head spa and skincare.",
+    "vi": "Spa gội đầu dưỡng sinh và chăm sóc da."
+   },
+   "map": "https://maps.app.goo.gl/MuEigtASWoFPyA1x6",
+   "open": "",
+   "close": "",
+   "menu": [],
+   "review": [
+    "인터넷에서 주소·영업시간·가격을 찾지 못했어요. 구글 지도 링크와 업체에 직접 확인해 주세요.",
+    "대표 사진을 넣어 주세요."
+   ]
+  }
+ ]
+}

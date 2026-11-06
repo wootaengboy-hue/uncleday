@@ -769,6 +769,70 @@ async function offerMigration() {
   };
 }
 
+/* ===== 조사한 업체 가져오기 (Claude가 imports/ 폴더에 올려 둔 파일) ===== */
+const filled = v => v != null && v !== "" && !(Array.isArray(v) && !v.length) && !(typeof v === "object" && !Array.isArray(v) && !Object.values(v).some(filled));
+// 가져온 값이 있는 칸만 바꾸고, 사진·가격표·후기·계약 정보처럼 파일에 없는 건 그대로 둬요
+function mergeShop(o, n) {
+  const r = clone(o);
+  Object.entries(n).forEach(([k, v]) => {
+    if (!filled(v)) return;
+    if (v && typeof v === "object" && !Array.isArray(v) && r[k] && typeof r[k] === "object" && !Array.isArray(r[k])) {
+      r[k] = { ...r[k] }; Object.entries(v).forEach(([kk, vv]) => { if (filled(vv)) r[k][kk] = vv; });
+    } else r[k] = clone(v);
+  });
+  return r;
+}
+async function importsDone() {
+  const r = await sb.from("settings").select("value").eq("key", "imports_done");
+  return (r.data && r.data[0] && r.data[0].value) || [];
+}
+async function markImport(id) {
+  const done = await importsDone();
+  if (!done.includes(id)) await sb.from("settings").upsert({ key: "imports_done", value: [...done, id] });
+}
+async function checkImports() {
+  let idx;
+  try { const r = await fetch("imports/index.json?t=" + Date.now(), { cache: "no-store" }); if (!r.ok) return; idx = await r.json(); } catch (e) { return; }
+  const done = await importsDone();
+  (idx.files || []).filter(f => !done.includes(f.id)).forEach(f => {
+    const n = notice("info", `<span class="grow">🔎 <b>${esc(f.title)}</b> — 조사한 업체 ${f.count}곳 정보가 준비됐어요.</span><button class="btn main sm" data-imp>미리보기·가져오기</button><button class="btn sm" data-skip>안 가져오기</button>`, "imp-" + f.id);
+    n.querySelector("[data-imp]").onclick = () => openImport(f, n);
+    n.querySelector("[data-skip]").onclick = () => confirmBox("이 자료를 가져오지 않을까요?", async () => { await markImport(f.id); n.remove(); toast("알림을 지웠어요"); }, "나중에 다시 보이지 않아요.", "안 가져오기", false);
+  });
+}
+async function openImport(f, note) {
+  let data;
+  try { data = await (await fetch("imports/" + f.file + "?t=" + Date.now(), { cache: "no-store" })).json(); } catch (e) { toast("파일을 읽지 못했어요"); return; }
+  const list = (data.shops || []).filter(s => s.id && s.name && catOf(s.cat) && cityOf(s.city));
+  const add = list.filter(s => !shops.some(x => x.id === s.id)), upd = list.filter(s => shops.some(x => x.id === s.id));
+  const info = s => [s.address && filled(s.address) ? "주소" : "", s.open ? "영업시간" : "", (s.menu || []).length ? `메뉴 ${s.menu.length}개` : "", (s.tags || []).length ? "태그" : "", s.desc && filled(s.desc) ? "소개" : ""].filter(Boolean).join(" · ") || "이름만";
+  const d = document.createElement("div"); d.className = "overlay center";
+  d.innerHTML = `<div class="modal" style="width:min(760px,calc(100% - 32px))"><h2>${esc(f.title)}</h2>
+    <p>새 업체 <b>${add.length}</b>곳 · 기존 업체 정보 보강 <b>${upd.length}</b>곳</p>
+    <p class="hint">기존 업체는 <b>파일에 내용이 있는 칸만</b> 바뀌어요. 사진·가격표·후기·수수료·계약 정보와 사이트 공개 여부는 그대로예요. 확인 필요 메모는 새 내용으로 바뀌어요.</p>
+    <div style="max-height:46vh;overflow:auto;border:1px solid var(--line);border-radius:10px">
+    <table class="t"><thead><tr><th>업체</th><th>카테고리</th><th>들어가는 정보</th><th class="num">확인 필요</th></tr></thead><tbody>
+    ${list.map(s => `<tr><td><b>${esc(s.name.ko)}</b> ${add.includes(s) ? `<span class="badge new">새로</span>` : ""}</td><td>${esc(catName(s.cat))}</td><td class="hint">${esc(info(s))}</td><td class="num">${(s.review || []).length}</td></tr>`).join("")}
+    </tbody></table></div>
+    <div class="btns"><button class="btn" data-no>닫기</button><button class="btn main" data-yes ${list.length ? "" : "disabled"}>${list.length}곳 가져오기</button></div></div>`;
+  document.body.appendChild(d);
+  d.querySelector("[data-no]").onclick = () => d.remove();
+  d.querySelector("[data-yes]").onclick = async () => {
+    const btn = d.querySelector("[data-yes]"); btn.disabled = true; btn.textContent = "저장 중…";
+    let sort = Math.max(0, ...Object.values(META).map(m => m.sort || 0)), ok = 0;
+    for (const n of list) {
+      const o = shops.find(x => x.id === n.id);
+      const s = o ? mergeShop(o, n) : mergeShop(blankShop(), n);
+      if (!o) META[s.id] = { published: true, sort: ++sort };
+      if (n.review) s.review = n.review;
+      try { await dbSaveShop(s); ok++; if (o) shops[shops.indexOf(o)] = s; else shops.push(s); } catch (e) { console.error(e); }
+    }
+    if (ok === list.length) { await markImport(f.id); note.remove(); }
+    d.remove(); drawList(); showTab("shops");
+    toast(ok === list.length ? `${ok}곳을 가져왔어요 ✅` : `${ok}곳 저장, ${list.length - ok}곳 실패했어요. 다시 눌러 주세요.`, 4500);
+  };
+}
+
 /* ===== 로그인 ===== */
 function gate(html) { $("gate").hidden = false; $("app").hidden = true; $("tabs").hidden = true; $("gate").innerHTML = html; }
 function loginForm(msg = "") {
@@ -822,6 +886,7 @@ async function afterLogin(session) {
   const h = location.hash.slice(1);
   showTab(["dash", "bk", "settle", "shops", "rv", "acc"].includes(h) ? h : "dash");
   offerMigration();
+  checkImports();
   // 1분마다 새 예약·후기 확인
   setInterval(async () => {
     if (document.hidden || $("layer").innerHTML) return;
