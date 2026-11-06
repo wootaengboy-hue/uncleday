@@ -591,6 +591,9 @@ create table if not exists public.tasks (
   done_at     timestamptz
 );
 
+-- 참조 담당자 (여러 명)
+alter table public.tasks add column if not exists watchers text[] not null default '{}';
+
 create or replace function public.tasks_before() returns trigger language plpgsql security definer set search_path = public as $$
 begin
   new.updated_at := now();

@@ -296,6 +296,12 @@ table.t tfoot td{font-weight:800;background:#fafbfc}
 .kempty{font-size:12px;color:#a8a29e;text-align:center;padding:8px}
 .lt-row{display:flex;gap:8px;align-items:center;padding:7px 4px;border-top:1px dashed var(--line);cursor:pointer;font-size:13.5px}
 .lt-row:first-child{border-top:0}.lt-row.done b{text-decoration:line-through;color:var(--sub)}
+.people{display:flex;gap:6px;flex-wrap:wrap}
+.person{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:4px 10px 4px 4px;font-weight:700;font-size:13px;cursor:pointer}
+.person .av{width:22px;height:22px;border-radius:50%;background:#e5e7eb;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800}
+.person.on{border-color:var(--main);background:#e9f2ec;color:var(--main)}.person.on .av{background:var(--main);color:#fff}
+.person:disabled{opacity:.4;cursor:default}
+.chip.ref{background:#eef2ff;color:#3730a3}
 @media (max-width:760px){.kanban.tasks{grid-template-columns:repeat(3,82vw)}.kanban.leads{grid-template-columns:repeat(7,78vw)}}
 </style>
 </head>
@@ -362,14 +368,14 @@ table.t tfoot td{font-weight:800;background:#fafbfc}
 <div id="layer"></div>
 <div id="printArea"></div>
 
-<script src="config.js?v=20261106h"></script>
+<script src="config.js?v=20261106i"></script>
 <script src="vendor/supabase.js"></script>
-<script src="data.js?v=20261106h"></script>
-<script src="shops.js?v=20261106h"></script>
-<script src="catimgs.js?v=20261106h"></script>
-<script src="admin-notes.js?v=20261106h"></script>
-<script src="admin-shops.js?v=20261106h"></script>
-<script src="admin-work.js?v=20261106h"></script>
-<script src="admin.js?v=20261106h"></script>
+<script src="data.js?v=20261106i"></script>
+<script src="shops.js?v=20261106i"></script>
+<script src="catimgs.js?v=20261106i"></script>
+<script src="admin-notes.js?v=20261106i"></script>
+<script src="admin-shops.js?v=20261106i"></script>
+<script src="admin-work.js?v=20261106i"></script>
+<script src="admin.js?v=20261106i"></script>
 </body>
 </html>

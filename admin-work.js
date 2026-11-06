@@ -17,7 +17,8 @@ async function loadWork() {
 }
 const who = e => e ? (e.split("@")[0]) : "미지정";
 const dueTag = d => { if (!d) return ""; const t = vnToday(); const cls = d < t ? "late" : d === t ? "today" : ""; return `<span class="chip ${cls}">📅 ${dayKo(d)}${d < t ? " 지남" : d === t ? " 오늘" : ""}</span>`; };
-const whoOk = x => workWho === "all" || (workWho === "me" ? x.assignee === ME.email : workWho === "none" ? !x.assignee : x.assignee === workWho);
+const watching = (x, e) => Array.isArray(x.watchers) && x.watchers.includes(e);
+const whoOk = x => workWho === "all" || (workWho === "me" ? x.assignee === ME.email || watching(x, ME.email) : workWho === "ref" ? watching(x, ME.email) : workWho === "none" ? !x.assignee : x.assignee === workWho || watching(x, workWho));
 const adminOpts = (sel, blank = "미지정") => `<option value="">${blank}</option>` + ADMINS.map(a => `<option value="${esc(a.email)}" ${a.email === sel ? "selected" : ""}>${esc(a.email)}${a.email === ME.email ? " (나)" : ""}</option>`).join("");
 const leadById = id => LEADS.find(l => l.id === id);
 
@@ -26,6 +27,7 @@ function workTodos() {
   const t = vnToday();
   return [
     ["myTask", "✅", "오늘까지 해야 할 내 일", TASKS.filter(x => x.status !== "done" && x.assignee === ME.email && x.due && x.due <= t).length, () => { workView = "tasks"; workWho = "me"; showTab("work"); }],
+    ["refMe", "👥", "나를 참조한 진행 중인 일", TASKS.filter(x => x.status !== "done" && watching(x, ME.email)).length, () => { workView = "tasks"; workWho = "ref"; showTab("work"); }],
     ["leadLate", "🤝", "다음 연락일이 지난 영업 업체", LEADS.filter(l => !["live", "hold"].includes(l.stage) && l.next_date && l.next_date < t).length, () => { workView = "leads"; workWho = "all"; showTab("work"); }]
   ];
 }
@@ -35,7 +37,7 @@ function drawWork() {
   $("tab-work").innerHTML = `
     <div class="work-top">
       <div class="seg"><button data-v="tasks" class="${workView === "tasks" ? "on" : ""}">✅ 할 일 보드</button><button data-v="leads" class="${workView === "leads" ? "on" : ""}">🤝 업체 영업</button></div>
-      <select id="wWho"><option value="all">담당자 전체</option><option value="me" ${workWho === "me" ? "selected" : ""}>내 것만</option><option value="none" ${workWho === "none" ? "selected" : ""}>미지정</option>${ADMINS.filter(a => a.email !== ME.email).map(a => `<option value="${esc(a.email)}" ${workWho === a.email ? "selected" : ""}>${esc(who(a.email))}</option>`).join("")}</select>
+      <select id="wWho"><option value="all">담당자 전체</option><option value="me" ${workWho === "me" ? "selected" : ""}>내 것 (담당+참조)</option><option value="ref" ${workWho === "ref" ? "selected" : ""}>나를 참조한 것</option><option value="none" ${workWho === "none" ? "selected" : ""}>미지정</option>${ADMINS.filter(a => a.email !== ME.email).map(a => `<option value="${esc(a.email)}" ${workWho === a.email ? "selected" : ""}>${esc(who(a.email))}</option>`).join("")}</select>
       <span class="grow"></span>
       ${workView === "leads" ? `<button class="btn main" id="leadNew">＋ 영업 업체 추가</button>` : `<button class="btn main" id="taskNew">＋ 할 일</button>`}
     </div>
@@ -79,10 +81,11 @@ function taskCard(x) {
   return `<div class="kcard pri${x.priority} ${x.status === "done" ? "done" : ""}" draggable="true" data-id="${x.id}">
     <div class="kt">${esc(x.title)}</div>
     ${x.memo ? `<div class="km">${esc(x.memo.length > 70 ? x.memo.slice(0, 70) + "…" : x.memo)}</div>` : ""}
-    <div class="kchips">${x.status !== "done" ? dueTag(x.due) : ""}<span class="chip">👤 ${esc(who(x.assignee))}</span>${sh ? `<span class="chip">🏪 ${esc(sh.name.ko)}</span>` : ""}${ld ? `<span class="chip">🤝 ${esc(ld.name)}</span>` : ""}</div></div>`;
+    <div class="kchips">${x.status !== "done" ? dueTag(x.due) : ""}<span class="chip">👤 ${esc(who(x.assignee))}</span>${(x.watchers || []).length ? `<span class="chip ref" title="참조: ${esc(x.watchers.join(", "))}">👥 ${esc(x.watchers.map(who).join(", "))}</span>` : ""}${sh ? `<span class="chip">🏪 ${esc(sh.name.ko)}</span>` : ""}${ld ? `<span class="chip">🤝 ${esc(ld.name)}</span>` : ""}</div></div>`;
 }
 function editTask(id, preset = {}) {
-  const x = id ? TASKS.find(y => y.id === id) : { title: "", memo: "", status: "todo", assignee: "", due: null, priority: 1, shop_id: null, lead_id: null, ...preset };
+  const x = id ? TASKS.find(y => y.id === id) : { title: "", memo: "", status: "todo", assignee: "", due: null, priority: 1, shop_id: null, lead_id: null, watchers: [], ...preset };
+  let refs = [...(x.watchers || [])];
   const d = document.createElement("div"); d.className = "overlay center";
   d.innerHTML = `<div class="modal" style="width:min(620px,calc(100% - 32px))"><h2>${id ? "할 일" : "새 할 일"}</h2>
     <div style="display:grid;gap:10px;margin-top:8px">
@@ -98,15 +101,24 @@ function editTask(id, preset = {}) {
         <label class="f"><span>관련 업체</span><select id="tShop"><option value="">없음</option>${shops.map(s => `<option value="${esc(s.id)}" ${s.id === x.shop_id ? "selected" : ""}>${esc(s.name.ko)}</option>`).join("")}</select></label>
         <label class="f"><span>관련 영업</span><select id="tLead"><option value="">없음</option>${LEADS.map(l => `<option value="${l.id}" ${l.id === x.lead_id ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
       </div>
+      <div class="f"><span>참조 <small class="hint">— 함께 알아야 하는 사람 (여러 명)</small></span><div class="people" id="tRefs"></div></div>
       ${id ? `<div class="hint">만든 사람: ${esc(x.created_by || "")} · ${dt(x.created_at)}${x.done_at ? ` · 완료 ${dt(x.done_at)}` : ""}</div>` : ""}
     </div>
     <div class="btns">${id ? `<button class="btn danger" data-del style="margin-right:auto">삭제</button>` : ""}<button class="btn" data-no>닫기</button><button class="btn main" data-yes>저장</button></div></div>`;
   document.body.appendChild(d);
   d.querySelector("#tTitle").focus();
+  const drawRefs = () => {
+    const box = d.querySelector("#tRefs"), owner = d.querySelector("#tWho").value;
+    box.innerHTML = ADMINS.map(a => { const on = refs.includes(a.email), me = a.email === owner;
+      return `<button type="button" class="person ${on ? "on" : ""}" data-p="${esc(a.email)}" ${me ? `disabled title="담당자예요"` : ""}><span class="av">${esc(who(a.email).slice(0, 1).toUpperCase())}</span>${esc(who(a.email))}${a.email === ME.email ? " (나)" : ""}${on ? " ✓" : ""}</button>`; }).join("") || `<span class="hint">관리자가 한 명뿐이에요. 계정 탭에서 관리자를 추가하면 참조할 수 있어요.</span>`;
+    box.querySelectorAll("[data-p]").forEach(b => b.onclick = () => { const e = b.dataset.p; refs = refs.includes(e) ? refs.filter(v => v !== e) : [...refs, e]; drawRefs(); });
+  };
+  drawRefs();
+  d.querySelector("#tWho").onchange = () => { refs = refs.filter(v => v !== d.querySelector("#tWho").value); drawRefs(); };
   d.querySelector("[data-no]").onclick = () => d.remove();
   d.querySelector("[data-yes]").onclick = async () => {
     const row = { title: d.querySelector("#tTitle").value.trim(), memo: d.querySelector("#tMemo").value, status: d.querySelector("#tSt").value, due: d.querySelector("#tDue").value || null,
-      priority: +d.querySelector("#tPri").value, assignee: d.querySelector("#tWho").value || null, shop_id: d.querySelector("#tShop").value || null, lead_id: d.querySelector("#tLead").value || null };
+      priority: +d.querySelector("#tPri").value, assignee: d.querySelector("#tWho").value || null, shop_id: d.querySelector("#tShop").value || null, lead_id: d.querySelector("#tLead").value || null, watchers: refs.filter(v => v !== (d.querySelector("#tWho").value || "")) };
     if (!row.title) { toast("제목을 적어 주세요"); return; }
     try {
       if (id) { const r = await q(sb.from("tasks").update(row).eq("id", id).select().single()); TASKS[TASKS.indexOf(x)] = r; }
