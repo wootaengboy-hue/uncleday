@@ -8,7 +8,15 @@ document.addEventListener("click", e => {
   const shop = m && SHOPS.find(s => s.id === decodeURIComponent(m[1])); if (!shop) return;
   const c = CITIES.find(x => x.id === shop.city), k = CATEGORIES.find(x => x.id === shop.cat);
   const text = ui("askMsg", { shop: tx(shop.name), city: c ? tx(c.name) : "", cat: k ? tx(k.name) : "" });
-  try { navigator.clipboard.writeText(text).then(() => alertBox(ui("askCopied")), () => {}); } catch (err) {}
+  // 바로 복사 (아이폰·카톡 인앱 브라우저·http 주소에서도 되도록 두 가지 방법)
+  let ok = false;
+  try {
+    const t = document.createElement("textarea"); t.value = text; t.setAttribute("readonly", "");
+    t.style.cssText = "position:fixed;top:0;left:0;opacity:0;font-size:16px"; document.body.appendChild(t);
+    t.select(); t.setSelectionRange(0, text.length); ok = document.execCommand("copy"); t.remove();
+  } catch (err) {}
+  if (ok) alertBox(ui("askCopied"));
+  else try { navigator.clipboard.writeText(text).then(() => alertBox(ui("askCopied")), () => {}); } catch (err) {}
 }, true);
 
 function renderShop(id) {
