@@ -1,8 +1,8 @@
 /* 엉클데이 관리자 — 노션처럼 쓰는 메모 편집기 (제목, 목록, 체크리스트, 토글, 구분선, 강조 상자, 템플릿)
    '/'를 입력하면 블록 메뉴가 떠요. 저장은 안전하게 거른 HTML로 해요. */
 const RICH_TAGS = { P: [], H2: [], H3: [], UL: ["class"], OL: [], LI: ["data-done"], B: [], STRONG: [], I: [], EM: [], S: [], STRIKE: [], U: [], A: ["href"],
-  BR: [], HR: [], BLOCKQUOTE: [], DIV: ["class"], SPAN: [] };
-const RICH_CLASS = ["check", "toggle", "open", "tg-head", "tg-body", "callout"];
+  BR: [], HR: [], BLOCKQUOTE: [], DIV: ["class"], SPAN: [], IMG: ["src", "alt", "class"] };
+const RICH_CLASS = ["check", "toggle", "open", "tg-head", "tg-body", "callout", "sm"];
 function richClean(html) {
   const doc = new DOMParser().parseFromString(`<div>${html || ""}</div>`, "text/html");
   const walk = el => [...el.childNodes].forEach(n => {
@@ -15,14 +15,16 @@ function richClean(html) {
       if (!ok.includes(a.name)) n.removeAttribute(a.name);
       else if (a.name === "class") { const c = a.value.split(/\s+/).filter(x => RICH_CLASS.includes(x)).join(" "); c ? n.setAttribute("class", c) : n.removeAttribute("class"); }
       else if (a.name === "href" && !/^https?:\/\//i.test(a.value)) n.removeAttribute("href");
+      else if (a.name === "src" && !(/^https:\/\//i.test(a.value) || (typeof SUPA !== "undefined" && SUPA.url && a.value.startsWith(SUPA.url + "/storage/")))) n.removeAttribute("src");
     });
+    if (n.tagName === "IMG" && !n.getAttribute("src")) { n.remove(); return; }
     if (n.tagName === "A") { n.setAttribute("target", "_blank"); n.setAttribute("rel", "noopener"); }
   });
   const root = doc.body.firstChild; walk(root);
   return root.innerHTML.replace(/(<p><br><\/p>)+$/, "").trim();
 }
 // 예전 글(그냥 텍스트)도 그대로 보이게
-const richFrom = v => !v ? "" : /<\/?(p|h2|h3|ul|ol|li|div|hr|br|b|blockquote)\b/i.test(v) ? richClean(v) : v.split("\n").map(l => `<p>${esc(l) || "<br>"}</p>`).join("");
+const richFrom = v => !v ? "" : /<\/?(p|h2|h3|ul|ol|li|div|hr|br|b|blockquote|img)\b/i.test(v) ? richClean(v) : v.split("\n").map(l => `<p>${esc(l) || "<br>"}</p>`).join("");
 const richText = v => { const d = document.createElement("div"); d.innerHTML = richFrom(v); d.querySelectorAll("p,li,h2,h3,div,br").forEach(e => e.append(" ")); return d.textContent.replace(/\s+/g, " ").trim(); };
 
 const BLOCKS = [
@@ -51,7 +53,9 @@ function richEditor(host, html, opts = {}) {
       <span class="re-sep"></span>
       <button type="button" data-b="ul" title="글머리 목록">•</button><button type="button" data-b="ol" title="번호 목록">1.</button><button type="button" data-b="check" title="체크리스트">☑</button>
       <button type="button" data-b="toggle" title="토글">▶</button><button type="button" data-b="callout" title="강조 상자">💡</button><button type="button" data-b="hr" title="구분선">—</button>
-      <span class="grow"></span><button type="button" class="re-tpl">📄 템플릿</button></div>
+      <button type="button" class="re-img" title="사진 넣기 (붙여넣기·끌어 놓기도 돼요)">🖼</button>
+      <span class="grow"></span><button type="button" class="re-full" title="크게 쓰기">⤢ 크게</button><button type="button" class="re-tpl">📄 템플릿</button></div>
+    <input type="file" class="re-file" accept="image/*" multiple hidden>
     <div class="re-doc" contenteditable="true" spellcheck="false" data-ph="${esc(opts.placeholder || "내용을 적어요. '/'를 누르면 제목·체크리스트·토글 메뉴가 나와요")}"></div>
     <div class="re-menu" hidden></div>`;
   const doc = host.querySelector(".re-doc"), menu = host.querySelector(".re-menu");
@@ -161,10 +165,49 @@ function richEditor(host, html, opts = {}) {
     const li = caretBlock(); if (li && li.tagName === "LI" && !li.textContent.trim()) li.removeAttribute("data-done");
   });
   doc.addEventListener("blur", () => setTimeout(closeMenu, 150));
-  doc.addEventListener("paste", e => { // 붙여넣기는 글자만 (서식 깨짐 방지)
-    const t = (e.clipboardData || window.clipboardData).getData("text/plain"); if (!t) return;
-    e.preventDefault(); document.execCommand("insertText", false, t);
+  // 사진: 붙여넣기·끌어 놓기·🖼 버튼 → 저장소에 올리고 넣어요 (화면 폭에 맞게 줄여서 보여요)
+  async function addImages(files) {
+    files = [...files].filter(f => /^image\//.test(f.type)); if (!files.length) return;
+    const s0 = sel(); const saved = s0.rangeCount && doc.contains(s0.anchorNode) ? s0.getRangeAt(0).cloneRange() : null;
+    toast(files.length > 1 ? `사진 ${files.length}장을 올리는 중…` : "사진을 올리는 중…");
+    const urls = [];
+    for (const f of files) { try { urls.push(await uploadImg(f, "notes/img", 1600, 0.85)); } catch (e) { dbErr(e, "사진 올리기"); } }
+    if (!urls.length) return;
+    doc.focus();
+    if (saved) { sel().removeAllRanges(); sel().addRange(saved); } else placeCaret(doc.lastElementChild || doc);
+    const html = urls.map(u => `<img src="${esc(u)}" alt="">`).join("");
+    let b = caretBlock(); while (b && b.parentNode !== doc) b = b.parentNode;
+    const t = document.createElement("div"); t.innerHTML = `<p>${html}</p><p><br></p>`;
+    const nodes = [...t.childNodes];
+    if (b) { b.after(...nodes); if (b.tagName === "P" && !b.textContent.trim() && !b.querySelector("img")) b.remove(); } else doc.append(...nodes);
+    placeCaret(nodes[1]); ph(); toast("사진을 넣었어요. 사진을 누르면 작게·크게 바꿀 수 있어요");
+  }
+  doc.addEventListener("paste", e => {
+    const cd = e.clipboardData || window.clipboardData;
+    const files = cd && cd.files && cd.files.length ? cd.files : null;
+    if (files && [...files].some(f => /^image\//.test(f.type))) { e.preventDefault(); addImages(files); return; }
+    const t = cd.getData("text/plain"); e.preventDefault();      // 글자만 붙여 넣어요 (서식·화면 캡처 HTML 깨짐 방지)
+    if (t) document.execCommand("insertText", false, t);
   });
+  doc.addEventListener("dragover", e => { if ([...(e.dataTransfer.items || [])].some(i => i.kind === "file")) { e.preventDefault(); doc.classList.add("drop"); } });
+  doc.addEventListener("dragleave", () => doc.classList.remove("drop"));
+  doc.addEventListener("drop", e => {
+    doc.classList.remove("drop");
+    if (e.dataTransfer.files && e.dataTransfer.files.length) {
+      e.preventDefault();
+      const r = document.caretRangeFromPoint ? document.caretRangeFromPoint(e.clientX, e.clientY) : null;
+      if (r) { sel().removeAllRanges(); sel().addRange(r); }
+      addImages(e.dataTransfer.files);
+    }
+  });
+  doc.addEventListener("click", e => { if (e.target.tagName === "IMG") e.target.classList.toggle("sm"); });
+  const fileIn = host.querySelector(".re-file");
+  host.querySelector(".re-img").onmousedown = e => { e.preventDefault(); fileIn.click(); };
+  fileIn.onchange = () => { addImages(fileIn.files); fileIn.value = ""; };
+  // 크게 쓰기 (화면 가득)
+  const fullBtn = host.querySelector(".re-full");
+  fullBtn.onclick = e => { e.preventDefault(); const on = host.classList.toggle("re-big"); fullBtn.textContent = on ? "⤡ 작게" : "⤢ 크게"; document.body.classList.toggle("re-big-open", on); doc.focus(); };
+  host.addEventListener("keydown", e => { if (e.key === "Escape" && host.classList.contains("re-big")) { e.stopPropagation(); fullBtn.click(); } });
 
   // 템플릿
   host.querySelector(".re-tpl").onclick = async e => {

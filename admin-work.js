@@ -90,7 +90,7 @@ function editTask(id, preset = {}) {
   const x = id ? TASKS.find(y => y.id === id) : { title: "", memo: "", status: "todo", assignee: "", due: null, priority: 1, shop_id: null, lead_id: null, watchers: [], ...preset };
   let refs = [...(x.watchers || [])];
   const d = document.createElement("div"); d.className = "overlay center";
-  d.innerHTML = `<div class="modal task-modal" style="width:min(760px,calc(100% - 32px))"><h2>${id ? "할 일" : "새 할 일"}</h2>
+  d.innerHTML = `<div class="modal task-modal" style="width:min(1040px,calc(100% - 24px))"><h2>${id ? "할 일" : "새 할 일"}</h2>
     <div style="display:grid;gap:10px;margin-top:8px">
       <label class="f"><span>제목 <em>*</em></span><input id="tTitle" value="${esc(x.title)}" placeholder="예: 다한스파 계약서 받기"></label>
       <div class="f"><span>내용</span><div id="tMemo" class="re"></div></div>
