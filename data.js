@@ -42,15 +42,15 @@ const CITIES = [
 
 // 4) 카테고리 (icon은 이모티콘)
 const CATEGORIES = [
+  { id: "skin", icon: "✨", name: { ko: "피부관리", en: "Facial & Skincare", vi: "Chăm sóc da mặt" }, sub: [
+      { ko: "페이셜 케어", en: "Facial", vi: "Chăm sóc da mặt" }, { ko: "여드름 관리", en: "Acne care", vi: "Trị mụn" },
+      { ko: "미백·재생", en: "Whitening / Repair", vi: "Dưỡng trắng / Phục hồi" } ] },
   { id: "massage", icon: "💆", name: { ko: "마사지", en: "Massage", vi: "Massage" }, sub: [
       { ko: "전신 마사지", en: "Full-body", vi: "Toàn thân" }, { ko: "발 마사지", en: "Foot", vi: "Chân" },
       { ko: "타이/아로마", en: "Thai / Aroma", vi: "Thái / Tinh dầu" }, { ko: "핫스톤", en: "Hot stone", vi: "Đá nóng" } ] },
   { id: "spa", icon: "🧖", name: { ko: "스파·바디케어", en: "Spa & Body", vi: "Spa & Chăm sóc cơ thể" }, sub: [
       { ko: "바디 스크럽", en: "Body scrub", vi: "Tẩy tế bào chết" }, { ko: "허브 찜질", en: "Herbal steam", vi: "Xông thảo dược" },
       { ko: "커플 스파", en: "Couple spa", vi: "Spa đôi" } ] },
-  { id: "skin", icon: "✨", name: { ko: "피부관리", en: "Facial & Skincare", vi: "Chăm sóc da mặt" }, sub: [
-      { ko: "페이셜 케어", en: "Facial", vi: "Chăm sóc da mặt" }, { ko: "여드름 관리", en: "Acne care", vi: "Trị mụn" },
-      { ko: "미백·재생", en: "Whitening / Repair", vi: "Dưỡng trắng / Phục hồi" } ] },
   { id: "derma", icon: "💉", name: { ko: "피부과 시술", en: "Dermatology", vi: "Da liễu thẩm mỹ" }, sub: [
       { ko: "레이저", en: "Laser", vi: "Laser" }, { ko: "보톡스·필러", en: "Botox / Filler", vi: "Botox / Filler" },
       { ko: "실리프팅", en: "Thread lift", vi: "Căng chỉ" }, { ko: "스킨부스터", en: "Skin booster", vi: "Skin booster" } ] },
