@@ -754,8 +754,9 @@ async function drawAccount() {
 
 /* ===== 처음 한 번: 기존 업체를 데이터베이스로 옮기기 ===== */
 async function offerMigration() {
-  if (shops.length || typeof SHOPS === "undefined" || !SHOPS.length) return;
-  const n = notice("warn", `<span class="grow"><b>데이터베이스가 비어 있어요.</b> 지금 사이트에 있는 업체 ${SHOPS.length}곳(사진, 메뉴, 확인 메모 포함)과 카테고리 사진을 옮길까요?</span><button class="btn main sm" id="migBtn">옮기기</button>`, "nMig");
+  // 기존 사이트 업체가 하나도 옮겨지지 않았을 때만 (엑셀로 새 업체를 먼저 올렸어도 물어봐요)
+  if (typeof SHOPS === "undefined" || !SHOPS.length || SHOPS.some(s => shops.some(x => x.id === s.id))) return;
+  const n = notice("warn", `<span class="grow"><b>기존 업체가 아직 데이터베이스에 없어요.</b> 지금 사이트에 있는 업체 ${SHOPS.length}곳(사진, 메뉴, 확인 메모 포함)과 카테고리 사진을 옮길까요?</span><button class="btn main sm" id="migBtn">옮기기</button>`, "nMig");
   $("migBtn").onclick = async () => {
     $("migBtn").disabled = true; $("migBtn").textContent = "옮기는 중…";
     const notes = typeof ADMIN_NOTES !== "undefined" ? ADMIN_NOTES : {};

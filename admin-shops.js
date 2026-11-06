@@ -535,7 +535,7 @@ const COLS = [
   ["desc.ko", "소개(한국어)"], ["desc.en", "소개(영어)"], ["desc.vi", "소개(베트남어)"], ["recommend.ko", "추천대상(한국어)"], ["recommend.en", "추천대상(영어)"], ["recommend.vi", "추천대상(베트남어)"],
   ["address.ko", "주소(한국어)"], ["address.en", "주소(영어)"], ["address.vi", "주소(베트남어)"], ["map", "지도링크"], ["geo", "좌표(위도,경도)"],
   ["open", "여는시간"], ["close", "닫는시간"], ["closed", "휴무요일"], ["staffLangs", "응대언어"],
-  ["rating", "평점"], ["reviews", "후기수"], ["menu", "메뉴"], ["img", "사진주소"]
+  ["rating", "평점"], ["reviews", "후기수"], ["menu", "메뉴"], ["img", "사진주소"], ["review", "확인필요(;로 구분)"]
 ];
 const csvCell = v => { v = String(v ?? ""); return /[",\n\r]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v; };
 function toRow(s) {
@@ -551,6 +551,7 @@ function toRow(s) {
       case "geo": return s.geo ? s.geo.join(", ") : "";
       case "closed": return (s.closed || []).map(d => DAYS[d]).join(",");
       case "staffLangs": return (s.staffLangs || []).map(l => langName[l] || l).join(",");
+      case "review": return (s.review || []).join(" ; ");
       case "menu": return (s.menu || []).map(m => [m.name.ko, m.name.en, m.name.vi || "", m.min, m.price].join(" | ")).join(" ; ");
       default: { const [a, b] = k.split("."); return b ? (s[a] || {})[b] : s[a]; }
     }
@@ -612,6 +613,7 @@ function rowToShop(obj, line, errs) {
     const [ko, en, vi, min, price] = parts.length >= 5 ? parts : [parts[0], parts[1], "", parts[2], parts[3]];
     return { name: { ko: ko || en || "", en: en || ko || "", vi: vi || "" }, min: parseInt(min) || 0, price: parseInt(String(price || "").replace(/[^\d]/g, "")) || 0 };
   }).filter(m => m.name.ko);
+  { const rv = split(g("review"), /[;；]/); if (rv.length) s.review = rv; }
   return s;
 }
 
@@ -642,7 +644,7 @@ async function importCSV(file) {
   d.querySelector("[data-no]").onclick = () => d.remove();
   d.querySelector("[data-yes]").onclick = async () => {
     const btn = d.querySelector("[data-yes]"); btn.disabled = true; btn.textContent = "저장 중…";
-    upd.forEach(s => { const o = shops.find(x => x.id === s.id); if (!s.img) s.img = o.img; if (o.imgPos && s.img === o.img) s.imgPos = o.imgPos; if (o.menuImgs) s.menuImgs = o.menuImgs; if (o.userReviews) { s.userReviews = o.userReviews; s.rating = o.rating; s.reviews = o.reviews; } if (o.best) s.best = true; if (!s.geo && o.geo) { s.geo = o.geo; if (o.geoApprox) s.geoApprox = true; } if (o.review) s.review = o.review; if (o.checks) s.checks = o.checks; });
+    upd.forEach(s => { const o = shops.find(x => x.id === s.id); if (!s.img) s.img = o.img; if (o.imgPos && s.img === o.img) s.imgPos = o.imgPos; if (o.menuImgs) s.menuImgs = o.menuImgs; if (o.userReviews) { s.userReviews = o.userReviews; s.rating = o.rating; s.reviews = o.reviews; } if (o.best) s.best = true; if (!s.geo && o.geo) { s.geo = o.geo; if (o.geoApprox) s.geoApprox = true; } if (!s.review && o.review) s.review = o.review; if (o.checks) s.checks = o.checks; });
     let sort = Math.max(0, ...Object.values(META).map(m => m.sort || 0));
     add.forEach(s => { META[s.id] = { published: true, sort: ++sort }; });
     let ok = 0;
