@@ -1,5 +1,5 @@
 /* 엉클데이 관리자 — 업무: 할 일 보드, 업체 영업 진행 */
-let TASKS = [], LEADS = [], ADMINS = [];
+let TASKS = [], LEADS = [], ADMINS = [], CMT_N = {};
 const TASK_COLS = [["todo", "할 일"], ["doing", "진행 중"], ["done", "완료"]];
 const LEAD_COLS = [["found", "후보 발굴", "찾아 둔 업체"], ["contacted", "연락함", "첫 연락·답 기다림"], ["meeting", "미팅", "방문·통화 상담"],
   ["negotiating", "계약 협의", "수수료·조건 조율"], ["signed", "계약 완료", "사이트 등록 준비"], ["live", "입점 완료", "사이트에 공개됨"], ["hold", "보류·거절", "나중에 다시"]];
@@ -13,6 +13,8 @@ async function loadWork() {
     sb.from("leads").select("*").order("updated_at", { ascending: false }).limit(3000),
     sb.from("admins").select("email,name").order("created_at")]);
   TASKS = t.error ? [] : t.data; LEADS = l.error ? [] : l.data; ADMINS = a.error ? [] : a.data;
+  const c = await sb.from("comments").select("target_id").limit(20000);
+  CMT_N = {}; (c.error ? [] : c.data).forEach(x => CMT_N[x.target_id] = (CMT_N[x.target_id] || 0) + 1);
   return !t.error && !l.error;
 }
 const who = e => e ? (e.split("@")[0]) : "미지정";
@@ -82,7 +84,7 @@ function taskCard(x) {
     <div class="kt">${esc(x.title)}</div>
     ${x.memo ? (() => { const t = richText(x.memo); const ck = (x.memo.match(/<li[^>]*>/g) || []).length && /class="check"/.test(x.memo) ? [((x.memo.match(/<ul class="check">[\s\S]*?<\/ul>/g) || []).join("").match(/<li data-done/g) || []).length, ((x.memo.match(/<ul class="check">[\s\S]*?<\/ul>/g) || []).join("").match(/<li/g) || []).length] : null;
       return `${t ? `<div class="km">${esc(t.length > 70 ? t.slice(0, 70) + "…" : t)}</div>` : ""}${ck && ck[1] ? `<div class="km ckp"><span style="width:${Math.round(ck[0] / ck[1] * 100)}%"></span><em>☑ ${ck[0]}/${ck[1]}</em></div>` : ""}`; })() : ""}
-    <div class="kchips">${x.status !== "done" ? dueTag(x.due) : ""}<span class="chip">👤 ${esc(who(x.assignee))}</span>${(x.watchers || []).length ? `<span class="chip ref" title="참조: ${esc(x.watchers.join(", "))}">👥 ${esc(x.watchers.map(who).join(", "))}</span>` : ""}${sh ? `<span class="chip">🏪 ${esc(sh.name.ko)}</span>` : ""}${ld ? `<span class="chip">🤝 ${esc(ld.name)}</span>` : ""}</div></div>`;
+    <div class="kchips">${x.status !== "done" ? dueTag(x.due) : ""}<span class="chip">👤 ${esc(who(x.assignee))}</span>${(x.watchers || []).length ? `<span class="chip ref" title="참조: ${esc(x.watchers.join(", "))}">👥 ${esc(x.watchers.map(who).join(", "))}</span>` : ""}${sh ? `<span class="chip">🏪 ${esc(sh.name.ko)}</span>` : ""}${ld ? `<span class="chip">🤝 ${esc(ld.name)}</span>` : ""}${CMT_N[x.id] ? `<span class="chip">💬 ${CMT_N[x.id]}</span>` : ""}</div></div>`;
 }
 function editTask(id, preset = {}) {
   const x = id ? TASKS.find(y => y.id === id) : { title: "", memo: "", status: "todo", assignee: "", due: null, priority: 1, shop_id: null, lead_id: null, watchers: [], ...preset };
@@ -103,12 +105,14 @@ function editTask(id, preset = {}) {
         <label class="f"><span>관련 영업</span><select id="tLead"><option value="">없음</option>${LEADS.map(l => `<option value="${l.id}" ${l.id === x.lead_id ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
       </div>
       <div class="f"><span>참조 <small class="hint">— 함께 알아야 하는 사람 (여러 명)</small></span><div class="people" id="tRefs"></div></div>
+      ${id ? `<div class="f"><span>💬 댓글</span><div id="tCmt"></div></div>` : `<div class="hint">💬 댓글은 저장한 뒤에 달 수 있어요.</div>`}
       ${id ? `<div class="hint">만든 사람: ${esc(x.created_by || "")} · ${dt(x.created_at)}${x.done_at ? ` · 완료 ${dt(x.done_at)}` : ""}</div>` : ""}
     </div>
     <div class="btns">${id ? `<button class="btn danger" data-del style="margin-right:auto">삭제</button>` : ""}<button class="btn" data-no>닫기</button><button class="btn main" data-yes>저장</button></div></div>`;
   document.body.appendChild(d);
   const ed = richEditor(d.querySelector("#tMemo"), x.memo || "", { onTemplate: t => { const ti = d.querySelector("#tTitle"); if (!ti.value.trim()) ti.value = t.name.replace(/^[^\s가-힣A-Za-z0-9]+\s*/, ""); } });
   d.querySelector("#tTitle").focus();
+  if (id) commentBox(d.querySelector("#tCmt"), "task", id);
   const drawRefs = () => {
     const box = d.querySelector("#tRefs"), owner = d.querySelector("#tWho").value;
     box.innerHTML = ADMINS.map(a => { const on = refs.includes(a.email), me = a.email === owner;
@@ -117,7 +121,7 @@ function editTask(id, preset = {}) {
   };
   drawRefs();
   d.querySelector("#tWho").onchange = () => { refs = refs.filter(v => v !== d.querySelector("#tWho").value); drawRefs(); };
-  d.querySelector("[data-no]").onclick = () => d.remove();
+  d.querySelector("[data-no]").onclick = () => { d.remove(); if (TAB === "work") drawWork(); if (preset._after) preset._after(); };
   d.querySelector("[data-yes]").onclick = async () => {
     const row = { title: d.querySelector("#tTitle").value.trim(), memo: ed.get(), status: d.querySelector("#tSt").value, due: d.querySelector("#tDue").value || null,
       priority: +d.querySelector("#tPri").value, assignee: d.querySelector("#tWho").value || null, shop_id: d.querySelector("#tShop").value || null, lead_id: d.querySelector("#tLead").value || null, watchers: refs.filter(v => v !== (d.querySelector("#tWho").value || "")) };
@@ -150,7 +154,7 @@ function drawLeads() {
             <div class="kt">${esc(l.name)}</div>
             <div class="km">${esc([cityName(l.city), l.cat ? catName(l.cat) : ""].filter(x => x && x !== "-").join(" · "))}</div>
             ${l.next_action || l.next_date ? `<div class="km next">➡ ${esc(l.next_action || "다음 연락")} ${l.next_date ? `<b class="${late ? "lt" : ""}">${dayKo(l.next_date)}</b>` : ""}</div>` : ""}
-            <div class="kchips"><span class="chip">👤 ${esc(who(l.assignee))}</span>${l.rate ? `<span class="chip">💯 ${+l.rate}%</span>` : ""}${l.shop_id ? `<span class="chip">🏪 등록됨</span>` : ""}${open ? `<span class="chip">✅ ${open}</span>` : ""}</div></div>`;
+            <div class="kchips"><span class="chip">👤 ${esc(who(l.assignee))}</span>${l.rate ? `<span class="chip">💯 ${+l.rate}%</span>` : ""}${l.shop_id ? `<span class="chip">🏪 등록됨</span>` : ""}${open ? `<span class="chip">✅ ${open}</span>` : ""}${CMT_N[l.id] ? `<span class="chip">💬 ${CMT_N[l.id]}</span>` : ""}</div></div>`;
         }).join("") || `<div class="kempty">-</div>`}</div></div>`;
     }).join("");
   if ($("leadSeed")) $("leadSeed").onclick = async () => {
@@ -213,7 +217,8 @@ async function openLead(id) {
           <button class="btn danger sm" id="lDel">삭제</button></div>
       </div>
       <div class="box"><h3>할 일 <small>이 업체와 관련된 일</small></h3><div id="lTasks"></div><div class="btn-row"><button class="btn sm" id="lTaskAdd">＋ 할 일 만들기</button></div></div>
-      <div class="box"><h3>연락 기록 <small>누가 언제 무엇을 했는지</small></h3>
+      <div class="box"><h3>💬 댓글 <small>관리자끼리 의견 나누기</small></h3><div id="lCmt"></div></div>
+      <div class="box"><h3>연락 기록 <small>업체와 연락한 내역</small></h3>
         <div style="display:flex;gap:6px;flex-wrap:wrap"><select id="logK" style="padding:8px;border:1px solid var(--line);border-radius:9px">${Object.entries(LOGK).map(([k, n]) => `<option value="${k}">${n}</option>`).join("")}</select>
           <input id="logIn" placeholder="예: 매니저와 통화, 다음 주 화요일 방문 약속" style="flex:1;min-width:0;padding:9px 11px;border:1px solid var(--line);border-radius:9px"><button class="btn" id="logAdd">남기기</button></div>
         <ul class="tl" id="lLog"><li>불러오는 중…</li></ul></div>
@@ -221,6 +226,7 @@ async function openLead(id) {
   const close = () => { $("layer").innerHTML = ""; if (TAB === "work") drawWork(); };
   $("pCancel").onclick = close; $("ov").onclick = e => { if (e.target.id === "ov") close(); };
   const led = richEditor($("lMemo"), l.memo || "");
+  commentBox($("lCmt"), "lead", l.id);
   const save = async (patch, msg = "저장했어요") => {
     try { const r = await q(sb.from("leads").update(patch).eq("id", l.id).select().single()); LEADS[LEADS.indexOf(l)] = r; l = r; toast(msg); drawHead(); loadLog(); } catch (e) {}
   };
@@ -288,4 +294,45 @@ function bindKanban(kind, onMove, onOpen) {
     col.ondragleave = e => { if (!col.contains(e.relatedTarget)) col.classList.remove("over"); };
     col.ondrop = e => { e.preventDefault(); col.classList.remove("over"); const id = dragId || e.dataTransfer.getData("text/plain"); if (id) onMove(id, col.dataset.col); };
   });
+}
+
+/* ---------- 댓글 ---------- */
+const cmtHtml = t => esc(t).replace(/@([\w.\-가-힣]+)/g, '<b class="mention">@$1</b>').replace(/\n/g, "<br>");
+async function commentBox(host, type, id) {
+  host.innerHTML = `<div class="cmts"><div class="cmt-list"><div class="hint">불러오는 중…</div></div>
+    <div class="cmt-new"><span class="av me">${esc(who(ME.email).slice(0, 1).toUpperCase())}</span>
+      <textarea rows="1" placeholder="댓글 달기… (@이름으로 언급, Ctrl+Enter로 등록)"></textarea><button type="button" class="btn sm main">등록</button></div></div>`;
+  const list = host.querySelector(".cmt-list"), ta = host.querySelector("textarea"), btn = host.querySelector(".cmt-new .btn");
+  ta.oninput = () => { ta.style.height = "auto"; ta.style.height = Math.min(ta.scrollHeight, 160) + "px"; };
+  async function load() {
+    const r = await sb.from("comments").select("*").eq("target_type", type).eq("target_id", id).order("created_at");
+    if (r.error) { list.innerHTML = `<div class="hint">댓글을 불러오지 못했어요. (SQL을 다시 실행했는지 확인해 주세요)</div>`; return; }
+    CMT_N[id] = r.data.length;
+    list.innerHTML = r.data.map(c => {
+      const mine = c.author_email === (ME.email || "").toLowerCase(), name = who(c.author_email || (c.author || "").replace(/^관리자 /, ""));
+      return `<div class="cmt" data-c="${c.id}"><span class="av">${esc(name.slice(0, 1).toUpperCase())}</span><div class="cmt-b">
+        <div class="cmt-h"><b>${esc(name)}</b><time>${dt(c.created_at)}${c.edited_at ? " · 수정됨" : ""}</time>${mine ? `<span class="cmt-act"><button type="button" data-e>수정</button><button type="button" data-d>삭제</button></span>` : ""}</div>
+        <div class="cmt-t">${cmtHtml(c.body)}</div></div></div>`;
+    }).join("") || `<div class="hint">아직 댓글이 없어요.</div>`;
+    list.querySelectorAll("[data-c]").forEach(el => {
+      const c = r.data.find(x => x.id === el.dataset.c);
+      const e = el.querySelector("[data-e]"), dl = el.querySelector("[data-d]");
+      if (e) e.onclick = () => {
+        const t = el.querySelector(".cmt-t"); t.innerHTML = `<textarea rows="2" style="width:100%">${esc(c.body)}</textarea><div class="btn-row"><button type="button" class="btn sm main" data-s>저장</button><button type="button" class="btn sm" data-x>취소</button></div>`;
+        t.querySelector("[data-x]").onclick = load;
+        t.querySelector("[data-s]").onclick = async () => { const v = t.querySelector("textarea").value.trim(); if (!v) return;
+          const u = await sb.from("comments").update({ body: v }).eq("id", c.id); if (u.error) { dbErr(u.error); return; } load(); };
+      };
+      if (dl) dl.onclick = () => confirmBox("이 댓글을 지울까요?", async () => { const u = await sb.from("comments").delete().eq("id", c.id); if (u.error) { dbErr(u.error, "삭제"); return; } load(); });
+    });
+  }
+  const send = async () => {
+    const v = ta.value.trim(); if (!v) return; btn.disabled = true;
+    const r = await sb.from("comments").insert({ target_type: type, target_id: id, body: v });
+    btn.disabled = false; if (r.error) { dbErr(r.error, "댓글 등록"); return; }
+    ta.value = ""; ta.style.height = "auto"; load();
+  };
+  btn.onclick = send;
+  ta.onkeydown = e => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && !e.isComposing) { e.preventDefault(); send(); } };
+  load();
 }

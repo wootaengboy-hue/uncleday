@@ -91,10 +91,11 @@ function richEditor(host, html, opts = {}) {
 
   // 체크리스트 체크 / 토글 열고 닫기 (왼쪽 아이콘 자리를 누르면)
   doc.addEventListener("mousedown", e => {
-    const li = e.target.closest && e.target.closest("ul.check > li");
-    if (li && e.offsetX < 24 && e.target === li) { e.preventDefault(); li.toggleAttribute("data-done"); return; }
-    const h = e.target.closest && e.target.closest(".tg-head");
-    if (h && e.target === h && e.offsetX < 22) { e.preventDefault(); h.parentNode.classList.toggle("open"); }
+    if (!e.target.closest) return;
+    const li = e.target.closest("ul.check > li");
+    if (li && e.clientX - li.getBoundingClientRect().left < 26) { e.preventDefault(); li.toggleAttribute("data-done"); return; }
+    const h = e.target.closest(".tg-head");
+    if (h && e.clientX - h.getBoundingClientRect().left < 22) { e.preventDefault(); h.parentNode.classList.toggle("open"); }
   });
 
   // '/' 메뉴
@@ -127,15 +128,32 @@ function richEditor(host, html, opts = {}) {
     if (!menu.hidden) {
       if (e.key === "ArrowDown") { e.preventDefault(); mi = (mi + 1) % mlist.length; openMenu(slashNode ? slashNode.textContent.slice(slashOff + 1, sel().anchorOffset) : ""); return; }
       if (e.key === "ArrowUp") { e.preventDefault(); mi = (mi - 1 + mlist.length) % mlist.length; openMenu(slashNode ? slashNode.textContent.slice(slashOff + 1, sel().anchorOffset) : ""); return; }
-      if (e.key === "Enter" && !e.isComposing) { e.preventDefault(); choose(mi); return; }
       if (e.key === "Escape") { e.preventDefault(); closeMenu(); return; }
     }
-    // 토글 제목에서 Enter → 토글 안쪽으로
-    const b = caretBlock();
-    if (e.key === "Enter" && !e.isComposing && !e.shiftKey && b && b.classList && b.classList.contains("tg-head")) {
-      e.preventDefault(); const t = b.parentNode; t.classList.add("open");
-      let body = t.querySelector(".tg-body"); let p = body.firstElementChild; if (!p) { p = document.createElement("p"); p.innerHTML = "<br>"; body.append(p); }
-      placeCaret(p); return;
+  });
+  // Enter·지우기는 beforeinput에서 처리해요 (한글 입력 중에 Enter를 눌러도 똑같이 동작하도록)
+  const newP = () => { const p = document.createElement("p"); p.innerHTML = "<br>"; return p; };
+  const atStart = el => { const s = sel(); if (!s.rangeCount || !s.isCollapsed) return false; const r = document.createRange(); r.selectNodeContents(el); r.setEnd(s.anchorNode, s.anchorOffset); return !r.toString().length; };
+  doc.addEventListener("beforeinput", e => {
+    const b = caretBlock(), cls = b && b.classList, par = b && b.parentNode && b.parentNode.classList;
+    if (e.inputType === "insertParagraph") {
+      if (!menu.hidden && mlist.length) { e.preventDefault(); choose(mi); return; }
+      if (cls && cls.contains("tg-head")) {               // 토글 제목에서 Enter
+        e.preventDefault(); const t = b.parentNode;
+        if (t.classList.contains("open")) { const body = t.querySelector(".tg-body"); let p = body.firstElementChild; if (!p) { p = newP(); body.append(p); } placeCaret(p); }
+        else { const p = newP(); t.after(p); placeCaret(p); }
+        return;
+      }
+      if (par && (par.contains("tg-body") || par.contains("callout")) && !b.textContent.trim() && b === b.parentNode.lastElementChild) {
+        e.preventDefault(); const box = par.contains("tg-body") ? b.parentNode.parentNode : b.parentNode;   // 빈 줄에서 Enter → 토글·상자 밖으로
+        if (b.parentNode.children.length > 1) b.remove();
+        const p = newP(); box.after(p); placeCaret(p); return;
+      }
+    }
+    if (e.inputType === "deleteContentBackward" && cls && cls.contains("tg-head") && atStart(b)) {   // 토글 제목 맨 앞에서 지우기 → 일반 글로
+      e.preventDefault(); const t = b.parentNode, p = document.createElement("p"); p.innerHTML = b.innerHTML || "<br>";
+      const body = [...t.querySelector(".tg-body").children].filter(x => x.textContent.trim());
+      t.replaceWith(p, ...body); placeCaret(p);
     }
   });
   doc.addEventListener("keyup", e => {
@@ -196,6 +214,6 @@ function richView(el, html, onChange) {
   el.classList.add("re-doc", "view"); el.innerHTML = richFrom(html) || `<p class="hint">내용 없음</p>`;
   el.onclick = e => {
     const li = e.target.closest("ul.check > li"); if (li && e.target === li && e.offsetX < 24) { li.toggleAttribute("data-done"); if (onChange) onChange(richClean(el.innerHTML)); return; }
-    const h = e.target.closest(".tg-head"); if (h && e.target === h) h.parentNode.classList.toggle("open");
+    const h = e.target.closest(".tg-head"); if (h) h.parentNode.classList.toggle("open");
   };
 }

@@ -670,4 +670,42 @@ alter table public.templates enable row level security;
 drop policy if exists admin_all on public.templates;
 create policy admin_all on public.templates for all to authenticated using (public.is_admin()) with check (public.is_admin());
 
+-- ---------------------------------------------------------------
+-- 15. 댓글 (할 일·영업 카드)
+-- ---------------------------------------------------------------
+create table if not exists public.comments (
+  id            uuid primary key default gen_random_uuid(),
+  target_type   text not null check (target_type in ('task', 'lead')),
+  target_id     uuid not null,
+  body          text not null,
+  author        text,
+  author_email  text,
+  created_at    timestamptz not null default now(),
+  edited_at     timestamptz
+);
+create index if not exists comments_target_idx on public.comments (target_type, target_id, created_at);
+create or replace function public.comments_before() returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if tg_op = 'INSERT' then
+    new.author := actor_name(); new.author_email := lower(coalesce(auth.jwt() ->> 'email', '')); new.created_at := now(); new.edited_at := null;
+  else
+    new.author := old.author; new.author_email := old.author_email; new.created_at := old.created_at;
+    new.target_type := old.target_type; new.target_id := old.target_id; new.edited_at := now();
+  end if;
+  return new;
+end $$;
+drop trigger if exists comments_before on public.comments;
+create trigger comments_before before insert or update on public.comments for each row execute function public.comments_before();
+alter table public.comments enable row level security;
+drop policy if exists admin_read on public.comments;
+drop policy if exists admin_insert on public.comments;
+drop policy if exists own_update on public.comments;
+drop policy if exists own_delete on public.comments;
+create policy admin_read   on public.comments for select to authenticated using (public.is_admin());
+create policy admin_insert on public.comments for insert to authenticated with check (public.is_admin());
+create policy own_update   on public.comments for update to authenticated
+  using (public.is_admin() and author_email = lower(auth.jwt() ->> 'email')) with check (public.is_admin());
+create policy own_delete   on public.comments for delete to authenticated
+  using (public.is_admin() and author_email = lower(auth.jwt() ->> 'email'));
+
 -- 끝! 아래에 'Success. No rows returned' 가 보이면 완료예요.
