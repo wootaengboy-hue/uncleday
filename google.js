@@ -34,6 +34,16 @@ function gplaceBox(shop) {
     let html = "";
     if (d.rating) html += `<div class="g-rate">★ <b>${d.rating.toFixed(1)}</b> <span>(${(d.userRatingCount || 0).toLocaleString()})</span> <small>Google</small></div>`;
     const days = d.regularOpeningHours && d.regularOpeningHours.weekdayDescriptions;
+    // 우리 영업시간이 비어 있으면 '한눈에 보기'의 영업시간 칸에 구글 기준 오늘 시간을 보여 줘요 (저장하지 않고 화면에만)
+    if (days && days.length === 7 && !shop.open) {
+      const f = [...document.querySelectorAll("#detail .fact, .fact")].find(x => (x.querySelector(".fi") || {}).textContent === "🕒");
+      if (f) {
+        const vnDay = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })).getDay();
+        const today = days[(vnDay + 6) % 7], t = today.slice(today.indexOf(":") + 1).trim() || today;
+        f.classList.remove("tbd");
+        f.querySelector("b").innerHTML = `${esc(ui("gToday"))} ${esc(t)}<br><small>${esc(ui("gHoursNote"))}</small>`;
+      }
+    }
     if (days && days.length) html += `<details class="g-hours"><summary>🕒 ${ui("gHours")}</summary><ul>${days.map(x => `<li>${esc(x)}</li>`).join("")}</ul></details>`;
     // 업체 사진이 없을 때만 구글 사진 한 장 (사진도 하루 30회까지만)
     const ph = !shop.img && d.photos && d.photos[0];
