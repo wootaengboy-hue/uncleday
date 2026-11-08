@@ -53,5 +53,5 @@ const LIVE = (() => {
     if (a.classList.contains("kakao-link")) track("consult", curShop());
     else if (a.classList.contains("map-link")) track("map", curShop());
   }, true);
-  return { on, rpc, ready, track, view };
+  return { on, rpc, ready, track, view, bot };
 })();

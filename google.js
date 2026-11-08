@@ -5,7 +5,7 @@ const GPLACE = (() => {
   const on = () => typeof GMAPS !== "undefined" && GMAPS.key;
   const memo = {};                      // 이 페이지를 보는 동안만 기억해요 (저장하지 않아요)
   async function take(kind) {
-    if (typeof LIVE === "undefined" || !LIVE.on) return false;
+    if (typeof LIVE === "undefined" || !LIVE.on || LIVE.bot) return false;   // 검색 로봇은 구글 정보를 안 불러와요 (무료 횟수 아끼기)
     try { return await LIVE.rpc("gquota_take", { k: kind }); } catch (e) { return false; }
   }
   async function details(id) {
