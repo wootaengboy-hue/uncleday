@@ -10,6 +10,7 @@ const GUIDE = [
       <li><b>💬 슬랙 알림</b> — 예약·업체 답·후기·팀 알림을 슬랙 채널로 (아래 "슬랙" 참고).</li>
       <li><b>🏷️ 닉네임</b> — 이메일 대신 이름으로 보이고, @이름으로 참조·언급 (아래 "낙서장" 참고).</li>
       <li><b>🛟 자동 백업</b> — 매일 새벽 DB 전체를 잠근 파일로 30일 보관, 관리자에서 되돌리기 (아래 "백업" 참고).</li>
+      <li><b>🔑 비밀번호</b> — Bitwarden으로 한곳에서 관리 (아래 "비밀번호" 참고).</li>
       <li><b>📘 사용 안내</b> — 이 페이지예요. 모르는 게 있으면 위 검색창에 찾아보세요.</li></ul>` }
   ]},
   { sec: "처음 시작", items: [
@@ -124,6 +125,31 @@ const GUIDE = [
       <p>⚙️ 계정 → 💬 슬랙 알림에서 받을 종류를 고르거나, 잠깐 끌 수 있어요. 관리자가 직접 바꾼 예약 상태는 보내지 않아요.</p>
       <p><b>종류별로 다른 채널에 받기</b>: 슬랙 앱 설정 → <b>Incoming Webhooks → Add New Webhook</b>으로 채널마다 주소를 하나씩 더 만들고, 알림 종류 칸에 붙여넣은 뒤 <b>저장</b>해요. 비워 둔 종류는 기본 채널로 가요.<br>우리 채널: <b>#예약</b>(새 예약·업체 답·손님 행동) · <b>#후기</b>(새 후기) · <b>#엉클놀이</b>(팀 알림·영업 단계)</p>
       <p class="tip">💡 슬랙 앱을 휴대폰에 깔면 예약·업체 답을 바로 알림으로 받아요. 팀 대화는 슬랙 채널 스레드에서 나누면 돼요.</p>` }
+  ]},
+  { sec: "🔑 비밀번호", items: [
+    { ic: "🔑", t: "Bitwarden — 비밀번호는 여기에만", b: `
+      <ul><li>웹 보관함: <a href="https://vault.bitwarden.com" target="_blank">vault.bitwarden.com</a> · 크롬 확장·휴대폰 앱: <a href="https://bitwarden.com/download/" target="_blank">bitwarden.com/download</a></li>
+      <li>회사 계정: <b>uncledayadmin@gmail.com</b> · 조직 이름: <b>엉클데이</b> (무료, 2명까지 공유)</li>
+      <li>로그인할 때 크롬 오른쪽 위 Bitwarden 아이콘을 누르거나, 입력 칸의 방패 🛡 아이콘을 누르면 자동으로 채워져요.</li></ul>
+      <p class="warn">⚠️ <b>마스터 비밀번호</b>와 <b>Bitwarden 복구 코드</b>는 Bitwarden 안에 넣지 말고 <b>종이에만</b> 적어 두세요. 잊으면 아무도(Bitwarden도) 못 열어요.</p>` },
+    { ic: "🗂️", t: "어디에 무엇을 넣나요", b: `
+      <table class="gtable"><tr><th>위치</th><th>넣는 것</th><th>누가 봐요</th></tr>
+      <tr><td>🚨 <b>비상용</b> 컬렉션</td><td>BACKUP_PASSWORD · GitHub(wootaengboy-hue, 구글 로그인) · Supabase · 도메인 · 2단계 인증 <b>복구 코드</b>(각 항목 메모 칸)</td><td>사장님만</td></tr>
+      <tr><td>🔐 <b>운영</b> 컬렉션</td><td>구글 uncledayadmin · 네이버 uncledayadm · 슬랙 · 카카오톡 채널</td><td>팀원과 공유</td></tr>
+      <tr><td>👤 <b>내 보관함</b> (개인)</td><td>엉클데이 관리자 로그인(<code>www.uncleday.com/admin.html</code>) · 사장님 개인 구글(wootaengboy, 지도 키·결제)</td><td>본인만</td></tr></table>
+      <ul><li>관리자 로그인처럼 <b>사람마다 다른 계정</b>은 <b>Password Manager → ＋ 추가 → 소유자: 나</b>로 넣어요. (Admin Console에서 추가하면 조직 컬렉션을 고르라고 나와요)</li>
+      <li>구글로 가입한 계정(GitHub·Supabase 등)은 비밀번호 칸을 비우고 메모에 "구글(…)로 로그인"이라고 적어요.</li>
+      <li>넣지 않아도 되는 것: BACKUP_TOKEN(관리자에서 다시 만들면 됨), Supabase 공개 키·구글 지도 키(원래 공개용)</li></ul>` },
+    { ic: "👥", t: "팀원 초대·퇴사 처리", b: `
+      <ol><li>팀원은 각자 <a href="https://vault.bitwarden.com/#/signup" target="_blank">무료 Bitwarden 계정</a>을 만들어요</li>
+      <li>사장님: 웹 보관함 → <b>Admin Console → 구성원 → Invite member</b> → 컬렉션은 <b>운영</b>만 체크</li>
+      <li>무료 조직은 2명까지예요. 3명 이상 공유가 필요하면 Teams 요금제(1명당 월 약 $4)로 올려요</li>
+      <li><b>팀원이 나가면</b>: 구성원에서 빼고 → 그 사람이 알던 운영 비밀번호를 바꾸고 → 엉클데이 관리자 ⚙️ 계정에서도 빼요</li></ol>` },
+    { ic: "📏", t: "비밀번호 규칙 4가지", b: `
+      <ol><li>비밀번호는 <b>Bitwarden에만</b> — 낙서장·슬랙·카톡·메모장에 적지 않아요</li>
+      <li>새 비밀번호는 Bitwarden <b>생성기(🔄)</b>로 만들어요</li>
+      <li>같은 비밀번호를 <b>두 곳 이상 쓰지 않아요</b></li>
+      <li>중요한 계정(GitHub·Supabase·구글·네이버·Bitwarden)은 모두 <b>2단계 인증</b>을 켜요</li></ol>` }
   ]},
   { sec: "🛟 백업", items: [
     { ic: "🛟", t: "자동 백업 — 어떻게 돌아가나요", b: `
