@@ -1,5 +1,6 @@
 /* 업체 상세 + 예약 요청. 메인 화면 안에서 새로고침 없이 그려요 (shop.html 단독으로도 열려요). */
-const shopLink = id => window.SPA ? `#/shop/${encodeURIComponent(id)}` : `shop.html#${id}`;
+// 업체 주소는 /s/업체id/ (검색엔진이 읽는 진짜 페이지). 메인 화면 안에서는 눌러도 새로고침 없이 열려요 (app.js)
+const shopLink = id => `/s/${encodeURIComponent(id)}/`;
 
 // 업체 화면에서 '상담하기'를 누르면: 이 업체 문의 문구를 보여 주고 복사한 뒤, 카톡을 열어요 (카톡 창에 붙여넣기)
 function copyText(text) {
@@ -14,7 +15,7 @@ function copyText(text) {
 }
 document.addEventListener("click", e => {
   const a = e.target.closest("a.kakao-link"); if (!a || a.id === "bkKakao") return;
-  const m = location.hash.match(/^#\/shop\/(.+)$/) || (/shop\.html$/.test(location.pathname) && [0, location.hash.slice(1)]);
+  const m = (window.SHOP_ID && [0, window.SHOP_ID]) || location.hash.match(/^#\/shop\/(.+)$/) || (/shop\.html$/.test(location.pathname) && [0, location.hash.slice(1)]);
   const shop = m && SHOPS.find(s => s.id === decodeURIComponent(m[1])); if (!shop) return;
   e.preventDefault();
   const c = CITIES.find(x => x.id === shop.city), k = CATEGORIES.find(x => x.id === shop.cat);
@@ -50,7 +51,7 @@ document.querySelectorAll(".cta-bar").forEach(e => e.remove());
 document.body.classList.remove("has-cta");
 
 if (!shop) {
-  box.innerHTML = `<p class="empty">${ui("notFound")}</p><a href="${window.SPA ? "#" : "index.html"}">${ui("back")}</a>`;
+  box.innerHTML = `<p class="empty">${ui("notFound")}</p><a href="${window.SPA ? "#" : "/"}">${ui("back")}</a>`;
 } else {
   document.title = tx(shop.name) + " | " + tx(SITE.name);
   const cat = CATEGORIES.find(c => c.id === shop.cat);
@@ -80,7 +81,7 @@ if (!shop) {
     .sort((a, b) => (b.city === shop.city) - (a.city === shop.city)).slice(0, 3);
 
   box.innerHTML = `
-    <a href="${window.SPA ? "#" : "index.html"}" class="back">${ui("back")}</a>
+    <a href="${window.SPA ? "#" : "/"}" class="back">${ui("back")}</a>
     ${img}
     <div class="head">
       <div class="chips"><span class="tag cat-tag">${cat ? cat.icon + " " + tx(cat.name) : ""}</span>

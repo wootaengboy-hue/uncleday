@@ -156,8 +156,10 @@ drawCities(); drawNear(); drawCats(); drawShops();
 // ---------- 화면 전환: 업체를 누르면 새로고침 없이 상세 화면으로, 뒤로 가면 보던 위치로
 let homeY = 0;
 document.addEventListener("click", e => {
-  const a = e.target.closest('a[href^="#/shop/"]');
-  if (a && $("detail").hidden) homeY = window.scrollY;
+  const a = e.target.closest('a[href^="/s/"], a[href^="#/shop/"]'); if (!a) return;
+  if ($("detail").hidden) homeY = window.scrollY;
+  const m = a.getAttribute("href").match(/^\/s\/([^/]+)\/$/);
+  if (m && !e.ctrlKey && !e.metaKey && !e.shiftKey && e.button === 0 && a.target !== "_blank") { e.preventDefault(); location.hash = "#/shop/" + m[1]; }
 }, true);
 function route() {
   const m = location.hash.match(/^#\/shop\/(.+)$/);

@@ -71,7 +71,7 @@ const LIVE = (() => {
   const today = new Date().toISOString().slice(0, 10);
   if (once(localStorage, "ud-visit-" + today)) { track("visit"); trackSrc(); }
   track("hit");
-  const curShop = () => { const m = location.hash.match(/^#\/shop\/(.+)$/); if (m) return decodeURIComponent(m[1]); if (/shop\.html$/.test(location.pathname)) return decodeURIComponent(location.hash.slice(1)); return null; };
+  const curShop = () => { if (window.SHOP_ID) return window.SHOP_ID; const m = location.hash.match(/^#\/shop\/(.+)$/); if (m) return decodeURIComponent(m[1]); if (/shop\.html$/.test(location.pathname)) return decodeURIComponent(location.hash.slice(1)); return null; };
   const view = id => { if (id && once(sessionStorage, "ud-view-" + id)) track("view", id); };
   document.addEventListener("click", e => {
     const a = e.target.closest("a"); if (!a) return;
