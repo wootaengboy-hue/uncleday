@@ -13,7 +13,7 @@ const GPLACE = (() => {
     if (!(await take("details"))) return (memo[id] = null);
     try {
       const r = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(id)}?languageCode=${lang === "vi" ? "vi" : lang === "en" ? "en" : "ko"}`, {
-        headers: { "X-Goog-Api-Key": GMAPS.key, "X-Goog-FieldMask": "rating,userRatingCount,regularOpeningHours,photos,googleMapsUri" } });
+        headers: { "X-Goog-Api-Key": GMAPS.key, "X-Goog-FieldMask": "rating,userRatingCount,regularOpeningHours,photos,googleMapsUri,formattedAddress" } });
       memo[id] = r.ok ? await r.json() : null;
     } catch (e) { memo[id] = null; }
     return memo[id];
@@ -34,6 +34,12 @@ function gplaceBox(shop) {
     let html = "";
     if (d.rating) html += `<div class="g-rate">★ <b>${d.rating.toFixed(1)}</b> <span>(${(d.userRatingCount || 0).toLocaleString()})</span> <small>Google</small></div>`;
     const days = d.regularOpeningHours && d.regularOpeningHours.weekdayDescriptions;
+    // 우리 주소가 비어 있으면 구글 주소를 보여 줘요 (화면에만)
+    const addrEmpty = !shop.address || !Object.values(shop.address).some(v => v && v.trim());
+    if (addrEmpty && d.formattedAddress) {
+      const f = [...document.querySelectorAll(".fact")].find(x => (x.querySelector(".fi") || {}).textContent === "📍");
+      if (f) { f.classList.remove("tbd"); f.querySelector("b").innerHTML = `${esc(d.formattedAddress)}<br><small>${esc(ui("gAddrNote"))}</small>`; }
+    }
     // 우리 영업시간이 비어 있으면 '한눈에 보기'의 영업시간 칸에 구글 기준 오늘 시간을 보여 줘요 (저장하지 않고 화면에만)
     if (days && days.length === 7 && !shop.open) {
       const f = [...document.querySelectorAll("#detail .fact, .fact")].find(x => (x.querySelector(".fi") || {}).textContent === "🕒");
