@@ -75,10 +75,13 @@ const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": 
 const stars = n => "★".repeat(n) + "☆".repeat(5 - n);
 const reviewDate = d => d ? d.replace(/^(\d{4})-(\d{2}).*/, lang === "ko" ? "$1년 $2월" : "$2/$1") : "";
 
-/* 사진이 없는 업체: 카테고리 대표 이미지 + 업체 이름 카드 */
+/* 사진이 없는 업체: 카테고리 대표 이미지 + 업체 이름 카드 (여러 장이면 업체마다 돌아가며) */
+const PH_IMGS = { skin: ["images/ph-skin-1.jpg", "images/ph-skin-2.jpg", "images/ph-skin-3.jpg", "images/ph-skin-4.jpg"] };
 function phCard(shop, big) {
   const cat = CATEGORIES.find(c => c.id === shop.cat);
-  const bg = catImg(shop.cat);
+  const set = PH_IMGS[shop.cat];
+  let bg = catImg(shop.cat);
+  if (set && set.length) { const i = SHOPS.filter(x => x.cat === shop.cat && !x.img).findIndex(x => x.id === shop.id); bg = set[Math.max(0, i) % set.length]; }
   const lab = cat ? `${cat.icon} ${esc(tx(cat.name))}` : "";
   return `<div class="${big ? "hero " : ""}ph ph-card${bg ? " has-bg" : ""}"${bg ? ` style="background-image:url('${bg}')"` : ""}>
     <span class="ph-cat">${lab}</span>${big ? `<b class="ph-name">${esc(tx(shop.name))}</b><small class="ph-note">${esc(ui("phNote"))}</small>` : ""}</div>`;
