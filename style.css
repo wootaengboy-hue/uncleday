@@ -451,3 +451,6 @@ html[lang="vi"] .btn, html[lang="vi"] .price, html[lang="vi"] .best-badge, html[
 .ph-card:not(.has-bg) .ph-name { color: #223; text-shadow: none; }
 .ph-card:not(.has-bg) .ph-note { color: #667; }
 @media (max-width: 600px) { .hero.ph-card { height: 170px; padding: 16px; } .ph-name { font-size: 20px; } }
+
+.share-btn { cursor: pointer; border: 1px solid var(--line, #e5dccb); background: #fff; font: inherit; font-size: 13px; }
+.share-btn:hover { background: var(--sand); }

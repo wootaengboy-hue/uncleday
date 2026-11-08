@@ -137,3 +137,4 @@ Object.assign(UI.en, { gToday: "Today", gHoursNote: "From Google Maps · see all
 Object.assign(UI.vi, { gToday: "Hôm nay", gHoursNote: "Theo Google Maps · xem các ngày bên dưới" });
 Object.assign(UI.ko, { gAddrNote: "구글 지도 기준" }); Object.assign(UI.en, { gAddrNote: "From Google Maps" }); Object.assign(UI.vi, { gAddrNote: "Theo Google Maps" });
 Object.assign(UI.ko, { phNote: "매장 사진 준비 중 · 카테고리 대표 이미지" }); Object.assign(UI.en, { phNote: "Shop photos coming soon · Category image" }); Object.assign(UI.vi, { phNote: "Ảnh cửa hàng sắp có · Ảnh minh họa danh mục" });
+Object.assign(UI.ko, { shareBtn: "공유하기", shareCopied: "링크를 복사했어요. 카톡에 붙여넣어 보내세요" }); Object.assign(UI.en, { shareBtn: "Share", shareCopied: "Link copied" }); Object.assign(UI.vi, { shareBtn: "Chia sẻ", shareCopied: "Đã sao chép liên kết" });

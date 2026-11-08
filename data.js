@@ -76,9 +76,9 @@ const CATEGORIES = [
 const BANNER_IMG = "";
 
 const BANNERS = [
-  { title: { ko: "첫 예약 10% 할인", en: "10% off your first booking", vi: "Giảm 10% cho lần đặt đầu tiên" },
-    desc:  { ko: "처음 이용하시는 분께 드려요", en: "For new customers", vi: "Dành cho khách hàng mới" }, color: "#116241" },
-  { title: { ko: "한국어 통역 동행", en: "Korean-speaking support", vi: "Hỗ trợ tiếng Hàn" },
+  { title: { ko: "추가 요금 없이 업체 가격 그대로", en: "Same price as booking direct", vi: "Giá như đặt trực tiếp" },
+    desc:  { ko: "엉클데이로 예약해도 더 내는 돈이 없어요", en: "No extra fees when you book with us", vi: "Không phát sinh phí khi đặt qua chúng tôi" }, color: "#116241" },
+  { title: { ko: "한국어로 상담·예약", en: "Korean-speaking support", vi: "Hỗ trợ tiếng Hàn" },
     desc:  { ko: "말이 안 통해도 걱정 없어요", en: "No language worries", vi: "Không lo rào cản ngôn ngữ" }, color: "#0E2843" }
 ];
 

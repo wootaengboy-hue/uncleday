@@ -86,7 +86,7 @@ if (!shop) {
       <div class="chips"><span class="tag cat-tag">${cat ? cat.icon + " " + tx(cat.name) : ""}</span>
         <span class="tag">📍 ${cityName(shop.city)}</span>
         ${shop.rating ? `<span class="tag">⭐ ${shop.rating} (${shop.reviews})</span>` : ""}
-        ${pending ? `<span class="pending">${ui("unverified")}</span>` : ""}</div>
+        <button type="button" class="tag share-btn" id="shareBtn">🔗 ${ui("shareBtn")}</button></div>
       <h1>${tx(shop.name)}${shop.best ? ` <span class="best-badge"><i>✦</i>${ui("certBadge")}<i>✦</i></span>` : ""}</h1>
       <div class="tags">${shop.tags.map(t => `<span class="tag">#${tx(t)}</span>`).join("")}</div>
     </div>
@@ -131,8 +131,7 @@ if (!shop) {
     </form>
     <div id="rvDone" class="done" hidden></div>
 
-    ${pending ? `<p class="pending-box">${ui("unverifiedNote")}</p>
-    <div class="done"><h2>${ui("book")}</h2><p>${ui("askNote")}</p>
+    ${pending ? `<div class="done"><h2>${ui("book")}</h2><p>${ui("askNote")}</p>
       <a class="btn kakao-link" href="${SITE.kakao}" target="_blank">${ui("askBtn")}</a></div>` : ""}
 
     ${similar.length ? `<h2>${ui("similar")}</h2>
@@ -227,6 +226,13 @@ ${f.text}
     d.scrollIntoView({ behavior: "smooth" });
   };
 
+  // 공유하기: 카톡·네이버에서 미리보기가 예쁘게 나오는 공유 전용 주소
+  $("shareBtn").onclick = async () => {
+    const url = `${location.origin}/s/${encodeURIComponent(shop.id)}/`;
+    if (navigator.share && /Mobi|Android|iPhone/i.test(navigator.userAgent)) { try { await navigator.share({ title: tx(shop.name) + " | " + tx(SITE.name), url }); return; } catch (e) { if (e.name === "AbortError") return; } }
+    let ok = false; try { await navigator.clipboard.writeText(url); ok = true; } catch (e) { ok = copyText(url); }
+    const d = document.createElement("div"); d.className = "toast-site"; d.textContent = ok ? ui("shareCopied") : url; document.body.appendChild(d); setTimeout(() => d.remove(), 2600);
+  };
   if (pending) { /* 예약 폼은 숨김 */ } else {
   const form = $("form"), fDate = $("fDate"), fTime = $("fTime"), fMenu = $("fMenu");
 

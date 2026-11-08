@@ -111,8 +111,8 @@ function drawShops() {
     const img = s.img ? `<img src="${s.img}" alt="" loading="lazy" decoding="async" style="object-position:${s.imgPos || "50% 50%"}">` : phCard(s);
     return `<a class="shop ${s.best ? "is-best" : ""}" href="${shopLink(s.id)}"><div class="shop-media">${img}${s.best ? `<span class="best-badge"><i>✦</i>${ui("certBadge")}<i>✦</i></span>` : ""}</div><div class="info">
       <b>${tx(s.name)}</b>
-      <div class="rate ${s.rating ? "" : "none"}"><span class="rate-stars">${stars(Math.round(s.rating || 0))}</span>${s.rating ? `<b>${(+s.rating).toFixed(1)}</b><small>(${s.reviews})</small>` : `<small>${ui("noRating")}</small>`}</div>
-      <div class="meta">${state.from && s.geo ? `<b class="dist">📍 ${distText(distKm(state.from, s.geo))}</b> · ` : ""}${cityName(s.city)}${s.verified === false ? ` · <span class="pending">${ui("unverified")}</span>` : ""}</div>
+      ${s.rating ? `<div class="rate"><span class="rate-stars">${stars(Math.round(s.rating))}</span><b>${(+s.rating).toFixed(1)}</b><small>(${s.reviews})</small></div>` : ""}
+      <div class="meta">${state.from && s.geo ? `<b class="dist">📍 ${distText(distKm(state.from, s.geo))}</b> · ` : ""}${cityName(s.city)}</div>
       <div class="price">${priceFrom(s)}</div>
       <div>${s.tags.map(t => `<span class="tag">${tx(t)}</span>`).join("")}</div>
     </div></a>`;
