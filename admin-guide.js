@@ -135,9 +135,10 @@ const GUIDE = [
     { ic: "🗂️", t: "어디에 무엇을 넣나요", b: `
       <table class="gtable"><tr><th>위치</th><th>넣는 것</th><th>누가 봐요</th></tr>
       <tr><td>🚨 <b>비상용</b> 컬렉션</td><td>BACKUP_PASSWORD · GitHub(wootaengboy-hue, 구글 로그인) · Supabase · 도메인 · 2단계 인증 <b>복구 코드</b>(각 항목 메모 칸)</td><td>사장님만</td></tr>
-      <tr><td>🔐 <b>운영</b> 컬렉션</td><td>구글 uncledayadmin · 네이버 uncledayadm · 슬랙 · 카카오톡 채널</td><td>팀원과 공유</td></tr>
-      <tr><td>👤 <b>내 보관함</b> (개인)</td><td>엉클데이 관리자 로그인(<code>www.uncleday.com/admin.html</code>) · 사장님 개인 구글(wootaengboy, 지도 키·결제)</td><td>본인만</td></tr></table>
+      <tr><td>🔐 <b>운영</b> 컬렉션</td><td>구글 uncledayadmin · 네이버 uncledayadm (회사 공용 계정만)</td><td>팀원과 공유</td></tr>
+      <tr><td>👤 <b>내 보관함</b> (개인)</td><td>엉클데이 관리자 로그인(<code>www.uncleday.com/admin.html</code>) · 슬랙 · 카카오톡 채널 관리자 · 사장님 개인 구글(wootaengboy, 지도 키·결제)</td><td>본인만</td></tr></table>
       <ul><li>관리자 로그인처럼 <b>사람마다 다른 계정</b>은 <b>Password Manager → ＋ 추가 → 소유자: 나</b>로 넣어요. (Admin Console에서 추가하면 조직 컬렉션을 고르라고 나와요)</li>
+      <li><b>슬랙·카카오톡 채널처럼 사람마다 계정이 따로 있는 서비스</b>는 비밀번호를 나누지 않아요. 팀원을 그 서비스에 <b>초대</b>하고, 각자 자기 계정을 자기 보관함에 넣어요. 사장님이 못 들어갈 때를 대비해 믿을 만한 팀원 1명을 <b>관리자 권한</b>으로 두면 좋아요.</li>
       <li>구글로 가입한 계정(GitHub·Supabase 등)은 비밀번호 칸을 비우고 메모에 "구글(…)로 로그인"이라고 적어요.</li>
       <li>넣지 않아도 되는 것: BACKUP_TOKEN(관리자에서 다시 만들면 됨), Supabase 공개 키·구글 지도 키(원래 공개용)</li></ul>` },
     { ic: "👥", t: "팀원 초대·퇴사 처리", b: `
