@@ -173,6 +173,17 @@ h2.sec small{font-size:13px;color:var(--sub);font-weight:500}
 
 /* ===== 대시보드 ===== */
 .kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-top:16px}
+.guide{max-width:880px;margin:6px 0 60px}
+.guide-top{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:14px 0 8px}.guide-top input{flex:1;min-width:240px;padding:10px 13px;border:1px solid var(--line);border-radius:10px;font:inherit}
+.guide-nav{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 4px}.guide-nav a{background:#fff;border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:13px;color:inherit;text-decoration:none}.guide-nav a:hover{border-color:#116241;color:#116241}
+.guide-item{background:#fff;border-radius:12px;margin:8px 0;border:1px solid #0000}.guide-item[open]{border-color:var(--line)}
+.guide-item summary{list-style:none;cursor:pointer;padding:13px 16px;display:flex;gap:10px;align-items:center}.guide-item summary::-webkit-details-marker{display:none}
+.guide-item summary::after{content:"＋";margin-left:auto;color:var(--sub)}.guide-item[open] summary::after{content:"－"}
+.g-ic{font-size:18px}.g-who{font-style:normal;font-size:11.5px;font-weight:700;color:#A44500;background:#FFF0E3;padding:2px 8px;border-radius:999px}
+.g-body{padding:0 18px 14px 46px;font-size:14px;line-height:1.7}.g-body ul,.g-body ol{padding-left:20px;margin:6px 0}.g-body p{margin:8px 0}
+.g-body code{background:#f4efe3;padding:1px 6px;border-radius:5px;font-size:12.5px;word-break:break-all}
+.g-body .tip{background:#EAF5EF;border-radius:9px;padding:9px 12px}.g-body .warn{background:#FFF0E3;color:#7a3500;border-radius:9px;padding:9px 12px}
+@media(max-width:600px){.g-body{padding:0 14px 14px 16px}}
 .dims{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;margin-top:16px}
 .dim-card{background:#fff;border-radius:14px;padding:16px 18px}.dim-card.wide{grid-column:1/-1}
 .dim-card h3{margin:0 0 6px;font-size:15px}.dim-card h3 small{font-weight:500;color:var(--sub);font-size:12px;margin-left:6px}
@@ -467,15 +478,16 @@ table.t tfoot td{font-weight:800;background:#fafbfc}
 <div id="layer"></div>
 <div id="printArea"></div>
 
-<script src="config.js?v=20261108k"></script>
+<script src="config.js?v=20261108l"></script>
 <script src="vendor/supabase.js"></script>
-<script src="data.js?v=20261108k"></script>
-<script src="shops.js?v=20261108k"></script>
-<script src="catimgs.js?v=20261108k"></script>
-<script src="admin-notes.js?v=20261108k"></script>
-<script src="admin-shops.js?v=20261108k"></script>
-<script src="admin-editor.js?v=20261108k"></script>
-<script src="admin-work.js?v=20261108k"></script>
-<script src="admin.js?v=20261108k"></script>
+<script src="data.js?v=20261108l"></script>
+<script src="shops.js?v=20261108l"></script>
+<script src="catimgs.js?v=20261108l"></script>
+<script src="admin-notes.js?v=20261108l"></script>
+<script src="admin-shops.js?v=20261108l"></script>
+<script src="admin-editor.js?v=20261108l"></script>
+<script src="admin-guide.js?v=20261108l"></script>
+<script src="admin-work.js?v=20261108l"></script>
+<script src="admin.js?v=20261108l"></script>
 </body>
 </html>

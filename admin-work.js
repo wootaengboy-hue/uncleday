@@ -36,9 +36,14 @@ function workTodos() {
 
 function drawWork() {
   const t = vnToday();
+  if (workView === "guide") {
+    $("tab-work").innerHTML = `<div class="work-top"><div class="seg"><button data-v="tasks">✅ 할 일 보드</button><button data-v="leads">🤝 업체 영업</button><button data-v="guide" class="on">📘 사용 안내</button></div></div><div id="guideBox"></div>`;
+    $("tab-work").querySelectorAll("[data-v]").forEach(b => b.onclick = () => { workView = b.dataset.v; drawWork(); });
+    drawGuide($("guideBox")); return;
+  }
   $("tab-work").innerHTML = `
     <div class="work-top">
-      <div class="seg"><button data-v="tasks" class="${workView === "tasks" ? "on" : ""}">✅ 할 일 보드</button><button data-v="leads" class="${workView === "leads" ? "on" : ""}">🤝 업체 영업</button></div>
+      <div class="seg"><button data-v="tasks" class="${workView === "tasks" ? "on" : ""}">✅ 할 일 보드</button><button data-v="leads" class="${workView === "leads" ? "on" : ""}">🤝 업체 영업</button><button data-v="guide" class="${workView === "guide" ? "on" : ""}">📘 사용 안내</button></div>
       <select id="wWho"><option value="all">담당자 전체</option><option value="me" ${workWho === "me" ? "selected" : ""}>내 것 (담당+참조)</option><option value="ref" ${workWho === "ref" ? "selected" : ""}>나를 참조한 것</option><option value="none" ${workWho === "none" ? "selected" : ""}>미지정</option>${ADMINS.filter(a => a.email !== ME.email).map(a => `<option value="${esc(a.email)}" ${workWho === a.email ? "selected" : ""}>${esc(who(a.email))}</option>`).join("")}</select>
       <span class="grow"></span>
       ${workView === "leads" ? `<button class="btn main" id="leadNew">＋ 영업 업체 추가</button>` : `<button class="btn main" id="taskNew">＋ 할 일</button>`}

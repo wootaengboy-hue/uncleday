@@ -1,0 +1,119 @@
+/* 낙서장 → 📘 사용 안내: 팀원용 튜토리얼 (내용은 여기서 고쳐요) */
+const GUIDE = [
+  { sec: "처음 시작", items: [
+    { ic: "👋", t: "엉클데이는 어떤 사이트인가요", b: `
+      <p>베트남(다낭·나트랑·호치민·하노이)을 여행하는 한국 손님이 마사지·피부관리·뷰티 업체를 <b>한국어로 상담하고 예약</b>하는 사이트예요.</p>
+      <ul><li>손님은 <b>업체 가격 그대로</b> 내요. 추가 요금이 없어요.</li>
+      <li>우리는 업체에서 <b>수수료</b>(업체 가격의 몇 %)를 받아요. 업체마다 수수료율이 달라요.</li>
+      <li>그래서 "이 손님은 엉클데이 손님"이라는 <b>기록</b>이 가장 중요해요. 예약 코드, 업체 확인, 방문 확인이 모두 그 근거예요.</li></ul>` },
+    { ic: "🗺️", t: "관리자 페이지 한눈에 보기", b: `
+      <ul><li><b>📊 대시보드</b> — 오늘 할 일, 월별 실적, 방문자 분석</li>
+      <li><b>📝 낙서장</b> — 할 일 보드, 업체 영업 진행, 이 사용 안내</li>
+      <li><b>📅 예약</b> — 예약 접수·확정·방문 완료 처리</li>
+      <li><b>💰 정산</b> — 업체별 월 수수료 정산서 만들기·입금 확인</li>
+      <li><b>🏪 업체</b> — 업체 정보 수정, 구글 지도 연결, 사진</li>
+      <li><b>⭐ 후기</b> — 손님 후기 확인 후 게시</li>
+      <li><b>⚙️ 계정</b> — 내 비밀번호, 관리자 추가, 백업</li></ul>
+      <p class="tip">💡 화면이 이상하거나 새 기능이 안 보이면 <b>Ctrl + Shift + R</b>(맥은 Cmd + Shift + R)로 새로고침하세요.</p>` },
+    { ic: "🙋", t: "팀원(관리자) 추가하기", who: "사장님", b: `
+      <ol><li><b>⚙️ 계정</b> 탭 → 관리자 칸에 직원 이메일을 넣고 <b>추가</b></li>
+      <li>Supabase → <b>Authentication → Users → Add user → Create new user</b>에서 같은 이메일과 임시 비밀번호로 계정 만들기 (<b>Auto Confirm</b> 켜기)</li>
+      <li>직원이 로그인한 뒤 <b>⚙️ 계정 → 비밀번호 바꾸기</b></li></ol>
+      <p class="warn">⚠️ 비밀번호는 메신저에 남기지 말고, 첫 로그인 후 바로 바꾸게 해 주세요.</p>` }
+  ]},
+  { sec: "예약 처리", items: [
+    { ic: "💬", t: "예약이 들어오는 흐름 (카톡 상담)", b: `
+      <ol><li>손님이 업체 페이지에서 <b>카카오톡으로 문의하기</b>를 누르면, 업체 이름이 들어간 문의 문구가 복사되고 카톡 채널이 열려요.</li>
+      <li>손님이 카톡 창에 붙여넣으면 <b>어느 업체 페이지에서 왔는지</b> 바로 알 수 있어요.</li>
+      <li>상담하면서 날짜·시간·인원·메뉴를 정하고, <b>📅 예약 → ＋ 예약 직접 등록</b>으로 기록해요. 예약 코드(UD-월일-번호)가 생겨요.</li>
+      <li>예약을 열고 <b>📋 메시지 복사 (보낸 걸로 기록)</b>를 눌러 업체에 잘로·카톡으로 보내요. 메시지 안의 링크에서 업체가 로그인 없이 수락 / 불가 / 방문 완료(+금액)를 눌러요.</li>
+      <li>손님에게는 <b>예약확인증 링크</b>를 보내요. 손님도 "다녀왔어요"를 누를 수 있어요.</li></ol>
+      <p class="tip">💡 업체·손님이 링크로 누를 때마다 시간과 함께 기록이 남아요. 나중에 수수료 정산할 때 근거가 돼요.</p>` },
+    { ic: "✅", t: "예약 상태 바꾸기", b: `
+      <ul><li><b>접수</b> → 업체 확인 전</li><li><b>업체 확정</b> → 업체가 된다고 함</li>
+      <li><b>방문 완료</b> → 꼭 <b>결제 금액</b>을 넣어 주세요. 수수료가 자동 계산돼요.</li>
+      <li><b>노쇼 / 취소 / 업체 불가</b> → 실적에서 빠져요.</li></ul>
+      <p>대시보드 <b>할 일</b>에 "방문일이 지났는데 결과가 없음", "결제 금액이 비어 있음" 같은 빠진 일이 빨간 숫자로 나와요. 매일 0으로 만들어 주세요.</p>` },
+    { ic: "💰", t: "월말 정산", b: `
+      <ol><li><b>💰 정산</b> 탭에서 <b>정산서 만들기</b> (방문 완료 · 아직 정산서에 안 들어간 예약이 모여요)</li>
+      <li>정산서를 인쇄하거나 PDF로 저장해서 업체에 보내요.</li>
+      <li>입금되면 <b>입금 확인</b>을 눌러요. 정산이 끝난 예약은 금액을 바꿀 수 없게 잠겨요.</li></ol>
+      <p>대시보드 <b>업체별 → 리포트</b>는 업체에 보내는 월간 성과 보고서예요 (조회·상담·예약·방문, 베트남어·영어·한국어).</p>` }
+  ]},
+  { sec: "업체 관리", items: [
+    { ic: "🏪", t: "업체 정보 고치기", b: `
+      <ul><li><b>🏪 업체</b> 탭 → 업체의 <b>수정</b> → 기본 정보 / 위치·영업 / 가격표 / 사진</li>
+      <li>정보가 확실하지 않으면 비워 두세요. 비어 있으면 손님 화면에서 "상담 후 안내"로 나와요.</li>
+      <li>수수료율·계약 메모·연락처는 <b>손님에게 안 보이는</b> 관리자 전용 칸이에요.</li></ul>
+      <p class="tip">💡 업체를 대량으로 넣거나 크게 바꿀 때는 Claude에게 자료(엑셀·캡처)를 주면, 관리자 페이지 위에 <b>[미리보기·가져오기]</b> 알림이 떠요. 눌러서 확인하고 가져오면 돼요.</p>` },
+    { ic: "📍", t: "구글 지도 연결", b: `
+      <ul><li><b>🔗 구글 지도 자동 연결</b> — 아직 연결 안 된 업체를 한 번에 연결해요. 무료, 횟수 제한 없음.</li>
+      <li>자동 연결은 이름이 비슷한 다른 가게에 붙을 수 있어요. <b>수정 → 위치·영업</b>에서 지도 핀을 꼭 확인하세요.</li>
+      <li>틀렸으면 <b>🔎 구글에서 찾기</b>로 맞는 가게를 골라요.</li></ul>
+      <p>연결되면 업체 상세 화면에 구글 <b>평점·영업시간·지도</b>가 나와요. 우리 영업시간·주소가 비어 있으면 구글 것을 대신 보여 줘요.</p>
+      <p class="warn">⚠️ 구글 정보는 <b>하루 상세 조회 30번</b>까지만 나와요 (무료 범위 지키기). 매일 오전 9시에 다시 채워져요. 그래서 주요 업체는 확인된 정보를 우리 칸에 직접 넣어 두는 게 좋아요.<br>⚠️ 구글 약관상 구글 평점·영업시간·사진을 <b>복사해서 우리 칸에 저장하면 안 돼요</b>. 업체에 직접 확인한 정보만 넣어 주세요.</p>` },
+    { ic: "🖼️", t: "업체 사진", b: `
+      <ul><li>사진이 없는 업체는 <b>카테고리 대표 이미지</b>와 업체 이름이 자동으로 나와요 ("매장 사진 준비 중" 표시).</li>
+      <li>실제 매장 사진은 <b>업체 사장님 허락</b>을 받은 것만 올려요. 구글 지도·인스타 사진을 그냥 가져오면 안 돼요.</li>
+      <li>AI로 실제 매장처럼 만든 사진도 쓰지 않아요 (손님 오해·저작권 문제).</li></ul>` },
+    { ic: "🤝", t: "업체 영업 진행 (낙서장 → 업체 영업)", b: `
+      <ul><li>후보 발굴 → 연락함 → 미팅 → 계약 협의 → 계약 완료 → 입점 완료 순서로 카드를 끌어 옮겨요.</li>
+      <li>연락할 때마다 <b>연락 기록</b>을 남기고 <b>다음 연락일</b>을 정해요. 날짜가 지나면 빨갛게 표시돼요.</li></ul>` }
+  ]},
+  { sec: "홍보·분석", items: [
+    { ic: "🔗", t: "업체 링크 공유하기", b: `
+      <ul><li>업체 상세 화면의 <b>🔗 공유하기</b> 버튼으로 만든 링크를 보내요.</li>
+      <li>카톡·네이버에 보내면 업체 사진·이름·로고가 들어간 <b>미리보기 그림</b>이 나와요.</li>
+      <li>주소창 주소를 그대로 복사하면 엉클데이 기본 그림만 나오니 꼭 공유하기 버튼을 쓰세요.</li>
+      <li>업체를 추가하거나 이름·사진을 바꾸면 <b>3시간 안에</b> 미리보기도 자동으로 바뀌어요.</li></ul>
+      <p class="tip">💡 카톡에 예전 그림이 계속 보이면 <a href="https://developers.kakao.com/tool/debugger/sharing" target="_blank">카카오 공유 디버거</a>에서 링크를 넣고 <b>캐시 초기화</b>를 누르세요.</p>` },
+    { ic: "📈", t: "방문자 분석 보는 법 (대시보드)", b: `
+      <ul><li><b>사이트 반응</b> — 총 방문 수(새로고침 포함), 방문자(같은 사람은 하루 1명), 업체 조회, 상담 클릭</li>
+      <li><b>어디서 들어왔나요</b> — 카톡·네이버·구글·인스타·공유 링크·직접 방문</li>
+      <li><b>지금 어디에 있나요</b> — 한국(여행 준비 중) / 베트남(이미 현지)</li>
+      <li><b>기기·언어</b> — 휴대폰/PC, 한국어/베트남어/영어</li></ul>
+      <p>로봇은 빼고, 이름·IP 같은 개인정보 없이 숫자만 세요.</p>` },
+    { ic: "🏷️", t: "홍보 링크에 이름표 붙이기 (UTM)", b: `
+      <p>광고·블로그·인스타에 링크를 넣을 때 끝에 <code>?utm_source=이름</code>을 붙이면, 방문자 분석에 <b>🏷️ 광고 링크: 이름</b>으로 따로 나와요.</p>
+      <ul><li>인스타 광고: <code>https://www.uncleday.com/?utm_source=insta_ad</code></li>
+      <li>네이버 블로그: <code>https://www.uncleday.com/?utm_source=naver_blog</code></li>
+      <li>이름은 영어 소문자·숫자·_ 로만 짓고, 같은 홍보에는 항상 같은 이름을 써요.</li></ul>
+      <p class="tip">💡 어느 홍보에서 손님이 많이 왔는지 비교할 수 있어서 광고비를 아낄 수 있어요.</p>` }
+  ]},
+  { sec: "주의할 점", items: [
+    { ic: "🔒", t: "보안 — 절대 공유하면 안 되는 것", b: `
+      <ul><li>Supabase <b>service_role(secret) 키</b>, DB 비밀번호, GitHub 토큰 — 누구에게도(Claude 포함) 주지 마세요.</li>
+      <li>관리자 비밀번호 — 각자 관리, 공유 금지.</li>
+      <li>낙서장에 붙이는 이미지는 <b>링크만 알면 누구나 볼 수 있는</b> 저장소에 올라가요. <b>계약서·신분증·통장 사진은 올리지 마세요.</b></li></ul>
+      <p>사이트 코드에 들어 있는 Supabase 공개 키(sb_publishable…)와 구글 지도 키는 원래 공개용이라 괜찮아요.</p>` },
+    { ic: "🛠️", t: "DB 업데이트 (SQL 실행)", who: "사장님", b: `
+      <p>새 기능에 DB 칸이 필요할 때만 해요. Claude가 "SQL 실행해 주세요"라고 하면:</p>
+      <ol><li>Supabase → <b>SQL Editor</b></li>
+      <li><a href="https://raw.githubusercontent.com/wootaengboy-hue/uncleday/main/supabase/schema.sql" target="_blank">schema.sql</a> 내용 전체를 복사해서 붙여넣기 → <b>Run</b></li>
+      <li>"Success"가 나오면 끝. 여러 번 실행해도 기존 데이터는 안 지워져요.</li></ol>
+      <p class="tip">💡 <b>Failed to fetch</b> 오류가 나면 새로고침 후 다시 실행하거나, Claude에게 이번에 추가된 부분만 달라고 하세요.</p>
+      <p>쉽게 말해 <b>GitHub</b> = 사이트 화면(Claude가 고쳐요), <b>Supabase</b> = 데이터 저장소(SQL은 사장님이 실행)예요.</p>` },
+    { ic: "💸", t: "구글 지도 비용", who: "사장님", b: `
+      <ul><li>지도 보기·업체 찾기·자동 연결은 <b>무료</b>예요.</li>
+      <li>평점·영업시간(상세)과 사진은 매달 1,000번까지 무료라서, 우리 사이트에서 <b>하루 30번씩</b>으로 막아 두었어요 (한 달 최대 930번).</li>
+      <li>구글 클라우드에 <b>예산 알림 ₩1,000</b>이 걸려 있어요. 알림 메일이 오면 Claude에게 알려 주세요.</li></ul>` }
+  ]}
+];
+
+let guideQ = "";
+function drawGuide(host) {
+  const q = guideQ.trim().toLowerCase();
+  const strip = h => h.replace(/<[^>]+>/g, " ").toLowerCase();
+  const secs = GUIDE.map(s => ({ ...s, items: s.items.filter(it => !q || (it.t + strip(it.b)).toLowerCase().includes(q)) })).filter(s => s.items.length);
+  host.innerHTML = `
+    <div class="guide">
+      <div class="guide-top"><input id="gQ" type="search" placeholder="🔍 찾고 싶은 말 (예: 정산, 사진, 공유)" value="${esc(guideQ)}"><span class="hint">팀원이 함께 보는 사용 안내예요. 고칠 내용이 있으면 Claude에게 말해 주세요.</span></div>
+      <nav class="guide-nav">${GUIDE.map((s, i) => `<a href="#g-sec-${i}">${esc(s.sec)}</a>`).join("")}</nav>
+      ${secs.length ? secs.map(s => `<h2 class="sec" id="g-sec-${GUIDE.indexOf(GUIDE.find(x => x.sec === s.sec))}">${esc(s.sec)}</h2>
+        ${s.items.map(it => `<details class="guide-item" ${q ? "open" : ""}><summary><span class="g-ic">${it.ic}</span><b>${esc(it.t)}</b>${it.who ? `<em class="g-who">${esc(it.who)} 전용</em>` : ""}</summary><div class="g-body">${it.b}</div></details>`).join("")}`).join("")
+      : `<p class="empty" style="margin:30px 0">"${esc(guideQ)}"에 맞는 안내가 없어요.</p>`}
+    </div>`;
+  const inp = host.querySelector("#gQ");
+  inp.oninput = () => { guideQ = inp.value; const pos = inp.selectionStart; drawGuide(host); const n = host.querySelector("#gQ"); n.focus(); n.setSelectionRange(pos, pos); };
+  host.querySelectorAll(".guide-nav a").forEach(a => a.onclick = e => { e.preventDefault(); const el = host.querySelector(a.getAttribute("href")); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + scrollY - 120, behavior: "smooth" }); });
+}
