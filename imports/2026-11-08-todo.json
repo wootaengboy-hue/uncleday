@@ -1,0 +1,119 @@
+{
+ "id": "2026-11-08-todo",
+ "title": "오픈 준비 할 일 (11/8 정리)",
+ "created": "2026-11-08",
+ "tasks": [
+  {
+   "group": "오늘",
+   "priority": 2,
+   "title": "아우라 뷰티 영업시간 가져오기",
+   "note": "관리자 위쪽 알림 → [미리보기·가져오기]",
+   "memo": "<p>관리자 화면 위쪽 <b>아우라 뷰티 영업시간 (매일 08:00~19:00)</b> 알림에서 <b>[미리보기·가져오기]</b>를 눌러요.</p>"
+  },
+  {
+   "group": "오늘",
+   "priority": 2,
+   "title": "slack.sql 다시 실행 (종류별 채널·닉네임)",
+   "note": "Supabase SQL Editor에서 실행",
+   "memo": "<ol><li>Supabase → <b>SQL Editor</b></li><li><a href=\"https://raw.githubusercontent.com/wootaengboy-hue/uncleday/main/supabase/slack.sql\" target=\"_blank\">slack.sql</a> 내용 전체 복사 → 붙여넣기 → <b>Run</b></li><li><b>Success</b>가 나오면 끝</li></ol>"
+  },
+  {
+   "group": "오늘",
+   "priority": 1,
+   "title": "관리자 닉네임 정하기 (나·팀원)",
+   "note": "⚙️ 계정 → 관리자 목록",
+   "memo": "<p>⚙️ 계정 → 관리자 목록에서 이메일 옆 칸에 닉네임 입력 (띄어쓰기 없이 12자까지). 팀원 것도 대신 정할 수 있어요.</p>"
+  },
+  {
+   "group": "오늘",
+   "priority": 1,
+   "title": "슬랙 종류별 채널 연결 + 알림 켜기",
+   "note": "#예약 · #후기 · #엉클놀이",
+   "memo": "<ol><li>api.slack.com/apps → Uncle Day → Incoming Webhooks → <b>Add New Webhook</b> (채널마다)</li><li>⚙️ 계정 → 💬 슬랙 알림 → 종류별 칸에 주소 → 저장 → 테스트</li><li>슬랙 각 채널 이름 → 알림 → <b>모든 새 메시지</b> (휴대폰도)</li></ol>"
+  },
+  {
+   "group": "검색 노출",
+   "priority": 2,
+   "title": "네이버 아이디 만들기 (uncledayadmin)",
+   "note": "2단계 인증 켜기",
+   "memo": "<p>아이디 <b>uncledayadmin</b> (안 되면 uncledayadm). 연락 이메일은 uncledayadmin@gmail.com. 가입 후 2단계 인증 켜기.</p>"
+  },
+  {
+   "group": "검색 노출",
+   "priority": 2,
+   "title": "네이버 서치어드바이저 등록",
+   "note": "HTML 태그 → Claude에게 보내기 → 소유 확인 → 사이트맵 제출",
+   "memo": "<ol><li>searchadvisor.naver.com → 웹마스터 도구 → 사이트 등록: https://www.uncleday.com</li><li>확인 방법 <b>HTML 태그</b> → meta 한 줄을 Claude에게 보내기</li><li>Claude가 넣으면 <b>소유 확인</b></li><li>요청 → 사이트맵 제출: https://www.uncleday.com/sitemap.xml</li><li>요청 → 웹 페이지 수집: https://www.uncleday.com/</li></ol>"
+  },
+  {
+   "group": "검색 노출",
+   "priority": 1,
+   "title": "구글 Gmail 2단계 인증 켜기 (uncledayadmin)",
+   "note": "Google 계정 관리 → 보안",
+   "memo": "<p>uncledayadmin@gmail.com → Google 계정 관리 → 보안 → <b>2단계 인증</b>. 복구 이메일도 확인.</p>"
+  },
+  {
+   "group": "검색 노출",
+   "priority": 1,
+   "title": "구글 색인 생성 요청 (메인)",
+   "note": "서치 콘솔 맨 위 검색창",
+   "memo": "<p>서치 콘솔 맨 위 검색창에 https://www.uncleday.com/ → <b>색인 생성 요청</b>. 1~2주 뒤 <b>색인 생성 → 페이지</b>에서 숫자 확인.</p>"
+  },
+  {
+   "group": "검색 노출",
+   "priority": 1,
+   "title": "사이트 연락 이메일 정하기",
+   "note": "지금 hello@example.com → uncledayadmin@gmail.com?",
+   "memo": "<p>정해서 Claude에게 알려 주면 사이트에 반영해요. 나중에 info@uncleday.com 이 필요하면 무료로 Gmail에서 받는 방법부터.</p>"
+  },
+  {
+   "group": "오픈 전",
+   "priority": 2,
+   "title": "사업자 정보 정리 (상호·대표자·사업자번호·주소)",
+   "note": "사이트 맨 아래 표시용",
+   "memo": "<p>예약 중개 사이트는 화면 아래에 사업자 정보 표시가 필요해요. 정리해서 Claude에게 전달.</p>"
+  },
+  {
+   "group": "오픈 전",
+   "priority": 2,
+   "title": "개인정보처리방침 만들기",
+   "note": "사업자 정보 받으면 Claude가 초안 → 전문가 확인",
+   "memo": "<p>예약 때 이름·연락처를 받기 때문에 꼭 필요해요. 초안은 Claude, 최종 확인은 전문가.</p>"
+  },
+  {
+   "group": "오픈 전",
+   "priority": 1,
+   "title": "할인 배너 여부 결정",
+   "note": "할인 여부 · 비용 부담 주체",
+   "memo": "<p>지금 배너: '추가 요금 없이 업체 가격 그대로'. 할인을 하면 누가 부담할지(우리/업체) 정하기.</p>"
+  },
+  {
+   "group": "업체 정보",
+   "priority": 1,
+   "title": "구글 지도 연결 점검 (엉뚱한 가게 핀)",
+   "note": "업체 → 수정 → 위치·영업에서 지도 확인",
+   "memo": "<p>자동 연결이 이름 비슷한 다른 가게에 붙었을 수 있어요. 틀리면 <b>🔎 구글에서 찾기</b>로 다시.</p>"
+  },
+  {
+   "group": "업체 정보",
+   "priority": 1,
+   "title": "주요 업체 가격·영업시간·한국어 응대 확인",
+   "note": "캡처를 Claude에게 보내면 가져오기로 넣어 줌",
+   "memo": "<p>업체에 직접 확인한 정보만 넣어요 (구글 정보 복사 금지).</p>"
+  },
+  {
+   "group": "업체 정보",
+   "priority": 0,
+   "title": "업체 실제 사진 받기 (사장님 허락)",
+   "note": "허락받은 사진만",
+   "memo": "<p>구글 지도·인스타 사진을 그냥 쓰면 안 돼요. 허락받은 사진으로 하나씩 교체.</p>"
+  },
+  {
+   "group": "업체 정보",
+   "priority": 0,
+   "title": "마사지·헤어 대표 이미지 4장 만들기",
+   "note": "피부관리처럼 2×2 이미지로 보내기",
+   "memo": "<p>만들어서 보내면 Claude가 나눠서 업체마다 돌아가며 나오게 넣어요.</p>"
+  }
+ ]
+}

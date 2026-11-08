@@ -867,6 +867,29 @@ function mergeShop(o, n) {
   });
   return r;
 }
+// Claude가 정리한 할 일 목록을 할 일 보드에 한 번에 넣기
+function openTaskImport(f, data, note) {
+  const PRI_N = { 0: "낮음", 1: "보통", 2: "높음" };
+  const d = document.createElement("div"); d.className = "overlay center";
+  d.innerHTML = `<div class="modal" style="width:min(760px,calc(100% - 32px))"><h2>📋 ${esc(f.title)}</h2>
+    <p class="hint">넣을 것만 체크하세요. 담당자는 나(${esc(typeof who === "function" ? who(ME.email) : ME.email)})로 들어가요. 넣은 뒤에 보드에서 담당자·마감일을 바꿀 수 있어요.</p>
+    <div style="max-height:52vh;overflow:auto;border:1px solid var(--line);border-radius:10px">
+    ${data.tasks.map((t, i) => `<label style="display:flex;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);cursor:pointer;align-items:flex-start">
+      <input type="checkbox" data-ti="${i}" checked style="margin-top:4px"><span><b>${esc(t.title)}</b> <small class="hint">· ${PRI_N[t.priority ?? 1]}${t.due ? " · 마감 " + esc(t.due) : ""}${t.group ? " · " + esc(t.group) : ""}</small>
+      ${t.note ? `<br><small class="hint">${esc(t.note)}</small>` : ""}</span></label>`).join("")}</div>
+    <div class="btns"><button class="btn" data-no>닫기</button><button class="btn main" data-yes>할 일 보드에 넣기</button></div></div>`;
+  document.body.appendChild(d);
+  d.querySelector("[data-no]").onclick = () => d.remove();
+  d.querySelector("[data-yes]").onclick = async () => {
+    const pick = [...d.querySelectorAll("[data-ti]:checked")].map(x => data.tasks[+x.dataset.ti]);
+    if (!pick.length) { toast("고른 할 일이 없어요"); return; }
+    const rows = pick.map(t => ({ title: t.title, memo: t.memo || (t.note ? `<p>${esc(t.note)}</p>` : ""), status: "todo", priority: t.priority ?? 1, due: t.due || null, assignee: ME.email, watchers: [] }));
+    const r = await sb.from("tasks").insert(rows); if (r.error) return dbErr(r.error, "할 일 넣기");
+    await markImport(f.id); d.remove(); if (note) note.remove();
+    toast(`할 일 ${rows.length}개를 넣었어요 ✅`);
+    if (typeof loadWork === "function") { await loadWork(); if (TAB === "work") drawWork(); else if (TAB === "dash") drawDash(); }
+  };
+}
 async function importsDone() {
   const r = await sb.from("settings").select("value").eq("key", "imports_done");
   return (r.data && r.data[0] && r.data[0].value) || [];
@@ -880,7 +903,7 @@ async function checkImports() {
   try { const r = await fetch("imports/index.json?t=" + Date.now(), { cache: "no-store" }); if (!r.ok) return; idx = await r.json(); } catch (e) { return; }
   const done = await importsDone();
   (idx.files || []).filter(f => !done.includes(f.id)).forEach(f => {
-    const n = notice("info", `<span class="grow">🔎 <b>${esc(f.title)}</b> — 조사한 업체 ${f.count}곳 정보가 준비됐어요.</span><button class="btn main sm" data-imp>미리보기·가져오기</button><button class="btn sm" data-skip>안 가져오기</button>`, "imp-" + f.id);
+    const n = notice("info", `<span class="grow">${f.kind === "tasks" ? `📋 <b>${esc(f.title)}</b> — 할 일 ${f.count}개를 보드에 넣을 수 있어요.` : `🔎 <b>${esc(f.title)}</b> — 조사한 업체 ${f.count}곳 정보가 준비됐어요.`}</span><button class="btn main sm" data-imp>미리보기·가져오기</button><button class="btn sm" data-skip>안 가져오기</button>`, "imp-" + f.id);
     n.querySelector("[data-imp]").onclick = () => openImport(f, n);
     n.querySelector("[data-skip]").onclick = () => confirmBox("이 자료를 가져오지 않을까요?", async () => { await markImport(f.id); n.remove(); toast("알림을 지웠어요"); }, "나중에 다시 보이지 않아요.", "안 가져오기", false);
   });
@@ -888,6 +911,7 @@ async function checkImports() {
 async function openImport(f, note) {
   let data;
   try { data = await (await fetch("imports/" + f.file + "?t=" + Date.now(), { cache: "no-store" })).json(); } catch (e) { toast("파일을 읽지 못했어요"); return; }
+  if (data.tasks) return openTaskImport(f, data, note);
   const list = (data.shops || []).filter(s => s.id && s.name && catOf(s.cat) && cityOf(s.city));
   const add = list.filter(s => !shops.some(x => x.id === s.id)), upd = list.filter(s => shops.some(x => x.id === s.id));
   const info = s => [s.address && filled(s.address) ? "주소" : "", s.open ? "영업시간" : "", (s.menu || []).length ? `메뉴 ${s.menu.length}개` : "", (s.tags || []).length ? "태그" : "", s.desc && filled(s.desc) ? "소개" : ""].filter(Boolean).join(" · ") || "이름만";
