@@ -454,3 +454,38 @@ html[lang="vi"] .btn, html[lang="vi"] .price, html[lang="vi"] .best-badge, html[
 
 .share-btn { cursor: pointer; border: 1px solid var(--line, #e5dccb); background: #fff; font: inherit; font-size: 13px; }
 .share-btn:hover { background: var(--sand); }
+
+/* =========================================================
+   가독성 개선 (2026-11-08)
+   - 본문·업체명·버튼: Pretendard 하나로 통일 (한글·영문·숫자·베트남어 모두 같은 서체라 글자 크기와 굵기가 고르게 보여요)
+   - 주아체는 메인 배너 큰 제목에만 (작은 글씨에 쓰면 읽기 어려워요)
+   - 흐린 회색 글씨를 진하게, 작은 글씨를 조금 크게, 한국어 단어가 중간에서 끊기지 않게
+   ========================================================= */
+:root {
+  --font: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+  --display: var(--font);
+  --sub-text: #5b6676;
+}
+html[lang="vi"] { --display: var(--font); }
+body { font-family: var(--font); font-size: 16px; line-height: 1.7; letter-spacing: -0.01em; word-break: keep-all; overflow-wrap: anywhere; }
+h1, h2, h3, .head h1, .shop .info > b, .cat, .btn, .chip, .best-badge, .price, .rv-sum, .sim-item b,
+.cat-title, .card b, details summary, .partner h2, .lb-cap { font-family: var(--font); letter-spacing: -0.02em; }
+h1, h2, h3, .head h1, .cat-title, .partner h2 { font-weight: 800; }
+.shop .info > b, .sim-item b, .card b, details summary, .rv-sum { font-weight: 700; }
+.btn, .chip.on, .price, .best-badge { font-weight: 700; }
+.chip, .cat { font-weight: 600; }
+.banner h1 { font-family: "Jua", var(--font); font-weight: 400; letter-spacing: 0; }
+.langs .chip { font-family: var(--font); font-weight: 700; }
+.shop .info > b { font-size: 19px; line-height: 1.35; }
+.info > div, .card p, .sim-item small, .meta { font-size: 15px; }
+.card p, .faq p, details p { color: #33415a; line-height: 1.75; }
+.fact small, .rate small, .sim-item small, .checks small, .cat-title small, .board-hint, .cta-hint, .empty { color: var(--sub-text); }
+.fact small { font-size: 13px; }
+.fact b { font-weight: 700; line-height: 1.5; }
+.fact.tbd b { color: #8a94a0; font-weight: 500; }
+.tag { font-size: 13px; padding: 3px 9px; }
+.cta-hint { font-size: 12.5px; }
+.head p, #detail > p, .reco { line-height: 1.75; }
+.fact > div, .menu-row, .shop .info, .sim-item { line-height: 1.45; }
+.menu-row b { line-height: 1.4; }
+.menu-row .price { white-space: nowrap; }
