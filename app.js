@@ -108,7 +108,7 @@ function drawShops() {
   $("shopTitle").textContent = cur ? ui("shopsOf", { n: tx(cur.name) }) : ui("recommend");
   const card = s => {
     const cat = CATEGORIES.find(c => c.id === s.cat);
-    const img = s.img ? `<img src="${s.img}" alt="" loading="lazy" decoding="async" style="object-position:${s.imgPos || "50% 50%"}">` : `<div class="ph">${cat ? cat.icon : "✨"}</div>`;
+    const img = s.img ? `<img src="${s.img}" alt="" loading="lazy" decoding="async" style="object-position:${s.imgPos || "50% 50%"}">` : phCard(s);
     return `<a class="shop ${s.best ? "is-best" : ""}" href="${shopLink(s.id)}"><div class="shop-media">${img}${s.best ? `<span class="best-badge"><i>✦</i>${ui("certBadge")}<i>✦</i></span>` : ""}</div><div class="info">
       <b>${tx(s.name)}</b>
       <div class="rate ${s.rating ? "" : "none"}"><span class="rate-stars">${stars(Math.round(s.rating || 0))}</span>${s.rating ? `<b>${(+s.rating).toFixed(1)}</b><small>(${s.reviews})</small>` : `<small>${ui("noRating")}</small>`}</div>

@@ -54,7 +54,7 @@ if (!shop) {
 } else {
   document.title = tx(shop.name) + " | " + tx(SITE.name);
   const cat = CATEGORIES.find(c => c.id === shop.cat);
-  const img = shop.img ? `<img class="hero" src="${shop.img}" alt="" decoding="async" style="object-position:${shop.imgPos || "50% 50%"}">` : `<div class="hero ph">${cat ? cat.icon : "✨"}</div>`;
+  const img = shop.img ? `<img class="hero" src="${shop.img}" alt="" decoding="async" style="object-position:${shop.imgPos || "50% 50%"}">` : phCard(shop, true);
   const closed = shop.closed.length ? shop.closed.map(d => ui("days")[d]).join(", ") : ui("none");
   const staff = shop.staffLangs.length ? shop.staffLangs.map(l => ui("lang_" + l)).join(", ") : ui("tbd");
   const revs = (shop.userReviews || []).slice().sort((a, b) => (b.date || "").localeCompare(a.date || ""));
