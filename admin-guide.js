@@ -96,7 +96,8 @@ const GUIDE = [
       <li>업체 정보·주소·영업시간·메뉴가 구조화 데이터로 들어가서 구글이 "다낭 피부관리 업체"로 이해해요.</li>
       <li><b>사이트맵</b>(sitemap.xml)은 업체를 추가하면 3시간 안에 자동으로 바뀌어요.</li>
       <li>업체 소개글(설명)을 <b>구체적으로</b> 쓸수록 검색에 잘 걸려요. 예: 지역 이름, 대표 메뉴, 한국어 응대, 픽업 여부</li></ul>
-      <p class="tip">💡 검색 결과에 나오기까지 보통 몇 주 걸려요. 구글 서치 콘솔·네이버 서치어드바이저에 등록하면 더 빨라져요.</p>` },
+      <p class="tip">💡 검색 결과에 나오기까지 보통 몇 주 걸려요.</p>
+      <p><b>등록된 계정</b> (비밀번호는 사장님만 보관)<br>· 구글 서치 콘솔: <b>uncledayadmin@gmail.com</b> — 팀원은 설정 → 사용자 및 권한에서 추가<br>· 네이버 서치어드바이저: 아이디 <b>uncledayadm</b><br>· 둘 다 사이트맵 제출 완료: https://www.uncleday.com/sitemap.xml</p>` },
     { ic: "🏷️", t: "홍보 링크에 이름표 붙이기 (UTM)", b: `
       <p>광고·블로그·인스타에 링크를 넣을 때 끝에 <code>?utm_source=이름</code>을 붙이면, 방문자 분석에 <b>🏷️ 광고 링크: 이름</b>으로 따로 나와요.</p>
       <ul><li>인스타 광고: <code>https://www.uncleday.com/?utm_source=insta_ad</code></li>
