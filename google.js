@@ -39,9 +39,11 @@ function gplaceBox(shop) {
     const ph = !shop.img && d.photos && d.photos[0];
     if (ph && await GPLACE.take("photo")) {
       const who = (ph.authorAttributions || []).map(a => `<a href="${esc(a.uri || "#")}" target="_blank" rel="noopener">${esc(a.displayName || "")}</a>`).join(", ");
-      html = `<figure class="g-photo"><img src="https://places.googleapis.com/v1/${esc(ph.name)}/media?maxWidthPx=960&key=${encodeURIComponent(GMAPS.key)}" alt="" loading="lazy"><figcaption>📷 ${who || "Google"} · Google</figcaption></figure>` + html;
+      html = `<figure class="g-photo"><img src="https://places.googleapis.com/v1/${esc(ph.name)}/media?maxWidthPx=600&key=${encodeURIComponent(GMAPS.key)}" alt="" loading="lazy"><figcaption>📷 ${who || "Google"} · Google</figcaption></figure><div class="g-side">${html}</div>`;
+      el.classList.add("has-photo");
     }
-    if (d.googleMapsUri) html += `<a class="g-more" href="${esc(d.googleMapsUri)}" target="_blank" rel="noopener">${ui("gMore")} →</a>`;
+    if (d.googleMapsUri && !el.classList.contains("has-photo")) html += `<a class="g-more" href="${esc(d.googleMapsUri)}" target="_blank" rel="noopener">${ui("gMore")} →</a>`;
     el.innerHTML = html;
+    if (d.googleMapsUri && el.classList.contains("has-photo")) el.querySelector(".g-side").insertAdjacentHTML("beforeend", `<a class="g-more" href="${esc(d.googleMapsUri)}" target="_blank" rel="noopener">${ui("gMore")} →</a>`);
   });
 }

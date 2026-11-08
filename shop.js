@@ -99,7 +99,7 @@ if (!shop) {
     <div id="gBox"></div>
 
     <h2>${ui("about")}</h2><p>${tx(shop.desc)}</p>
-    ${shop.recommend ? `<p class="reco">👍 <b>${ui("recoFor")}</b> ${tx(shop.recommend)}</p>` : ""}
+    ${shop.recommend && tx(shop.recommend) ? `<p class="reco">👍 <b>${ui("recoFor")}</b> ${tx(shop.recommend)}</p>` : ""}
 
     ${shop.menu.length ? `<h2>${ui("menu")}</h2>
     <div id="menuList">${shop.menu.map((m, i) => `
