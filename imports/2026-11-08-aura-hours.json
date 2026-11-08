@@ -1,0 +1,23 @@
+{
+ "id": "2026-11-08-aura-hours",
+ "title": "아우라 뷰티 영업시간 (매일 08:00~19:00)",
+ "created": "2026-11-08",
+ "shops": [
+  {
+   "id": "aura-beauty",
+   "cat": "skin",
+   "city": "danang",
+   "name": {
+    "ko": "아우라 뷰티",
+    "en": "Aura Beauty",
+    "vi": "Aura Beauty"
+   },
+   "open": "08:00",
+   "close": "19:00",
+   "review": [
+    "메뉴와 가격을 넣어 주세요.",
+    "대표 사진을 넣어 주세요."
+   ]
+  }
+ ]
+}
