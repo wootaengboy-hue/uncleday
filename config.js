@@ -12,5 +12,5 @@ const SUPA = {
    - 구글 클라우드에서 만든 키를 넣어요. 키는 www.uncleday.com 에서만 쓰이도록 제한해 두세요.
    - 비워 두면 구글 정보 칸이 나오지 않아요. */
 const GMAPS = {
-  key: ""
+  key: "AIzaSyCnm-TjvncTNjZB_ubch0XdEkIss--mr1g"
 };
