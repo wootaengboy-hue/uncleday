@@ -9,9 +9,10 @@ W, H = 1200, 630
 d = json.load(open(sys.argv[1]))
 FONT_DIRS = ["/usr/share/fonts/opentype/noto", "/usr/share/fonts/opentype/noto-cjk", "/usr/share/fonts/noto-cjk"]
 def font(weight, size):
-    for dr in FONT_DIRS:
-        p = os.path.join(dr, f"NotoSansCJK-{weight}.ttc")
-        if os.path.exists(p): return ImageFont.truetype(p, size, index=1)  # 1 = KR
+    for w in (weight, "Bold", "Regular"):   # 기본 설치에는 Bold·Regular 만 있을 수 있어요
+        for dr in FONT_DIRS:
+            p = os.path.join(dr, f"NotoSansCJK-{w}.ttc")
+            if os.path.exists(p): return ImageFont.truetype(p, size, index=1)  # 1 = KR
     raise SystemExit("Noto Sans CJK 글꼴이 없어요")
 tx = lambda v: (v.get("ko") or v.get("en") or "") if isinstance(v, dict) else (v or "")
 cats = {c["id"]: c for c in d["categories"]}; cities = {c["id"]: c for c in d["cities"]}
