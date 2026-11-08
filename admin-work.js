@@ -51,6 +51,14 @@ const dueTag = d => { if (!d) return ""; const t = vnToday(); const cls = d < t 
 const watching = (x, e) => Array.isArray(x.watchers) && x.watchers.includes(e);
 const whoOk = x => workWho === "all" || (workWho === "me" ? x.assignee === ME.email || watching(x, ME.email) : workWho === "ref" ? watching(x, ME.email) : workWho === "none" ? !x.assignee : x.assignee === workWho || watching(x, workWho));
 const adminOpts = (sel, blank = "미지정") => `<option value="">${blank}</option>` + ADMINS.map(a => `<option value="${esc(a.email)}" ${a.email === sel ? "selected" : ""}>${esc(who(a.email))}${a.email === ME.email ? " (나)" : ""}</option>`).join("");
+// 고르기 칸을 노션처럼 색깔 버튼으로 (원래 칸은 숨겨 두고 값만 맞춰요)
+function pills(sel, colors) {
+  if (!sel) return;
+  const box = document.createElement("div"); box.className = "pills";
+  const draw = () => { box.innerHTML = [...sel.options].map(o => `<button type="button" class="pill ${colors[o.value] || "gray"} ${o.value === sel.value ? "on" : ""}" data-v="${esc(o.value)}">${esc(o.textContent)}</button>`).join("");
+    box.querySelectorAll("[data-v]").forEach(b => b.onclick = e => { e.preventDefault(); sel.value = b.dataset.v; sel.dispatchEvent(new Event("change")); draw(); }); };
+  sel.hidden = true; sel.after(box); draw();
+}
 const leadById = id => LEADS.find(l => l.id === id);
 
 // 대시보드 '할 일'에 쓰는 숫자
@@ -147,6 +155,8 @@ function editTask(id, preset = {}) {
     </div>
     <div class="btns">${id ? `<button class="btn danger" data-del style="margin-right:auto">삭제</button>` : ""}<button class="btn" data-no>닫기</button><button class="btn main" data-yes>저장</button></div></div>`;
   document.body.appendChild(d);
+  pills(d.querySelector("#tSt"), { todo: "gray", doing: "blue", done: "green" });
+  pills(d.querySelector("#tPri"), { 0: "gray", 1: "amber", 2: "red" });
   const ed = richEditor(d.querySelector("#tMemo"), x.memo || "", { onTemplate: t => { const ti = d.querySelector("#tTitle"); if (!ti.value.trim()) ti.value = t.name.replace(/^[^\s가-힣A-Za-z0-9]+\s*/, ""); } });
   d.querySelector("#tTitle").focus();
   if (id) commentBox(d.querySelector("#tCmt"), "task", id);
