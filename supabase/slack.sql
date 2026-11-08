@@ -49,13 +49,17 @@ begin
     continue when u is null or u !~ '^https://hooks\.slack\.com/';
     select string_agg(lbl ->> e, ', ') into names from unnest(c.events) e where coalesce(nullif(c.hooks ->> e, ''), c.webhook) = u;
     begin
-      perform net.http_post(url := u, body := jsonb_build_object('text', '✅ 엉클데이 슬랙 연결 테스트예요 (' || actor_name() || E')\n이 채널로 오는 알림: ' || coalesce(names, '없음 (기본 채널)')),
+      perform net.http_post(url := u, body := jsonb_build_object('text', '✅ 엉클데이 슬랙 연결 테스트예요 (' || nick(actor_name()) || E')\n이 채널로 오는 알림: ' || coalesce(names, '없음 (기본 채널)')),
                             headers := '{"Content-Type": "application/json"}'::jsonb);
     exception when others then null; end;
   end loop;
 end $$;
 revoke all on function public.slack_test() from public, anon;
 grant execute on function public.slack_test() to authenticated;
+
+-- '관리자 someone@mail.com' → 닉네임 (없으면 이메일 앞부분)
+create or replace function public.nick(t text) returns text language sql stable security definer set search_path = public as $$
+  select coalesce((select coalesce(nullif(name, ''), split_part(email, '@', 1)) from admins where lower(email) = lower(regexp_replace(coalesce(t, ''), '^관리자 ', ''))), t) $$;
 
 create or replace function public.slack_money(v bigint) returns text language sql immutable as $$
   select case when v is null then '' else to_char(v, 'FM999,999,999,999') || '₫' end $$;
@@ -72,7 +76,7 @@ begin
   st := case new.detail -> 'status' ->> 1 when 'confirmed' then '✅ 확정' when 'rejected' then '❌ 불가' when 'visited' then '🙌 방문 완료'
         when 'cancelled' then '🚫 취소' when 'noshow' then '👻 노쇼' when 'settled' then '💰 정산 완료' when 'requested' then '📥 접수로 되돌림' else null end;
   if new.action = 'created' then
-    ev := 'booking'; m := '📅 새 예약' || case when new.actor = '손님' then ' (사이트에서 손님이 직접)' else ' (' || new.actor || ' 등록)' end || E'\n' || head;
+    ev := 'booking'; m := '📅 새 예약' || case when new.actor = '손님' then ' (사이트에서 손님이 직접)' else ' (' || nick(new.actor) || ' 등록)' end || E'\n' || head;
   elsif new.actor = '업체' then
     ev := 'shop';
     if new.action = 'shop_memo' then m := '🏪 업체 메모: ' || coalesce(new.detail ->> 'memo', '') || E'\n' || head;
@@ -112,7 +116,7 @@ declare who text; k text;
 begin
   select coalesce(nullif(name, ''), split_part(email, '@', 1)) into who from admins where lower(email) = new.recipient_email;
   k := case new.kind when 'mention' then '💬 언급' when 'assign' then '👉 담당 지정' when 'ref' then '👥 참조' when 'comment' then '🗨️ 새 댓글' else '🔔 알림' end;
-  perform slack_send('team', k || ' → *' || coalesce(who, new.recipient_email) || '* · ' || coalesce(new.actor, '') || E'\n'
+  perform slack_send('team', k || ' → *' || coalesce(who, new.recipient_email) || '* · ' || coalesce(nick(new.actor), '') || E'\n'
     || case new.target_type when 'task' then '할 일: ' else '영업: ' end || coalesce(new.title, '')
     || coalesce(E'\n> ' || left(replace(regexp_replace(new.body, '<[^>]+>', ' ', 'g'), E'\n', ' '), 200), ''));
   return new;
@@ -132,7 +136,7 @@ begin
     || case when new.kind = 'created' then '🆕 새 후보 추가' else
          (case f when 'found' then '후보 발굴' when 'contacted' then '연락함' when 'meeting' then '미팅' when 'negotiating' then '계약 협의' when 'signed' then '계약 완료' when 'live' then '입점 완료' when 'hold' then '보류·거절' else coalesce(f, '') end)
          || ' → ' || (case t when 'found' then '후보 발굴' when 'contacted' then '연락함' when 'meeting' then '미팅' when 'negotiating' then '계약 협의' when 'signed' then '🎉 계약 완료' when 'live' then '🎉 입점 완료' when 'hold' then '보류·거절' else coalesce(t, '') end) end
-    || ' (' || coalesce(new.actor, '') || ')');
+    || ' (' || coalesce(nick(new.actor), '') || ')');
   return new;
 end $$;
 drop trigger if exists slack_lead on public.lead_logs;

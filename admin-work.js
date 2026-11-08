@@ -17,11 +17,40 @@ async function loadWork() {
   CMT_N = {}; (c.error ? [] : c.data).forEach(x => CMT_N[x.target_id] = (CMT_N[x.target_id] || 0) + 1);
   return !t.error && !l.error;
 }
-const who = e => e ? (e.split("@")[0]) : "미지정";
+// 사람 이름: 닉네임이 있으면 닉네임, 없으면 이메일 앞부분
+const who = e => { if (!e) return "미지정"; const a = ADMINS.find(x => x.email.toLowerCase() === String(e).toLowerCase()); return (a && a.name) || String(e).split("@")[0]; };
+const NICK_RE = /^[A-Za-z0-9._\-가-힣]{1,12}$/;
+// @ 자동완성: 입력칸에서 @를 치면 사람 목록이 떠요
+function atPicker(input, onPick, opts = {}) {
+  const box = document.createElement("div"); box.className = "at-pop"; box.hidden = true; input.parentNode.style.position = "relative"; input.parentNode.appendChild(box);
+  let list = [], sel = 0, q = null;
+  const close = () => { box.hidden = true; q = null; };
+  const draw = () => {
+    if (!list.length) return close();
+    box.innerHTML = list.map((a, i) => `<button type="button" class="${i === sel ? "on" : ""}" data-i="${i}"><span class="av">${esc(who(a.email).slice(0, 1).toUpperCase())}</span><b>${esc(who(a.email))}</b><small>${esc(a.email)}</small></button>`).join("");
+    box.hidden = false; box.querySelectorAll("[data-i]").forEach(b => b.onmousedown = e => { e.preventDefault(); pick(list[+b.dataset.i]); });
+  };
+  const pick = a => { const r = onPick(a, q); close(); return r; };
+  input.addEventListener("input", () => {
+    const v = input.value.slice(0, input.selectionStart ?? input.value.length);
+    const m = opts.whole ? v.match(/^@?([\w.\-가-힣]*)$/) : v.match(/(?:^|\s)@([\w.\-가-힣]*)$/);
+    if (!m) return close();
+    q = m[1].toLowerCase();
+    list = ADMINS.filter(a => (!opts.skip || !opts.skip(a)) && (who(a.email).toLowerCase().includes(q) || a.email.toLowerCase().includes(q))).slice(0, 8); sel = 0; draw();
+  });
+  input.addEventListener("keydown", e => {
+    if (box.hidden || e.isComposing) return;
+    if (e.key === "ArrowDown") { e.preventDefault(); sel = (sel + 1) % list.length; draw(); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); sel = (sel - 1 + list.length) % list.length; draw(); }
+    else if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); e.stopImmediatePropagation(); pick(list[sel]); }
+    else if (e.key === "Escape") close();
+  }, true);
+  input.addEventListener("blur", () => setTimeout(close, 150));
+}
 const dueTag = d => { if (!d) return ""; const t = vnToday(); const cls = d < t ? "late" : d === t ? "today" : ""; return `<span class="chip ${cls}">📅 ${dayKo(d)}${d < t ? " 지남" : d === t ? " 오늘" : ""}</span>`; };
 const watching = (x, e) => Array.isArray(x.watchers) && x.watchers.includes(e);
 const whoOk = x => workWho === "all" || (workWho === "me" ? x.assignee === ME.email || watching(x, ME.email) : workWho === "ref" ? watching(x, ME.email) : workWho === "none" ? !x.assignee : x.assignee === workWho || watching(x, workWho));
-const adminOpts = (sel, blank = "미지정") => `<option value="">${blank}</option>` + ADMINS.map(a => `<option value="${esc(a.email)}" ${a.email === sel ? "selected" : ""}>${esc(a.email)}${a.email === ME.email ? " (나)" : ""}</option>`).join("");
+const adminOpts = (sel, blank = "미지정") => `<option value="">${blank}</option>` + ADMINS.map(a => `<option value="${esc(a.email)}" ${a.email === sel ? "selected" : ""}>${esc(who(a.email))}${a.email === ME.email ? " (나)" : ""}</option>`).join("");
 const leadById = id => LEADS.find(l => l.id === id);
 
 // 대시보드 '할 일'에 쓰는 숫자
@@ -48,9 +77,11 @@ function drawWork() {
       <span class="grow"></span>
       ${workView === "leads" ? `<button class="btn main" id="leadNew">＋ 영업 업체 추가</button>` : `<button class="btn main" id="taskNew">＋ 할 일</button>`}
     </div>
+    ${(ADMINS.find(a => a.email === ME.email) || {}).name ? "" : `<div class="nick-nudge">👋 <b>닉네임</b>을 정하면 팀원들이 이메일 대신 이름으로 보고, <b>@이름</b>으로 부를 수 있어요. <button class="btn sm main" id="nickGo">⚙️ 계정에서 정하기</button></div>`}
     <div class="kanban ${workView}" id="kb"></div>
     <p class="hint" style="margin:10px 0 40px">${workView === "tasks" ? "카드를 끌어서 다른 칸에 놓으면 상태가 바뀌어요 (휴대폰은 카드를 눌러 상태를 바꿔요). 완료는 최근 30일만 보여요." : "업체 카드를 끌어서 단계를 옮겨요. 단계·담당자가 바뀌면 누가 언제 바꿨는지 자동으로 기록돼요. 다음 연락일이 지나면 빨갛게 표시돼요."}</p>`;
   $("tab-work").querySelectorAll("[data-v]").forEach(b => b.onclick = () => { workView = b.dataset.v; drawWork(); });
+  if ($("nickGo")) $("nickGo").onclick = () => showTab("acc");
   $("wWho").onchange = e => { workWho = e.target.value; drawWork(); };
   if ($("taskNew")) $("taskNew").onclick = () => editTask(null, { assignee: ME.email });
   if ($("leadNew")) $("leadNew").onclick = () => newLead();
@@ -109,7 +140,8 @@ function editTask(id, preset = {}) {
         <label class="f"><span>관련 업체</span><select id="tShop"><option value="">없음</option>${shops.map(s => `<option value="${esc(s.id)}" ${s.id === x.shop_id ? "selected" : ""}>${esc(s.name.ko)}</option>`).join("")}</select></label>
         <label class="f"><span>관련 영업</span><select id="tLead"><option value="">없음</option>${LEADS.map(l => `<option value="${l.id}" ${l.id === x.lead_id ? "selected" : ""}>${esc(l.name)}</option>`).join("")}</select></label>
       </div>
-      <div class="f"><span>참조 <small class="hint">— 함께 알아야 하는 사람 (여러 명)</small></span><div class="people" id="tRefs"></div></div>
+      <div class="f"><span>참조 <small class="hint">— 함께 알아야 하는 사람 (여러 명). 눌러서 고르거나 <b>@이름</b>을 입력하세요</small></span><div class="people" id="tRefs"></div>
+        <div class="at-wrap"><input id="tRefAt" class="at-in" placeholder="@이름 입력 → Enter" autocomplete="off"></div></div>
       ${id ? `<div class="f"><span>💬 댓글</span><div id="tCmt"></div></div>` : `<div class="hint">💬 댓글은 저장한 뒤에 달 수 있어요.</div>`}
       ${id ? `<div class="hint">만든 사람: ${esc(x.created_by || "")} · ${dt(x.created_at)}${x.done_at ? ` · 완료 ${dt(x.done_at)}` : ""}</div>` : ""}
     </div>
@@ -125,6 +157,9 @@ function editTask(id, preset = {}) {
     box.querySelectorAll("[data-p]").forEach(b => b.onclick = () => { const e = b.dataset.p; refs = refs.includes(e) ? refs.filter(v => v !== e) : [...refs, e]; drawRefs(); });
   };
   drawRefs();
+  const refIn = d.querySelector("#tRefAt");
+  atPicker(refIn, a => { if (!refs.includes(a.email) && a.email !== d.querySelector("#tWho").value) refs = [...refs, a.email]; refIn.value = ""; drawRefs(); refIn.focus(); },
+    { whole: true, skip: a => refs.includes(a.email) || a.email === d.querySelector("#tWho").value });
   d.querySelector("#tWho").onchange = () => { refs = refs.filter(v => v !== d.querySelector("#tWho").value); drawRefs(); };
   d.querySelector("[data-no]").onclick = () => { d.remove(); if (TAB === "work") drawWork(); if (preset._after) preset._after(); };
   d.querySelector("[data-yes]").onclick = async () => {
@@ -306,7 +341,7 @@ const cmtHtml = t => esc(t).replace(/@([\w.\-가-힣]+)/g, '<b class="mention">@
 async function commentBox(host, type, id) {
   host.innerHTML = `<div class="cmts"><div class="cmt-list"><div class="hint">불러오는 중…</div></div>
     <div class="cmt-new"><span class="av me">${esc(who(ME.email).slice(0, 1).toUpperCase())}</span>
-      <textarea rows="1" placeholder="댓글 달기… (@이름으로 언급, Ctrl+Enter로 등록)"></textarea><button type="button" class="btn sm main">등록</button></div>
+      <div class="at-wrap"><textarea rows="1" placeholder="댓글 달기… (@를 치면 사람 목록이 떠요, Ctrl+Enter로 등록)"></textarea></div><button type="button" class="btn sm main">등록</button></div>
     ${ADMINS.length > 1 ? `<div class="hint">언급하기: ${ADMINS.filter(a => a.email !== ME.email).map(a => `<button type="button" class="mention-pick" data-m="${esc(who(a.email))}">@${esc(who(a.email))}</button>`).join(" ")}</div>` : ""}</div>`;
   const list = host.querySelector(".cmt-list"), ta = host.querySelector("textarea"), btn = host.querySelector(".cmt-new .btn");
   ta.oninput = () => { ta.style.height = "auto"; ta.style.height = Math.min(ta.scrollHeight, 160) + "px"; };
@@ -339,6 +374,8 @@ async function commentBox(host, type, id) {
     ta.value = ""; ta.style.height = "auto"; load();
   };
   host.querySelectorAll(".mention-pick").forEach(m => m.onclick = () => { ta.value = (ta.value && !/\s$/.test(ta.value) ? ta.value + " " : ta.value) + "@" + m.dataset.m + " "; ta.focus(); ta.oninput(); });
+  atPicker(ta, (a, q) => { const pos = ta.selectionStart, head = ta.value.slice(0, pos), at = head.lastIndexOf("@");
+    const before = head.slice(0, at) + "@" + who(a.email) + " "; ta.value = before + ta.value.slice(pos); ta.selectionStart = ta.selectionEnd = before.length; ta.focus(); ta.oninput(); }, { skip: a => a.email === ME.email });
   btn.onclick = send;
   ta.onkeydown = e => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && !e.isComposing) { e.preventDefault(); send(); } };
   load();

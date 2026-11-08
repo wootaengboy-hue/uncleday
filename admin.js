@@ -815,8 +815,16 @@ async function drawAccount() {
   const drawAdmins = async () => {
     const [a, e] = await Promise.all([sb.from("admins").select("*").order("created_at"), sb.from("admin_emails").select("*").order("created_at")]);
     const active = new Set((a.data || []).map(x => x.email.toLowerCase()));
-    $("adminList").innerHTML = (a.data || []).map(x => `<div>✅ ${esc(x.email)}${x.user_id === ME.id ? " (나)" : ""}</div>`).join("") +
+    $("adminList").innerHTML = `<div class="hint" style="margin:0 0 6px">닉네임: 할 일·댓글·알림에 이메일 대신 보여요. <b>@닉네임</b>으로 부를 수 있어요 (띄어쓰기 없이 12자까지).</div>` + (a.data || []).map(x => `<div class="adm-row">✅ <input class="nick-in" data-nick="${esc(x.user_id)}" value="${esc(x.name || "")}" placeholder="닉네임" maxlength="12"><small>${esc(x.email)}${x.user_id === ME.id ? " (나)" : ""}</small></div>`).join("") +
       (e.data || []).filter(x => !active.has(x.email.toLowerCase())).map(x => `<div>⏳ ${esc(x.email)} <span class="hint">— 아직 로그인 안 함</span> <button class="btn sm danger" data-rm="${esc(x.email)}">빼기</button></div>`).join("");
+    $("adminList").querySelectorAll("[data-nick]").forEach(inp => inp.onchange = async () => {
+      const v = inp.value.trim();
+      if (v && !NICK_RE.test(v)) { toast("닉네임은 띄어쓰기 없이 한글·영문·숫자로 12자까지예요"); inp.value = ""; return; }
+      if (v && (a.data || []).some(x => x.user_id !== inp.dataset.nick && ((x.name || "").toLowerCase() === v.toLowerCase() || x.email.split("@")[0].toLowerCase() === v.toLowerCase()))) { toast("다른 사람이 쓰는 이름이에요"); return; }
+      const r = await sb.from("admins").update({ name: v || null }).eq("user_id", inp.dataset.nick); if (r.error) return dbErr(r.error);
+      const em = (a.data.find(y => y.user_id === inp.dataset.nick) || {}).email, m = ADMINS.find(x => x.email === em); if (m) m.name = v || null;
+      toast(v ? `닉네임을 '${v}'(으)로 정했어요` : "닉네임을 지웠어요");
+    });
     $("adminList").querySelectorAll("[data-rm]").forEach(b => b.onclick = async () => { await sb.from("admin_emails").delete().eq("email", b.dataset.rm); drawAdmins(); });
   };
   drawAdmins(); drawSlack();
