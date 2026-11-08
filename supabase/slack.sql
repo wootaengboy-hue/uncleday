@@ -14,6 +14,7 @@ create table if not exists public.slack_cfg (
   updated_at  timestamptz not null default now(),
   updated_by  text
 );
+alter table public.slack_cfg add column if not exists hooks jsonb not null default '{}'::jsonb;   -- 알림 종류별 채널 (비면 기본 채널)
 insert into public.slack_cfg (id) values (1) on conflict do nothing;
 alter table public.slack_cfg enable row level security;
 drop policy if exists admin_all on public.slack_cfg;
@@ -21,13 +22,15 @@ create policy admin_all on public.slack_cfg for all to authenticated using (publ
 
 create or replace function public.slack_send(ev text, msg text) returns void
 language plpgsql security definer set search_path = public as $$
-declare c slack_cfg;
+declare c slack_cfg; u text;
 begin
   select * into c from slack_cfg where id = 1;
-  if c is null or not c.enabled or c.webhook is null or c.webhook !~ '^https://hooks\.slack\.com/' then return; end if;
+  if c is null or not c.enabled then return; end if;
   if ev <> 'test' and not (ev = any(c.events)) then return; end if;
+  u := coalesce(nullif(c.hooks ->> ev, ''), c.webhook);   -- 종류별 채널이 있으면 거기로, 없으면 기본 채널로
+  if u is null or u !~ '^https://hooks\.slack\.com/' then return; end if;
   begin
-    perform net.http_post(url := c.webhook, body := jsonb_build_object('text', msg), headers := '{"Content-Type": "application/json"}'::jsonb);
+    perform net.http_post(url := u, body := jsonb_build_object('text', msg), headers := '{"Content-Type": "application/json"}'::jsonb);
   exception when others then null;   -- 슬랙이 안 돼도 예약 저장은 절대 막지 않아요
   end;
 end $$;
@@ -35,9 +38,21 @@ revoke all on function public.slack_send(text, text) from public, anon, authenti
 
 create or replace function public.slack_test() returns void
 language plpgsql security definer set search_path = public as $$
+declare c slack_cfg; u text; names text;
+  lbl constant jsonb := '{"booking":"📅 새 예약","shop":"🏪 업체 답","customer":"🙋 손님 행동","review":"⭐ 새 후기","team":"💬 팀 알림","lead":"🤝 영업 단계"}';
 begin
   if not is_admin() then raise exception '관리자만 할 수 있어요'; end if;
-  perform slack_send('test', '✅ 엉클데이 슬랙 연결 테스트예요. 이 메시지가 보이면 연결 성공! (' || actor_name() || ')');
+  select * into c from slack_cfg where id = 1;
+  -- 채널(웹후크)마다 한 번씩, 그 채널로 오는 알림 종류를 적어서 보내요
+  for u in select distinct coalesce(nullif(c.hooks ->> e, ''), c.webhook) from unnest(c.events) e
+           union select c.webhook where c.webhook is not null loop
+    continue when u is null or u !~ '^https://hooks\.slack\.com/';
+    select string_agg(lbl ->> e, ', ') into names from unnest(c.events) e where coalesce(nullif(c.hooks ->> e, ''), c.webhook) = u;
+    begin
+      perform net.http_post(url := u, body := jsonb_build_object('text', '✅ 엉클데이 슬랙 연결 테스트예요 (' || actor_name() || E')\n이 채널로 오는 알림: ' || coalesce(names, '없음 (기본 채널)')),
+                            headers := '{"Content-Type": "application/json"}'::jsonb);
+    exception when others then null; end;
+  end loop;
 end $$;
 revoke all on function public.slack_test() from public, anon;
 grant execute on function public.slack_test() to authenticated;

@@ -764,21 +764,28 @@ async function drawSlack() {
   const on = !!c.webhook;
   box.innerHTML = `<h3>💬 슬랙 알림 ${on ? (c.enabled ? `<span class="sl-pill ok">연결됨</span>` : `<span class="sl-pill">꺼짐</span>`) : ""}</h3>
     <div class="hint">예약·업체 답·후기 같은 일이 생기면 슬랙 채널로 바로 알려 줘요. 관리자가 직접 바꾼 건 보내지 않아요 (본인이 한 일이라서).</div>
-    <label class="f"><span>슬랙 웹후크 주소 (https://hooks.slack.com/… )</span>
+    <label class="f"><span>기본 채널 웹후크 주소 (https://hooks.slack.com/… )</span>
       <input id="slHook" type="password" autocomplete="off" placeholder="${on ? "저장돼 있어요 · 바꾸려면 새 주소를 붙여넣기" : "https://hooks.slack.com/services/…"}" style="padding:9px 11px;border:1px solid var(--line);border-radius:9px"></label>
-    <div class="sl-evs">${SLACK_EVS.map(([k, n, d]) => `<label class="sl-ev"><input type="checkbox" value="${k}" ${(c.events || []).includes(k) ? "checked" : ""}><b>${n}</b><small>${d}</small></label>`).join("")}</div>
-    <label class="sl-ev" style="margin-top:6px"><input type="checkbox" id="slOn" ${c.enabled ? "checked" : ""}><b>알림 켜기</b><small>잠깐 끄고 싶을 때 체크를 풀어요</small></label>
+    <div class="hint" style="margin-top:12px"><b>알림 종류별로 다른 채널</b>에 받고 싶으면 아래 칸마다 그 채널의 웹후크 주소를 넣어요. 비워 두면 위 <b>기본 채널</b>로 가요.</div>
+    <div class="sl-evs">${SLACK_EVS.map(([k, n, d]) => { const own = !!(c.hooks || {})[k]; return `<div class="sl-ev"><label class="sl-ck"><input type="checkbox" value="${k}" ${(c.events || []).includes(k) ? "checked" : ""}><span><b>${n}</b><small>${d}</small></span></label>
+      <div class="sl-ch">${own ? `<span class="sl-pill ok">📢 따로 채널</span><button type="button" class="linkish" data-hk-clear="${k}">기본 채널로</button>` : `<span class="sl-pill">기본 채널</span>`}
+      <input type="password" autocomplete="off" data-hook="${k}" placeholder="${own ? "바꾸려면 새 주소 붙여넣기" : "다른 채널 웹후크 (선택)"}"></div></div>`; }).join("")}</div>
+    <div class="sl-ev" style="margin-top:6px"><label class="sl-ck"><input type="checkbox" id="slOn" ${c.enabled ? "checked" : ""}><span><b>알림 켜기</b><small>잠깐 끄고 싶을 때 체크를 풀어요</small></span></label></div>
     <div class="btn-row"><button class="btn main" id="slSave">저장</button><button class="btn" id="slTest" ${on ? "" : "disabled"}>테스트 메시지 보내기</button>${on ? `<button class="btn" id="slDel">연결 끊기</button>` : ""}</div>
     ${c.updated_by ? `<div class="hint">마지막 변경: ${esc(c.updated_by)} · ${dt(c.updated_at)}</div>` : ""}`;
   $("slSave").onclick = async () => {
     const hook = $("slHook").value.trim();
     if (hook && !/^https:\/\/hooks\.slack\.com\/services\//.test(hook)) { toast("슬랙 웹후크 주소가 아니에요. https://hooks.slack.com/services/ 로 시작해야 해요"); return; }
-    const upd = { id: 1, enabled: $("slOn").checked, events: [...box.querySelectorAll(".sl-evs input:checked")].map(x => x.value), updated_at: new Date().toISOString(), updated_by: ME.email };
+    const hooks = { ...(c.hooks || {}) }; let bad = false;
+    box.querySelectorAll("[data-hook]").forEach(i => { const v = i.value.trim(); if (!v) return; if (!/^https:\/\/hooks\.slack\.com\/services\//.test(v)) bad = true; else hooks[i.dataset.hook] = v; });
+    if (bad) { toast("종류별 칸에 슬랙 웹후크 주소가 아닌 게 있어요. https://hooks.slack.com/services/ 로 시작해야 해요"); return; }
+    const upd = { id: 1, enabled: $("slOn").checked, events: [...box.querySelectorAll(".sl-evs input[type=checkbox]:checked")].map(x => x.value), hooks, updated_at: new Date().toISOString(), updated_by: ME.email };
     if (hook) upd.webhook = hook;
     const w = await sb.from("slack_cfg").upsert(upd); if (w.error) return dbErr(w.error);
     toast(hook ? "저장했어요. '테스트 메시지 보내기'로 확인해 보세요" : "저장했어요"); drawSlack();
   };
-  if ($("slTest")) $("slTest").onclick = async () => { const t = await sb.rpc("slack_test"); if (t.error) return dbErr(t.error); toast("보냈어요. 슬랙 채널을 확인해 보세요 (몇 초 걸려요)"); };
+  box.querySelectorAll("[data-hk-clear]").forEach(x => x.onclick = async () => { const h = { ...(c.hooks || {}) }; delete h[x.dataset.hkClear]; const w = await sb.from("slack_cfg").update({ hooks: h, updated_at: new Date().toISOString(), updated_by: ME.email }).eq("id", 1); if (w.error) return dbErr(w.error); toast("기본 채널로 돌렸어요"); drawSlack(); });
+  if ($("slTest")) $("slTest").onclick = async () => { const t = await sb.rpc("slack_test"); if (t.error) return dbErr(t.error); toast("연결된 채널마다 테스트 메시지를 보냈어요 (몇 초 걸려요)"); };
   if ($("slDel")) $("slDel").onclick = async () => { if (!confirm("슬랙 연결을 끊을까요?")) return; const w = await sb.from("slack_cfg").update({ webhook: null, updated_at: new Date().toISOString(), updated_by: ME.email }).eq("id", 1); if (w.error) return dbErr(w.error); drawSlack(); };
 }
 async function drawAccount() {
