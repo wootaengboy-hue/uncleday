@@ -828,6 +828,10 @@ async function openImport(f, note) {
       const s = o ? mergeShop(o, n) : mergeShop(blankShop(), n);
       if (!o) META[s.id] = { published: true, sort: ++sort };
       if (n.review) s.review = n.review;
+      if (n.contract) {             // 업체 전화 등은 손님 화면이 아니라 관리자용 계약 정보로
+        delete s.contract; const pv = PRIV[s.id] || { commission_rate: 0, contract: {} };
+        PRIV[s.id] = { ...pv, contract: { ...(pv.contract || {}), ...Object.fromEntries(Object.entries(n.contract).filter(([k, v]) => filled(v) && !filled((pv.contract || {})[k]))) } };
+      }
       try { await dbSaveShop(s); ok++; if (o) shops[shops.indexOf(o)] = s; else shops.push(s); } catch (e) { console.error(e); }
     }
     if (ok === list.length) { await markImport(f.id); note.remove(); }

@@ -1,0 +1,47 @@
+{
+ "id": "2026-11-08-aura",
+ "title": "아우라 뷰티 정보 (구글 지도 캡처)",
+ "created": "2026-11-08",
+ "shops": [
+  {
+   "id": "aura-beauty",
+   "cat": "skin",
+   "city": "danang",
+   "name": {
+    "ko": "아우라 뷰티",
+    "en": "Aura Beauty",
+    "vi": "Aura Beauty"
+   },
+   "address": {
+    "ko": "40 Nguyễn Thị Thập, Thanh Khê, Đà Nẵng",
+    "en": "40 Nguyen Thi Thap, Thanh Khe, Da Nang",
+    "vi": "40 Đường Nguyễn Thị Thập, Thanh Khê, Đà Nẵng"
+   },
+   "geo": [
+    16.074063,
+    108.173187
+   ],
+   "close": "19:00",
+   "desc": {
+    "ko": "'정성을 다한 뷰티 케어로 아름다움을 한 단계 높인다'는 것을 내건 탄케 지역의 피부관리 숍이에요. 구글 후기 평점이 높은 곳이에요.",
+    "en": "A skincare spa in Thanh Khe whose motto is 'dedicated beauty care that elevates your look'. Highly rated in Google reviews.",
+    "vi": "Spa chăm sóc da tại Thanh Khê với phương châm 'Làm đẹp tận tâm, nâng tầm sắc đẹp'. Được đánh giá cao trên Google."
+   },
+   "tags": [
+    {
+     "ko": "탄케 지역",
+     "en": "Thanh Khe area",
+     "vi": "Khu Thanh Khê"
+    }
+   ],
+   "contract": {
+    "phone": "+84 339 614 561"
+   },
+   "review": [
+    "여는 시간을 확인해 주세요 (닫는 시간 19:00만 확인됐어요).",
+    "메뉴와 가격을 넣어 주세요.",
+    "대표 사진을 넣어 주세요."
+   ]
+  }
+ ]
+}
