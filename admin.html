@@ -301,7 +301,7 @@ table.t tfoot td{font-weight:800;background:#fafbfc}
 .seg{display:inline-flex;background:#fff;border-radius:12px;padding:3px;border:1px solid var(--line)}
 .seg button{border:0;background:none;padding:7px 14px;border-radius:9px;font-weight:800;cursor:pointer;color:var(--sub)}
 .seg button.on{background:var(--main);color:#fff}
-.kanban{display:grid;gap:10px;align-items:start;overflow-x:auto;padding-bottom:6px}
+.kanban{display:grid;gap:10px;align-items:stretch;overflow-x:auto;padding-bottom:6px}
 .kanban.tasks{grid-template-columns:repeat(3,minmax(250px,1fr))}
 .kanban.leads{grid-template-columns:repeat(7,minmax(220px,1fr))}
 .kcol{background:#f3eee2;border-radius:14px;padding:10px;display:grid;gap:8px;min-height:120px;align-content:start;border:2px solid transparent}
@@ -314,6 +314,12 @@ table.t tfoot td{font-weight:800;background:#fafbfc}
 .kcard{background:#fff;border-radius:11px;padding:10px 11px;box-shadow:0 1px 2px #0000000f;cursor:pointer;border-left:4px solid transparent;display:grid;gap:5px}
 .kcard:hover{box-shadow:0 2px 8px #00000018}
 .kcard.drag{opacity:.4}
+.kcard{position:relative}.kcard .kt{padding-right:46px}
+.kmove{position:absolute;top:6px;right:6px;border:1px solid var(--line);background:#fff;border-radius:7px;font-size:11.5px;padding:2px 7px;cursor:pointer;color:var(--sub);opacity:0;transition:opacity .15s}
+.kcard:hover .kmove,.kmove:focus{opacity:1}.kmove:hover{color:var(--main);border-color:var(--main)}
+@media (hover:none){.kmove{opacity:1}}
+.kmove-menu{position:fixed;z-index:90;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px #0002;padding:4px;display:grid;min-width:150px}
+.kmove-menu button{border:0;background:none;text-align:left;padding:7px 10px;border-radius:7px;cursor:pointer;font:inherit;font-size:13px}.kmove-menu button:hover{background:#e9f2ec;color:var(--main)}
 .kcard.pri2{border-left-color:var(--danger)}.kcard.pri0{border-left-color:#cfd6dd}
 .kcard.done .kt{text-decoration:line-through;color:var(--sub)}
 .kcard.late{border-left-color:var(--danger)}
@@ -494,16 +500,16 @@ table.t tfoot td{font-weight:800;background:#fafbfc}
 <div id="layer"></div>
 <div id="printArea"></div>
 
-<script src="config.js?v=20261108v"></script>
+<script src="config.js?v=20261108w"></script>
 <script src="vendor/supabase.js"></script>
-<script src="data.js?v=20261108v"></script>
-<script src="shops.js?v=20261108v"></script>
-<script src="catimgs.js?v=20261108v"></script>
-<script src="admin-notes.js?v=20261108v"></script>
-<script src="admin-shops.js?v=20261108v"></script>
-<script src="admin-editor.js?v=20261108v"></script>
-<script src="admin-guide.js?v=20261108v"></script>
-<script src="admin-work.js?v=20261108v"></script>
-<script src="admin.js?v=20261108v"></script>
+<script src="data.js?v=20261108w"></script>
+<script src="shops.js?v=20261108w"></script>
+<script src="catimgs.js?v=20261108w"></script>
+<script src="admin-notes.js?v=20261108w"></script>
+<script src="admin-shops.js?v=20261108w"></script>
+<script src="admin-editor.js?v=20261108w"></script>
+<script src="admin-guide.js?v=20261108w"></script>
+<script src="admin-work.js?v=20261108w"></script>
+<script src="admin.js?v=20261108w"></script>
 </body>
 </html>

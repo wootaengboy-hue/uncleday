@@ -79,7 +79,7 @@ function drawWork() {
     </div>
     ${(ADMINS.find(a => a.email === ME.email) || {}).name ? "" : `<div class="nick-nudge">👋 <b>닉네임</b>을 정하면 팀원들이 이메일 대신 이름으로 보고, <b>@이름</b>으로 부를 수 있어요. <button class="btn sm main" id="nickGo">⚙️ 계정에서 정하기</button></div>`}
     <div class="kanban ${workView}" id="kb"></div>
-    <p class="hint" style="margin:10px 0 40px">${workView === "tasks" ? "카드를 끌어서 다른 칸에 놓으면 상태가 바뀌어요 (휴대폰은 카드를 눌러 상태를 바꿔요). 완료는 최근 30일만 보여요." : "업체 카드를 끌어서 단계를 옮겨요. 단계·담당자가 바뀌면 누가 언제 바꿨는지 자동으로 기록돼요. 다음 연락일이 지나면 빨갛게 표시돼요."}</p>`;
+    <p class="hint" style="margin:10px 0 40px">${workView === "tasks" ? "카드를 끌어서 다른 칸(아무 높이나)에 놓거나, 카드의 <b>이동 ▸</b>을 눌러 바로 옮길 수 있어요. 완료는 최근 30일만 보여요." : "업체 카드를 끌거나 <b>이동 ▸</b>을 눌러 단계를 옮겨요. 단계·담당자가 바뀌면 누가 언제 바꿨는지 자동으로 기록돼요. 다음 연락일이 지나면 빨갛게 표시돼요."}</p>`;
   $("tab-work").querySelectorAll("[data-v]").forEach(b => b.onclick = () => { workView = b.dataset.v; drawWork(); });
   if ($("nickGo")) $("nickGo").onclick = () => showTab("acc");
   $("wWho").onchange = e => { workWho = e.target.value; drawWork(); };
@@ -324,7 +324,23 @@ async function openLead(id) {
 /* ---------- 끌어서 옮기기 ---------- */
 function bindKanban(kind, onMove, onOpen) {
   let dragId = null;
+  const cols = [...$("kb").querySelectorAll(".kcol")].map(k => [k.dataset.col, (k.querySelector(".khead b") || {}).textContent || k.dataset.col]);
   $("kb").querySelectorAll(".kcard").forEach(c => {
+    // ▸ 버튼: 끌지 않고 바로 다른 칸으로 옮기기
+    const here = c.closest(".kcol").dataset.col, mv = document.createElement("button");
+    mv.type = "button"; mv.className = "kmove"; mv.title = "다른 칸으로 옮기기"; mv.textContent = "이동 ▸"; c.appendChild(mv);
+    mv.onclick = e => {
+      e.stopPropagation(); document.querySelectorAll(".kmove-menu").forEach(m => m.remove());
+      const m = document.createElement("div"); m.className = "kmove-menu";
+      m.innerHTML = cols.filter(([k]) => k !== here).map(([k, n]) => `<button type="button" data-to="${esc(k)}">→ ${esc(n)}</button>`).join("");
+      document.body.appendChild(m);   // 칸 밖으로 잘리지 않게 화면 위에 띄워요
+      const r = mv.getBoundingClientRect(), h = m.offsetHeight;
+      m.style.left = Math.max(8, r.right - m.offsetWidth) + "px";
+      m.style.top = (r.bottom + 4 + h > innerHeight ? r.top - 4 - h : r.bottom + 4) + "px";
+      addEventListener("scroll", () => m.remove(), { once: true, capture: true });
+      m.querySelectorAll("[data-to]").forEach(b => b.onclick = ev => { ev.stopPropagation(); m.remove(); onMove(c.dataset.id, b.dataset.to); });
+      setTimeout(() => document.addEventListener("click", () => m.remove(), { once: true }), 0);
+    };
     c.onclick = () => onOpen(c.dataset.id);
     c.ondragstart = e => { dragId = c.dataset.id; c.classList.add("drag"); e.dataTransfer.effectAllowed = "move"; try { e.dataTransfer.setData("text/plain", dragId); } catch (err) {} };
     c.ondragend = () => { c.classList.remove("drag"); $("kb").querySelectorAll(".kcol").forEach(x => x.classList.remove("over")); };
