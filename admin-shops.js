@@ -222,6 +222,12 @@ function openEditor(id, preset, opts = {}) {
           </div>
           <div class="hint">구글 지도에서 업체 건물을 <b>마우스 오른쪽 클릭</b>(휴대폰은 길게 누르기)하면 맨 위에 숫자 두 개가 나와요. 그걸 복사해서 붙여 넣으면 정확한 위치가 돼요.</div>
           <div class="err-text" id="geoErr"></div></div>
+        ${typeof GMAPS !== "undefined" && GMAPS.key ? `<div class="f"><span>구글 지도 연결 <small style="font-weight:400;color:var(--sub)">상세페이지에 구글 영업시간·평점·사진·지도가 자동으로 나와요</small></span>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <input id="gpIn" style="flex:1;min-width:200px;padding:9px 11px;border:1px solid var(--line);border-radius:9px" placeholder="구글 장소 ID (찾기 버튼으로 넣어요)" value="${esc(s.gplace || "")}">
+            <button type="button" class="btn sm main" id="gpFind">🔎 구글에서 찾기</button>
+            <button type="button" class="btn sm" id="gpClear" ${s.gplace ? "" : "hidden"}>연결 끊기</button>
+          </div><div id="gpRes"></div></div>` : ""}
         <div class="two">
           <label class="f"><span>여는 시간</span><input type="time" data-k="open" value="${esc(s.open)}"></label>
           <label class="f"><span>닫는 시간</span><input type="time" data-k="close" value="${esc(s.close)}"></label>
@@ -276,6 +282,20 @@ function openEditor(id, preset, opts = {}) {
   $("cRate").oninput = () => { pv.commission_rate = Math.min(100, Math.max(0, +$("cRate").value || 0)); };
   $("layer").querySelectorAll("[data-c]").forEach(el => el.oninput = () => { pv.contract[el.dataset.c] = el.value; });
   $("pChk").onchange = () => { pub = $("pChk").checked; $("pSw").classList.toggle("on", pub); };
+  if ($("gpIn")) {
+    const showMap = id => `<iframe style="width:100%;height:200px;border:0;border-radius:10px" loading="lazy" src="https://www.google.com/maps/embed/v1/place?key=${encodeURIComponent(GMAPS.key)}&q=place_id:${encodeURIComponent(id)}&language=ko"></iframe>`;
+    if (s.gplace) $("gpRes").innerHTML = showMap(s.gplace);
+    $("gpIn").oninput = () => { s.gplace = $("gpIn").value.trim() || undefined; if (!s.gplace) delete s.gplace; };
+    $("gpClear").onclick = () => { delete s.gplace; $("gpIn").value = ""; $("gpRes").innerHTML = ""; $("gpClear").hidden = true; };
+    $("gpFind").onclick = async () => {
+      const q = [s.name.vi || s.name.en || s.name.ko, (s.address && (s.address.vi || s.address.en)) || (cityOf(s.city) ? cityOf(s.city).name.en : "")].filter(Boolean).join(", ");
+      $("gpRes").innerHTML = `<div class="hint">"${esc(q)}" 찾는 중…</div>`;
+      const ids = await gplaceSearch(q);
+      if (!ids.length) { $("gpRes").innerHTML = `<div class="err-text">못 찾았어요. 업체 이름(베트남어·영어)이나 주소를 고친 뒤 다시 눌러 주세요.</div>`; return; }
+      $("gpRes").innerHTML = `<div class="hint">맞는 업체의 <b>[이 업체예요]</b>를 눌러 주세요.</div>` + ids.slice(0, 3).map((id, i) => `<div style="margin-top:8px">${showMap(id)}<button type="button" class="btn sm main" data-gp="${esc(id)}" style="margin-top:4px">✅ ${i + 1}번, 이 업체예요</button></div>`).join("");
+      $("gpRes").querySelectorAll("[data-gp]").forEach(b => b.onclick = () => { s.gplace = b.dataset.gp; $("gpIn").value = s.gplace; $("gpRes").innerHTML = showMap(s.gplace); $("gpClear").hidden = false; toast("연결했어요. '저장'을 눌러 주세요."); });
+    };
+  }
   $("geoIn").oninput = () => {
     const v = $("geoIn").value.trim();
     const m = v.match(/^(-?\d+(?:\.\d+)?)\s*[, ]\s*(-?\d+(?:\.\d+)?)$/);
@@ -679,6 +699,7 @@ function initShops() {
       open: "10:00", close: "22:00", closed: [0], staffLangs: ["ko", "en"], cat: "massage", city: "danang",
       menu: [{ name: { ko: "전신 마사지 60분", en: "Full body 60 min", vi: "Massage toàn thân 60 phút" }, min: 60, price: 450000 }, { name: { ko: "발 마사지", en: "Foot massage", vi: "Massage chân" }, min: 45, price: 300000 }] })
   ]));
+  if (typeof GMAPS !== "undefined" && GMAPS.key) { $("gpBulk").hidden = false; $("gpBulk").onclick = gplaceBulk; }
   $("expBtn").onclick = () => saveFile(`엉클데이_업체목록_${new Date().toISOString().slice(0, 10)}.csv`, csvText(shops.map(toRow)));
   notice("info", `<details class="grow"><summary style="cursor:pointer"><b>엑셀(CSV) 업로드 양식 쓰는 법</b></summary><ul style="margin:8px 0 0;padding-left:18px">
     <li>'업로드 양식 받기'로 받은 파일에 한 줄에 한 업체씩 적어요. 엑셀에서 <b>CSV</b>로 저장해서 올려요.</li>
@@ -687,4 +708,34 @@ function initShops() {
     <li>태그는 쉼표로 구분 · 휴무요일 <code>일,토</code> · 응대언어 <code>한국어,영어</code> · 입점확인 <code>Y</code> 또는 <code>N</code></li>
     <li>메뉴: <code>전신 마사지 | Full body | Massage toàn thân | 60 | 450000 ; 발 마사지 | Foot | Massage chân | 45 | 300000</code> (한국어 | 영어 | 베트남어 | 분 | 가격, 메뉴끼리는 <code>;</code>)</li>
     <li>사진·수수료율은 업로드 후 각 업체 '수정'에서 넣어요.</li></ul></details>`, "nHelp", "shopNotices");
+}
+
+/* ===== 구글 장소 찾기 (ID만 받는 검색 — 구글 무료·무제한) ===== */
+async function gplaceSearch(q) {
+  try {
+    const r = await fetch("https://places.googleapis.com/v1/places:searchText", { method: "POST",
+      headers: { "Content-Type": "application/json", "X-Goog-Api-Key": GMAPS.key, "X-Goog-FieldMask": "places.id" },
+      body: JSON.stringify({ textQuery: q, languageCode: "vi" }) });
+    if (!r.ok) { const e = await r.json().catch(() => ({})); toast("구글 검색 오류: " + ((e.error && e.error.message) || r.status), 6000); return []; }
+    const j = await r.json(); return (j.places || []).map(p => p.id);
+  } catch (e) { toast("구글에 연결하지 못했어요"); return []; }
+}
+async function gplaceBulk() {
+  const list = shops.filter(s => !s.gplace);
+  if (!list.length) { toast("모든 업체가 이미 연결돼 있어요"); return; }
+  confirmBox(`구글 지도 연결이 안 된 업체 ${list.length}곳을 자동으로 찾아 연결할까요?`, async () => {
+    let ok = 0, miss = [];
+    toast(`${list.length}곳 찾는 중… 잠시만요`, 4000);
+    for (const s of list) {
+      const city = cityOf(s.city) ? cityOf(s.city).name.en : "";
+      const q = [s.name.vi || s.name.en || s.name.ko, (s.address && (s.address.vi || s.address.en)) || city].filter(Boolean).join(", ");
+      const ids = await gplaceSearch(q);
+      if (!ids.length) { miss.push(s.name.ko); continue; }
+      const n = clone(s); n.gplace = ids[0];
+      n.review = [...(n.review || []).filter(x => !/구글 지도 연결/.test(x)), "구글 지도 자동 연결 — 맞는 업체인지 '위치·영업'에서 지도로 확인해 주세요."];
+      try { await dbSaveShop(n); shops[shops.indexOf(s)] = n; ok++; } catch (e) { miss.push(s.name.ko); }
+    }
+    drawList();
+    toast(`${ok}곳 연결했어요${miss.length ? ` · 못 찾은 곳 ${miss.length}곳: ${miss.slice(0, 5).join(", ")}${miss.length > 5 ? " …" : ""}` : ""}`, 8000);
+  }, "이름과 주소로 검색해서 첫 번째 결과를 연결해요. 이 검색은 구글 무료(무제한)예요. 잘못 연결된 곳이 있을 수 있으니 업체마다 '확인 필요' 메모를 남겨 둘게요.", "자동 연결", false);
 }

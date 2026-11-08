@@ -127,3 +127,8 @@ Object.assign(UI.en, { askTitle: "Ask on KakaoTalk", askStep: "We copied the inq
   askCopyBtn: "Copy again", askOpen: "Open KakaoTalk →", askCopiedShort: "Copied. Paste it into the KakaoTalk chat.", askCopyFail: "Couldn't copy automatically. Press and hold the text above to copy it." });
 Object.assign(UI.vi, { askTitle: "Hỏi qua KakaoTalk", askStep: "Chúng tôi đã sao chép nội dung bên dưới. Khi KakaoTalk mở, chỉ cần <b>dán</b> vào khung chat. (Điền ngày và số người để được trả lời nhanh hơn)",
   askCopyBtn: "Sao chép lại", askOpen: "Mở KakaoTalk →", askCopiedShort: "Đã sao chép. Hãy dán vào khung chat KakaoTalk.", askCopyFail: "Không tự sao chép được. Hãy nhấn giữ đoạn chữ phía trên để sao chép." });
+
+/* 구글 지도 정보 */
+Object.assign(UI.ko, { gTitle: "구글 지도 정보", gNote: "Google 제공", gHours: "영업시간 보기 (구글)", gMore: "구글 지도에서 사진·후기 더 보기" });
+Object.assign(UI.en, { gTitle: "On Google Maps", gNote: "Provided by Google", gHours: "Opening hours (Google)", gMore: "More photos & reviews on Google Maps" });
+Object.assign(UI.vi, { gTitle: "Thông tin Google Maps", gNote: "Do Google cung cấp", gHours: "Giờ mở cửa (Google)", gMore: "Xem thêm ảnh & đánh giá trên Google Maps" });

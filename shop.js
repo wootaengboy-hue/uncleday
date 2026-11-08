@@ -96,6 +96,7 @@ if (!shop) {
       <div class="fact ${f[3] ? "" : "tbd"}"><span class="fi">${f[0]}</span><div><small>${f[1]}</small><b>${f[2]}</b></div></div>`).join("")}
     </div>
     ${shop.map ? `<p><a class="map-link" href="${shop.map}" target="_blank">🗺️ ${ui("map")}</a></p>` : ""}
+    <div id="gBox"></div>
 
     <h2>${ui("about")}</h2><p>${tx(shop.desc)}</p>
     ${shop.recommend ? `<p class="reco">👍 <b>${ui("recoFor")}</b> ${tx(shop.recommend)}</p>` : ""}
@@ -151,6 +152,7 @@ if (!shop) {
       <small>${ui("notice")}</small>
     </form>
     <div id="done" class="done" hidden></div>`;
+  if (typeof gplaceBox === "function") gplaceBox(shop);
   // 메뉴판 크게 보기
   const boards = shop.menuImgs || [];
   function openBoard(i) {

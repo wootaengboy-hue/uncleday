@@ -796,4 +796,30 @@ end $$;
 drop trigger if exists leads_notify on public.leads;
 create trigger leads_notify after insert or update on public.leads for each row execute function public.leads_notify();
 
+-- ---------------------------------------------------------------
+-- 17. 구글 지도 정보 사용량 제한 (무료 한도 안에서만 쓰도록 하루 횟수를 세요)
+--   details: 영업시간·평점 (구글 무료 한도 월 1,000회) / photo: 사진 (월 1,000회)
+--   하루 30회씩 → 한 달 최대 930회라서 요금이 나가지 않아요.
+-- ---------------------------------------------------------------
+create table if not exists public.gquota (
+  day   date not null,
+  kind  text not null,
+  n     int  not null default 0,
+  primary key (day, kind)
+);
+alter table public.gquota enable row level security;
+drop policy if exists admin_read on public.gquota;
+create policy admin_read on public.gquota for select to authenticated using (public.is_admin());
+create or replace function public.gquota_take(k text) returns boolean
+language plpgsql security definer set search_path = public as $$
+declare lim int := case k when 'details' then 30 when 'photo' then 30 else 0 end; cur int;
+begin
+  if lim = 0 then return false; end if;
+  insert into gquota (day, kind, n) values ((now() at time zone 'UTC')::date, k, 0) on conflict do nothing;
+  update gquota set n = n + 1 where day = (now() at time zone 'UTC')::date and kind = k and n < lim returning n into cur;
+  return cur is not null;
+end $$;
+revoke all on function public.gquota_take(text) from public;
+grant execute on function public.gquota_take(text) to anon, authenticated;
+
 -- 끝! 아래에 'Success. No rows returned' 가 보이면 완료예요.
