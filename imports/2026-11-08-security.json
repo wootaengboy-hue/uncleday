@@ -1,0 +1,63 @@
+{
+ "id": "2026-11-08-security",
+ "title": "보안·자동 백업 할 일",
+ "created": "2026-11-08",
+ "tasks": [
+  {
+   "group": "백업",
+   "priority": 2,
+   "title": "자동 백업 켜기 (DB 준비 → 열쇠 → GitHub 설정 → 첫 백업)",
+   "note": "backup.sql 실행 → ⚙️ 계정 → 🛟 자동 백업",
+   "memo": "<ol><li>Supabase SQL Editor에서 <a href=\"https://raw.githubusercontent.com/wootaengboy-hue/uncleday/main/supabase/backup.sql\" target=\"_blank\">backup.sql</a> 실행</li><li>관리자 ⚙️ 계정 → 🛟 자동 백업 → <b>🔑 백업 열쇠 만들기</b></li><li>창에 나온 순서대로 GitHub에 <b>BACKUP_TOKEN</b>(열쇠), <b>BACKUP_PASSWORD</b>(내가 정한 비밀번호 12자 이상) 넣기</li><li>GitHub Actions → db-backup → <b>Run workflow</b></li><li>관리자에 \"마지막 자동 백업\" 시간이 뜨면 완료</li></ol><p>⚠️ 백업 비밀번호는 종이·비밀번호 앱에 따로 적어 두기. 잃어버리면 백업을 못 열어요.</p>"
+  },
+  {
+   "group": "백업",
+   "priority": 1,
+   "title": "백업 되돌리기 연습 1번 해 보기",
+   "note": "백업 파일 받아서 '열어 보기'까지만",
+   "memo": "<ol><li>GitHub Actions → db-backup → 최근 실행 → 아래 Artifacts 파일 받기</li><li>관리자 ⚙️ 계정 → ↩️ 백업에서 되돌리기 → 파일·비밀번호 넣고 <b>열어 보기</b></li><li>업체 수·예약 수가 맞게 보이면 성공 (실제로 되돌리기는 누르지 않아도 돼요)</li></ol>"
+  },
+  {
+   "group": "보안",
+   "priority": 2,
+   "title": "GitHub 2단계 인증 켜기",
+   "note": "사이트 화면 전체를 바꿀 수 있는 계정",
+   "memo": "<ol><li>github.com 오른쪽 위 프로필 → <b>Settings</b> → <b>Password and authentication</b></li><li><b>Two-factor authentication → Enable</b></li><li>인증 앱(구글 OTP 등)으로 등록, <b>복구 코드</b>는 꼭 따로 보관</li></ol>"
+  },
+  {
+   "group": "보안",
+   "priority": 2,
+   "title": "Supabase 2단계 인증 켜기",
+   "note": "데이터 전체를 가진 계정",
+   "memo": "<ol><li>supabase.com 로그인 → 왼쪽 아래 프로필 → <b>Account preferences</b>(또는 Account settings)</li><li><b>Multi-factor authentication</b>에서 인증 앱 등록</li><li>복구 방법 따로 보관</li></ol>"
+  },
+  {
+   "group": "보안",
+   "priority": 2,
+   "title": "GitHub '기록 강제 삭제 금지' 설정",
+   "note": "해커가 들어와도 과거 기록을 못 지우게",
+   "memo": "<ol><li><a href=\"https://github.com/wootaengboy-hue/uncleday/settings/rules\" target=\"_blank\">저장소 Settings → Rules → Rulesets</a> → <b>New ruleset → New branch ruleset</b></li><li>이름: 기록 보호 · Enforcement status: <b>Active</b></li><li>Target branches → <b>Add target → Include default branch</b></li><li>Rules에서 <b>Restrict deletions</b>, <b>Block force pushes</b> 두 개만 체크 (나머지는 끄기)</li><li><b>Create</b></li></ol><p>자동 업데이트(공유 미리보기)는 그대로 작동해요.</p>"
+  },
+  {
+   "group": "보안",
+   "priority": 1,
+   "title": "관리자 비밀번호 점검 (팀원 모두)",
+   "note": "다른 사이트와 같은 비밀번호 금지",
+   "memo": "<p>팀원 모두 관리자 ⚙️ 계정 → 비밀번호 바꾸기로 <b>12자 이상, 다른 곳에서 안 쓰는 비밀번호</b>로 바꾸기.</p><p>비밀번호는 메신저·낙서장·슬랙에 적지 않기.</p><p>퇴사·역할 변경 시 계정 탭에서 바로 빼기.</p>"
+  },
+  {
+   "group": "보안",
+   "priority": 1,
+   "title": "구글(uncledayadmin)·네이버(uncledayadm) 2단계 인증",
+   "note": "네이버는 휴대폰 네이버 앱에 아이디 추가 후",
+   "memo": "<ol><li>구글: Google 계정 관리 → 보안 → 2단계 인증</li><li>네이버: 휴대폰 네이버 앱에 uncledayadm 로그인(아이디 추가) → PC에서 내정보 → 보안설정 → 2단계 인증 → 기기 새로 고침</li></ol>"
+  },
+  {
+   "group": "보안",
+   "priority": 0,
+   "title": "매달 1일: 백업이 잘 되고 있는지 확인",
+   "note": "⚙️ 계정 → 🛟 자동 백업 상태가 '작동 중'인지",
+   "memo": "<p>상태가 '⚠️ 2일 넘게 안 됨'이면 GitHub Actions → db-backup 실행 기록을 캡처해서 Claude에게.</p>"
+  }
+ ]
+}

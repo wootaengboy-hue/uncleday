@@ -29,6 +29,14 @@
    "count": 16,
    "created": "2026-11-08",
    "kind": "tasks"
+  },
+  {
+   "id": "2026-11-08-security",
+   "file": "2026-11-08-security.json",
+   "title": "보안·자동 백업 할 일",
+   "count": 8,
+   "created": "2026-11-08",
+   "kind": "tasks"
   }
  ]
 }

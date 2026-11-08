@@ -788,6 +788,124 @@ async function drawSlack() {
   if ($("slTest")) $("slTest").onclick = async () => { const t = await sb.rpc("slack_test"); if (t.error) return dbErr(t.error); toast("연결된 채널마다 테스트 메시지를 보냈어요 (몇 초 걸려요)"); };
   if ($("slDel")) $("slDel").onclick = async () => { if (!confirm("슬랙 연결을 끊을까요?")) return; const w = await sb.from("slack_cfg").update({ webhook: null, updated_at: new Date().toISOString(), updated_by: ME.email }).eq("id", 1); if (w.error) return dbErr(w.error); drawSlack(); };
 }
+/* ===== 자동 백업: 열쇠 만들기 · 백업에서 되돌리기 ===== */
+const REPO_URL = "https://github.com/wootaengboy-hue/uncleday";
+const hex = buf => [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
+async function drawBackup() {
+  const box = $("backupBox"); if (!box) return;
+  const r = await sb.from("backup_keys").select("*").eq("id", 1).maybeSingle();
+  if (r.error) { box.innerHTML = `<h3>🛟 자동 백업</h3><div class="hint">아직 DB 준비가 안 됐어요. 사장님이 Supabase에서 <a href="https://raw.githubusercontent.com/wootaengboy-hue/uncleday/main/supabase/backup.sql" target="_blank">backup.sql</a>을 한 번 실행해 주세요.</div>`; return; }
+  const k = r.data || {}, has = !!k.token_hash;
+  const late = k.last_run && (Date.now() - new Date(k.last_run)) > 2 * 864e5;
+  box.innerHTML = `<h3>🛟 자동 백업 ${has ? (k.last_run ? `<span class="sl-pill ${late ? "" : "ok"}">${late ? "⚠️ 2일 넘게 안 됨" : "작동 중"}</span>` : `<span class="sl-pill">첫 백업 기다림</span>`) : `<span class="sl-pill">꺼짐</span>`}</h3>
+    <div class="hint">매일 새벽 4시쯤 DB 전체(업체·예약·정산·후기·할 일·영업)를 받아서 <b>사장님 비밀번호로 잠근 파일</b>로 30일 보관해요. 해킹·실수로 내용이 바뀌면 아래 <b>되돌리기</b>로 복구해요.</div>
+    ${has ? `<div style="margin:8px 0">🔑 열쇠 만든 날: ${dt(k.created_at)} · ${esc(who ? who(k.created_by || "") : k.created_by || "")}<br>🕓 마지막 자동 백업: ${k.last_run ? `<b>${dt(k.last_run)}</b> (${Math.round((k.last_size || 0) / 1024)}KB)` : "아직 없음"}</div>` : ""}
+    <div class="btn-row"><button class="btn ${has ? "" : "main"}" id="bkKey">🔑 백업 열쇠 ${has ? "다시 " : ""}만들기</button><a class="btn" href="${REPO_URL}/actions/workflows/db-backup.yml" target="_blank">📦 백업 파일 목록 (GitHub)</a><button class="btn main" id="bkRestore">↩️ 백업에서 되돌리기</button></div>`;
+  $("bkKey").onclick = () => confirmBox(has ? "열쇠를 다시 만들까요?" : "백업 열쇠를 만들까요?", async () => {
+    const tok = hex(crypto.getRandomValues(new Uint8Array(32)));
+    const h = hex(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(tok)));
+    const w = await sb.from("backup_keys").upsert({ id: 1, token_hash: h, created_at: new Date().toISOString(), created_by: ME.email }); if (w.error) return dbErr(w.error);
+    showBackupKey(tok); drawBackup();
+  }, has ? "예전 열쇠는 바로 못 쓰게 돼요. GitHub의 BACKUP_TOKEN도 새 열쇠로 바꿔야 해요." : "", "만들기", false);
+  $("bkRestore").onclick = openRestore;
+}
+function showBackupKey(tok) {
+  const d = document.createElement("div"); d.className = "overlay center";
+  d.innerHTML = `<div class="modal" style="width:min(680px,calc(100% - 32px))"><h2>🔑 백업 열쇠</h2>
+    <p class="warn" style="margin:6px 0">이 열쇠는 <b>지금 한 번만</b> 보여요. 아래 순서대로 GitHub에 넣고 창을 닫으세요. 메신저·낙서장·Claude에게 보내지 마세요.</p>
+    <div style="display:flex;gap:8px;margin:10px 0"><input readonly value="${tok}" id="bkTok" style="flex:1;font-family:monospace;padding:9px;border:1px solid var(--line);border-radius:9px"><button class="btn main" id="bkCopy">복사</button></div>
+    <ol style="line-height:1.8;padding-left:20px;margin:6px 0">
+      <li><a href="${REPO_URL}/settings/secrets/actions/new" target="_blank"><b>GitHub 비밀 값 추가 화면</b></a>을 열어요 (GitHub 로그인 필요)</li>
+      <li><b>Name</b>: <code>BACKUP_TOKEN</code> · <b>Secret</b>: 위 열쇠 붙여넣기 → <b>Add secret</b></li>
+      <li>한 번 더 새로 만들기: <b>Name</b>: <code>BACKUP_PASSWORD</code> · <b>Secret</b>: 사장님이 정한 <b>백업 비밀번호</b> (12자 이상) → <b>Add secret</b></li>
+      <li><a href="${REPO_URL}/actions/workflows/db-backup.yml" target="_blank"><b>db-backup</b></a> → <b>Run workflow</b>로 첫 백업 (1분 뒤 이 화면에 '마지막 자동 백업'이 떠요)</li></ol>
+    <p class="warn">⚠️ 백업 비밀번호는 <b>종이나 비밀번호 관리 앱에 따로 적어 두세요.</b> 잃어버리면 백업 파일을 열 수 없어요 (저도 열 수 없어요).</p>
+    <div class="btns"><button class="btn main" data-no>다 넣었어요, 닫기</button></div></div>`;
+  document.body.appendChild(d);
+  d.querySelector("#bkCopy").onclick = async () => { const i = d.querySelector("#bkTok"); i.select(); try { await navigator.clipboard.writeText(tok); } catch (e) { document.execCommand("copy"); } toast("복사했어요"); };
+  d.querySelector("[data-no]").onclick = () => d.remove();
+}
+// GitHub에서 받은 zip(또는 안의 .enc)을 브라우저 안에서 풀어요 — 파일은 어디에도 올라가지 않아요
+async function unzipFirst(buf) {
+  const v = new DataView(buf); let e = buf.byteLength - 22;
+  while (e >= 0 && v.getUint32(e, true) !== 0x06054b50) e--;
+  if (e < 0) throw new Error("zip 아님");
+  const cd = v.getUint32(e + 16, true), method = v.getUint16(cd + 10, true), csize = v.getUint32(cd + 20, true), lho = v.getUint32(cd + 42, true);
+  const start = lho + 30 + v.getUint16(lho + 26, true) + v.getUint16(lho + 28, true), data = buf.slice(start, start + csize);
+  if (method === 0) return data;
+  if (method !== 8) throw new Error("압축 방식 모름");
+  return await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer();
+}
+async function openBackupFile(buf, pw) {
+  let u = new Uint8Array(buf);
+  if (u[0] === 0x50 && u[1] === 0x4b) { buf = await unzipFirst(buf); u = new Uint8Array(buf); }
+  if (new TextDecoder().decode(u.slice(0, 8)) !== "Salted__") {   // 잠기지 않은 json
+    try { return JSON.parse(new TextDecoder().decode(u)); } catch (e) { throw new Error("백업 파일이 아니에요"); }
+  }
+  const salt = u.slice(8, 16), body = u.slice(16);
+  const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveBits"]);
+  const bits = new Uint8Array(await crypto.subtle.deriveBits({ name: "PBKDF2", salt, iterations: 200000, hash: "SHA-256" }, base, 384));
+  const key = await crypto.subtle.importKey("raw", bits.slice(0, 32), "AES-CBC", false, ["decrypt"]);
+  let plain; try { plain = await crypto.subtle.decrypt({ name: "AES-CBC", iv: bits.slice(32, 48) }, key, body); } catch (e) { throw new Error("비밀번호가 틀렸어요"); }
+  const txt = await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream("gzip"))).text();
+  return JSON.parse(txt);
+}
+function openRestore() {
+  const d = document.createElement("div"); d.className = "overlay center";
+  d.innerHTML = `<div class="modal" style="width:min(720px,calc(100% - 32px))"><h2>↩️ 백업에서 되돌리기</h2>
+    <ol style="line-height:1.8;padding-left:20px;margin:6px 0 10px"><li><a href="${REPO_URL}/actions/workflows/db-backup.yml" target="_blank">백업 목록</a>에서 되돌릴 날짜를 눌러 맨 아래 <b>Artifacts</b>의 파일을 내려받아요</li>
+      <li>받은 파일(zip 그대로 괜찮아요)을 고르고 백업 비밀번호를 넣어요</li></ol>
+    <div style="display:grid;gap:8px"><input type="file" id="rsFile" accept=".zip,.enc,.json"><input type="password" id="rsPw" placeholder="백업 비밀번호" autocomplete="off" style="padding:9px;border:1px solid var(--line);border-radius:9px">
+      <button class="btn main" id="rsOpen">열어 보기</button></div>
+    <div id="rsBody" style="margin-top:12px"></div>
+    <div class="btns"><button class="btn" data-no>닫기</button></div></div>`;
+  document.body.appendChild(d);
+  d.querySelector("[data-no]").onclick = () => d.remove();
+  d.querySelector("#rsOpen").onclick = async () => {
+    const f = d.querySelector("#rsFile").files[0]; if (!f) return toast("백업 파일을 골라 주세요");
+    const btn = d.querySelector("#rsOpen"); btn.disabled = true; btn.textContent = "여는 중…";
+    try { showRestorePlan(d, await openBackupFile(await f.arrayBuffer(), d.querySelector("#rsPw").value)); }
+    catch (e) { toast("열지 못했어요: " + e.message); }
+    btn.disabled = false; btn.textContent = "열어 보기";
+  };
+}
+function showRestorePlan(d, B) {
+  const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  const cur = new Map(shops.map(s => [s.id, s]));
+  const shopDiff = (B.shops || []).filter(x => !cur.has(x.id) || !same(splitShop(cur.get(x.id))[0], x.data)).length;
+  const missing = (B.shops || []).filter(x => !cur.has(x.id)).length;
+  const curTasks = new Set(TASKS.map(t => t.id)), curLeads = new Set(LEADS.map(l => l.id));
+  const items = [
+    ["shops", `🏪 업체 정보 ${(B.shops || []).length}곳`, `지금과 다른 곳 ${shopDiff}곳 (그중 지금 없는 곳 ${missing}곳) · 비공개 메모·수수료율 포함`, shopDiff > 0],
+    ["tasks", `✅ 할 일 ${(B.tasks || []).length}개`, `지금 없는 것 ${(B.tasks || []).filter(t => !curTasks.has(t.id)).length}개`, false],
+    ["leads", `🤝 영업 업체 ${(B.leads || []).length}곳`, `지금 없는 곳 ${(B.leads || []).filter(l => !curLeads.has(l.id)).length}곳 · 연락 기록 포함`, false],
+    ["templates", `📄 템플릿 ${(B.templates || []).length}개`, "", false],
+    ["catimg", "🖼️ 카테고리 사진 설정", "", false]];
+  d.querySelector("#rsBody").innerHTML = `<div class="box" style="background:#f7f4ec"><b>📅 ${dt(B.at)} 백업</b> · 예약 ${(B.bookings || []).length}건 · 정산 ${(B.settlements || []).length}건 · 후기 ${(B.reviews || []).length}개
+    <p class="hint" style="margin:6px 0 10px">체크한 것만 <b>백업 때 내용으로 덮어써요</b>. 백업 뒤에 새로 만든 것은 지우지 않아요. 예약·정산은 원래 지울 수 없게 막혀 있어서 되돌리기에서 빠져 있어요 (필요하면 아래 파일로 확인).</p>
+    ${items.map(([k, n, s, on]) => `<label style="display:flex;gap:10px;padding:6px 0;align-items:flex-start"><input type="checkbox" data-rs="${k}" ${on ? "checked" : ""} style="margin-top:4px"><span><b>${n}</b>${s ? `<br><small class="hint">${s}</small>` : ""}</span></label>`).join("")}
+    <div class="btn-row"><button class="btn main" id="rsGo">선택한 것 되돌리기</button><button class="btn" id="rsDl">⬇ 풀린 파일 받기 (JSON)</button></div></div>`;
+  d.querySelector("#rsDl").onclick = () => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(B, null, 1)], { type: "application/json" })); a.download = `엉클데이_백업_${String(B.at).slice(0, 10)}.json`; a.click(); };
+  d.querySelector("#rsGo").onclick = () => {
+    const pick = new Set([...d.querySelectorAll("[data-rs]:checked")].map(x => x.dataset.rs)); if (!pick.size) return toast("고른 것이 없어요");
+    confirmBox("정말 되돌릴까요?", async () => {
+      try {
+        if (pick.has("shops")) {
+          await q(sb.from("shops").upsert((B.shops || []).map(x => ({ id: x.id, data: x.data, sort: x.sort, published: x.published, updated_by: ME.email }))), "업체 되돌리기");
+          if ((B.shop_private || []).length) await q(sb.from("shop_private").upsert(B.shop_private.map(x => ({ shop_id: x.shop_id, notes: x.notes, commission_rate: x.commission_rate, contract: x.contract }))), "비공개 메모 되돌리기");
+        }
+        if (pick.has("tasks") && (B.tasks || []).length) await q(sb.from("tasks").upsert(B.tasks), "할 일 되돌리기");
+        if (pick.has("leads") && (B.leads || []).length) {
+          await q(sb.from("leads").upsert(B.leads), "영업 되돌리기");
+          if ((B.lead_logs || []).length) await q(sb.from("lead_logs").upsert(B.lead_logs, { onConflict: "id", ignoreDuplicates: true }), "영업 기록 되돌리기");
+        }
+        if (pick.has("templates") && (B.templates || []).length) await q(sb.from("templates").upsert(B.templates), "템플릿 되돌리기");
+        if (pick.has("catimg")) { const c = (B.settings || []).find(x => x.key === "cat_imgs"); if (c) await q(sb.from("settings").upsert({ key: "cat_imgs", value: c.value }), "카테고리 사진 되돌리기"); }
+        d.remove(); toast("되돌렸어요 ✅ 사이트 공유 미리보기는 3시간 안에 따라 바뀌어요"); await loadAll(); showTab(TAB);
+      } catch (e) { /* q가 오류를 보여 줘요 */ }
+    }, "체크한 항목이 백업 때 내용으로 바뀌어요.", "되돌리기", true);
+  };
+}
 async function drawAccount() {
   $("tab-acc").innerHTML = `<div class="two" style="margin-top:16px;align-items:start">
     <div class="box"><h3>내 계정</h3><div>${esc(ME.email)}</div>
@@ -800,6 +918,7 @@ async function drawAccount() {
       <form id="addAdm" style="display:flex;gap:8px"><input type="email" id="admEmail" placeholder="직원 이메일" required style="flex:1;padding:9px 11px;border:1px solid var(--line);border-radius:9px"><button class="btn">추가</button></form>
       <div class="hint">직원 추가 순서: ① 여기에 이메일 추가 → ② Supabase → <b>Authentication → Users → Add user → Create new user</b>에서 같은 이메일과 임시 비밀번호로 계정 만들기 (Auto Confirm 켜기) → ③ 직원이 로그인한 뒤 '비밀번호 바꾸기'.</div></div>
   </div>
+  <div class="box" style="margin:14px 0 0" id="backupBox"><h3>🛟 자동 백업</h3><div class="hint">불러오는 중…</div></div>
   <div class="box" style="margin:14px 0 0" id="slackBox"><h3>💬 슬랙 알림</h3><div class="hint">불러오는 중…</div></div>
   <div class="box" style="margin:14px 0 40px"><h3>백업</h3>
     <div class="hint">업체·예약·정산·후기 전체를 파일로 내려받아요. 한 달에 한 번 정도 받아 두면 안전해요.</div>
@@ -827,7 +946,7 @@ async function drawAccount() {
     });
     $("adminList").querySelectorAll("[data-rm]").forEach(b => b.onclick = async () => { await sb.from("admin_emails").delete().eq("email", b.dataset.rm); drawAdmins(); });
   };
-  drawAdmins(); drawSlack();
+  drawAdmins(); drawSlack(); drawBackup();
   $("addAdm").onsubmit = async e => { e.preventDefault(); const r = await sb.from("admin_emails").insert({ email: $("admEmail").value.trim().toLowerCase(), added_by: ME.email }); if (r.error) dbErr(r.error); else { $("admEmail").value = ""; drawAdmins(); toast("추가했어요"); } };
   const dl = (name, text, type) => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); };
   $("bkAll").onclick = async () => {

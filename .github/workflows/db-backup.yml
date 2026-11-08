@@ -1,0 +1,46 @@
+# DB 자동 백업: 매일 새벽 4시쯤(한국 시간) DB 전체를 받아서 비밀번호로 잠근 뒤 30일 보관해요.
+# 필요한 설정 (GitHub → Settings → Secrets and variables → Actions):
+#   BACKUP_TOKEN    관리자 ⚙️ 계정 → 🛟 자동 백업 → '백업 열쇠 만들기'에서 받은 열쇠
+#   BACKUP_PASSWORD 사장님이 정한 백업 비밀번호 (되돌릴 때 필요해요. 잃어버리면 백업을 못 열어요)
+name: db-backup
+on:
+  schedule:
+    - cron: "23 19 * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 백업 받아서 잠그기
+        id: b
+        env:
+          BACKUP_TOKEN: ${{ secrets.BACKUP_TOKEN }}
+          BACKUP_PASSWORD: ${{ secrets.BACKUP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -z "${BACKUP_TOKEN:-}" ] || [ -z "${BACKUP_PASSWORD:-}" ]; then
+            echo "::warning::BACKUP_TOKEN / BACKUP_PASSWORD 가 아직 설정되지 않아서 백업을 건너뛰어요."; echo "skip=1" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          URL=$(node -e 'eval(require("fs").readFileSync("config.js","utf8").replace(/^const /gm,"var "));process.stdout.write(SUPA.url)')
+          KEY=$(node -e 'eval(require("fs").readFileSync("config.js","utf8").replace(/^const /gm,"var "));process.stdout.write(SUPA.key)')
+          D=$(TZ=Asia/Seoul date +%Y%m%d-%H%M)
+          umask 077; mkdir -p out
+          printf '{"t":"%s"}' "$BACKUP_TOKEN" > req.json
+          curl -sS --fail-with-body -X POST "$URL/rest/v1/rpc/backup_dump" -H "apikey: $KEY" -H "Content-Type: application/json" --data @req.json -o raw.json
+          rm -f req.json
+          SIZE=$(stat -c %s raw.json); echo "백업 크기: $SIZE 바이트"
+          [ "$SIZE" -gt 500 ] || { echo "::error::백업 내용이 너무 작아요"; exit 1; }
+          gzip -9 raw.json
+          openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -md sha256 -salt -in raw.json.gz -out "out/uncleday-backup-$D.enc" -pass env:BACKUP_PASSWORD
+          rm -f raw.json.gz
+          echo "name=uncleday-backup-$D" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        if: steps.b.outputs.skip != '1'
+        with:
+          name: ${{ steps.b.outputs.name }}
+          path: out/
+          retention-days: 30
+          if-no-files-found: error
