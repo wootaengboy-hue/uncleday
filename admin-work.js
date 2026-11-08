@@ -43,7 +43,7 @@ function atPicker(input, onPick, opts = {}) {
     if (e.key === "ArrowDown") { e.preventDefault(); sel = (sel + 1) % list.length; draw(); }
     else if (e.key === "ArrowUp") { e.preventDefault(); sel = (sel - 1 + list.length) % list.length; draw(); }
     else if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); e.stopImmediatePropagation(); pick(list[sel]); }
-    else if (e.key === "Escape") close();
+    else if (e.key === "Escape") { e.preventDefault(); close(); }
   }, true);
   input.addEventListener("blur", () => setTimeout(close, 150));
 }

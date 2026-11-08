@@ -1025,3 +1025,33 @@ async function afterLogin(session) {
   if (RECOVERY || recovering) { recovering = true; newPasswordForm(); return; }
   if (data.session) afterLogin(data.session); else loginForm();
 })();
+
+/* ===== 창 닫기: Esc 키나 창 바깥(어두운 곳)을 누르면 닫혀요. 고친 내용이 있으면 한 번 물어봐요 ===== */
+(() => {
+  const snap = d => [...d.querySelectorAll("input, select, textarea")].map(i => i.type === "checkbox" || i.type === "radio" ? i.checked : i.value).join("\u0001")
+    + "\u0002" + [...d.querySelectorAll("[contenteditable=true]")].map(e => e.innerHTML).join("\u0001");
+  new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => {
+    if (n.nodeType === 1 && n.classList.contains("overlay")) setTimeout(() => { n._snap = snap(n); }, 300);   // 내용이 다 그려진 뒤의 모습을 기억
+  }))).observe(document.body, { childList: true });
+  const top = () => [...document.querySelectorAll("body > .overlay")].filter(o => !o.hidden && o.querySelector("[data-no]")).pop();
+  function tryClose(o) {
+    const no = o.querySelector("[data-no]"); if (!no) return;
+    const dirty = o._snap !== undefined && snap(o) !== o._snap && !/취소|아니/.test(no.textContent);
+    if (!dirty) { no.click(); return; }
+    confirmBox("저장하지 않고 닫을까요?", () => no.click(), "고친 내용이 사라져요.", "닫기", true);
+  }
+  document.addEventListener("keydown", e => {
+    if (e.key !== "Escape" || e.defaultPrevented || e.isComposing) return;
+    const o = top(); if (!o) return;
+    if (document.querySelector(".re-big")) return;   // 크게 보기 중이면 먼저 그것만 닫혀요
+    e.preventDefault(); tryClose(o);
+  });
+  let downOn = null;
+  document.addEventListener("mousedown", e => { downOn = e.target; }, true);
+  document.addEventListener("click", e => {
+    const o = e.target;
+    if (!o.classList || !o.classList.contains("overlay") || downOn !== o || o !== top()) return;   // 안에서 끌다가 바깥에서 놓은 건 무시
+    if (e.offsetX > o.clientWidth || e.offsetY > o.clientHeight) return;   // 스크롤 막대를 누른 건 무시
+    tryClose(o);
+  });
+})();
