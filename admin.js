@@ -753,6 +753,34 @@ function drawReviews() {
 }
 
 /* ===== 계정 ===== */
+const SLACK_EVS = [["booking", "📅 새 예약", "사이트·카톡으로 들어온 예약"], ["shop", "🏪 업체 답", "업체가 링크로 확정·불가·방문 완료(금액)를 눌렀을 때"],
+  ["customer", "🙋 손님 행동", "손님이 '다녀왔어요'·취소를 눌렀을 때"], ["review", "⭐ 새 후기", "게시를 기다리는 후기"],
+  ["team", "💬 팀 알림", "낙서장 @언급·담당 지정·참조·댓글 (🔔와 같은 내용)"], ["lead", "🤝 영업 단계", "영업 업체 추가·단계 변경"]];
+async function drawSlack() {
+  const box = $("slackBox"); if (!box) return;
+  const r = await sb.from("slack_cfg").select("*").eq("id", 1).maybeSingle();
+  if (r.error) { box.innerHTML = `<h3>💬 슬랙 알림</h3><div class="hint">아직 DB 준비가 안 됐어요. 사장님이 Supabase에서 schema.sql을 한 번 실행해 주세요. (📘 사용 안내 → DB 업데이트)</div>`; return; }
+  const c = r.data || { enabled: true, events: SLACK_EVS.map(e => e[0]) };
+  const on = !!c.webhook;
+  box.innerHTML = `<h3>💬 슬랙 알림 ${on ? (c.enabled ? `<span class="sl-pill ok">연결됨</span>` : `<span class="sl-pill">꺼짐</span>`) : ""}</h3>
+    <div class="hint">예약·업체 답·후기 같은 일이 생기면 슬랙 채널로 바로 알려 줘요. 관리자가 직접 바꾼 건 보내지 않아요 (본인이 한 일이라서).</div>
+    <label class="f"><span>슬랙 웹후크 주소 (https://hooks.slack.com/… )</span>
+      <input id="slHook" type="password" autocomplete="off" placeholder="${on ? "저장돼 있어요 · 바꾸려면 새 주소를 붙여넣기" : "https://hooks.slack.com/services/…"}" style="padding:9px 11px;border:1px solid var(--line);border-radius:9px"></label>
+    <div class="sl-evs">${SLACK_EVS.map(([k, n, d]) => `<label class="sl-ev"><input type="checkbox" value="${k}" ${(c.events || []).includes(k) ? "checked" : ""}><b>${n}</b><small>${d}</small></label>`).join("")}</div>
+    <label class="sl-ev" style="margin-top:6px"><input type="checkbox" id="slOn" ${c.enabled ? "checked" : ""}><b>알림 켜기</b><small>잠깐 끄고 싶을 때 체크를 풀어요</small></label>
+    <div class="btn-row"><button class="btn main" id="slSave">저장</button><button class="btn" id="slTest" ${on ? "" : "disabled"}>테스트 메시지 보내기</button>${on ? `<button class="btn" id="slDel">연결 끊기</button>` : ""}</div>
+    ${c.updated_by ? `<div class="hint">마지막 변경: ${esc(c.updated_by)} · ${dt(c.updated_at)}</div>` : ""}`;
+  $("slSave").onclick = async () => {
+    const hook = $("slHook").value.trim();
+    if (hook && !/^https:\/\/hooks\.slack\.com\/services\//.test(hook)) { toast("슬랙 웹후크 주소가 아니에요. https://hooks.slack.com/services/ 로 시작해야 해요"); return; }
+    const upd = { id: 1, enabled: $("slOn").checked, events: [...box.querySelectorAll(".sl-evs input:checked")].map(x => x.value), updated_at: new Date().toISOString(), updated_by: ME.email };
+    if (hook) upd.webhook = hook;
+    const w = await sb.from("slack_cfg").upsert(upd); if (w.error) return dbErr(w.error);
+    toast(hook ? "저장했어요. '테스트 메시지 보내기'로 확인해 보세요" : "저장했어요"); drawSlack();
+  };
+  if ($("slTest")) $("slTest").onclick = async () => { const t = await sb.rpc("slack_test"); if (t.error) return dbErr(t.error); toast("보냈어요. 슬랙 채널을 확인해 보세요 (몇 초 걸려요)"); };
+  if ($("slDel")) $("slDel").onclick = async () => { if (!confirm("슬랙 연결을 끊을까요?")) return; const w = await sb.from("slack_cfg").update({ webhook: null, updated_at: new Date().toISOString(), updated_by: ME.email }).eq("id", 1); if (w.error) return dbErr(w.error); drawSlack(); };
+}
 async function drawAccount() {
   $("tab-acc").innerHTML = `<div class="two" style="margin-top:16px;align-items:start">
     <div class="box"><h3>내 계정</h3><div>${esc(ME.email)}</div>
@@ -765,6 +793,7 @@ async function drawAccount() {
       <form id="addAdm" style="display:flex;gap:8px"><input type="email" id="admEmail" placeholder="직원 이메일" required style="flex:1;padding:9px 11px;border:1px solid var(--line);border-radius:9px"><button class="btn">추가</button></form>
       <div class="hint">직원 추가 순서: ① 여기에 이메일 추가 → ② Supabase → <b>Authentication → Users → Add user → Create new user</b>에서 같은 이메일과 임시 비밀번호로 계정 만들기 (Auto Confirm 켜기) → ③ 직원이 로그인한 뒤 '비밀번호 바꾸기'.</div></div>
   </div>
+  <div class="box" style="margin:14px 0 0" id="slackBox"><h3>💬 슬랙 알림</h3><div class="hint">불러오는 중…</div></div>
   <div class="box" style="margin:14px 0 40px"><h3>백업</h3>
     <div class="hint">업체·예약·정산·후기 전체를 파일로 내려받아요. 한 달에 한 번 정도 받아 두면 안전해요.</div>
     <div class="btn-row"><button class="btn" id="bkAll">⬇ 전체 백업 (JSON)</button><button class="btn" id="bkShopsJs">⬇ 사이트 기본 파일 (shops.js)</button></div></div>`;
@@ -783,7 +812,7 @@ async function drawAccount() {
       (e.data || []).filter(x => !active.has(x.email.toLowerCase())).map(x => `<div>⏳ ${esc(x.email)} <span class="hint">— 아직 로그인 안 함</span> <button class="btn sm danger" data-rm="${esc(x.email)}">빼기</button></div>`).join("");
     $("adminList").querySelectorAll("[data-rm]").forEach(b => b.onclick = async () => { await sb.from("admin_emails").delete().eq("email", b.dataset.rm); drawAdmins(); });
   };
-  drawAdmins();
+  drawAdmins(); drawSlack();
   $("addAdm").onsubmit = async e => { e.preventDefault(); const r = await sb.from("admin_emails").insert({ email: $("admEmail").value.trim().toLowerCase(), added_by: ME.email }); if (r.error) dbErr(r.error); else { $("admEmail").value = ""; drawAdmins(); toast("추가했어요"); } };
   const dl = (name, text, type) => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); };
   $("bkAll").onclick = async () => {
