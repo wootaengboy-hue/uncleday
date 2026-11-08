@@ -124,7 +124,7 @@ function drawTasks() {
 }
 function taskCard(x) {
   const sh = x.shop_id && shopById(x.shop_id), ld = x.lead_id && leadById(x.lead_id);
-  return `<div class="kcard pri${x.priority} ${x.status === "done" ? "done" : ""}" draggable="true" data-id="${x.id}">
+  return `<div class="kcard pri${x.priority} ${x.status === "done" ? "done" : ""}" draggable="true" data-id="${x.id}" title="중요도: ${(PRI.find(p => +p[0] === x.priority) || [, ""])[1]}">
     <div class="kt">${esc(x.title)}</div>
     ${x.memo ? (() => { const t = richText(x.memo); const ck = (x.memo.match(/<li[^>]*>/g) || []).length && /class="check"/.test(x.memo) ? [((x.memo.match(/<ul class="check">[\s\S]*?<\/ul>/g) || []).join("").match(/<li data-done/g) || []).length, ((x.memo.match(/<ul class="check">[\s\S]*?<\/ul>/g) || []).join("").match(/<li/g) || []).length] : null;
       return `${t ? `<div class="km">${esc(t.length > 70 ? t.slice(0, 70) + "…" : t)}</div>` : ""}${ck && ck[1] ? `<div class="km ckp"><span style="width:${Math.round(ck[0] / ck[1] * 100)}%"></span><em>☑ ${ck[0]}/${ck[1]}</em></div>` : ""}`; })() : ""}
