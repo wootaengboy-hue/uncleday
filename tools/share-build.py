@@ -43,7 +43,7 @@ def fit(draw, text, weight, size, maxw, minsize=34):
     while draw.textlength(text + "…", font=f) > maxw and len(text) > 1: text = text[:-1]
     return f, text + "…"
 
-LOGO = Image.open("images/logo-full.webp").convert("RGB")
+LOGO = Image.open("images/logo-og.png").convert("RGBA")   # 배경 투명 + 흰 글씨 로고
 def card(shop, bgsrc):
     bg = load(bgsrc) or Image.new("RGB", (W, H), "#FAF3E0")
     im = cover(bg, W, H, shop.get("imgPos") or "50% 50%")
@@ -66,10 +66,11 @@ def card(shop, bgsrc):
         ef, en = fit(dr, en, "Medium", 38, W * .62, 26)
         dr.text((x0, y + 90 + nf.size + 26), en, font=ef, fill=(235, 235, 230), anchor="lt")
     # 아래: 로고 + 문구
-    lg = LOGO.copy(); lg.thumbnail((240, 102)); bx, by = x0, H - 70 - lg.height
-    plate = Image.new("RGB", (lg.width + 28, lg.height + 20), (250, 243, 224)); m = Image.new("L", plate.size, 0)
-    ImageDraw.Draw(m).rounded_rectangle((0, 0, *plate.size), 18, fill=255); im.paste(plate, (bx - 14, by - 10), m); im.paste(lg, (bx, by))
-    dr.text((bx + lg.width + 34, by + lg.height / 2), "한국어 상담 · 추가 요금 없이 예약", font=font("Bold", 30), fill="white", anchor="lm")
+    lg = LOGO.copy(); lg.thumbnail((300, 128)); bx, by = x0, H - 70 - lg.height
+    sh = Image.new("RGBA", im.size, (0, 0, 0, 0)); sa = lg.getchannel("A").point(lambda v: v * 0.55)
+    sh.paste(Image.new("RGBA", lg.size, (0, 0, 0, 255)), (bx + 2, by + 3), sa); sh = sh.filter(ImageFilter.GaussianBlur(5))
+    im = Image.alpha_composite(im.convert("RGBA"), sh); im.alpha_composite(lg, (bx, by)); im = im.convert("RGB"); dr = ImageDraw.Draw(im)
+    dr.text((bx + lg.width + 36, by + lg.height / 2), "한국어 상담 · 추가 요금 없이 예약", font=font("Bold", 30), fill="white", anchor="lm")
     return im
 
 def esc(s): return html.escape(s or "", quote=True)
