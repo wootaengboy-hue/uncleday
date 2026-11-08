@@ -92,7 +92,7 @@ PAGE = """<!doctype html>
 <meta name="twitter:image" content="{img}">
 <meta name="robots" content="noindex,follow">
 <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png">
-<script>location.replace("/#/shop/{jsid}");</script>
+<script>(function(){{var r="";try{{r=new URL(document.referrer).hostname}}catch(e){{}}location.replace("/?via=share"+(r?"&ref="+encodeURIComponent(r):"")+"#/shop/{jsid}");}})();</script>
 </head><body style="font-family:sans-serif;text-align:center;padding:60px 16px">
 <p><a href="/#/shop/{hid}">{name} 보러 가기 →</a></p>
 </body></html>

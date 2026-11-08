@@ -42,9 +42,34 @@ const LIVE = (() => {
       fetch(`${SUPA.url}/rest/v1/rpc/track`, { method: "POST", keepalive: true, headers: { ...headers, "Content-Type": "application/json" }, body: JSON.stringify({ k, s: s || null }) }).catch(() => {});
     } catch (e) {}
   }
+  // 어디서 왔는지 (카톡·네이버·구글…), 기기, 언어, 지금 있는 나라(시간대) — 하루 1번, 이름·IP 없이 분류만
+  function srcOf() {
+    const q = new URLSearchParams(location.search), ua = navigator.userAgent;
+    const utm = q.get("utm_source"); if (utm) return "utm:" + utm.toLowerCase().slice(0, 30);
+    let ref = q.get("ref") || ""; const viaShare = q.get("via") === "share";
+    if (!ref) { try { const h = new URL(document.referrer).hostname; if (!/uncleday\.com$/.test(h)) ref = h; } catch (e) {} }
+    const rules = [[/kakao|daum\.net/i, "kakao"], [/naver/i, "naver"], [/google\./i, "google"], [/instagram/i, "instagram"], [/facebook|fb\.com|^m\.me$/i, "facebook"],
+      [/youtube|youtu\.be/i, "youtube"], [/tiktok/i, "tiktok"], [/threads/i, "threads"], [/^t\.co$|twitter|x\.com/i, "x"], [/bing\./i, "bing"], [/line\.me/i, "line"], [/zalo/i, "zalo"], [/chatgpt|openai|perplexity|claude\.ai/i, "ai"]];
+    for (const [re, k] of rules) if (re.test(ref)) return k;
+    const app = [[/KAKAOTALK/i, "kakao"], [/NAVER\(inapp|NAVER/i, "naver"], [/Instagram/i, "instagram"], [/FBAN|FBAV/i, "facebook"], [/ Line\//i, "line"], [/Zalo/i, "zalo"]];
+    for (const [re, k] of app) if (re.test(ua)) return k;
+    if (ref) return "etc";
+    return viaShare ? "share" : "direct";
+  }
+  function trackSrc() {
+    if (!on || bot) return;
+    const ua = navigator.userAgent;
+    const dev = /iPad|Tablet/i.test(ua) || (/Android/i.test(ua) && !/Mobile/i.test(ua)) ? "tablet" : /Mobi|iPhone|Android/i.test(ua) ? "mobile" : "pc";
+    const lang = ((navigator.language || "").slice(0, 2) || "unknown").toLowerCase();
+    let tz = "unknown"; try { const z = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; tz = z === "Asia/Seoul" ? "kr" : /Ho_Chi_Minh|Saigon|Bangkok/.test(z) ? "vn" : z ? "etc" : "unknown"; } catch (e) {}
+    try { fetch(`${SUPA.url}/rest/v1/rpc/track_src`, { method: "POST", keepalive: true, headers: { ...headers, "Content-Type": "application/json" }, body: JSON.stringify({ src: SRC, dev, lang, tz }) }).catch(() => {}); } catch (e) {}
+  }
+  const SRC = srcOf();
+  // 주소창에 붙은 공유 꼬리표(?via=share&ref=…)는 지워요
+  try { if (/[?&](via|ref)=/.test(location.search)) history.replaceState(null, "", location.pathname + location.hash); } catch (e) {}
   function once(store, key) { try { if (store.getItem(key)) return false; store.setItem(key, "1"); } catch (e) {} return true; }
   const today = new Date().toISOString().slice(0, 10);
-  if (once(localStorage, "ud-visit-" + today)) track("visit");
+  if (once(localStorage, "ud-visit-" + today)) { track("visit"); trackSrc(); }
   track("hit");
   const curShop = () => { const m = location.hash.match(/^#\/shop\/(.+)$/); if (m) return decodeURIComponent(m[1]); if (/shop\.html$/.test(location.pathname)) return decodeURIComponent(location.hash.slice(1)); return null; };
   const view = id => { if (id && once(sessionStorage, "ud-view-" + id)) track("view", id); };

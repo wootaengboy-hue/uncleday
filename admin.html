@@ -173,6 +173,18 @@ h2.sec small{font-size:13px;color:var(--sub);font-weight:500}
 
 /* ===== 대시보드 ===== */
 .kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-top:16px}
+.dims{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;margin-top:16px}
+.dim-card{background:#fff;border-radius:14px;padding:16px 18px}.dim-card.wide{grid-column:1/-1}
+.dim-card h3{margin:0 0 6px;font-size:15px}.dim-card h3 small{font-weight:500;color:var(--sub);font-size:12px;margin-left:6px}
+.dim-card .hint{margin:0 0 10px;font-size:12px}.dim-card .empty{color:var(--sub);font-size:13px;margin:10px 0 0}
+.dim-row{display:grid;grid-template-columns:minmax(110px,46%) 1fr 74px;gap:10px;align-items:center;padding:5px 0;font-size:13.5px}
+.dim-l{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dim-bar{height:10px;background:#f1ece0;border-radius:6px;overflow:hidden}.dim-bar i{display:block;height:100%;background:#116241;border-radius:6px}
+.dim-n{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}.dim-n small{color:var(--sub);font-weight:500;margin-left:5px;font-size:11.5px}
+.day-chart{display:flex;align-items:flex-end;gap:3px;height:150px;padding-top:8px}
+.day-col{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;min-width:0;cursor:default}
+.day-col i{display:block;width:100%;background:#116241;border-radius:4px 4px 0 0;opacity:.85}.day-col:hover i{opacity:1;background:#F07A1A}
+.day-col small{font-size:10.5px;color:var(--sub);height:16px;line-height:16px}
 .kpi{background:#fff;border-radius:14px;padding:14px 16px;cursor:default}
 .kpi.click{cursor:pointer}.kpi.click:hover{outline:2px solid #11624133}
 .kpi small{display:block;color:var(--sub);font-size:12.5px;font-weight:700}
@@ -455,15 +467,15 @@ table.t tfoot td{font-weight:800;background:#fafbfc}
 <div id="layer"></div>
 <div id="printArea"></div>
 
-<script src="config.js?v=20261108j"></script>
+<script src="config.js?v=20261108k"></script>
 <script src="vendor/supabase.js"></script>
-<script src="data.js?v=20261108j"></script>
-<script src="shops.js?v=20261108j"></script>
-<script src="catimgs.js?v=20261108j"></script>
-<script src="admin-notes.js?v=20261108j"></script>
-<script src="admin-shops.js?v=20261108j"></script>
-<script src="admin-editor.js?v=20261108j"></script>
-<script src="admin-work.js?v=20261108j"></script>
-<script src="admin.js?v=20261108j"></script>
+<script src="data.js?v=20261108k"></script>
+<script src="shops.js?v=20261108k"></script>
+<script src="catimgs.js?v=20261108k"></script>
+<script src="admin-notes.js?v=20261108k"></script>
+<script src="admin-shops.js?v=20261108k"></script>
+<script src="admin-editor.js?v=20261108k"></script>
+<script src="admin-work.js?v=20261108k"></script>
+<script src="admin.js?v=20261108k"></script>
 </body>
 </html>

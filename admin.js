@@ -61,6 +61,35 @@ async function loadStats(m, force) {
   STATS[m] = r.error ? [] : r.data;
   return STATS[m];
 }
+// 방문자 분석 (유입경로·기기·언어·나라)
+const DIMS = {};
+async function loadDims(m, force) {
+  if (DIMS[m] && !force) return DIMS[m];
+  const r = await sb.from("stats_dim").select("day,dim,val,n").gte("day", m + "-01").lt("day", addMonth(m, 1) + "-01").limit(50000);
+  DIMS[m] = r.error ? [] : r.data;
+  return DIMS[m];
+}
+const DIM_NAMES = {
+  src: { kakao: "💬 카카오톡", naver: "🟢 네이버", google: "🔍 구글", instagram: "📸 인스타그램", facebook: "📘 페이스북", youtube: "▶️ 유튜브", tiktok: "🎵 틱톡", threads: "🧵 스레드", x: "✖️ X(트위터)", bing: "🔎 빙", line: "💚 라인", zalo: "🔵 잘로", ai: "🤖 AI 검색(챗GPT 등)", share: "🔗 공유 링크", direct: "⌨️ 직접 방문", etc: "🌐 기타 사이트", unknown: "❔ 알 수 없음" },
+  dev: { mobile: "📱 휴대폰", pc: "💻 PC", tablet: "📲 태블릿", unknown: "❔ 알 수 없음" },
+  lang: { ko: "🇰🇷 한국어", vi: "🇻🇳 베트남어", en: "🇺🇸 영어", ja: "🇯🇵 일본어", zh: "🇨🇳 중국어", unknown: "❔ 알 수 없음" },
+  tz: { kr: "🇰🇷 한국", vn: "🇻🇳 베트남·동남아", etc: "🌏 그 밖의 나라", unknown: "❔ 알 수 없음" }
+};
+const dimName = (d, v) => (DIM_NAMES[d] || {})[v] || (v.startsWith("utm:") ? "🏷️ 광고 링크: " + v.slice(4) : v);
+function dimCard(m, d, title, hint) {
+  const sum = {}; (DIMS[m] || []).filter(r => r.dim === d).forEach(r => sum[r.val] = (sum[r.val] || 0) + r.n);
+  const rows = Object.entries(sum).sort((a, b) => b[1] - a[1]); const tot = rows.reduce((t, r) => t + r[1], 0);
+  return `<div class="dim-card"><h3>${title}</h3>${hint ? `<p class="hint">${hint}</p>` : ""}${rows.length ? rows.map(([v, n]) => {
+    const p = Math.round(n / tot * 100);
+    return `<div class="dim-row"><span class="dim-l">${esc(dimName(d, v))}</span><span class="dim-bar"><i style="width:${Math.max(2, p)}%"></i></span><span class="dim-n">${n.toLocaleString()}<small>${p}%</small></span></div>`;
+  }).join("") : `<p class="empty">아직 기록이 없어요</p>`}</div>`;
+}
+function dailyChart(m) {
+  const days = new Date(+m.slice(0, 4), +m.slice(5, 7), 0).getDate(); const v = [], h = [];
+  for (let i = 1; i <= days; i++) { const d = `${m}-${String(i).padStart(2, "0")}`; v.push(statSum(m, "visit", undefined, d)); h.push(statSum(m, "view", undefined, d)); }
+  const max = Math.max(1, ...v);
+  return `<div class="dim-card wide"><h3>날짜별 방문자 <small>막대 위에 마우스를 올리면 숫자가 보여요</small></h3><div class="day-chart">${v.map((n, i) => `<div class="day-col" title="${+m.slice(5)}월 ${i + 1}일 · 방문자 ${n}명 · 업체 조회 ${h[i]}회"><i style="height:${n ? Math.max(3, n / max * 100) : 0}%"></i><small>${(i + 1) % 5 === 0 || i === 0 ? i + 1 : ""}</small></div>`).join("")}</div></div>`;
+}
 const statSum = (m, kind, shop, day) => (STATS[m] || []).filter(r => r.kind === kind && (shop === undefined || r.shop_id === shop) && (!day || r.day === day)).reduce((t, r) => t + r.n, 0);
 async function loadAll() { await Promise.all([loadShops(), loadBookings(), loadSettles(), loadReviews(), loadWork()]); }
 
@@ -115,6 +144,7 @@ function drawDash() {
   dashMonth = dashMonth || vnMonth();
   const need = [dashMonth, vnMonth()].filter(m => !STATS[m]);
   if (need.length) { Promise.all(need.map(m => loadStats(m))).then(() => { if (TAB === "dash") drawDash(); }); }
+  if (!DIMS[dashMonth]) loadDims(dashMonth).then(() => { if (TAB === "dash") drawDash(); });
   const today = vnToday();
   const todays = BOOKINGS.filter(b => b.visit_date === today && !["cancelled", "rejected"].includes(b.status));
   const st = monthStats(dashMonth);
@@ -163,6 +193,14 @@ function drawDash() {
       <div class="kpi"><small>상담하기 클릭</small><b>${sv("consult")}</b><em>카톡 상담 버튼</em></div>
       <div class="kpi"><small>상담 → 예약</small><b>${hasSt && consultAll ? Math.round(st.active / consultAll * 100) + "%" : "-"}</b><em>예약 ${st.active}건 ÷ 상담 클릭</em></div>
     </div>
+    <h2 class="sec">방문자 분석 <small>${monthKo(dashMonth)} · 방문자 1명당 하루 1번 · 이름·IP 없이 분류만 저장</small></h2>
+    ${DIMS[dashMonth] ? `<div class="dims">
+      ${dailyChart(dashMonth)}
+      ${dimCard(dashMonth, "src", "어디서 들어왔나요", "링크를 누른 곳이에요. '직접 방문'은 주소를 직접 쳤거나 즐겨찾기·일부 앱에서 열린 경우예요.")}
+      ${dimCard(dashMonth, "tz", "지금 어디에 있나요", "휴대폰·PC의 시간대로 봐요. 여행 준비 중(한국)인지, 이미 현지(베트남)인지 알 수 있어요.")}
+      ${dimCard(dashMonth, "dev", "어떤 기기로 봤나요")}
+      ${dimCard(dashMonth, "lang", "어떤 언어를 쓰나요", "휴대폰·브라우저 기본 언어예요.")}
+    </div>` : `<p class="hint">불러오는 중…</p>`}
     <h2 class="sec">업체별 <small>${monthKo(dashMonth)}</small></h2>
     ${rows.length ? `<div class="tscroll"><table class="t"><thead><tr><th>업체</th><th class="num">수수료율</th><th class="num">조회</th><th class="num">상담</th><th class="num">예약</th><th class="num">방문</th><th class="num">결제액</th><th class="num">수수료</th><th class="num">미정산</th><th></th></tr></thead><tbody>
       ${rows.map(r => `<tr class="click" data-shop="${esc(r.id)}"><td><b>${esc(r.name)}</b></td><td class="num">${r.rate ? r.rate + "%" : `<span style="color:var(--danger)">미정</span>`}</td><td class="num">${r.views}</td><td class="num">${r.consult}</td><td class="num">${r.active}</td><td class="num">${r.done}</td><td class="num">${vnd(r.paid)}</td><td class="num"><b>${vnd(r.comm)}</b></td><td class="num">${r.unsettled ? vnd(r.unsettled) : "-"}</td><td class="num">${r.id !== "-" ? `<button class="btn sm" data-rep="${esc(r.id)}">리포트</button>` : ""}</td></tr>`).join("")}

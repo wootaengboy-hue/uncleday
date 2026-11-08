@@ -540,6 +540,33 @@ end $$;
 revoke all on function public.track(text, text) from public;
 grant execute on function public.track(text, text) to anon, authenticated;
 
+-- 12-1. 방문자 분석: 어디서 왔는지 · 기기 · 언어 · 지금 있는 나라(시간대) — 하루 1번, 숫자만
+create table if not exists public.stats_dim (
+  day  date not null,
+  dim  text not null,   -- src(유입경로) / dev(기기) / lang(언어) / tz(시간대 나라)
+  val  text not null,
+  n    int  not null default 0,
+  primary key (day, dim, val)
+);
+alter table public.stats_dim enable row level security;
+drop policy if exists admin_read on public.stats_dim;
+create policy admin_read on public.stats_dim for select to authenticated using (public.is_admin());
+
+create or replace function public.track_src(src text, dev text, lang text, tz text) returns void
+language plpgsql security definer set search_path = public as $$
+declare d date := (now() at time zone 'Asia/Ho_Chi_Minh')::date; k text; v text;
+begin
+  foreach k in array array['src', 'dev', 'lang', 'tz'] loop
+    v := case k when 'src' then src when 'dev' then dev when 'lang' then lang else tz end;
+    v := left(regexp_replace(lower(coalesce(v, '')), '[^a-z0-9_.:-]', '', 'g'), 40);
+    if v = '' then v := 'unknown'; end if;
+    insert into stats_dim (day, dim, val, n) values (d, k, v, 1)
+    on conflict (day, dim, val) do update set n = stats_dim.n + 1;
+  end loop;
+end $$;
+revoke all on function public.track_src(text, text, text, text) from public;
+grant execute on function public.track_src(text, text, text, text) to anon, authenticated;
+
 -- ---------------------------------------------------------------
 -- 13. 업무 관리: 할 일 보드, 업체 영업 진행
 -- ---------------------------------------------------------------
