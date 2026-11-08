@@ -43,6 +43,45 @@ document.addEventListener("click", e => {
   d.onclick = ev => { if (ev.target === d) d.remove(); };
 }, true);
 
+/* 🚕 그랩으로 가기: 목적지(업체 주소·좌표)를 채운 채로 그랩 앱을 열어요. 출발지는 그랩이 현재 위치로 잡아요.
+   그랩 공식 문서가 없는 연결 방식이라, 안 되면 주소 복사로 넘어가요. */
+function rideDest(shop) {
+  const a = shop.address || {}, c = CITIES.find(x => x.id === shop.city);
+  const addr = [a.vi, a.en, a.ko].find(v => v && v.trim() && !/확인 중|to be confirmed|đang xác nhận/i.test(v)) || "";
+  const name = (shop.name && (shop.name.vi || shop.name.en || shop.name.ko)) || "";
+  const city = c ? (c.name.vi || c.name.en) : "";
+  return { name, addr: addr || [name, city].filter(Boolean).join(", "), geo: Array.isArray(shop.geo) && shop.geo.length === 2 ? shop.geo : null };
+}
+function grabLink(dst) {
+  const p = new URLSearchParams({ screenType: "BOOKING" });
+  if (dst.geo && isFinite(dst.geo[0]) && isFinite(dst.geo[1])) { p.set("dropOffLatitude", String(dst.geo[0])); p.set("dropOffLongitude", String(dst.geo[1])); }
+  p.set("dropOffAddress", dst.addr); p.set("dropOffKeywords", dst.name || dst.addr);
+  const u = new URL("https://grab.onelink.me/2695613898");
+  u.search = new URLSearchParams({ pid: "organic_web", af_force_deeplink: "true", af_dp: "grab://open?" + p.toString().replace(/\+/g, "%20") }).toString();
+  return u.href;
+}
+function openRide(shop) {
+  const dst = rideDest(shop), mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  document.querySelectorAll(".ask-sheet").forEach(x => x.remove());
+  const d = document.createElement("div"); d.className = "ask-sheet";
+  d.innerHTML = `<div class="ask-box" role="dialog" aria-label="${ui("rideTitle")}">
+    <b class="ask-title">🚕 ${ui("rideTitle")}</b>
+    <div class="ride-dst"><small>${ui("rideTo")}</small><b>${esc(tx(shop.name))}</b><span>${esc(dst.addr)}</span></div>
+    <p class="ask-step">${mobile ? ui("rideStep") : ui("ridePc")}</p>
+    <p class="ask-st" id="rideSt"></p>
+    <div class="ask-btns"><button type="button" class="btn ride-copy">${ui("rideCopy")}</button>
+      ${mobile ? `<a class="btn ride-grab" href="${grabLink(dst)}" rel="noopener">${ui("rideGrab")}</a>` : `<span></span>`}</div>
+    <p class="ride-etc">${ui("rideEtc")}</p>
+    <button type="button" class="ask-close" aria-label="close">✕</button></div>`;
+  document.body.appendChild(d);
+  const st = ok => { const el = d.querySelector("#rideSt"); el.textContent = ok ? "✅ " + ui("rideCopied") : ui("askCopyFail"); el.className = "ask-st " + (ok ? "ok" : "no"); };
+  const doCopy = () => { const ok = copyText(dst.addr); st(ok); if (!ok && navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(dst.addr).then(() => st(true), () => {}); };
+  d.querySelector(".ride-copy").onclick = doCopy;
+  const g = d.querySelector(".ride-grab"); if (g) g.addEventListener("click", () => { doCopy(); if (typeof LIVE !== "undefined" && LIVE.track) LIVE.track("map", shop.id); });
+  d.querySelector(".ask-close").onclick = () => d.remove();
+  d.onclick = ev => { if (ev.target === d) d.remove(); };
+}
+
 function renderShop(id) {
 const shop = SHOPS.find(s => s.id === id);
 const box = $("detail");
@@ -96,7 +135,7 @@ if (!shop) {
     <div class="facts">${facts.map(f => `
       <div class="fact ${f[3] ? "" : "tbd"}"><span class="fi">${f[0]}</span><div><small>${f[1]}</small><b>${f[2]}</b></div></div>`).join("")}
     </div>
-    ${shop.map ? `<p><a class="map-link" href="${shop.map}" target="_blank">🗺️ ${ui("map")}</a></p>` : ""}
+    <p class="go-row">${shop.map ? `<a class="map-link" href="${shop.map}" target="_blank">🗺️ ${ui("map")}</a>` : ""}<button type="button" class="ride-btn" id="rideBtn">🚕 ${ui("rideBtn")}</button></p>
     <div id="gBox"></div>
 
     <h2>${ui("about")}</h2><p>${tx(shop.desc)}</p>
@@ -153,6 +192,7 @@ if (!shop) {
     </form>
     <div id="done" class="done" hidden></div>`;
   if (typeof gplaceBox === "function") gplaceBox(shop);
+  if ($("rideBtn")) $("rideBtn").onclick = () => openRide(shop);
   // 메뉴판 크게 보기
   const boards = shop.menuImgs || [];
   function openBoard(i) {
