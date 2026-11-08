@@ -335,6 +335,18 @@ table.t tfoot td{font-weight:800;background:#fafbfc}
 .pill.amber{background:#fdf0c8;color:#9a6700}.pill.red{background:#fde2e1;color:#c0362c}
 .kcard.drag{opacity:.4}
 .kcard{position:relative}.kcard .kt{padding-right:46px}
+.crm-bar{display:grid;gap:10px;margin:16px 0 10px}.crm-segs{display:flex;flex-wrap:wrap;gap:6px}.crm-segs .chip small{opacity:.7;margin-left:3px}
+.crm-filters{display:flex;gap:8px;flex-wrap:wrap}.crm-filters input{flex:1;min-width:200px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;font:inherit}.crm-filters select{padding:8px;border:1px solid var(--line);border-radius:10px;font:inherit}
+.crm-bulk{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#e9f2ec;border-radius:12px;padding:8px 12px;margin-bottom:10px}
+.crm-tbl tbody tr{cursor:pointer}.crm-tbl tbody tr:hover{background:#faf7ef}.crm-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px}
+.ctag{font-size:11.5px;background:#eef2ff;color:#3730a3;border-radius:999px;padding:1px 8px}
+.crm-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}.cu-name{font:inherit;font-weight:800;border:0;border-bottom:1.5px dashed var(--line);background:none;width:min(320px,60vw)}
+.crm-kpis{grid-template-columns:repeat(auto-fit,minmax(130px,1fr));margin:12px 0}.crm-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:12px}@media(max-width:800px){.crm-cols{grid-template-columns:1fr}}
+.crm-cols .box{margin:0 0 12px;display:block;align-self:start}.crm-cols{align-items:start}.crm-tagpick{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.crm-tl{display:grid;gap:8px;max-height:52vh;overflow:auto}.tl-row{display:grid;grid-template-columns:26px 1fr;gap:6px;padding:8px;border-radius:10px;background:#faf8f3;font-size:14px}.tl-ic{font-size:16px}
+.st{font-size:11.5px;border-radius:999px;padding:1px 7px;background:#eee;margin-left:4px}.st-visited,.st-settled{background:#dcf2e3;color:#116241}.st-cancelled,.st-noshow,.st-rejected{background:#fde2e1;color:#c0362c}.st-confirmed{background:#dbeafe;color:#1d4ed8}
+.cp-row{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin-bottom:6px}.cp-row code{font-weight:800;background:#fff7e8;padding:3px 7px;border-radius:7px}.cp-row.dim{opacity:.55}.cp-acts{display:flex;gap:4px}
+.msg-list{display:grid;gap:10px;max-height:56vh;overflow:auto}.msg-item{border:1px solid var(--line);border-radius:12px;padding:10px}.msg-item.sent{background:#f1faf4}.msg-item textarea{width:100%;box-sizing:border-box;margin-top:6px;font:inherit;font-size:14px;padding:8px;border:1px solid var(--line);border-radius:9px}
 .kmove{position:absolute;top:6px;right:6px;border:1px solid var(--line);background:#fff;border-radius:7px;font-size:11.5px;padding:2px 7px;cursor:pointer;color:var(--sub);opacity:0;transition:opacity .15s}
 .kcard:hover .kmove,.kmove:focus{opacity:1}.kmove:hover{color:var(--main);border-color:var(--main)}
 @media (hover:none){.kmove{opacity:1}}
@@ -468,6 +480,7 @@ table.t tfoot td{font-weight:800;background:#fafbfc}
   <button data-tab="dash" class="on">📊 대시보드</button>
   <button data-tab="work">📝 낙서장<span class="cnt" id="cntWork"></span></button>
   <button data-tab="bk">📅 예약<span class="cnt" id="cntBk"></span></button>
+  <button data-tab="crm">👥 고객</button>
   <button data-tab="settle">💰 정산</button>
   <button data-tab="shops">🏪 업체 <span class="hint" id="shopCount"></span></button>
   <button data-tab="rv">⭐ 후기<span class="cnt" id="cntRv"></span></button>
@@ -482,6 +495,7 @@ table.t tfoot td{font-weight:800;background:#fafbfc}
   <section id="tab-dash" data-pane="dash"></section>
   <section id="tab-work" data-pane="work" hidden></section>
   <section id="tab-bk" data-pane="bk" hidden></section>
+  <section id="tab-crm" data-pane="crm" hidden></section>
   <section id="tab-settle" data-pane="settle" hidden></section>
 
   <section id="tab-shops" data-pane="shops" hidden>
@@ -521,16 +535,17 @@ table.t tfoot td{font-weight:800;background:#fafbfc}
 <div id="layer"></div>
 <div id="printArea"></div>
 
-<script src="config.js?v=20261109g"></script>
+<script src="config.js?v=20261109i"></script>
 <script src="vendor/supabase.js"></script>
-<script src="data.js?v=20261109g"></script>
-<script src="shops.js?v=20261109g"></script>
-<script src="catimgs.js?v=20261109g"></script>
-<script src="admin-notes.js?v=20261109g"></script>
-<script src="admin-shops.js?v=20261109g"></script>
-<script src="admin-editor.js?v=20261109g"></script>
-<script src="admin-guide.js?v=20261109g"></script>
-<script src="admin-work.js?v=20261109g"></script>
-<script src="admin.js?v=20261109g"></script>
+<script src="data.js?v=20261109i"></script>
+<script src="shops.js?v=20261109i"></script>
+<script src="catimgs.js?v=20261109i"></script>
+<script src="admin-notes.js?v=20261109i"></script>
+<script src="admin-shops.js?v=20261109i"></script>
+<script src="admin-editor.js?v=20261109i"></script>
+<script src="admin-guide.js?v=20261109i"></script>
+<script src="admin-work.js?v=20261109i"></script>
+<script src="admin-crm.js?v=20261109i"></script>
+<script src="admin.js?v=20261109i"></script>
 </body>
 </html>

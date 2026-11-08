@@ -499,3 +499,6 @@ h1, h2, h3, .head h1, .cat-title, .partner h2 { font-weight: 800; }
 .ride-grab { background: #00B14F !important; color: #fff !important; border-color: #00B14F !important; font-weight: 800; }
 .ride-etc { margin: 0; font-size: 12.5px; color: var(--sub-text, #5b6676); line-height: 1.55; }
 .ride-copy { background: #fff !important; color: #1f2937 !important; border: 1.5px solid #d6d3cb !important; }
+
+.mk-ok { display: flex !important; flex-direction: row !important; gap: 8px; align-items: flex-start; font-size: 13.5px; color: var(--sub-text, #5b6676); line-height: 1.5; }
+.mk-ok input { width: auto !important; margin-top: 3px; flex: none; }

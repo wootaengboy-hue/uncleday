@@ -187,6 +187,8 @@ if (!shop) {
       <label>${ui("fName")}<input name="name" required></label>
       <label>${ui("fContact")}<input name="contact" required></label>
       <label>${ui("fNote")}<textarea name="note" rows="3"></textarea></label>
+      <label>${ui("fCoupon")}<input name="coupon" maxlength="20" autocomplete="off" style="text-transform:uppercase" placeholder="UD……"></label>
+      <label class="mk-ok"><input type="checkbox" name="marketing" value="1"><span>${ui("fMarketing")}</span></label>
       <button class="btn big-btn" type="submit">${ui("bookBtn")}</button>
       <small>${ui("notice")}</small>
     </form>
@@ -320,14 +322,14 @@ ${f.text}
 인원: ${f.people}명
 이름: ${f.name}
 연락처: ${f.contact}
-요청사항: ${f.note || "-"}
+요청사항: ${f.note || "-"}${f.coupon ? "\n쿠폰: " + f.coupon.toUpperCase() : ""}
 고객 언어: ${lang.toUpperCase()}`;
 
     // 데이터베이스에 바로 접수 → 예약번호와 예약확인증
     if (LIVE.on) {
       const btn = form.querySelector('button[type="submit"]'); btn.disabled = true; btn.textContent = ui("bkSending");
       try {
-        const r = await LIVE.rpc("create_booking", { p: { shop_id: shop.id, menu: +f.menu, date: f.date, time: f.time, people: +f.people, name: f.name, contact: f.contact, note: f.note, lang } });
+        const r = await LIVE.rpc("create_booking", { p: { shop_id: shop.id, menu: +f.menu, date: f.date, time: f.time, people: +f.people, name: f.name, contact: f.contact, note: f.note, coupon: f.coupon || "", marketing: f.marketing === "1", lang } });
         const link = `booking.html#${r.token}`;
         const kmsg = msg.replace("[예약 요청]", `[예약 요청] ${r.code}`);
         form.hidden = true;

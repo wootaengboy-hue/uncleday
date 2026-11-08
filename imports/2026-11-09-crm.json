@@ -1,0 +1,35 @@
+{
+ "id": "2026-11-09-crm",
+ "title": "고객 관리(CRM) 할 일",
+ "created": "2026-11-09",
+ "tasks": [
+  {
+   "group": "고객 관리",
+   "priority": 2,
+   "title": "고객 관리 켜기 (crm.sql 실행)",
+   "note": "Supabase SQL Editor",
+   "memo": "<ol><li>Supabase → SQL Editor</li><li><a href=\"https://raw.githubusercontent.com/wootaengboy-hue/uncleday/main/supabase/crm.sql\" target=\"_blank\">crm.sql</a> 전체 복사 → 붙여넣기 → <b>Run</b></li><li>관리자 <b>👥 고객</b> 탭에 손님 목록이 나오면 완료 (지금까지 예약이 자동으로 묶여요)</li></ol>"
+  },
+  {
+   "group": "고객 관리",
+   "priority": 2,
+   "title": "쿠폰 비용 부담 원칙 정하기",
+   "note": "우리 수수료에서 / 업체 부담 / 반반",
+   "memo": "<p>쿠폰 혜택을 누가 부담할지 정해야 발급할 수 있어요.</p><ul><li>예: 10% 할인 → 엉클데이 수수료에서 빼기 / 업체가 부담(대신 손님을 더 보내 줌) / 반반</li><li>업체별로 다르면 업체 계약 메모에 적어 두기</li></ul>"
+  },
+  {
+   "group": "고객 관리",
+   "priority": 1,
+   "title": "개인정보처리방침에 '마케팅 수신 동의' 넣기",
+   "note": "사업자 정보 받으면 Claude가 초안",
+   "memo": "<p>쿠폰·이벤트 안내 동의(선택), 보관 기간, 철회 방법을 개인정보처리방침에 넣어야 해요. 사업자 정보와 함께 Claude에게 요청.</p>"
+  },
+  {
+   "group": "고객 관리",
+   "priority": 0,
+   "title": "첫 쿠폰 이벤트 기획 (재방문 고객 대상)",
+   "note": "고객 탭 → 재방문·한 번 방문 묶음",
+   "memo": "<ol><li>고객 탭에서 <b>한 번 방문</b> + <b>안내 동의</b> 손님 보기</li><li>합의된 혜택으로 쿠폰 한꺼번에 발급 → 메시지 복사해서 보내기</li><li>한 달 뒤 쿠폰 사용 수·재방문율 비교</li></ol>"
+  }
+ ]
+}

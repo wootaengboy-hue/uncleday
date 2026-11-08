@@ -111,7 +111,7 @@ function showTab(t) {
   document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
   document.querySelectorAll("[data-pane]").forEach(p => p.hidden = p.dataset.pane !== t);
   if (location.hash.slice(1) !== t) history.replaceState(null, "", "#" + t);
-  ({ dash: drawDash, work: drawWork, bk: drawBookings, settle: drawSettle, shops: drawList, rv: drawReviews, acc: drawAccount })[t]();
+  ({ dash: drawDash, work: drawWork, bk: drawBookings, crm: drawCrm, settle: drawSettle, shops: drawList, rv: drawReviews, acc: drawAccount })[t]();
   drawCounts();
 }
 function drawCounts() {
@@ -384,7 +384,8 @@ async function openBooking(id) {
           <div class="hint">업체는 링크에서 로그인 없이 <b>수락 / 불가 / 방문 완료(+금액)</b>만 눌러요. 누르면 시간과 함께 아래 기록에 남아요.</div>
         </div>
         <div class="box"><h3>🙋 손님에게 안내</h3>
-          <div class="hint">${esc(b.contact || "")} · ${LANG_KO[b.lang] || b.lang}</div>
+          <div class="hint">${esc(b.contact || "")} · ${LANG_KO[b.lang] || b.lang}${b.customer_id ? ` · <a href="#" id="toCust">👤 손님 카드 보기</a>` : ""}${b.marketing_ok ? " · ✅ 안내 동의" : ""}</div>
+          ${b.coupon_code ? `<div class="warn" style="margin:6px 0">🎟 손님이 쿠폰 코드 <b>${esc(b.coupon_code)}</b>를 적었어요 → 고객 탭 쿠폰 목록에서 확인하고 <b>사용 처리</b>해 주세요</div>` : ""}
           <pre class="msg-prev" id="custMsg"></pre>
           <div class="btn-row">
             <button class="btn main" id="copyCust">📋 안내 메시지 복사 (보낸 걸로 기록)</button>
@@ -521,6 +522,7 @@ async function openBooking(id) {
     drawTrace();
   }
   drawTop(); loadEvents();
+  const tc = document.getElementById("toCust"); if (tc) tc.onclick = async e => { e.preventDefault(); if (CRM_READY === null) await loadCrm(); if (CRM_READY) openCustomer(b.customer_id); else toast("고객 관리 준비(crm.sql)가 아직이에요"); };
 }
 
 /* ===== 예약 직접 등록 (카톡·전화로 받은 예약) ===== */
@@ -539,6 +541,7 @@ function newBooking() {
         <label class="f"><span>연락처</span><input id="nContact" placeholder="카톡 ID, 전화"></label>
         <label class="f"><span>경로 · 언어</span><div style="display:flex;gap:6px"><select id="nSrc"><option value="kakao">카톡</option><option value="phone">전화</option><option value="etc">기타</option><option value="web">사이트</option></select><select id="nLang">${Object.entries(LANG_KO).map(([k, n]) => `<option value="${k}">${n}</option>`).join("")}</select></div></label></div>
       <label class="f"><span>요청사항</span><textarea id="nNote"></textarea></label>
+      <label class="sl-ck"><input type="checkbox" id="nMk"><span><b>손님이 쿠폰·이벤트 안내 받기에 동의함</b><small>카톡·전화에서 손님이 직접 "받을게요"라고 했을 때만 체크</small></span></label>
       <label class="f"><span>상태</span><select id="nSt"><option value="requested">접수 (업체 확인 전)</option><option value="confirmed">업체 확정</option><option value="visited">이미 방문 완료</option></select></label>
       <div class="err-text" id="nErr"></div>
     </div>
@@ -558,7 +561,7 @@ function newBooking() {
     const row = { shop_id: s.id, shop_name: s.name.ko, menu_name: m.name.ko, menu_min: m.min || null, unit_price: m.price || null, people: ppl,
       list_price: m.price ? m.price * ppl : null, visit_date: $$("nDate").value || null, visit_time: $$("nTime").value || null,
       customer_name: $$("nName").value.trim(), contact: $$("nContact").value.trim(), note: $$("nNote").value, lang: $$("nLang").value,
-      source: $$("nSrc").value, status: $$("nSt").value, commission_rate: rateOf(s.id) };
+      source: $$("nSrc").value, status: $$("nSt").value, commission_rate: rateOf(s.id), marketing_ok: $$("nMk").checked };
     try {
       const b = await q(sb.from("bookings").insert(row).select().single(), "예약 등록");
       BOOKINGS.unshift(b); d.remove(); toast(`${b.code} 예약을 등록했어요`); openBooking(b.id);
@@ -880,6 +883,7 @@ function showRestorePlan(d, B) {
     ["tasks", `✅ 할 일 ${(B.tasks || []).length}개`, `지금 없는 것 ${(B.tasks || []).filter(t => !curTasks.has(t.id)).length}개`, false],
     ["leads", `🤝 영업 업체 ${(B.leads || []).length}곳`, `지금 없는 곳 ${(B.leads || []).filter(l => !curLeads.has(l.id)).length}곳 · 연락 기록 포함`, false],
     ["templates", `📄 템플릿 ${(B.templates || []).length}개`, "", false],
+    ["crm", `👥 손님 카드 ${(B.customers || []).length}명 · 쿠폰 ${(B.coupons || []).length}장`, "메모·태그·안내 동의·연락 기록 포함", false],
     ["catimg", "🖼️ 카테고리 사진 설정", "", false]];
   d.querySelector("#rsBody").innerHTML = `<div class="box" style="background:#f7f4ec"><b>📅 ${dt(B.at)} 백업</b> · 예약 ${(B.bookings || []).length}건 · 정산 ${(B.settlements || []).length}건 · 후기 ${(B.reviews || []).length}개
     <p class="hint" style="margin:6px 0 10px">체크한 것만 <b>백업 때 내용으로 덮어써요</b>. 백업 뒤에 새로 만든 것은 지우지 않아요. 예약·정산은 원래 지울 수 없게 막혀 있어서 되돌리기에서 빠져 있어요 (필요하면 아래 파일로 확인).</p>
@@ -898,6 +902,12 @@ function showRestorePlan(d, B) {
         if (pick.has("leads") && (B.leads || []).length) {
           await q(sb.from("leads").upsert(B.leads), "영업 되돌리기");
           if ((B.lead_logs || []).length) await q(sb.from("lead_logs").upsert(B.lead_logs, { onConflict: "id", ignoreDuplicates: true }), "영업 기록 되돌리기");
+        }
+        if (pick.has("crm") && (B.customers || []).length) {
+          await q(sb.from("customers").upsert(B.customers), "손님 카드 되돌리기");
+          if ((B.coupons || []).length) await q(sb.from("coupons").upsert(B.coupons), "쿠폰 되돌리기");
+          if ((B.customer_logs || []).length) await q(sb.from("customer_logs").upsert(B.customer_logs, { onConflict: "id", ignoreDuplicates: true }), "손님 기록 되돌리기");
+          CRM_READY = null;
         }
         if (pick.has("templates") && (B.templates || []).length) await q(sb.from("templates").upsert(B.templates), "템플릿 되돌리기");
         if (pick.has("catimg")) { const c = (B.settings || []).find(x => x.key === "cat_imgs"); if (c) await q(sb.from("settings").upsert({ key: "cat_imgs", value: c.value }), "카테고리 사진 되돌리기"); }

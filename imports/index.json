@@ -37,6 +37,14 @@
    "count": 8,
    "created": "2026-11-08",
    "kind": "tasks"
+  },
+  {
+   "id": "2026-11-09-crm",
+   "file": "2026-11-09-crm.json",
+   "title": "고객 관리(CRM) 할 일",
+   "count": 4,
+   "created": "2026-11-09",
+   "kind": "tasks"
   }
  ]
 }
