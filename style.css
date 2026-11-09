@@ -596,3 +596,6 @@ h1, h2, h3, .head h1, .cat-title, .partner h2 { font-weight: 800; }
 .tags { display: flex; flex-wrap: wrap; gap: 7px 6px; align-items: center; }
 .tags .tag { margin: 0; line-height: 1.45; }
 .card-tags { margin-top: 6px; }
+
+.kstep.ok b { font-size: 16px; }
+.k-again { display: inline-block; margin-top: 2px; font-size: 13px; color: #6b7280; text-decoration: underline; text-underline-offset: 3px; }

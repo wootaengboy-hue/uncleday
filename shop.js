@@ -372,7 +372,13 @@ ${f.text}
         $("bkKakao").onclick = () => {
           try { navigator.clipboard.writeText(`[${ui("kMsgHead")}] ${r.code} ${f.name || ""}\n${new URL(link, location.href).href}`); } catch (e) {}
           LIVE.rpc("customer_action", { t: r.token, action: "kakao" }).catch(() => {});   // 누른 기록 (관리자 화면에 💬 표시)
-          setTimeout(() => { $("kStep").classList.add("ok"); $("kStep").innerHTML = `<b>✅ ${ui("kStepDone")}</b><p>${ui("kStepDoneDesc")}</p><a class="btn" href="${SITE.kakao}" target="_blank" rel="noopener">💬 ${ui("kStepAgain")}</a>`; }, 400);
+          setTimeout(() => {
+            done.querySelector("h2").textContent = "✅ " + ui("kAllDone");
+            $("kStep").classList.add("ok");
+            $("kStep").innerHTML = `<b>${ui("kStepDone")}</b><p>${ui("kStepDoneDesc")}</p><a class="k-again" href="${SITE.kakao}" target="_blank" rel="noopener">${ui("kStepAgain")}</a>`;
+            const big = done.querySelector('a.btn[href*="booking.html"]'); if (big) big.classList.add("big-btn");
+            const h = done.querySelector("p.hint"); if (h) h.remove();
+          }, 400);
         };
         try { const k = "uncleday-my-bookings"; const a = JSON.parse(localStorage.getItem(k) || "[]"); a.unshift({ code: r.code, token: r.token, shop: shop.id, date: f.date }); localStorage.setItem(k, JSON.stringify(a.slice(0, 20))); } catch (e) {}
         done.scrollIntoView({ behavior: "smooth" });
