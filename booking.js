@@ -83,7 +83,7 @@ function draw(b) {
     <div id="vRvBox"></div>
     <p class="v-save">${ui("vSave")}</p>
   </div>`;
-  const act = async (a, pick = null) => { try { draw(await LIVE.rpc("customer_action", { t, action: a, pick })); if (a === "pick") toastV(ui("vResDone")); } catch (e) { toastV(e.message); } };
+  const act = async (a, pick = null) => { try { draw(await LIVE.rpc("customer_action", pick == null ? { t, action: a } : { t, action: a, pick })); if (a === "pick") toastV(ui("vResDone")); } catch (e) { toastV(e.message); } };
   box.querySelectorAll("[data-pick]").forEach(x => x.onclick = () => {
     const o = offers[+x.dataset.pick]; const d = document.createElement("div"); d.className = "lightbox";
     d.innerHTML = `<div class="done" style="max-width:340px;margin:auto"><h2>${ui("vResAsk")}</h2><p><b>${esc(fmtDate(o.date, o.time))}</b></p><button class="btn big-btn" data-y>${ui("vResPick")}</button> <button class="btn" data-n>${ui("vNo")}</button></div>`;

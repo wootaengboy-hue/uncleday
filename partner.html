@@ -162,7 +162,7 @@ function draw() {
     let amount = null;
     if (a === "visited") { amount = +String($("amt").value).replace(/[^\d]/g, ""); if (!$("amt").value) { toast(t("needAmt")); return; } }
     btn.disabled = true;
-    try { B = await rpc("shop_reply", { t: tk, action: a, amount, memo: $("memo") ? $("memo").value : null, times: a === "reject" ? props.filter(p => p.date && p.time) : null }); changing = false; proposing = false; draw(); toast(t("saved")); }
+    try { B = await rpc("shop_reply", Object.assign({ t: tk, action: a, amount, memo: $("memo") ? $("memo").value : null }, a === "reject" && props.some(p => p.date && p.time) ? { times: props.filter(p => p.date && p.time) } : {})); changing = false; proposing = false; draw(); toast(t("saved")); }
     catch (e) { btn.disabled = false; toast(e.message); }
   });
 }
