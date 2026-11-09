@@ -1228,4 +1228,9 @@ end $$;
 revoke all on function public.backup_dump(text) from public;
 grant execute on function public.backup_dump(text) to anon, authenticated;
 
+
+-- 20. 낙서장 칸반 카드 순서
+alter table public.tasks add column if not exists pos double precision;
+alter table public.leads add column if not exists pos double precision;
+
 -- 끝! 아래에 'Success. No rows returned' 가 보이면 완료예요.

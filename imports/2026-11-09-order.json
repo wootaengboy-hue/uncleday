@@ -1,0 +1,14 @@
+{
+ "id": "2026-11-09-order",
+ "title": "칸반 순서 저장 켜기",
+ "created": "2026-11-09",
+ "tasks": [
+  {
+   "group": "낙서장",
+   "priority": 2,
+   "title": "칸반 순서 저장 켜기 (order.sql 실행)",
+   "note": "Supabase SQL Editor",
+   "memo": "<ol><li>Supabase → SQL Editor</li><li><a href=\"https://raw.githubusercontent.com/wootaengboy-hue/uncleday/main/supabase/order.sql\" target=\"_blank\">order.sql</a> 내용(3줄) 붙여넣기 → <b>Run</b></li><li>카드를 위아래로 끌어 옮긴 뒤 새로고침해도 그대로면 완료</li></ol>"
+  }
+ ]
+}

@@ -45,6 +45,14 @@
    "count": 4,
    "created": "2026-11-09",
    "kind": "tasks"
+  },
+  {
+   "id": "2026-11-09-order",
+   "file": "2026-11-09-order.json",
+   "title": "칸반 순서 저장 켜기",
+   "count": 1,
+   "created": "2026-11-09",
+   "kind": "tasks"
   }
  ]
 }

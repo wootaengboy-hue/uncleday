@@ -87,7 +87,7 @@ function drawWork() {
     </div>
     ${(ADMINS.find(a => a.email === ME.email) || {}).name ? "" : `<div class="nick-nudge">👋 <b>닉네임</b>을 정하면 팀원들이 이메일 대신 이름으로 보고, <b>@이름</b>으로 부를 수 있어요. <button class="btn sm main" id="nickGo">⚙️ 계정에서 정하기</button></div>`}
     <div class="kanban ${workView}" id="kb"></div>
-    <p class="hint" style="margin:10px 0 40px">${workView === "tasks" ? "카드를 끌어서 다른 칸(아무 높이나)에 놓거나, 카드의 <b>이동 ▸</b>을 눌러 바로 옮길 수 있어요. 완료는 최근 30일만 보여요." : "업체 카드를 끌거나 <b>이동 ▸</b>을 눌러 단계를 옮겨요. 단계·담당자가 바뀌면 누가 언제 바꿨는지 자동으로 기록돼요. 다음 연락일이 지나면 빨갛게 표시돼요."}</p>`;
+    <p class="hint" style="margin:10px 0 40px">${workView === "tasks" ? "카드는 <b>작성한 순서</b>로 놓여요. 끌어서 <b>위아래 순서</b>를 바꾸거나 다른 칸에 놓을 수 있고, <b>이동 ▸</b>으로 바로 옮길 수도 있어요 (옮긴 칸의 맨 아래로). 완료는 최근 30일만 보여요." : "업체 카드를 끌거나 <b>이동 ▸</b>을 눌러 단계를 옮겨요. 단계·담당자가 바뀌면 누가 언제 바꿨는지 자동으로 기록돼요. 다음 연락일이 지나면 빨갛게 표시돼요."}</p>`;
   $("tab-work").querySelectorAll("[data-v]").forEach(b => b.onclick = () => { workView = b.dataset.v; drawWork(); });
   if ($("nickGo")) $("nickGo").onclick = () => showTab("acc");
   $("wWho").onchange = e => { workWho = e.target.value; drawWork(); };
@@ -99,12 +99,12 @@ function drawWork() {
 /* ---------- 할 일 보드 ---------- */
 function drawTasks() {
   const t = vnToday(), cut = new Date(Date.now() - 30 * 864e5).toISOString();
-  const sortT = (a, b) => (b.priority - a.priority) || (a.due || "9999").localeCompare(b.due || "9999") || a.created_at.localeCompare(b.created_at);
+  const sortT = (a, b) => ordKey(a) - ordKey(b);
   $("kb").innerHTML = TASK_COLS.map(([k, n]) => {
     let list = TASKS.filter(x => x.status === k && whoOk(x));
     const hidden = k === "done" && !showAllDone ? list.filter(x => (x.done_at || x.updated_at) < cut).length : 0;
-    if (k === "done") list = list.filter(x => showAllDone || (x.done_at || x.updated_at) >= cut).sort((a, b) => (b.done_at || "").localeCompare(a.done_at || ""));
-    else list.sort(sortT);
+    if (k === "done") list = list.filter(x => showAllDone || (x.done_at || x.updated_at) >= cut);
+    list.sort(sortT);
     return `<div class="kcol" data-col="${k}"><div class="khead"><b>${n}</b><span class="kn">${list.length}</span></div>
       ${k !== "done" ? `<input class="kadd" data-add="${k}" placeholder="＋ 입력하고 Enter">` : ""}
       <div class="kcards">${list.map(x => taskCard(x)).join("") || `<div class="kempty">비어 있어요</div>`}</div>
@@ -117,14 +117,15 @@ function drawTasks() {
     try { TASKS.unshift(await q(sb.from("tasks").insert(row).select().single(), "할 일 추가")); drawTasks(); $("kb").querySelector(`[data-add="${row.status}"]`).focus(); } catch (err) { inp.disabled = false; }
   });
   if ($("moreDone")) $("moreDone").onclick = () => { showAllDone = true; drawTasks(); };
-  bindKanban("task", async (id, col) => {
-    const x = TASKS.find(y => y.id === id); if (!x || x.status === col) return;
-    try { const r = await q(sb.from("tasks").update({ status: col }).eq("id", id).select().single()); TASKS[TASKS.indexOf(x)] = r; drawTasks(); drawCounts(); } catch (e) {}
+  bindKanban("task", async (id, col, pos) => {
+    const x = TASKS.find(y => y.id === id); if (!x) return;
+    const patch = { pos }; if (x.status !== col) patch.status = col;
+    const r = await movePatch("tasks", id, patch); if (r) { TASKS[TASKS.indexOf(x)] = r; drawTasks(); drawCounts(); }
   }, id => editTask(id));
 }
 function taskCard(x) {
   const sh = x.shop_id && shopById(x.shop_id), ld = x.lead_id && leadById(x.lead_id);
-  return `<div class="kcard pri${x.priority} ${x.status === "done" ? "done" : ""}" draggable="true" data-id="${x.id}" title="중요도: ${(PRI.find(p => +p[0] === x.priority) || [, ""])[1]}">
+  return `<div class="kcard pri${x.priority} ${x.status === "done" ? "done" : ""}" draggable="true" data-id="${x.id}" data-k="${ordKey(x)}" title="중요도: ${(PRI.find(p => +p[0] === x.priority) || [, ""])[1]}">
     <div class="kt">${esc(x.title)}</div>
     ${x.memo ? (() => { const t = richText(x.memo); const ck = (x.memo.match(/<li[^>]*>/g) || []).length && /class="check"/.test(x.memo) ? [((x.memo.match(/<ul class="check">[\s\S]*?<\/ul>/g) || []).join("").match(/<li data-done/g) || []).length, ((x.memo.match(/<ul class="check">[\s\S]*?<\/ul>/g) || []).join("").match(/<li/g) || []).length] : null;
       return `${t ? `<div class="km">${esc(t.length > 70 ? t.slice(0, 70) + "…" : t)}</div>` : ""}${ck && ck[1] ? `<div class="km ckp"><span style="width:${Math.round(ck[0] / ck[1] * 100)}%"></span><em>☑ ${ck[0]}/${ck[1]}</em></div>` : ""}`; })() : ""}
@@ -195,12 +196,12 @@ function drawLeads() {
   const notIn = shops.filter(s => !shopIdsInLeads.has(s.id));
   $("kb").innerHTML = (LEADS.length ? "" : `<div class="notice info" style="grid-column:1/-1;margin:0"><span class="grow">영업 보드가 비어 있어요. 이미 사이트에 등록된 업체 ${notIn.length}곳을 계약 상태에 맞춰 불러올까요? (수수료율이 있고 입점 확인된 곳 → 입점 완료, 나머지 → 후보 발굴)</span><button class="btn main sm" id="leadSeed">불러오기</button></div>`) +
     LEAD_COLS.map(([k, n, sub]) => {
-      const list = LEADS.filter(l => l.stage === k && whoOk(l)).sort((a, b) => (a.next_date || "9999").localeCompare(b.next_date || "9999") || b.updated_at.localeCompare(a.updated_at));
+      const list = LEADS.filter(l => l.stage === k && whoOk(l)).sort((a, b) => ordKey(a) - ordKey(b));
       return `<div class="kcol" data-col="${k}"><div class="khead"><b>${n}</b><span class="kn">${list.length}</span><small>${sub}</small></div>
         <div class="kcards">${list.map(l => {
           const late = !["live", "hold"].includes(l.stage) && l.next_date && l.next_date < t;
           const open = TASKS.filter(x => x.lead_id === l.id && x.status !== "done").length;
-          return `<div class="kcard ${late ? "late" : ""}" draggable="true" data-id="${l.id}">
+          return `<div class="kcard ${late ? "late" : ""}" draggable="true" data-id="${l.id}" data-k="${ordKey(l)}">
             <div class="kt">${esc(l.name)}</div>
             <div class="km">${esc([cityName(l.city), l.cat ? catName(l.cat) : ""].filter(x => x && x !== "-").join(" · "))}</div>
             ${l.next_action || l.next_date ? `<div class="km next">➡ ${esc(l.next_action || "다음 연락")} ${l.next_date ? `<b class="${late ? "lt" : ""}">${dayKo(l.next_date)}</b>` : ""}</div>` : ""}
@@ -214,10 +215,12 @@ function drawLeads() {
       stage: isOk(s) && rateOf(s.id) ? "live" : "found", assignee: ME.email }));
     try { await q(sb.from("leads").insert(rows), "불러오기"); await loadWork(); drawWork(); toast(`${rows.length}곳을 불러왔어요`); } catch (e) { $("leadSeed").disabled = false; }
   };
-  bindKanban("lead", async (id, col) => {
-    const l = leadById(id); if (!l || l.stage === col) return;
-    try { const r = await q(sb.from("leads").update({ stage: col }).eq("id", id).select().single()); LEADS[LEADS.indexOf(l)] = r; drawLeads(); drawCounts();
-      if (col === "signed" && !r.shop_id) toast("계약 완료! 업체 카드를 열어 '사이트에 업체 등록'을 눌러 주세요.", 4500); } catch (e) {}
+  bindKanban("lead", async (id, col, pos) => {
+    const l = leadById(id); if (!l) return;
+    const patch = { pos }, moved = l.stage !== col; if (moved) patch.stage = col;
+    const r = await movePatch("leads", id, patch); if (!r) return;
+    LEADS[LEADS.indexOf(l)] = r; drawLeads(); drawCounts();
+    if (moved && col === "signed" && !r.shop_id) toast("계약 완료! 업체 카드를 열어 '사이트에 업체 등록'을 눌러 주세요.", 4500);
   }, id => openLead(id));
 }
 function newLead() {
@@ -332,6 +335,31 @@ async function openLead(id) {
 }
 
 /* ---------- 끌어서 옮기기 ---------- */
+// 카드 순서: 사용자가 옮긴 자리(pos)가 있으면 그것, 없으면 작성한 시간 순서
+const ordKey = x => x.pos != null ? +x.pos : Date.parse(x.created_at || 0);
+let POS_OK = true;
+async function movePatch(table, id, patch) {
+  if (!POS_OK) delete patch.pos;
+  if (!Object.keys(patch).length) return null;
+  let r = await sb.from(table).update(patch).eq("id", id).select().single();
+  if (r.error && /pos/.test(r.error.message || "") && "pos" in patch) {   // 아직 DB에 순서 칸이 없을 때
+    POS_OK = false; toast("순서 저장 칸이 아직 없어요. 사장님이 order.sql을 실행하면 순서가 저장돼요", 4500);
+    delete patch.pos; if (!Object.keys(patch).length) return null;
+    r = await sb.from(table).update(patch).eq("id", id).select().single();
+  }
+  if (r.error) { dbErr(r.error); return null; }
+  return r.data;
+}
+// 놓은 자리의 앞뒤 카드 사이 값으로 순서를 정해요
+function dropPos(col, y, dragId) {
+  const cards = [...col.querySelectorAll(".kcard")].filter(c => c.dataset.id !== dragId);
+  const i = cards.findIndex(c => { const r = c.getBoundingClientRect(); return y < r.top + r.height / 2; });
+  const k = c => +c.dataset.k;
+  if (!cards.length) return { pos: Date.now(), before: null };
+  if (i === -1) return { pos: k(cards[cards.length - 1]) + 60000, before: null };
+  if (i === 0) return { pos: k(cards[0]) - 60000, before: cards[0] };
+  return { pos: (k(cards[i - 1]) + k(cards[i])) / 2, before: cards[i] };
+}
 function bindKanban(kind, onMove, onOpen) {
   let dragId = null;
   const cols = [...$("kb").querySelectorAll(".kcol")].map(k => [k.dataset.col, (k.querySelector(".khead b") || {}).textContent || k.dataset.col]);
@@ -348,17 +376,25 @@ function bindKanban(kind, onMove, onOpen) {
       m.style.left = Math.max(8, r.right - m.offsetWidth) + "px";
       m.style.top = (r.bottom + 4 + h > innerHeight ? r.top - 4 - h : r.bottom + 4) + "px";
       addEventListener("scroll", () => m.remove(), { once: true, capture: true });
-      m.querySelectorAll("[data-to]").forEach(b => b.onclick = ev => { ev.stopPropagation(); m.remove(); onMove(c.dataset.id, b.dataset.to); });
+      m.querySelectorAll("[data-to]").forEach(b => b.onclick = ev => { ev.stopPropagation(); m.remove();
+        const tc = $("kb").querySelector(`.kcol[data-col="${CSS.escape(b.dataset.to)}"]`), ks = tc ? [...tc.querySelectorAll(".kcard")].map(x => +x.dataset.k) : [];
+        onMove(c.dataset.id, b.dataset.to, ks.length ? Math.max(...ks) + 60000 : Date.now()); });
       setTimeout(() => document.addEventListener("click", () => m.remove(), { once: true }), 0);
     };
     c.onclick = () => onOpen(c.dataset.id);
     c.ondragstart = e => { dragId = c.dataset.id; c.classList.add("drag"); e.dataTransfer.effectAllowed = "move"; try { e.dataTransfer.setData("text/plain", dragId); } catch (err) {} };
-    c.ondragend = () => { c.classList.remove("drag"); $("kb").querySelectorAll(".kcol").forEach(x => x.classList.remove("over")); };
+    c.ondragend = () => { c.classList.remove("drag"); clearMarks(); };
   });
+  const clearMarks = () => $("kb").querySelectorAll(".kcol").forEach(x => { x.classList.remove("over", "drop-end"); x.querySelectorAll(".drop-before").forEach(y => y.classList.remove("drop-before")); });
   $("kb").querySelectorAll(".kcol").forEach(col => {
-    col.ondragover = e => { e.preventDefault(); col.classList.add("over"); };
-    col.ondragleave = e => { if (!col.contains(e.relatedTarget)) col.classList.remove("over"); };
-    col.ondrop = e => { e.preventDefault(); col.classList.remove("over"); const id = dragId || e.dataTransfer.getData("text/plain"); if (id) onMove(id, col.dataset.col); };
+    col.ondragover = e => {
+      e.preventDefault(); const p = dropPos(col, e.clientY, dragId);
+      $("kb").querySelectorAll(".drop-before").forEach(y => { if (y !== p.before) y.classList.remove("drop-before"); });
+      $("kb").querySelectorAll(".kcol").forEach(x => { if (x !== col) x.classList.remove("over", "drop-end"); });
+      col.classList.add("over"); col.classList.toggle("drop-end", !p.before); if (p.before) p.before.classList.add("drop-before");
+    };
+    col.ondragleave = e => { if (!col.contains(e.relatedTarget)) { col.classList.remove("over", "drop-end"); col.querySelectorAll(".drop-before").forEach(y => y.classList.remove("drop-before")); } };
+    col.ondrop = e => { e.preventDefault(); const id = dragId || e.dataTransfer.getData("text/plain"); const p = dropPos(col, e.clientY, id); clearMarks(); if (id) onMove(id, col.dataset.col, p.pos); };
   });
 }
 
