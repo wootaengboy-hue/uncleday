@@ -18,7 +18,7 @@ document.addEventListener("click", e => {
   const m = (window.SHOP_ID && [0, window.SHOP_ID]) || location.hash.match(/^#\/shop\/(.+)$/) || (/shop\.html$/.test(location.pathname) && [0, location.hash.slice(1)]);
   const shop = m && SHOPS.find(s => s.id === decodeURIComponent(m[1])); if (!shop) return;
   e.preventDefault();
-  const c = CITIES.find(x => x.id === shop.city), k = CATEGORIES.find(x => x.id === shop.cat);
+  const c = CITIES.find(x => x.id === shop.city), k = catGroup(shop.cat);
   const text = ui("askMsg", { shop: tx(shop.name), city: c ? tx(c.name) : "", cat: k ? tx(k.name) : "" });
   document.querySelectorAll(".ask-sheet").forEach(x => x.remove());
   const d = document.createElement("div"); d.className = "ask-sheet";
@@ -93,7 +93,7 @@ if (!shop) {
   box.innerHTML = `<p class="empty">${ui("notFound")}</p><a href="${window.SPA ? "#" : "/"}">${ui("back")}</a>`;
 } else {
   document.title = tx(shop.name) + " | " + tx(SITE.name);
-  const cat = CATEGORIES.find(c => c.id === shop.cat);
+  const cat = catGroup(shop.cat);
   const img = shop.img ? `<img class="hero" src="${shop.img}" alt="" decoding="async" style="object-position:${shop.imgPos || "50% 50%"}">` : phCard(shop, true);
   const closed = shop.closed.length ? shop.closed.map(d => ui("days")[d]).join(", ") : ui("none");
   const staff = shop.staffLangs.length ? shop.staffLangs.map(l => ui("lang_" + l)).join(", ") : ui("tbd");

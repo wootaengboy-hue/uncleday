@@ -40,8 +40,8 @@ const CITIES = [
   { id: "nhatrang", name: { ko: "나트랑", en: "Nha Trang", vi: "Nha Trang" } }
 ];
 
-// 4) 카테고리 (icon은 이모티콘)
-const CATEGORIES = [
+// 4) 세부 카테고리 (업체마다 저장되는 값, 관리자에서 고르는 목록. icon은 이모티콘)
+const CATEGORY_DETAIL = [
   { id: "skin", icon: "✨", name: { ko: "피부관리", en: "Facial & Skincare", vi: "Chăm sóc da mặt" }, sub: [
       { ko: "페이셜 케어", en: "Facial", vi: "Chăm sóc da mặt" }, { ko: "여드름 관리", en: "Acne care", vi: "Trị mụn" },
       { ko: "미백·재생", en: "Whitening / Repair", vi: "Dưỡng trắng / Phục hồi" } ] },
@@ -153,3 +153,18 @@ const FAQ = [
     a: { ko: "네, 상담 예약부터 도와드려요. 시술·수술은 반드시 병원에서 직접 상담을 받고 결정하세요. 회복 기간과 귀국 일정, 사후 관리 방법을 미리 확인하는 게 좋아요. 가격은 상담 후 병원에서 안내해요.",
          en: "Yes, we can start with a consultation booking. Always consult the clinic in person before deciding on any procedure, and check recovery time, your flight home and aftercare in advance. Prices are given by the clinic after consultation.", vi: "Có, chúng tôi hỗ trợ đặt lịch tư vấn trước. Hãy luôn tư vấn trực tiếp tại cơ sở trước khi quyết định, và kiểm tra trước thời gian hồi phục, lịch bay và chăm sóc sau điều trị. Giá do cơ sở báo sau khi tư vấn." } }
 ];
+
+// 5) 사이트에 보이는 카테고리: 업체가 적은 동안은 2개로 묶어서 보여 줘요
+//    나중에 업체가 많아지면 members를 나눠 묶음을 늘리면 돼요 (업체 데이터는 안 바꿔도 돼요)
+const CATEGORIES = [
+  { id: "spabody", icon: "💆", name: { ko: "Spa & Body", en: "Spa & Body", vi: "Spa & Body" },
+    desc: { ko: "마사지 · 스파 · 바디케어", en: "Massage · Spa · Body care", vi: "Massage · Spa · Chăm sóc cơ thể" },
+    members: ["massage", "spa"] },
+  { id: "beauty", icon: "✨", name: { ko: "Skin & Beauty", en: "Skin & Beauty", vi: "Skin & Beauty" },
+    desc: { ko: "피부관리 · 피부과 · 헤어 · 네일 등", en: "Skincare · Clinics · Hair · Nails", vi: "Chăm sóc da · Da liễu · Tóc · Nail" },
+    members: ["skin", "derma", "surgery", "hair", "nail", "body", "dental", "package"] }
+];
+CATEGORIES.forEach(g => { g.sub = g.members.map(id => CATEGORY_DETAIL.find(c => c.id === id)).filter(Boolean).map(c => c.name); });
+// 업체의 세부 카테고리 → 사이트 묶음 (모르는 값은 Skin & Beauty로)
+const catGroup = id => CATEGORIES.find(c => c.id === id || c.members.includes(id)) || CATEGORIES[CATEGORIES.length - 1];
+const catDetail = id => CATEGORY_DETAIL.find(c => c.id === id);

@@ -307,7 +307,7 @@ function newLead() {
     <div style="display:grid;gap:10px;margin-top:8px">
       <label class="f"><span>업체 이름 <em>*</em></span><input id="lName"></label>
       <div class="two"><label class="f"><span>지역</span><select id="lCity">${CITIES.map(c => `<option value="${c.id}">${esc(c.name.ko)}</option>`).join("")}</select></label>
-        <label class="f"><span>카테고리</span><select id="lCat">${CATEGORIES.map(c => `<option value="${c.id}">${esc(c.name.ko)}</option>`).join("")}</select></label></div>
+        <label class="f"><span>카테고리</span><select id="lCat">${CATEGORY_DETAIL.map(c => `<option value="${c.id}">${esc(c.name.ko)}</option>`).join("")}</select></label></div>
       <label class="f"><span>구글 지도 링크</span><input id="lMap" placeholder="https://maps.app.goo.gl/…"></label>
       <div class="two"><label class="f"><span>다음 할 일</span><input id="lNext" placeholder="예: 잘로로 첫 연락"></label><label class="f"><span>날짜</span><input type="date" id="lDate" value="${vnToday()}"></label></div>
     </div><div class="btns"><button class="btn" data-no>닫기</button><button class="btn main" data-yes>추가</button></div></div>`;
@@ -336,7 +336,7 @@ async function openLead(id) {
       <div class="box"><h3>업체 정보</h3>
         <div class="three"><label class="f"><span>업체 이름</span><input id="lName" value="${esc(l.name)}"></label>
           <label class="f"><span>지역</span><select id="lCity"><option value="">-</option>${CITIES.map(c => `<option value="${c.id}" ${c.id === l.city ? "selected" : ""}>${esc(c.name.ko)}</option>`).join("")}</select></label>
-          <label class="f"><span>카테고리</span><select id="lCat"><option value="">-</option>${CATEGORIES.map(c => `<option value="${c.id}" ${c.id === l.cat ? "selected" : ""}>${esc(c.name.ko)}</option>`).join("")}</select></label></div>
+          <label class="f"><span>카테고리</span><select id="lCat"><option value="">-</option>${CATEGORY_DETAIL.map(c => `<option value="${c.id}" ${c.id === l.cat ? "selected" : ""}>${esc(c.name.ko)}</option>`).join("")}</select></label></div>
         <div class="three"><label class="f"><span>업체 담당자</span><input id="lPerson" value="${esc(l.person || "")}" placeholder="예: Ms. Linh (매니저)"></label>
           <label class="f"><span>연락처 (전화·잘로·카톡)</span><input id="lContact" value="${esc(l.contact || "")}"></label>
           <label class="f"><span>수수료율 (%)</span><input type="number" id="lRate" min="0" max="100" step="0.5" value="${l.rate ?? ""}" placeholder="제안·합의"></label></div>
@@ -372,7 +372,7 @@ async function openLead(id) {
     if ($("lShopOpen")) $("lShopOpen").onclick = () => { $("layer").innerHTML = ""; showTab("shops"); openEditor(sh.id); };
     if ($("lShopLink")) $("lShopLink").onchange = e => { if (e.target.value) save({ shop_id: e.target.value }, "사이트 업체와 연결했어요"); };
     if ($("lShopNew")) $("lShopNew").onclick = () => {
-      const lid = l.id, pre = { ...blankShop(), id: slug(l.name), name: { ko: l.name, en: "", vi: "" }, city: l.city || CITIES[0].id, cat: l.cat || CATEGORIES[0].id, map: l.map || "" };
+      const lid = l.id, pre = { ...blankShop(), id: slug(l.name), name: { ko: l.name, en: "", vi: "" }, city: l.city || CITIES[0].id, cat: l.cat || CATEGORY_DETAIL[0].id, map: l.map || "" };
       $("layer").innerHTML = "";
       openEditor(null, pre, { rate: l.rate, contract: { person: l.person || "", phone: l.contact || "" }, onSaved: async s => {
         const cur = leadById(lid);

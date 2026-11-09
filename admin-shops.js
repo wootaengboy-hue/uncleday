@@ -11,7 +11,7 @@ const PRIV = {};                 // 업체별 관리자 전용: 수수료율, �
 const META = {};                 // 업체별: 사이트 공개 여부, 순서
 let catImgs = {};
 
-const catOf = id => CATEGORIES.find(c => c.id === id);
+const catOf = id => CATEGORY_DETAIL.find(c => c.id === id);
 const cityOf = id => CITIES.find(c => c.id === id);
 const catName = id => catOf(id) ? catOf(id).name.ko : id || "-";
 const cityName = id => cityOf(id) ? cityOf(id).name.ko : id || "-";
@@ -71,7 +71,7 @@ const dbErr = (e, what = "저장") => { console.error(e); toast(`${what}에 실�
 /* ===== 목록 ===== */
 function fillFilters() {
   $("fCity").innerHTML = `<option value="">지역 전체</option>` + CITIES.map(c => `<option value="${c.id}">${esc(c.name.ko)}</option>`).join("");
-  $("fCat").innerHTML = `<option value="">카테고리 전체</option>` + CATEGORIES.map(c => `<option value="${c.id}">${c.icon} ${esc(c.name.ko)}</option>`).join("");
+  $("fCat").innerHTML = `<option value="">카테고리 전체</option>` + CATEGORY_DETAIL.map(c => `<option value="${c.id}">${c.icon} ${esc(c.name.ko)}</option>`).join("");
   ["q","fCity","fCat","fSt"].forEach(k => $(k).oninput = drawList);
 }
 function drawStats() {
@@ -109,7 +109,7 @@ function drawList() {
 
 /* ===== 편집 창 ===== */
 const blankShop = () => ({
-  id: "", cat: CATEGORIES[0].id, city: CITIES[0].id, verified: false,
+  id: "", cat: CATEGORY_DETAIL[0].id, city: CITIES[0].id, verified: false,
   name: { ko: "", en: "", vi: "" }, rating: 0, reviews: 0, img: "",
   tags: [], desc: { ko: "", en: "" }, recommend: { ko: "", en: "" },
   address: { ko: "", en: "" }, map: "", open: "", close: "", closed: [], staffLangs: [], menu: []
@@ -181,7 +181,7 @@ function openEditor(id, preset, opts = {}) {
       <div class="box"><h3>기본 정보</h3>
         ${pair("name", "업체명", false, true)}
         <div class="three">
-          <label class="f"><span>카테고리 <em>*</em></span><select data-k="cat">${CATEGORIES.map(c => `<option value="${c.id}" ${c.id === s.cat ? "selected" : ""}>${c.icon} ${esc(c.name.ko)}</option>`).join("")}</select></label>
+          <label class="f"><span>세부 카테고리 <em>*</em> <small class="hint">사이트엔 ${esc(catGroup(s.cat).name.ko)}로 보여요</small></span><select data-k="cat">${CATEGORY_DETAIL.map(c => `<option value="${c.id}" ${c.id === s.cat ? "selected" : ""}>${c.icon} ${esc(c.name.ko)}</option>`).join("")}</select></label>
           <label class="f"><span>지역 <em>*</em></span><select data-k="city">${CITIES.map(c => `<option value="${c.id}" ${c.id === s.city ? "selected" : ""}>${esc(c.name.ko)}</option>`).join("")}</select></label>
           <label class="f"><span>아이디 (주소용) <em>*</em></span><input id="idIn" value="${esc(s.id)}" placeholder="예: dahan-spa"></label>
         </div>
@@ -503,7 +503,7 @@ function openCatImgs() {
       <div class="box" id="catRows" style="gap:0;padding:6px 16px"></div>
     </div></div></div>`;
   const draw = () => {
-    $("catRows").innerHTML = CATEGORIES.map(c => `<div style="display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)">
+    $("catRows").innerHTML = `<p class="hint" style="margin:8px 0">⭐ 메인 화면 카테고리 (지금 사이트에 보이는 묶음)</p>` + CATEGORIES.map(c => ({ ...c, name: { ko: `${c.name.ko} · ${c.desc.ko}` } })).concat([{ _sep: 1 }], CATEGORY_DETAIL).map(c => c._sep ? `<p class="hint" style="margin:14px 0 4px">세부 카테고리 (사진 없는 업체 카드 배경에 쓰여요)</p>` : `<div style="display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)">
       <div class="img-prev" style="width:96px;height:72px;font-size:28px;flex:none">${catImgs[c.id] ? `<img src="${esc(imgSrc(catImgs[c.id]))}" alt="">` : c.icon}</div>
       <b style="flex:1">${esc(c.name.ko)}</b>
       <label class="btn sm">${catImgs[c.id] ? "바꾸기" : "📷 올리기"}<input type="file" accept="image/*" data-cup="${c.id}" hidden></label>
@@ -608,7 +608,7 @@ function decode(buf) {
   try { return new TextDecoder("utf-8", { fatal: true }).decode(buf); }
   catch (e) { return new TextDecoder("euc-kr").decode(buf); }   // 엑셀 기본 CSV(한글 깨짐 방지)
 }
-const findCat = v => { v = v.trim(); return (CATEGORIES.find(c => c.id === v || c.name.ko === v || c.name.en.toLowerCase() === v.toLowerCase()) || {}).id; };
+const findCat = v => { v = v.trim(); return (CATEGORY_DETAIL.find(c => c.id === v || c.name.ko === v || c.name.en.toLowerCase() === v.toLowerCase()) || {}).id; };
 const findCity = v => { v = v.trim(); return (CITIES.find(c => c.id === v || c.name.ko === v || c.name.en.toLowerCase() === v.toLowerCase()) || {}).id; };
 const split = (v, re = /[,，]/) => String(v || "").split(re).map(x => x.trim()).filter(Boolean);
 

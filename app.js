@@ -76,8 +76,10 @@ function drawCities() {
 }
 
 function drawCats() {
+  const gImg = c => catImg(c.id) || c.members.map(catImg).find(Boolean) || "";
+  $("catGrid").classList.toggle("two", CATEGORIES.length <= 3);
   $("catGrid").innerHTML = CATEGORIES.map(c =>
-    `<button class="cat ${c.id === state.cat ? "on" : ""} ${catImg(c.id) ? "has-img" : ""}" data-id="${c.id}">${catImg(c.id) ? `<i class="cat-img" style="background-image:url('${catImg(c.id)}')"></i>` : `<span>${c.icon}</span>`}${tx(c.name)}${SHOPS.some(s => s.cat === c.id) ? "" : `<em class="soon">${ui("soon")}</em>`}</button>`).join("");
+    `<button class="cat ${c.id === state.cat ? "on" : ""} ${gImg(c) ? "has-img" : ""}" data-id="${c.id}">${gImg(c) ? `<i class="cat-img" style="background-image:url('${gImg(c)}')"></i>` : `<span>${c.icon}</span>`}<b class="cat-n">${tx(c.name)}</b>${c.desc ? `<small class="cat-d">${tx(c.desc)}</small>` : ""}${SHOPS.some(s => catGroup(s.cat).id === c.id) ? "" : `<em class="soon">${ui("soon")}</em>`}</button>`).join("");
   $("catGrid").querySelectorAll("button").forEach(el => el.onclick = () => {
     state.cat = state.cat === el.dataset.id ? "" : el.dataset.id;
     drawCats(); drawShops();
@@ -92,22 +94,21 @@ function drawShops() {
   const words = state.q.split(/\s+/).map(norm).filter(Boolean);
   const full = norm(state.q);
   const textOf = s => {
-    const cat = CATEGORIES.find(c => c.id === s.cat) || {};
+    const cat = catDetail(s.cat) || {}, grp = catGroup(s.cat);
     const city = CITIES.find(c => c.id === s.city) || {};
-    return norm(JSON.stringify([s.name, s.tags, s.menu.map(m => m.name), s.desc, s.recommend, s.address, cat.name, cat.sub, city.name]));
+    return norm(JSON.stringify([s.name, s.tags, s.menu.map(m => m.name), s.desc, s.recommend, s.address, cat.name, cat.sub, grp.name, city.name]));
   };
   // 검색어 전체가 그대로 들어간 업체가 있으면 그것만, 없으면 단어별로 모두 들어간 업체
   const wholeHit = full && SHOPS.some(s => textOf(s).includes(full));
   const list = SHOPS.slice().sort((a, b) => (b.best ? 1 : 0) - (a.best ? 1 : 0)).filter(s => {
     const text = textOf(s);
-    return (!state.cat || s.cat === state.cat) &&
+    return (!state.cat || catGroup(s.cat).id === state.cat) &&
            (state.city === "all" || s.city === state.city) &&
            (!full || (wholeHit ? text.includes(full) : words.every(w => text.includes(w))));
   });
   const cur = CATEGORIES.find(c => c.id === state.cat);
   $("shopTitle").textContent = cur ? ui("shopsOf", { n: tx(cur.name) }) : ui("recommend");
   const card = s => {
-    const cat = CATEGORIES.find(c => c.id === s.cat);
     const img = s.img ? `<img src="${s.img}" alt="" loading="lazy" decoding="async" style="object-position:${s.imgPos || "50% 50%"}">` : phCard(s);
     return `<a class="shop ${s.best ? "is-best" : ""}" href="${shopLink(s.id)}"><div class="shop-media">${img}${s.best ? `<span class="best-badge"><i>✦</i>${ui("certBadge")}<i>✦</i></span>` : ""}</div><div class="info">
       <b>${tx(s.name)}</b>
@@ -128,7 +129,7 @@ function drawShops() {
   }
   if (!state.cat) {
     $("shopGrid").innerHTML = CATEGORIES.map(c => {
-      const arr = list.filter(s => s.cat === c.id);
+      const arr = list.filter(s => catGroup(s.cat).id === c.id);
       return arr.length ? `<h3 class="cat-title">${c.icon} ${tx(c.name)} <small>${arr.length}</small></h3>${grid(arr)}` : "";
     }).join("");
   } else {

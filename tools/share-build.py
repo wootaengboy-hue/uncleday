@@ -15,7 +15,11 @@ def font(weight, size):
             if os.path.exists(p): return ImageFont.truetype(p, size, index=1)  # 1 = KR
     raise SystemExit("Noto Sans CJK 글꼴이 없어요")
 tx = lambda v: (v.get("ko") or v.get("en") or "") if isinstance(v, dict) else (v or "")
-cats = {c["id"]: c for c in d["categories"]}; cities = {c["id"]: c for c in d["cities"]}
+cats = {}
+for c in d["categories"]:   # 사이트 묶음 카테고리: 세부 카테고리 값도 묶음으로 찾아가게
+    cats[c["id"]] = c
+    for m in c.get("members", []): cats.setdefault(m, c)
+cities = {c["id"]: c for c in d["cities"]}
 
 def load(src):
     if not src: return None
