@@ -181,9 +181,16 @@ if (!shop) {
     <form id="form" class="form" ${pending ? "hidden" : ""}>
       <label>${ui("fMenu")}<select name="menu" id="fMenu">${shop.menu.map((m, i) =>
         `<option value="${i}">${tx(m.name)} – ${money(m.price)}</option>`).join("")}</select></label>
-      <label>${ui("fDate")}<input type="date" name="date" id="fDate" required></label>
-      <label>${ui("fTime")}<select name="time" id="fTime" required></select></label>
-      <label>${ui("fPeople")}<input type="number" name="people" value="1" min="1" max="10" required></label>
+      <div class="bk-pick">
+        <button type="button" class="bk-sum" id="bkSum"><span class="bk-ic">📅</span><span id="bkSumT">${ui("pickDT")}</span><span class="bk-car">▾</span></button>
+        <div class="bk-panel" id="bkPanel" hidden>
+          <div class="cal-head"><button type="button" class="cal-nav" id="calPrev" aria-label="prev">‹</button><b id="calTitle"></b><button type="button" class="cal-nav" id="calNext" aria-label="next">›</button></div>
+          <div class="cal-grid" id="calGrid"></div>
+          <div class="slots" id="slots"></div>
+        </div>
+        <input type="hidden" name="date" id="fDate"><input type="hidden" name="time" id="fTime">
+      </div>
+      <div class="ppl-row"><span>${ui("fPeople")}</span><div class="ppl"><button type="button" id="pplM" aria-label="-">−</button><b id="pplN">1</b><button type="button" id="pplP" aria-label="+">＋</button></div><input type="hidden" name="people" id="fPeople" value="1"></div>
       <label>${ui("fName")}<input name="name" required></label>
       <label>${ui("fContact")}<input name="contact" required></label>
       <label>${ui("fNote")}<textarea name="note" rows="3"></textarea></label>
@@ -279,38 +286,59 @@ ${f.text}
   if (pending) { /* 예약 폼은 숨김 */ } else {
   const form = $("form"), fDate = $("fDate"), fTime = $("fTime"), fMenu = $("fMenu");
 
-  // 내일부터 선택 가능
-  const d = new Date(); d.setDate(d.getDate() + 1);
-  fDate.min = d.toISOString().slice(0, 10);
-
+  // 네이버 예약처럼: 달력에서 날짜 → 30분 단위 시간 버튼 → 인원 −/＋
   const toMin = t => +t.slice(0, 2) * 60 + +t.slice(3, 5);
   const toStr = m => String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0");
-
-  // 시간 칸: 영업시간 안에서 시술이 끝나는 시간까지만 30분 간격으로
-  function drawTimes() {
-    const dur = shop.menu[fMenu.value].min;
-    let html = "";
-    for (let t = toMin(shop.open); t + dur <= toMin(shop.close); t += 30)
-      html += `<option>${toStr(t)}</option>`;
-    fTime.innerHTML = html;
+  const ymd = x => `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`;
+  const first = new Date(); first.setHours(0, 0, 0, 0); first.setDate(first.getDate() + 1);   // 내일부터
+  const last = new Date(first); last.setDate(last.getDate() + 90);                            // 90일까지
+  let view = new Date(first.getFullYear(), first.getMonth(), 1);
+  const dayOff = ds => (shop.closed || []).includes(new Date(ds + "T00:00:00").getDay());
+  const fmtTime = t => { const m = toMin(t), h = Math.floor(m / 60), mm = String(m % 60).padStart(2, "0"); return lang === "ko" ? `${h < 12 ? "오전" : "오후"} ${h % 12 || 12}:${mm}` : lang === "vi" ? `${h}:${mm}` : `${h % 12 || 12}:${mm} ${h < 12 ? "AM" : "PM"}`; };
+  const fmtDate = ds => { const x = new Date(ds + "T00:00:00"), w = ui("days")[x.getDay()]; return lang === "ko" ? `${x.getMonth() + 1}.${x.getDate()}(${w})` : lang === "vi" ? `${w}, ${x.getDate()}/${x.getMonth() + 1}` : `${w}, ${x.toLocaleString("en-US", { month: "short" })} ${x.getDate()}`; };
+  function slotsFor() { const dur = shop.menu[fMenu.value].min || 60, out = []; for (let t = toMin(shop.open); t + dur <= toMin(shop.close); t += 30) out.push(toStr(t)); return out; }
+  function drawSum() {
+    $("bkSumT").textContent = fDate.value && fTime.value ? `${fmtDate(fDate.value)} ${fmtTime(fTime.value)}` : fDate.value ? `${fmtDate(fDate.value)} · ${ui("pickTime")}` : ui("pickDT");
+    $("bkSum").classList.toggle("set", !!(fDate.value && fTime.value));
   }
-  drawTimes();
-  fMenu.onchange = drawTimes;
-
-  // 쉬는 요일 막기
-  fDate.onchange = () => {
-    if (fDate.value && shop.closed.includes(new Date(fDate.value + "T00:00:00").getDay())) {
-      alert(ui("closedAlert")); fDate.value = "";
+  function drawCal() {
+    const y = view.getFullYear(), m = view.getMonth();
+    $("calTitle").textContent = lang === "ko" ? `${y}.${String(m + 1).padStart(2, "0")}` : `${String(m + 1).padStart(2, "0")}/${y}`;
+    $("calPrev").disabled = view <= new Date(first.getFullYear(), first.getMonth(), 1);
+    $("calNext").disabled = new Date(y, m + 1, 1) > last;
+    let h = ui("days").map((w, i) => `<span class="cal-w ${i === 0 ? "sun" : i === 6 ? "sat" : ""}">${w}</span>`).join("");
+    const start = new Date(y, m, 1).getDay(), n = new Date(y, m + 1, 0).getDate();
+    for (let i = 0; i < start; i++) h += `<span></span>`;
+    for (let dd = 1; dd <= n; dd++) {
+      const x = new Date(y, m, dd), ds = ymd(x), off = dayOff(ds), out = x < first || x > last;
+      h += `<button type="button" class="cal-d ${ds === fDate.value ? "on" : ""} ${x.getDay() === 0 ? "sun" : x.getDay() === 6 ? "sat" : ""} ${off ? "off" : ""}" data-d="${ds}" ${out || off ? "disabled" : ""}>${dd}${off && !out ? `<small>${ui("closedDay")}</small>` : ""}</button>`;
     }
-  };
+    $("calGrid").innerHTML = h;
+    $("calGrid").querySelectorAll("[data-d]").forEach(b => b.onclick = () => { fDate.value = b.dataset.d; if (!slotsFor().includes(fTime.value)) fTime.value = ""; drawCal(); drawSlots(); drawSum(); });
+  }
+  function drawSlots() {
+    if (!fDate.value) { $("slots").innerHTML = `<p class="slot-hint">${ui("pickDateFirst")}</p>`; return; }
+    const all = slotsFor();
+    const grp = [[ui("am"), all.filter(t => toMin(t) < 720)], [ui("pm"), all.filter(t => toMin(t) >= 720)]].filter(g => g[1].length);
+    $("slots").innerHTML = all.length ? grp.map(([n, ts]) => `<div class="slot-g"><h5>${n}</h5><div class="slot-list">${ts.map(t => `<button type="button" class="slot ${t === fTime.value ? "on" : ""}" data-t="${t}">${lang === "ko" ? (h => `${h % 12 || 12}:${t.slice(3)}`)(+t.slice(0, 2)) : fmtTime(t).replace(/ (AM|PM)$/, "")}</button>`).join("")}</div></div>`).join("") : `<p class="slot-hint">${ui("noSlot")}</p>`;
+    $("slots").querySelectorAll("[data-t]").forEach(b => b.onclick = () => { fTime.value = b.dataset.t; drawSlots(); drawSum(); setTimeout(() => { $("bkPanel").hidden = true; $("bkSum").classList.remove("open"); }, 180); });
+  }
+  $("bkSum").onclick = () => { const p = $("bkPanel"); p.hidden = !p.hidden; $("bkSum").classList.toggle("open", !p.hidden); if (!p.hidden) { drawCal(); drawSlots(); } };
+  $("calPrev").onclick = () => { view = new Date(view.getFullYear(), view.getMonth() - 1, 1); drawCal(); };
+  $("calNext").onclick = () => { view = new Date(view.getFullYear(), view.getMonth() + 1, 1); drawCal(); };
+  const setPpl = n => { n = Math.max(1, Math.min(10, n)); $("fPeople").value = n; $("pplN").textContent = n; $("pplM").disabled = n <= 1; $("pplP").disabled = n >= 10; };
+  $("pplM").onclick = () => setPpl(+$("fPeople").value - 1); $("pplP").onclick = () => setPpl(+$("fPeople").value + 1); setPpl(1);
+  fMenu.onchange = () => { if (fTime.value && !slotsFor().includes(fTime.value)) fTime.value = ""; drawSlots(); drawSum(); };
+  drawSum();
 
   document.querySelectorAll(".pick").forEach(btn => btn.onclick = () => {
-    fMenu.value = btn.dataset.i; drawTimes();
+    fMenu.value = btn.dataset.i; fMenu.onchange();
     $("bookTitle").scrollIntoView({ behavior: "smooth" });
   });
 
   form.onsubmit = async e => {
     e.preventDefault();
+    if (!fDate.value || !fTime.value) { alertBox(ui("pickDTFirst")); $("bkPanel").hidden = false; $("bkSum").classList.add("open"); drawCal(); drawSlots(); $("bkSum").scrollIntoView({ behavior: "smooth", block: "center" }); return; }
     const f = Object.fromEntries(new FormData(form));
     const m = shop.menu[f.menu];
     // 운영자(한국어)가 읽는 메시지

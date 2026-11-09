@@ -48,7 +48,8 @@ function draw(b) {
   const s = b.shop || {};
   const m = (s.menu || []).find(x => x.name && x.name.ko === b.menu_name);
   const menuName = m ? tx(m.name) : b.menu_name;
-  const open = ["requested", "confirmed"].includes(b.status);
+  const open = ["requested", "shop_ok", "confirmed", "reschedule"].includes(b.status);
+  const offers = b.status === "reschedule" ? (b.offer_times || []) : [];
   const past = ["visited", "settled"].includes(b.status);
   const canVisit = !b.customer_visit_at && !["cancelled", "rejected"].includes(b.status);
   document.title = `${ui("vTitle")} ${b.code} | ${tx(SITE.name)}`;
@@ -65,7 +66,11 @@ function draw(b) {
       <dt>${ui("vName")}</dt><dd>${esc(b.customer_name)}</dd>
       ${b.note ? `<dt>${ui("vNote")}</dt><dd>${esc(b.note)}</dd>` : ""}
     </dl>
-    ${open ? `<p class="v-show">📱 ${ui("vShow")}</p>` : ""}
+    ${b.status === "reschedule" ? `<div class="res-box"><h3>🔁 ${ui("vResTitle")}</h3><p>${ui("vResDesc")}</p>
+      <div class="res-list">${offers.map((o, i) => `<div class="res-opt"><span>${esc(fmtDate(o.date, o.time))}</span><button class="btn" data-pick="${i}">${ui("vResPick")}</button></div>`).join("")}</div>
+      <p style="margin:10px 0 0">${ui("vResNone")}</p></div>` : ""}
+    ${b.change_count && b.status !== "reschedule" ? `<p class="v-ok" style="background:#fff4e5;color:#9a5208">🔁 ${ui("vChanged", { n: b.change_count })}</p>` : ""}
+    ${b.status === "confirmed" ? `<p class="v-show">📱 ${ui("vShow")}</p>` : ""}
     <div class="v-btns">
       ${canVisit && (past || b.status === "confirmed" || b.status === "noshow") ? `<button class="btn big-btn" id="vVisit">${ui("vVisited")}</button>` : ""}
       ${b.customer_visit_at ? `<p class="v-ok">${ui("vVisitedDone")}</p>` : ""}
@@ -78,7 +83,13 @@ function draw(b) {
     <div id="vRvBox"></div>
     <p class="v-save">${ui("vSave")}</p>
   </div>`;
-  const act = async a => { try { draw(await LIVE.rpc("customer_action", { t, action: a })); } catch (e) { toastV(e.message); } };
+  const act = async (a, pick = null) => { try { draw(await LIVE.rpc("customer_action", { t, action: a, pick })); if (a === "pick") toastV(ui("vResDone")); } catch (e) { toastV(e.message); } };
+  box.querySelectorAll("[data-pick]").forEach(x => x.onclick = () => {
+    const o = offers[+x.dataset.pick]; const d = document.createElement("div"); d.className = "lightbox";
+    d.innerHTML = `<div class="done" style="max-width:340px;margin:auto"><h2>${ui("vResAsk")}</h2><p><b>${esc(fmtDate(o.date, o.time))}</b></p><button class="btn big-btn" data-y>${ui("vResPick")}</button> <button class="btn" data-n>${ui("vNo")}</button></div>`;
+    d.style.background = "#0009"; d.style.display = "flex"; d.style.alignItems = "center"; d.style.justifyContent = "center";
+    document.body.appendChild(d); d.querySelector("[data-n]").onclick = () => d.remove(); d.querySelector("[data-y]").onclick = () => { d.remove(); act("pick", +x.dataset.pick); };
+  });
   if ($("vVisit")) $("vVisit").onclick = () => act("visited");
   $("vLink").onclick = () => { try { navigator.clipboard.writeText(location.href); toastV(ui("vLinkCopied")); } catch (e) {} };
   if ($("vCancel")) $("vCancel").onclick = () => {

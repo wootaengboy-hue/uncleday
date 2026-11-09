@@ -6,10 +6,10 @@ let ME = { email: "", id: "" };
 let BOOKINGS = []; window.BOOKINGS = BOOKINGS;
 let SETTLES = [], RVS = [];
 const ST = {
-  requested: "접수 (업체 확인 전)", confirmed: "업체 확정", rejected: "업체 불가", visited: "방문 완료",
+  requested: "접수 (업체 확인 전)", shop_ok: "업체 가능 (확정 대기)", confirmed: "예약 확정", rejected: "업체 불가", reschedule: "시간 변경 안내 (손님 답 대기)", visited: "방문 완료",
   settled: "정산 완료", cancelled: "취소", noshow: "노쇼"
 };
-const ST_SHORT = { requested: "접수", confirmed: "확정", rejected: "불가", visited: "방문완료", settled: "정산완료", cancelled: "취소", noshow: "노쇼" };
+const ST_SHORT = { requested: "접수", shop_ok: "업체가능", confirmed: "확정", rejected: "불가", reschedule: "변경안내", visited: "방문완료", settled: "정산완료", cancelled: "취소", noshow: "노쇼" };
 const SRC = { web: "사이트", kakao: "카톡", phone: "전화", etc: "기타" };
 const LANG_KO = { ko: "한국어", en: "영어", vi: "베트남어", ja: "일본어", zh: "중국어" };
 
@@ -28,7 +28,8 @@ const shopName = b => { const s = shopById(b.shop_id); return s ? s.name.ko : (b
 const siteUrl = path => new URL(path, location.href).href;
 const copy = async (text, msg = "복사했어요") => { try { await navigator.clipboard.writeText(text); toast(msg); return true; } catch (e) { prompt("복사해서 쓰세요", text); return false; } };
 const stBadge = s => `<span class="st ${s}">${ST_SHORT[s] || s}</span>`;
-const isOpenSt = s => s === "requested" || s === "confirmed";
+const isOpenSt = s => ["requested", "shop_ok", "confirmed", "reschedule"].includes(s);
+const KAKAO_CENTER = "https://center-pf.kakao.com/";
 const hoursSince = ts => ts ? (Date.now() - new Date(ts).getTime()) / 36e5 : 0;
 
 async function q(promise, what = "저장") {
@@ -95,13 +96,15 @@ async function loadAll() { await Promise.all([loadShops(), loadBookings(), loadS
 
 /* ===== 할 일 (놓치면 안 되는 것) ===== */
 const TODO = [
-  ["notSent", "📨", "업체에 아직 안 알린 새 예약", b => b.status === "requested" && !b.sent_to_shop_at],
+  ["notSent", "📨", "업체에 아직 안 알린 예약 (새 예약·변경된 시간)", b => b.status === "requested" && !b.sent_to_shop_at],
+  ["shopOk", "👍", "업체가 가능 — 예약 확정 버튼을 눌러 주세요", b => b.status === "shop_ok"],
   ["noReply", "⏳", "업체 답이 3시간 넘게 없음", b => b.status === "requested" && b.sent_to_shop_at && hoursSince(b.sent_to_shop_at) > 3],
   ["tellCust", "📣", "확정됐는데 손님에게 안내 안 함", b => b.status === "confirmed" && !b._custTold],
   ["custSaid", "🙋", "손님은 '다녀왔어요'를 눌렀는데 방문 완료 처리가 안 됨", b => b.customer_visit_at && isOpenSt(b.status)],
   ["pastOpen", "📆", "방문일이 지났는데 결과(방문·노쇼)가 없음", b => isOpenSt(b.status) && b.visit_date && b.visit_date < vnToday()],
   ["noAmount", "💸", "방문 완료인데 결제 금액이 비어 있음", b => b.status === "visited" && b.paid_amount == null],
-  ["rejected", "🔁", "업체가 불가 — 손님에게 다른 시간·업체 안내 필요", b => b.status === "rejected"]
+  ["rejected", "🔁", "업체가 불가 — 손님에게 시간 변경 안내 필요", b => b.status === "rejected"],
+  ["resWait", "⏳", "시간 변경 안내 후 손님 답 기다리는 중", b => b.status === "reschedule"]
 ];
 
 /* ===== 탭 ===== */
@@ -220,7 +223,8 @@ function drawDash() {
 /* ===== 예약 목록 ===== */
 const BKF0 = { st: "open", shop: "", q: "", from: "", to: "", todo: "" };
 let bkF = { ...BKF0 };
-const ST_GROUPS = [["open", "진행 중", b => isOpenSt(b.status)], ["requested", "접수", b => b.status === "requested"], ["confirmed", "확정", b => b.status === "confirmed"],
+const ST_GROUPS = [["open", "진행 중", b => isOpenSt(b.status) || b.status === "rejected"], ["requested", "접수", b => b.status === "requested"], ["shop_ok", "업체 가능", b => b.status === "shop_ok"],
+  ["reschedule", "시간 변경 중", b => b.status === "rejected" || b.status === "reschedule"], ["confirmed", "확정", b => b.status === "confirmed"],
   ["visited", "방문완료·정산 전", b => b.status === "visited"], ["settled", "정산완료", b => b.status === "settled"],
   ["closed", "취소·불가·노쇼", b => ["cancelled", "rejected", "noshow"].includes(b.status)], ["all", "전체", () => true]];
 function filteredBookings() {
@@ -277,8 +281,9 @@ function marks(b) {
   return `<span class="marks">${m.map(([i, on, t]) => `<i class="${on ? "on" : ""}" title="${t}${on && typeof on === "string" ? " " + dt(on) : ""}">${i}</i>`).join("")}</span>`;
 }
 async function loadTold() {
-  const r = await sb.from("booking_events").select("booking_id").in("action", ["sent_to_customer"]);
-  if (!r.error) { TOLD.clear(); r.data.forEach(x => TOLD.add(x.booking_id)); }
+  // "확정 안내"를 보낸 예약만 (시간 변경 안내는 확정 안내가 아니에요)
+  const r = await sb.from("booking_events").select("booking_id,detail").in("action", ["sent_to_customer"]);
+  if (!r.error) { TOLD.clear(); r.data.forEach(x => { const st = x.detail && x.detail.status; if (!st || st === "confirmed") TOLD.add(x.booking_id); }); }
   BOOKINGS.forEach(b => b._custTold = TOLD.has(b.id));
 }
 function exportBookings(list) {
@@ -297,7 +302,8 @@ function shopMsg(b, l) {
   const link = siteUrl("partner.html#" + b.shop_token);
   const d = b.visit_date ? b.visit_date.split("-").reverse().join("/") : "-";
   const nat = { ko: { ko: "한국", en: "Korea", vi: "Hàn Quốc" }, en: { ko: "영어권", en: "English", vi: "nói tiếng Anh" }, vi: { ko: "베트남", en: "Vietnam", vi: "Việt Nam" } }[b.lang] || {};
-  if (l === "vi") return `[Uncle Day] Đặt lịch mới · ${b.code}
+  const ch = b.change_count && b.status === "requested";
+  if (l === "vi") return `[Uncle Day] ${ch ? `🔁 ĐỔI GIỜ (lần ${b.change_count}) – vui lòng xác nhận giờ MỚI` : "Đặt lịch mới"} · ${b.code}
 📅 ${d} lúc ${b.visit_time || "-"}
 💆 ${mn}${b.menu_min ? ` (${b.menu_min} phút)` : ""} × ${b.people} người
 👤 Khách: ${b.customer_name}${nat.vi ? ` (${nat.vi})` : ""}${b.note ? `\n📝 Ghi chú: ${b.note}` : ""}${b.list_price ? `\n💰 Giá dự kiến: ${vnd(b.list_price)}` : ""}
@@ -305,7 +311,7 @@ function shopMsg(b, l) {
 👉 Vui lòng bấm link để NHẬN hoặc TỪ CHỐI lịch:
 ${link}
 Sau khi khách đến, mở lại link này và nhập số tiền khách đã thanh toán. Cảm ơn!`;
-  if (l === "en") return `[Uncle Day] New booking · ${b.code}
+  if (l === "en") return `[Uncle Day] ${ch ? `🔁 TIME CHANGED (#${b.change_count}) – please confirm the NEW time` : "New booking"} · ${b.code}
 📅 ${d} at ${b.visit_time || "-"}
 💆 ${mn}${b.menu_min ? ` (${b.menu_min} min)` : ""} × ${b.people}
 👤 Guest: ${b.customer_name}${nat.en ? ` (${nat.en})` : ""}${b.note ? `\n📝 Notes: ${b.note}` : ""}${b.list_price ? `\n💰 Estimated: ${vnd(b.list_price)}` : ""}
@@ -313,7 +319,7 @@ Sau khi khách đến, mở lại link này và nhập số tiền khách đã t
 👉 Please tap to ACCEPT or DECLINE:
 ${link}
 After the guest visits, open the link again and enter the amount paid. Thank you!`;
-  return `[엉클데이] 새 예약 · ${b.code}
+  return `[엉클데이] ${ch ? `🔁 시간 변경 (${b.change_count}번째) – 새 시간 확인 부탁드려요` : "새 예약"} · ${b.code}
 📅 ${dayKo(b.visit_date)} ${b.visit_time || ""}
 💆 ${b.menu_name}${b.menu_min ? ` (${b.menu_min}분)` : ""} × ${b.people}명
 👤 손님: ${b.customer_name}${b.note ? `\n📝 요청: ${b.note}` : ""}${b.list_price ? `\n💰 예상 금액: ${vnd(b.list_price)}` : ""}
@@ -331,13 +337,25 @@ function custMsg(b) {
   const d = b.visit_date ? (l === "ko" ? dayKo(b.visit_date) : b.visit_date.split("-").reverse().join("/")) : "-";
   const T = {
     ko: { ok: "예약이 확정됐어요 ✅", req: "예약 요청을 받았어요. 업체에 확인하고 다시 연락드릴게요.", no: "요청하신 시간은 업체 사정으로 예약이 어려워요 🙏 다른 시간이나 비슷한 업체를 안내해 드릴게요.",
-      code: "예약번호", shop: "업체", at: "일시", menu: "메뉴", ppl: n => n + "명", vo: "예약확인증", tail: "도착하면 예약확인증을 업체에 보여 주세요. 결제는 업체에서 직접 하시면 돼요." },
+      code: "예약번호", shop: "업체", at: "일시", menu: "메뉴", ppl: n => n + "명", vo: "예약확인증", tail: "도착하면 예약확인증을 업체에 보여 주세요. 결제는 업체에서 직접 하시면 돼요.",
+      res: "요청하신 시간은 업체 사정으로 어려워요 🙏 아래 시간 중 괜찮은 시간이 있을까요?", resTail: "예약확인증 링크에서 원하는 시간을 누르시거나, 이 채팅으로 답해 주세요. 다른 시간이 좋으면 편하게 말씀해 주세요.", was: "요청하신 시간" },
     en: { ok: "Your booking is confirmed ✅", req: "We received your request and are checking with the shop.", no: "Sorry, the shop can't take that time 🙏 We'll suggest another time or a similar shop.",
-      code: "Booking no.", shop: "Shop", at: "Date", menu: "Service", ppl: n => n + (n > 1 ? " guests" : " guest"), vo: "Voucher", tail: "Show the voucher when you arrive. You pay the shop directly." },
+      code: "Booking no.", shop: "Shop", at: "Date", menu: "Service", ppl: n => n + (n > 1 ? " guests" : " guest"), vo: "Voucher", tail: "Show the voucher when you arrive. You pay the shop directly.",
+      res: "Sorry, the shop can't take the time you asked for 🙏 Would one of these times work?", resTail: "Tap the time you want on your voucher link, or reply here. If another time suits you better, just let us know.", was: "Your requested time" },
     vi: { ok: "Lịch hẹn đã được xác nhận ✅", req: "Chúng tôi đã nhận yêu cầu và đang kiểm tra với cơ sở.", no: "Xin lỗi, cơ sở không nhận được khung giờ này 🙏 Chúng tôi sẽ đề xuất giờ khác.",
-      code: "Mã đặt lịch", shop: "Cơ sở", at: "Thời gian", menu: "Dịch vụ", ppl: n => n + " người", vo: "Phiếu đặt lịch", tail: "Đưa phiếu cho cơ sở khi đến. Thanh toán trực tiếp tại cơ sở." }
+      code: "Mã đặt lịch", shop: "Cơ sở", at: "Thời gian", menu: "Dịch vụ", ppl: n => n + " người", vo: "Phiếu đặt lịch", tail: "Đưa phiếu cho cơ sở khi đến. Thanh toán trực tiếp tại cơ sở.",
+      res: "Xin lỗi, cơ sở không nhận được giờ bạn chọn 🙏 Bạn có thể đến vào một trong các giờ sau không?", resTail: "Bấm chọn giờ trong phiếu đặt lịch hoặc trả lời tại đây. Nếu muốn giờ khác, cứ nhắn cho chúng tôi.", was: "Giờ bạn đã chọn" }
   }[l];
   const head = b.status === "confirmed" ? T.ok : b.status === "rejected" ? T.no : T.req;
+  const fd = x => x ? (l === "ko" ? dayKo(x) : x.split("-").reverse().join("/")) : "-";
+  if (b.status === "reschedule") return `[Uncle Day] ${T.res}
+${T.code}: ${b.code} · ${sn}
+${T.was}: ${d} ${b.visit_time || ""}
+
+${(b.offer_times || []).map((o, i) => `${i + 1}) ${fd(o.date)} ${o.time}`).join("\n")}
+
+${T.vo}: ${link}
+${T.resTail}`;
   return `[Uncle Day] ${head}
 ${T.code}: ${b.code}
 ${T.shop}: ${sn}${ad ? `\n📍 ${ad}` : ""}
@@ -359,6 +377,7 @@ async function openBooking(id) {
   $("layer").innerHTML = `<div class="overlay" id="ov"><div class="panel" role="dialog" aria-label="예약 상세">
     <div class="panel-head"><h2><span class="bk-code">${esc(b.code)}</span> · ${esc(b.customer_name || "")}</h2><span id="pSt"></span><button class="btn" id="pCancel">닫기</button></div>
     <div class="panel-body">
+      <div class="box next-box" id="nextBox"></div>
       <div class="box"><h3>진행 상태</h3>
         <div class="btn-row" id="stBtns"></div>
         <div class="calc">
@@ -431,7 +450,7 @@ async function openBooking(id) {
   function drawTop() {
     $("pSt").innerHTML = stBadge(b.status);
     const locked = b.status === "settled";
-    const btns = [["requested", "접수로"], ["confirmed", "✅ 업체 확정"], ["rejected", "업체 불가"], ["visited", "🙌 방문 완료"], ["noshow", "노쇼"], ["cancelled", "취소"]];
+    const btns = [["requested", "접수로"], ["shop_ok", "업체 가능"], ["confirmed", "✅ 예약 확정"], ["rejected", "업체 불가"], ["visited", "🙌 방문 완료"], ["noshow", "노쇼"], ["cancelled", "취소"]];
     $("stBtns").innerHTML = locked ? `<span class="hint">정산이 끝난 예약이라 상태와 금액을 바꿀 수 없어요. (정산 탭에서 입금 확인을 취소하면 바꿀 수 있어요)</span>`
       : btns.map(([k, n]) => `<button class="btn st-btn ${b.status === k ? "cur" : ""}" data-st="${k}">${n}</button>`).join("");
     $("paid").value = b.paid_amount != null ? Number(b.paid_amount).toLocaleString("en-US") : "";
@@ -442,7 +461,70 @@ async function openBooking(id) {
     $("stBtns").querySelectorAll("[data-st]").forEach(x => x.onclick = () => setStatus(x.dataset.st));
     $("shopMsg").textContent = shopMsg(b, msgLang);
     $("custMsg").textContent = custMsg(b);
-    drawTrace();
+    drawTrace(); drawNext();
+  }
+  // 👉 지금 할 일: 단계마다 버튼 하나로 (메시지 복사 + 잘로·카톡 열기 + 기록)
+  const shopZalo = zaloLink(ct.zalo || ct.phone);
+  const fdk = x => x ? dayKo(x) : "-";
+  async function sendShop() {
+    await copy(shopMsg(b, msgLang), shopZalo ? "업체 메시지를 복사했어요. 잘로 대화창에 붙여넣기만 하세요." : "업체 메시지를 복사했어요. 잘로·카톡에 붙여 넣어 보내 주세요.");
+    if (shopZalo) window.open(shopZalo, "_blank");
+    b = await updBooking(b.id, { sent_to_shop_at: new Date().toISOString() }).catch(() => b);
+    await logEvent(b.id, "sent_to_shop", { lang: msgLang, change: b.change_count || 0 }); drawTop(); loadEvents();
+  }
+  async function sendCust(what) {
+    await copy(custMsg(b), "손님 메시지를 복사했어요. 카카오톡 채널 채팅창에 붙여넣기만 하세요.");
+    window.open(KAKAO_CENTER, "_blank");
+    await logEvent(b.id, "sent_to_customer", { status: b.status, what }); if (b.status === "confirmed") { TOLD.add(b.id); b._custTold = true; } drawTop(); loadEvents();
+  }
+  let editRows = null;   // 손님에게 안내할 시간을 고치는 중
+  function drawNext() {
+    const nb = $("nextBox"), st = b.status, ago = h => h < 1 ? `${Math.max(1, Math.round(h * 60))}분` : `${Math.round(h)}시간`;
+    let h = "";
+    if (st === "requested") {
+      h = `<h3>👉 지금 할 일 · 업체에 확인 요청</h3>${b.change_count ? `<p class="warn">🔁 손님이 바꾼 시간이에요 (${b.change_count}번째 변경) · <b>${fdk(b.visit_date)} ${esc(b.visit_time || "")}</b></p>` : ""}
+        ${b.sent_to_shop_at ? `<p>⏳ 업체 답 기다리는 중 · ${ago(hoursSince(b.sent_to_shop_at))} 전에 보냄. 업체가 링크에서 가능/불가를 누르면 여기 바로 바뀌어요.</p><div class="btn-row"><button class="btn" data-nx="shop">📨 업체에 다시 보내기</button></div>`
+          : `<p>업체에 예약 가능한지 물어봐요. 누르면 ${msgLang === "vi" ? "베트남어" : msgLang === "en" ? "영어" : "한국어"} 메시지가 복사되고${shopZalo ? " 업체 잘로 대화창이 열려요" : "요 (업체 잘로 번호가 없어요 — 업체 수정 → 계약·정산)"}.</p><div class="btn-row"><button class="btn main" data-nx="shop">📨 업체에 확인 요청 보내기</button></div>`}`;
+    } else if (st === "shop_ok") {
+      h = `<h3>👉 지금 할 일 · 예약 확정</h3><p>👍 업체가 <b>${fdk(b.visit_date)} ${esc(b.visit_time || "")}</b> 가능하다고 답했어요.</p>
+        <div class="btn-row"><button class="btn main" data-nx="confirm">✅ 예약 확정하고 손님에게 안내</button></div><p class="hint">누르면 예약 확정으로 바뀌고, 손님 확정 메시지가 복사되고 카카오톡 채널 관리자센터가 열려요.</p>`;
+    } else if (st === "rejected" || st === "reschedule") {
+      const prop = b.proposed_times || [], editing = st === "rejected" || !!editRows;
+      const offer = editRows || (st === "reschedule" ? (b.offer_times || []) : (prop.length ? prop : [{ date: b.visit_date || "", time: "" }]));
+      h = editing ? `<h3>👉 지금 할 일 · 손님에게 시간 변경 안내</h3>
+        <p>${st === "reschedule" ? "🔁 손님에게 다시 안내할 시간을 고쳐요." : "❌"} 업체가 <b>${fdk(b.visit_date)} ${esc(b.visit_time || "")}</b>은 불가라고 했어요.${prop.length ? ` 업체가 제안한 시간: <b>${prop.map(p => fdk(p.date) + " " + esc(p.time)).join(" · ")}</b>` : " 제안한 시간이 없어요 — 업체와 이야기한 가능한 시간을 적어 주세요."}</p>
+        <div id="offRows">${offer.map((o, i) => `<div class="off-row"><input type="date" data-od="${i}" value="${esc(o.date || "")}"><input type="time" step="1800" data-ot="${i}" value="${esc(o.time || "")}"><button class="btn sm" data-odel="${i}" title="빼기">✕</button></div>`).join("")}</div>
+        <div class="btn-row"><button class="btn sm" data-nx="addOff">+ 시간 추가 (최대 3개)</button><button class="btn main" data-nx="offer">🔁 손님에게 시간 변경 안내</button></div>
+        <p class="hint">누르면 "시간 변경 안내"로 바뀌고, 손님 예약확인증에 이 시간들이 버튼으로 떠요. 손님 메시지가 복사되고 카카오톡 채널 관리자센터가 열려요.</p>`
+        : `<h3>⏳ 손님 답 기다리는 중 · 시간 변경 안내함</h3><p>손님이 예약확인증에서 시간을 누르면 자동으로 <b>업체 확인 요청</b> 단계로 돌아가요. 카톡으로 답이 오면 아래에서 대신 골라 주세요.</p>
+        <div class="off-list">${offer.map((o, i) => `<div class="off-row"><b>${fdk(o.date)} ${esc(o.time)}</b><button class="btn sm main" data-pick="${i}">손님이 이 시간 골랐어요</button></div>`).join("")}</div>
+        <div class="btn-row"><button class="btn sm" data-nx="resend">📋 안내 메시지 다시 복사</button><button class="btn sm" data-nx="reoffer">시간 다시 고르기</button></div>`;
+    } else if (st === "confirmed") {
+      h = b._custTold || TOLD.has(b.id) ? `<h3>✅ 확정 · 손님 안내 완료</h3><p class="hint">손님이 다녀가면 업체가 링크에서 결제 금액을 넣어요. (안 넣으면 아래에서 직접 방문 완료 처리)</p>`
+        : `<h3>👉 지금 할 일 · 손님에게 확정 안내</h3><div class="btn-row"><button class="btn main" data-nx="tell">📣 손님에게 확정 메시지 보내기</button></div>`;
+    }
+    nb.innerHTML = h; nb.hidden = !h;
+    const rows = () => [...nb.querySelectorAll("[data-od]")].map(i => ({ date: i.value, time: (nb.querySelector(`[data-ot="${i.dataset.od}"]`) || {}).value || "" }));
+    nb.querySelectorAll("[data-odel]").forEach(x => x.onclick = () => { const r = rows(); r.splice(+x.dataset.odel, 1); editRows = r.length ? r : [{ date: b.visit_date || "", time: "" }]; drawNext(); });
+    nb.querySelectorAll("[data-pick]").forEach(x => x.onclick = () => confirmBox("손님이 이 시간을 골랐다고 처리할까요?", async () => {
+      const o = (b.offer_times || [])[+x.dataset.pick]; if (!o) return;
+      try { b = await updBooking(b.id, { visit_date: o.date, visit_time: o.time, status: "requested", sent_to_shop_at: null, shop_replied_at: null, change_count: (b.change_count || 0) + 1, offer_times: [], proposed_times: [] }, "시간 변경"); toast("변경된 시간으로 업체 확인 요청 단계로 돌아갔어요"); drawTop(); loadEvents(); } catch (e) {}
+    }, "업체 확인 요청 단계로 돌아가요. 그다음 업체에 변경된 시간을 보내 주세요.", "네, 바꿀게요", false));
+    nb.querySelectorAll("[data-nx]").forEach(x => x.onclick = async () => {
+      const a = x.dataset.nx;
+      if (a === "shop") return sendShop();
+      if (a === "tell" || a === "resend") return sendCust(a);
+      if (a === "confirm") { try { b = await updBooking(b.id, { status: "confirmed" }, "예약 확정"); } catch (e) { return; } return sendCust("confirm"); }
+      if (a === "addOff") { const r = rows(); if (r.length >= 3) { toast("최대 3개까지예요"); return; } r.push({ date: (r[r.length - 1] || {}).date || b.visit_date || "", time: "" }); editRows = r; drawNext(); return; }
+      if (a === "reoffer") { editRows = (b.offer_times || []).map(o => ({ ...o })); drawNext(); return; }
+      if (a === "offer") {
+        const r = rows().filter(o => o.date && o.time);
+        if (!r.length) { toast("손님에게 안내할 시간을 1개 이상 적어 주세요"); return; }
+        try { b = await updBooking(b.id, { status: "reschedule", offer_times: r }, "시간 변경 안내"); } catch (e) { return; }
+        editRows = null;
+        return sendCust("reschedule");
+      }
+    });
   }
   function calc() {
     const p = num($("paid").value), r = +$("rate").value || 0;
@@ -472,7 +554,7 @@ async function openBooking(id) {
   };
   $("copyCust").onclick = async () => {
     await copy(custMsg(b), "손님 안내 메시지를 복사했어요.");
-    await logEvent(b.id, "sent_to_customer", { status: b.status }); TOLD.add(b.id); b._custTold = true; loadEvents(); drawTrace();
+    await logEvent(b.id, "sent_to_customer", { status: b.status }); if (b.status === "confirmed") { TOLD.add(b.id); b._custTold = true; } loadEvents(); drawTrace(); drawNext();
   };
   $("copyVo").onclick = () => copy(siteUrl("booking.html#" + b.customer_token), "예약확인증 링크를 복사했어요");
   $("saveInfo").onclick = async () => {

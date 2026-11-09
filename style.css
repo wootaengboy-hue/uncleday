@@ -502,3 +502,43 @@ h1, h2, h3, .head h1, .cat-title, .partner h2 { font-weight: 800; }
 
 .mk-ok { display: flex !important; flex-direction: row !important; gap: 8px; align-items: flex-start; font-size: 13.5px; color: var(--sub-text, #5b6676); line-height: 1.5; }
 .mk-ok input { width: auto !important; margin-top: 3px; flex: none; }
+
+/* ===== 네이버 예약식 날짜·시간·인원 ===== */
+.bk-pick { display: grid; gap: 0; min-width: 0; } .bk-panel, .slots, .cal-grid { min-width: 0; }
+.bk-sum { display: flex; align-items: center; gap: 10px; width: 100%; padding: 13px 14px; border: 1px solid #cfd4da; border-radius: 10px; background: #fff; font: inherit; font-size: 15px; font-weight: 700; color: #444; cursor: pointer; text-align: left; }
+.bk-sum.set { border-color: var(--main); color: #111; }
+.bk-sum.open { border-radius: 10px 10px 0 0; border-bottom-color: #eceff2; }
+.bk-sum #bkSumT { flex: 1; min-width: 0; }
+.bk-car { color: #888; transition: transform .15s; }
+.bk-sum.open .bk-car { transform: rotate(180deg); }
+.bk-panel { border: 1px solid #cfd4da; border-top: 0; border-radius: 0 0 10px 10px; padding: 12px 12px 16px; background: #fff; }
+.cal-head { display: flex; align-items: center; justify-content: center; gap: 18px; margin: 2px 0 10px; font-size: 16px; }
+.cal-nav { width: 32px; height: 32px; border-radius: 50%; border: 1px solid #e3e6ea; background: #fff; font-size: 18px; cursor: pointer; color: #444; }
+.cal-nav:disabled { opacity: .3; cursor: default; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; text-align: center; }
+.cal-w { font-size: 12px; color: #888; padding: 4px 0; font-weight: 700; }
+.cal-w.sun, .cal-d.sun:not(:disabled) { color: #e5484d; }
+.cal-w.sat, .cal-d.sat:not(:disabled) { color: #3b6fd8; }
+.cal-d { aspect-ratio: 1 / 1; max-height: 46px; border: 0; background: none; border-radius: 50%; font: inherit; font-size: 14px; font-weight: 700; color: #222; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
+.cal-d:hover:not(:disabled) { background: #eef9f8; }
+.cal-d:disabled { color: #c8ccd1 !important; cursor: default; font-weight: 400; }
+.cal-d small { font-size: 9px; color: #c8ccd1; }
+.cal-d.on { background: var(--main); color: #fff !important; }
+.slots { margin-top: 14px; border-top: 1px solid #eef0f2; padding-top: 12px; }
+.slot-g h5 { margin: 8px 0 6px; font-size: 13px; color: #666; }
+.slot-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(66px, 1fr)); gap: 6px; }
+.slot { padding: 9px 0; border: 1px solid #d9dde2; border-radius: 8px; background: #fff; font: inherit; font-size: 14px; font-weight: 700; color: #333; cursor: pointer; }
+.slot:hover { border-color: var(--main); }
+.slot.on { background: var(--main); border-color: var(--main); color: #fff; }
+.slot-hint { color: #888; font-size: 13px; margin: 4px 0; text-align: center; }
+.ppl-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border: 1px solid #cfd4da; border-radius: 10px; font-size: 14px; font-weight: 700; }
+.ppl { display: flex; align-items: center; gap: 14px; }
+.ppl button { width: 34px; height: 34px; border-radius: 50%; border: 1px solid #cfd4da; background: #fff; font-size: 18px; cursor: pointer; color: #333; }
+.ppl button:disabled { opacity: .35; cursor: default; }
+.ppl b { min-width: 22px; text-align: center; font-size: 16px; }
+/* 예약확인증: 시간 변경 고르기 */
+.res-box { border: 1px solid #f5c26b; background: #fff9ec; border-radius: 12px; padding: 14px; margin: 12px 0; }
+.res-box h3 { margin: 0 0 6px; font-size: 16px; }
+.res-box p { margin: 0 0 10px; font-size: 14px; color: #555; }
+.res-list { display: grid; gap: 8px; }
+.res-opt { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; background: #fff; border: 1px solid #ecdcb8; border-radius: 10px; font-weight: 700; }

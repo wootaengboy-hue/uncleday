@@ -144,3 +144,23 @@ Object.assign(UI.vi, { rideBtn: "Đi bằng Grab", rideTitle: "Đến cửa hàn
 Object.assign(UI.ko, { fCoupon: "쿠폰 코드 (있으면)", fMarketing: "(선택) 엉클데이 쿠폰·이벤트 소식을 카카오톡·문자로 받을게요. 언제든 '그만'이라고 하면 멈춰요." });
 Object.assign(UI.en, { fCoupon: "Coupon code (optional)", fMarketing: "(Optional) Send me Uncle Day coupons and offers by message. Reply 'STOP' anytime." });
 Object.assign(UI.vi, { fCoupon: "Mã ưu đãi (nếu có)", fMarketing: "(Không bắt buộc) Gửi cho tôi ưu đãi và sự kiện của Uncle Day qua tin nhắn. Trả lời 'DỪNG' bất cứ lúc nào." });
+
+/* 네이버 예약식 날짜·시간 고르기 + 시간 변경 안내 */
+Object.assign(UI.ko, { pickDT: "날짜와 시간을 선택해 주세요", pickTime: "시간을 선택해 주세요", pickDateFirst: "먼저 날짜를 골라 주세요", pickDTFirst: "날짜와 시간을 먼저 골라 주세요",
+  am: "오전", pm: "오후", closedDay: "휴무", noSlot: "이 메뉴는 예약 가능한 시간이 없어요. 카톡으로 문의해 주세요.",
+  bkDoneDesc: "업체에 예약 가능 여부를 바로 확인하고, 신속하게 예약 확정 안내드릴게요. 예약확인증에서 진행 상황을 볼 수 있어요.",
+  st_shop_ok: "업체 확인 완료 · 곧 확정 안내드려요", st_reschedule: "업체 사정으로 시간 변경이 필요해요",
+  vResTitle: "다른 시간으로 바꿔 주실 수 있을까요?", vResDesc: "요청하신 시간은 업체 사정으로 어려워요. 아래 시간 중 괜찮은 시간을 골라 주시면 업체에 다시 확인해 확정 안내드릴게요.",
+  vResPick: "이 시간으로 변경", vResAsk: "이 시간으로 바꿔서 다시 요청할까요?", vResDone: "변경 요청했어요. 업체 확인 후 신속하게 확정 안내드릴게요.", vResNone: "맞는 시간이 없으면 카톡으로 편한 시간을 알려 주세요.", vChanged: "시간 변경 {n}회" });
+Object.assign(UI.en, { pickDT: "Select a date and time", pickTime: "Select a time", pickDateFirst: "Pick a date first", pickDTFirst: "Please pick a date and time first",
+  am: "Morning", pm: "Afternoon", closedDay: "Closed", noSlot: "No time slots for this service. Please ask us on KakaoTalk.",
+  bkDoneDesc: "We are checking availability with the shop right now and will confirm your booking shortly. You can follow the progress on your booking voucher.",
+  st_shop_ok: "Shop checked · confirming shortly", st_reschedule: "The shop needs a different time",
+  vResTitle: "Could you pick a different time?", vResDesc: "The shop can't take the time you asked for. Pick one of the times below and we'll check with the shop again and confirm.",
+  vResPick: "Change to this time", vResAsk: "Request this time instead?", vResDone: "Change requested. We'll confirm with the shop shortly.", vResNone: "If none of these work, tell us a good time on KakaoTalk.", vChanged: "Time changed {n}×" });
+Object.assign(UI.vi, { pickDT: "Chọn ngày và giờ", pickTime: "Chọn giờ", pickDateFirst: "Hãy chọn ngày trước", pickDTFirst: "Vui lòng chọn ngày và giờ trước",
+  am: "Buổi sáng", pm: "Buổi chiều", closedDay: "Nghỉ", noSlot: "Dịch vụ này chưa có khung giờ. Vui lòng hỏi qua KakaoTalk.",
+  bkDoneDesc: "Chúng tôi đang kiểm tra lịch với cơ sở và sẽ sớm xác nhận lịch hẹn. Bạn có thể theo dõi trên phiếu đặt lịch.",
+  st_shop_ok: "Cơ sở đã kiểm tra · sắp xác nhận", st_reschedule: "Cơ sở cần đổi giờ khác",
+  vResTitle: "Bạn có thể chọn giờ khác không?", vResDesc: "Cơ sở không nhận được giờ bạn chọn. Hãy chọn một giờ bên dưới, chúng tôi sẽ kiểm tra lại và xác nhận.",
+  vResPick: "Đổi sang giờ này", vResAsk: "Gửi yêu cầu đổi sang giờ này?", vResDone: "Đã gửi yêu cầu đổi giờ. Chúng tôi sẽ sớm xác nhận.", vResNone: "Nếu không có giờ phù hợp, hãy nhắn giờ bạn muốn qua KakaoTalk.", vChanged: "Đã đổi giờ {n} lần" });

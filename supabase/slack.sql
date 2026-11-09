@@ -74,7 +74,7 @@ begin
   head := '`' || b.code || '` *' || coalesce(b.shop_name, '업체 미정') || '* · ' || coalesce(to_char(b.visit_date, 'MM/DD'), '날짜 미정')
           || coalesce(' ' || b.visit_time, '') || ' · ' || b.people || '명';
   st := case new.detail -> 'status' ->> 1 when 'confirmed' then '✅ 확정' when 'rejected' then '❌ 불가' when 'visited' then '🙌 방문 완료'
-        when 'cancelled' then '🚫 취소' when 'noshow' then '👻 노쇼' when 'settled' then '💰 정산 완료' when 'requested' then '📥 접수로 되돌림' else null end;
+        when 'cancelled' then '🚫 취소' when 'noshow' then '👻 노쇼' when 'settled' then '💰 정산 완료' when 'requested' then '📥 업체 확인 대기로' when 'shop_ok' then '👍 가능 (엉클데이 확정 대기)' when 'reschedule' then '🔁 시간 변경 안내' else null end;
   if new.action = 'created' then
     ev := 'booking'; m := '📅 새 예약' || case when new.actor = '손님' then ' (사이트에서 손님이 직접)' else ' (' || nick(new.actor) || ' 등록)' end || E'\n' || head;
   elsif new.actor = '업체' then

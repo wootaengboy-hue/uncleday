@@ -25,7 +25,7 @@ h1{font-size:19px;margin:0}
 .code{font-size:28px;font-weight:800;letter-spacing:.04em;color:var(--g);line-height:1.1}
 .st{display:inline-block;border-radius:999px;padding:4px 12px;font-weight:700;font-size:14px;background:#fff4e5;color:#9a5208}
 .st.confirmed,.st.visited,.st.settled{background:#e6f6f3;color:#1f7a6e}
-.st.cancelled,.st.rejected,.st.noshow{background:#fdecec;color:#9b2c2c}
+.st.cancelled,.st.rejected,.st.noshow{background:#fdecec;color:#9b2c2c}.st.shop_ok{background:#e8f1ff;color:#1d4f91}
 dl{display:grid;grid-template-columns:110px 1fr;gap:10px 12px;margin:0}
 dt{color:var(--sub);font-size:13px;padding-top:2px}dd{margin:0;overflow-wrap:anywhere}
 .big{font-size:18px;font-weight:800}
@@ -53,21 +53,36 @@ const T = {
     amount: "Số tiền khách đã thanh toán (₫)", amountHint: "Nhập tổng số tiền khách trả tại cơ sở. Hoa hồng được tính theo hợp đồng.",
     memo: "Ghi chú cho Uncle Day (không bắt buộc)", saved: "Đã lưu. Cảm ơn bạn!", needAmt: "Vui lòng nhập số tiền", notFound: "Không tìm thấy lịch hẹn. Vui lòng liên hệ Uncle Day.",
     acceptedMsg: "Bạn đã nhận lịch này. Sau khi khách đến, hãy mở lại liên kết này để xác nhận.", closed: "Lịch hẹn này đã kết thúc.", ppln: n => n + " người",
-    help: "Có thắc mắc? Nhắn cho Uncle Day qua Zalo/KakaoTalk.", change: "Đổi lại" },
+    help: "Có thắc mắc? Nhắn cho Uncle Day qua Zalo/KakaoTalk.", change: "Đổi lại",
+    shop_ok: "Đã báo nhận được – chờ Uncle Day xác nhận", reschedule: "Uncle Day đang hỏi khách giờ khác",
+    okMsg: "Bạn đã báo NHẬN ĐƯỢC giờ này. Uncle Day sẽ xác nhận với khách và báo lại.", toReject: "Đổi thành không nhận được", toAccept: "✅ Đổi thành nhận được",
+    propTitle: "Không nhận được giờ này", propHint: "Nếu có giờ khác trống, hãy chọn (tối đa 3). Uncle Day sẽ hỏi lại khách.", addTime: "+ Thêm giờ khác", sendReject: "Gửi: không nhận được", cancel: "Quay lại",
+    rejectedMsg: "Bạn đã báo không nhận được giờ này.", proposed: "Giờ bạn đề xuất", resMsg: "Uncle Day đang hỏi khách chọn giờ khác. Khi khách chọn, bạn sẽ nhận yêu cầu mới.",
+    changed: n => `🔁 Lịch đã được ĐỔI GIỜ (lần ${n}). Vui lòng kiểm tra giờ mới bên dưới.` },
   en: { title: "Booking from Uncle Day", code: "Booking no.", status: "Status", date: "Date & time", svc: "Service", ppl: "Guests", guest: "Guest name", note: "Notes", price: "Estimated price",
     requested: "Waiting for your reply", confirmed: "Accepted", rejected: "Declined", visited: "Guest visited", settled: "Settled", cancelled: "Cancelled by guest", noshow: "No-show",
     accept: "✅ Accept booking", reject: "Can't take this time", visited_btn: "Guest visited – confirm", noshow_btn: "Guest did not come",
     amount: "Amount the guest paid (₫)", amountHint: "Enter the total the guest paid at your shop. Commission follows our agreement.",
     memo: "Note to Uncle Day (optional)", saved: "Saved. Thank you!", needAmt: "Please enter the amount", notFound: "Booking not found. Please contact Uncle Day.",
     acceptedMsg: "You accepted this booking. After the guest visits, open this link again to confirm.", closed: "This booking is closed.", ppln: n => n,
-    help: "Questions? Message Uncle Day on Zalo/KakaoTalk.", change: "Change" },
+    help: "Questions? Message Uncle Day on Zalo/KakaoTalk.", change: "Change",
+    shop_ok: "You said OK – Uncle Day is confirming", reschedule: "Uncle Day is asking the guest for another time",
+    okMsg: "You said this time WORKS. Uncle Day will confirm with the guest and let you know.", toReject: "Change to: can't take it", toAccept: "✅ Change to: OK",
+    propTitle: "Can't take this time", propHint: "If you have other free times, pick up to 3. Uncle Day will ask the guest.", addTime: "+ Add another time", sendReject: "Send: can't take it", cancel: "Back",
+    rejectedMsg: "You said you can't take this time.", proposed: "Times you suggested", resMsg: "Uncle Day is asking the guest to pick another time. You'll get a new request when they do.",
+    changed: n => `🔁 This booking was MOVED to a new time (change #${n}). Please check the new time below.` },
   ko: { title: "엉클데이 예약", code: "예약번호", status: "상태", date: "방문 일시", svc: "메뉴", ppl: "인원", guest: "손님 이름", note: "요청사항", price: "예상 금액",
     requested: "업체 확인 대기", confirmed: "예약 수락", rejected: "예약 불가", visited: "방문 완료", settled: "정산 완료", cancelled: "손님 취소", noshow: "노쇼",
     accept: "✅ 예약 수락", reject: "이 시간은 불가", visited_btn: "손님 방문 완료", noshow_btn: "손님이 안 왔어요",
     amount: "손님이 결제한 금액 (₫)", amountHint: "손님이 업체에서 낸 총금액을 적어 주세요. 수수료는 계약대로 계산돼요.",
     memo: "엉클데이에 남길 메모 (선택)", saved: "저장했어요. 감사합니다!", needAmt: "금액을 적어 주세요", notFound: "예약을 찾을 수 없어요. 엉클데이에 문의해 주세요.",
     acceptedMsg: "예약을 수락했어요. 손님이 다녀가면 이 링크를 다시 열어 방문 완료를 눌러 주세요.", closed: "끝난 예약이에요.", ppln: n => n + "명",
-    help: "문의는 엉클데이 잘로/카카오톡으로 주세요.", change: "바꾸기" }
+    help: "문의는 엉클데이 잘로/카카오톡으로 주세요.", change: "바꾸기",
+    shop_ok: "가능으로 답함 · 엉클데이 확정 대기", reschedule: "엉클데이가 손님에게 다른 시간 안내 중",
+    okMsg: "이 시간 가능으로 답했어요. 엉클데이가 손님에게 확정 안내하고 알려 드릴게요.", toReject: "불가로 바꾸기", toAccept: "✅ 가능으로 바꾸기",
+    propTitle: "이 시간은 불가", propHint: "다른 가능한 시간이 있으면 골라 주세요 (최대 3개). 엉클데이가 손님에게 다시 물어봐요.", addTime: "+ 다른 시간 추가", sendReject: "불가로 보내기", cancel: "돌아가기",
+    rejectedMsg: "이 시간은 불가로 답했어요.", proposed: "제안한 시간", resMsg: "엉클데이가 손님에게 다른 시간을 고르도록 안내하고 있어요. 손님이 고르면 새 요청이 와요.",
+    changed: n => `🔁 시간이 변경된 예약이에요 (${n}번째 변경). 아래 새 시간을 확인해 주세요.` }
 };
 let L = (() => { try { return localStorage.getItem("partner-lang") || "vi"; } catch (e) { return "vi"; } })();
 const $ = id => document.getElementById(id);
@@ -82,7 +97,10 @@ async function rpc(name, args) {
   if (!r.ok) throw new Error((j && j.message) || "Error " + r.status);
   return j;
 }
-let B = null, changing = false;
+let B = null, changing = false, proposing = false, props = [];
+const toMin = x => +x.slice(0, 2) * 60 + +x.slice(3, 5), toStr = m => String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0");
+const slots = () => { const o = B.open || "09:00", c = B.close || "21:00", out = []; for (let m = toMin(o); m + (B.menu_min || 60) <= toMin(c); m += 30) out.push(toStr(m)); return out.length ? out : ["10:00"]; };
+const fmtD = x => x ? x.split("-").reverse().join("/") : "-";
 function langs() {
   $("lg").innerHTML = ["vi", "en", "ko"].map(l => `<button class="${l === L ? "on" : ""}" data-l="${l}">${l.toUpperCase()}</button>`).join(" ");
   $("lg").querySelectorAll("button").forEach(b => b.onclick = () => { L = b.dataset.l; try { localStorage.setItem("partner-lang", L); } catch (e) {} document.documentElement.lang = L; langs(); draw(); });
@@ -93,7 +111,13 @@ function draw() {
   const d = b.visit_date ? b.visit_date.split("-").reverse().join("/") : "-";
   const svc = b.menu ? nm(b.menu.name) : b.menu_name;
   const closed = ["settled", "cancelled"].includes(b.status);
-  const showVisit = ["confirmed", "visited", "noshow"].includes(b.status) || changing;
+  const showVisit = ["confirmed", "shop_ok", "visited", "noshow"].includes(b.status) || changing;
+  const S = slots();
+  const propBox = proposing ? `<div class="amt"><b>${t("propTitle")}</b><p class="hint">${t("propHint")}</p>
+      ${props.map((p, i) => `<div style="display:flex;gap:8px"><input type="date" data-pd="${i}" value="${esc(p.date)}" style="flex:1;min-width:0;padding:10px;border:1px solid var(--line);border-radius:10px;font-size:15px"><select data-pt="${i}" style="padding:10px;border:1px solid var(--line);border-radius:10px;font-size:15px"><option value="">--:--</option>${S.map(x => `<option ${x === p.time ? "selected" : ""}>${x}</option>`).join("")}</select></div>`).join("")}
+      ${props.length < 3 ? `<button class="btn" data-a="add">${t("addTime")}</button>` : ""}
+      <textarea id="memo" placeholder="${t("memo")}"></textarea>
+      <button class="btn no" data-a="reject">${t("sendReject")}</button><button class="btn" data-a="back">${t("cancel")}</button></div>` : "";
   $("box").innerHTML = `<h1>${t("title")}</h1>
     <div><div class="hint">${t("code")}</div><div class="code">${esc(b.code)}</div></div>
     <div><span class="st ${esc(b.status)}">${t(b.status)}</span></div>
@@ -105,18 +129,22 @@ function draw() {
       ${b.note ? `<dt>${t("note")}</dt><dd>${esc(b.note)}</dd>` : ""}
       ${b.list_price ? `<dt>${t("price")}</dt><dd>₫${Number(b.list_price).toLocaleString("en-US")}</dd>` : ""}
     </dl>
-    ${closed ? `<p class="done">${t("closed")}</p>` : `
-    ${b.status === "requested" || b.status === "rejected" ? `<div class="btns">
+    ${b.change_count && b.status === "requested" ? `<p class="done" style="background:#fff4e5;color:#9a5208">${t("changed")(b.change_count)}</p>` : ""}
+    ${closed ? `<p class="done">${t("closed")}</p>` : proposing ? propBox : `
+    ${b.status === "requested" ? `<div class="btns">
       <button class="btn ok" data-a="accept">${t("accept")}</button>
-      ${b.status === "requested" ? `<button class="btn no" data-a="reject">${t("reject")}</button>` : ""}</div>` : ""}
+      <button class="btn no" data-a="propose">${t("reject")}</button></div>` : ""}
+    ${b.status === "shop_ok" ? `<p class="done">${t("okMsg")}</p><button class="btn no" data-a="propose">${t("toReject")}</button>` : ""}
+    ${b.status === "rejected" ? `<p class="done" style="background:#fdecec;color:#9b2c2c">${t("rejectedMsg")}${(b.proposed_times || []).length ? `<br>${t("proposed")}: ${b.proposed_times.map(p => esc(fmtD(p.date) + " " + p.time)).join(" · ")}` : ""}</p><button class="btn ok" data-a="accept">${t("toAccept")}</button>` : ""}
+    ${b.status === "reschedule" ? `<p class="done" style="background:#fff4e5;color:#9a5208">${t("resMsg")}</p>` : ""}
     ${b.status === "confirmed" ? `<p class="done">${t("acceptedMsg")}</p>` : ""}
-    ${showVisit && (b.status !== "visited" || changing) ? `<div class="amt">
+    ${!proposing && showVisit && (b.status !== "visited" || changing) ? `<div class="amt">
       <label for="amt"><b>${t("amount")}</b></label>
       <input id="amt" inputmode="numeric" placeholder="${b.list_price ? Number(b.list_price).toLocaleString("en-US") : "0"}" value="${b.paid_amount ? Number(b.paid_amount).toLocaleString("en-US") : ""}">
       <p class="hint">${t("amountHint")}</p>
       <textarea id="memo" placeholder="${t("memo")}"></textarea>
       <button class="btn ok" data-a="visited">${t("visited_btn")}</button>
-      ${b.status === "confirmed" ? `<button class="btn no" data-a="noshow">${t("noshow_btn")}</button>` : ""}
+      ${b.status === "confirmed" || b.status === "shop_ok" ? `<button class="btn no" data-a="noshow">${t("noshow_btn")}</button>` : ""}
     </div>` : ""}
     ${b.status === "visited" && !changing ? `<p class="done">✅ ${t("visited")} · ₫${Number(b.paid_amount || 0).toLocaleString("en-US")}</p>
       <button class="btn" data-a="change">${t("change")}</button>` : ""}`}
@@ -126,10 +154,15 @@ function draw() {
   $("box").querySelectorAll("[data-a]").forEach(btn => btn.onclick = async () => {
     const a = btn.dataset.a;
     if (a === "change") { changing = true; draw(); return; }
+    const keep = () => { $("box").querySelectorAll("[data-pd]").forEach(i => props[+i.dataset.pd].date = i.value); $("box").querySelectorAll("[data-pt]").forEach(i => props[+i.dataset.pt].time = i.value); };
+    if (a === "propose") { proposing = true; props = [{ date: b.visit_date || "", time: "" }]; draw(); return; }
+    if (a === "add") { keep(); props.push({ date: (props[props.length - 1] || {}).date || b.visit_date || "", time: "" }); draw(); return; }
+    if (a === "back") { proposing = false; draw(); return; }
+    if (a === "reject") keep();
     let amount = null;
     if (a === "visited") { amount = +String($("amt").value).replace(/[^\d]/g, ""); if (!$("amt").value) { toast(t("needAmt")); return; } }
     btn.disabled = true;
-    try { B = await rpc("shop_reply", { t: tk, action: a, amount, memo: $("memo") ? $("memo").value : null }); changing = false; draw(); toast(t("saved")); }
+    try { B = await rpc("shop_reply", { t: tk, action: a, amount, memo: $("memo") ? $("memo").value : null, times: a === "reject" ? props.filter(p => p.date && p.time) : null }); changing = false; proposing = false; draw(); toast(t("saved")); }
     catch (e) { btn.disabled = false; toast(e.message); }
   });
 }
