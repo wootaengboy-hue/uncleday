@@ -73,16 +73,16 @@ async function drawCrm() {
     <div class="crm-bulk" ${crmSel.size ? "" : "hidden"}><b>${crmSel.size}명 선택</b>
       <button class="btn main sm" id="crmBulkCoupon">🎟 쿠폰 한꺼번에 발급</button><button class="btn sm" id="crmBulkMsg">💬 메시지 만들기</button><button class="btn sm" id="crmBulkClear">선택 풀기</button>
       <span class="hint">동의하지 않은 손님은 자동으로 빠져요</span></div>
-    <div class="tbl-wrap"><table class="tbl crm-tbl"><thead><tr><th><input type="checkbox" id="crmAll"></th><th>손님</th><th>연락처</th><th>예약·방문</th><th>결제 합계</th><th>마지막 방문</th><th>자주 간 업체</th><th>안내</th></tr></thead>
+    <div class="tscroll"><table class="t crm-tbl"><thead><tr><th class="ck"><input type="checkbox" id="crmAll"></th><th>손님</th><th>연락처</th><th class="num">예약 · 방문</th><th class="num">결제 합계</th><th>마지막 방문</th><th>자주 간 업체</th><th class="c" title="마케팅 수신 동의 · 🎟 쓸 수 있는 쿠폰">안내 동의</th></tr></thead>
     <tbody>${list.slice(0, 500).map(({ c, s }) => `<tr data-cid="${c.id}">
-      <td><input type="checkbox" data-sel="${c.id}" ${crmSel.has(c.id) ? "checked" : ""}></td>
+      <td class="ck"><input type="checkbox" data-sel="${c.id}" ${crmSel.has(c.id) ? "checked" : ""}></td>
       <td><b>${esc(c.name || "(이름 없음)")}</b> <small class="hint">${LANG_KO[c.lang] || ""}</small>${(c.tags || []).length ? `<div class="crm-tags">${c.tags.map(t => `<span class="ctag">${esc(t)}</span>`).join("")}</div>` : ""}</td>
-      <td class="hint">${esc(maskContact(c.contact))}</td>
-      <td>${s.all}건 · <b>${s.done}회</b>${s.cancel ? ` <small class="hint">취소·노쇼 ${s.cancel}</small>` : ""}</td>
-      <td>${s.paid ? vnd(s.paid) : "-"}</td>
+      <td class="hint nw">${esc(maskContact(c.contact))}</td>
+      <td class="num">${s.all}건 · <b>${s.done}회</b>${s.cancel ? `<br><small class="hint">취소·노쇼 ${s.cancel}</small>` : ""}</td>
+      <td class="num">${s.paid ? vnd(s.paid) : `<span class="hint">-</span>`}</td>
       <td>${s.lastVisit ? `${s.lastVisit.slice(5).replace("-", "/")} <small class="hint">${daysAgo(s.lastVisit)}일 전</small>` : `<small class="hint">-</small>`}</td>
-      <td>${s.fav ? `${esc((shopById(s.fav) || {}).name ? shopById(s.fav).name.ko : s.fav)} <small class="hint">${s.favN}회</small>` : "-"}</td>
-      <td>${c.marketing_ok ? "✅" : `<span class="hint">—</span>`}${s.coupons ? ` 🎟${s.coupons}` : ""}</td></tr>`).join("")
+      <td>${s.fav ? `${esc((shopById(s.fav) || {}).name ? shopById(s.fav).name.ko : s.fav)} <small class="hint">${s.favN}회</small>` : `<span class="hint">-</span>`}</td>
+      <td class="c">${c.marketing_ok ? "✅" : `<span class="hint">—</span>`}${s.coupons ? ` 🎟${s.coupons}` : ""}</td></tr>`).join("")
       || `<tr><td colspan="8" class="hint" style="padding:24px;text-align:center">${CUSTOMERS.length ? "조건에 맞는 손님이 없어요" : "아직 손님이 없어요. 예약이 들어오면 연락처별로 자동으로 생겨요."}</td></tr>`}</tbody></table></div>
     ${list.length > 500 ? `<p class="hint">앞의 500명만 보여요. 검색이나 조건으로 좁혀 주세요.</p>` : ""}
     <p class="hint" style="margin-top:10px">💡 같은 <b>연락처</b>로 들어온 예약은 한 손님으로 자동으로 묶여요 (010-1234-5678 = +82 10 1234 5678, 카톡 ID는 대소문자·띄어쓰기 무시). 연락처가 없는 예약은 묶이지 않아요.</p>`;
