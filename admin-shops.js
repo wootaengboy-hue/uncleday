@@ -169,6 +169,11 @@ function openEditor(id, preset, opts = {}) {
           <label class="f"><span>업체 예약 알림 언어</span><select data-c="msgLang">${[["vi", "베트남어"], ["en", "영어"], ["ko", "한국어"]].map(([k, n]) => `<option value="${k}" ${(pv.contract.msgLang || "vi") === k ? "selected" : ""}>${n}</option>`).join("")}</select></label>
           <label class="f"><span>정산 방법 (계좌·주기 등)</span><input data-c="settle" value="${esc(pv.contract.settle || "")}" placeholder="예: 매월 5일 계좌이체, Vietcombank …"></label>
         </div>
+        <div class="two">
+          <label class="f"><span>이메일</span><input data-c="email" value="${esc(pv.contract.email || "")}" placeholder="계약서·정산서 받을 주소"></label>
+          <div class="f"><span>계약서 ${pv.contract.signedAt ? `<span class="badge new">✅ 서명 완료 ${esc(pv.contract.signedAt)}</span>` : (pv.contract.sends || []).length ? `<small class="hint">마지막 발송 ${esc(dt(pv.contract.sends[pv.contract.sends.length - 1].at))}</small>` : ""}</span>
+            <button type="button" class="btn" id="ctSendBtn">📄 계약서 만들기·보내기 (PDF · 잘로 · 메일)</button></div>
+        </div>
         <label class="f"><span>계약 메모</span><textarea data-c="memo" placeholder="예: 계약서 사진 위치, 특이 조건, 프로모션 합의 내용">${esc(pv.contract.memo || "")}</textarea></label>
         <div class="hint">수수료율은 <b>새로 들어오는 예약</b>에 적용돼요. 이미 들어온 예약의 수수료율은 예약 화면에서 따로 고칠 수 있어요.</div>
       </div>
@@ -281,6 +286,7 @@ function openEditor(id, preset, opts = {}) {
   $("idIn").oninput = () => { idTouched = true; };
   $("cRate").oninput = () => { pv.commission_rate = Math.min(100, Math.max(0, +$("cRate").value || 0)); };
   $("layer").querySelectorAll("[data-c]").forEach(el => el.oninput = () => { pv.contract[el.dataset.c] = el.value; });
+  $("ctSendBtn").onclick = () => { if (isNew || !shops.some(x => x.id === s.id)) { toast("업체를 먼저 저장한 뒤에 계약서를 보낼 수 있어요"); return; } openContractSend(s.id, pv); };
   $("pChk").onchange = () => { pub = $("pChk").checked; $("pSw").classList.toggle("on", pub); };
   if ($("gpIn")) {
     const showMap = id => `<iframe style="width:100%;height:200px;border:0;border-radius:10px" loading="lazy" src="https://www.google.com/maps/embed/v1/place?key=${encodeURIComponent(GMAPS.key)}&q=place_id:${encodeURIComponent(id)}&language=ko"></iframe>`;
@@ -691,6 +697,7 @@ function initShops() {
   fillFilters(); drawList();
   $("addBtn").onclick = () => openEditor(null);
   $("catImgBtn").onclick = openCatImgs;
+  $("ctTplBtn").onclick = openContractTpl;
   $("csvBtn").onclick = () => $("csvFile").click();
   $("csvFile").onchange = () => { const f = $("csvFile").files[0]; if (f) importCSV(f); $("csvFile").value = ""; };
   $("tplBtn").onclick = () => saveFile("엉클데이_업체등록양식.csv", csvText([
