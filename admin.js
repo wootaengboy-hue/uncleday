@@ -309,7 +309,7 @@ function shopMsg(b, l) {
   const s = shopById(b.shop_id);
   const m = s && (s.menu || []).find(x => x.name.ko === b.menu_name);
   const mn = m ? (m.name[l] || m.name.en || m.name.ko) : b.menu_name;
-  const link = siteUrl("partner.html#" + b.shop_token);
+  const link = siteUrl("partner.html?v=2#" + b.shop_token);
   const d = b.visit_date ? b.visit_date.split("-").reverse().join("/") : "-";
   const nat = { ko: { ko: "한국", en: "Korea", vi: "Hàn Quốc" }, en: { ko: "영어권", en: "English", vi: "nói tiếng Anh" }, vi: { ko: "베트남", en: "Vietnam", vi: "Việt Nam" } }[b.lang] || {};
   const ch = b.change_count && b.status === "requested";
@@ -339,13 +339,13 @@ ${link}
 손님이 다녀간 뒤 같은 링크에서 결제 금액을 넣어 주세요. 감사합니다!`;
 }
 function followMsg(b) {
-  const l = ["ko", "en", "vi"].includes(b.lang) ? b.lang : "ko", link = siteUrl("booking.html#" + b.customer_token), nm = b.customer_name || "", sn = shopName(b);
+  const l = ["ko", "en", "vi"].includes(b.lang) ? b.lang : "ko", link = siteUrl("booking.html?v=2#" + b.customer_token), nm = b.customer_name || "", sn = shopName(b);
   if (l === "en") return `[Uncle Day] Hi ${nm}, how was ${sn}? 😊\nCould you tap a star on your voucher? Even one tap really helps the next guests.\n⭐ ${link}\nIf anything was uncomfortable, just tell us here.`;
   if (l === "vi") return `[Uncle Day] Chào ${nm}, buổi hôm nay ở ${sn} thế nào? 😊\nBạn bấm giúp một ngôi sao trong phiếu đặt lịch nhé. Chỉ một lần bấm cũng giúp ích cho khách sau.\n⭐ ${link}\nNếu có gì chưa hài lòng, cứ nhắn cho chúng tôi tại đây.`;
   return `[엉클데이] ${nm}님, ${sn} 잘 다녀오셨나요? 😊\n오늘 어떠셨는지 예약확인증에서 별 한 번만 눌러 주세요. 다음 손님들께 큰 도움이 돼요.\n⭐ ${link}\n불편했던 점이 있으면 이 채팅으로 편하게 말씀해 주세요.`;
 }
 function custMsg(b) {
-  const link = siteUrl("booking.html#" + b.customer_token);
+  const link = siteUrl("booking.html?v=2#" + b.customer_token);
   const s = shopById(b.shop_id);
   const l = ["ko", "en", "vi"].includes(b.lang) ? b.lang : "en";
   const sn = s ? (s.name[l] || s.name.en || s.name.ko) : b.shop_name;
@@ -591,7 +591,7 @@ async function openBooking(id) {
     await copy(custMsg(b), "손님 안내 메시지를 복사했어요.");
     await logEvent(b.id, "sent_to_customer", { status: b.status }); if (b.status === "confirmed") { TOLD.add(b.id); b._custTold = true; } loadEvents(); drawTrace(); drawNext();
   };
-  $("copyVo").onclick = () => copy(siteUrl("booking.html#" + b.customer_token), "예약확인증 링크를 복사했어요");
+  $("copyVo").onclick = () => copy(siteUrl("booking.html?v=2#" + b.customer_token), "예약확인증 링크를 복사했어요");
   $("saveInfo").onclick = async () => {
     const sid = $("eShop").value, s = shopById(sid);
     const m = s && s.menu.find(x => x.name.ko === $("eMenu").value.trim());

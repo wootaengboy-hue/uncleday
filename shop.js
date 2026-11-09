@@ -358,7 +358,7 @@ ${f.text}
       const btn = form.querySelector('button[type="submit"]'); btn.disabled = true; btn.textContent = ui("bkSending");
       try {
         const r = await LIVE.rpc("create_booking", { p: { shop_id: shop.id, menu: +f.menu, date: f.date, time: f.time, people: +f.people, name: f.name, contact: f.contact, note: f.note, coupon: f.coupon || "", marketing: f.marketing === "1", lang } });
-        const link = `booking.html#${r.token}`;
+        const link = `booking.html?v=2#${r.token}`;
         const kmsg = msg.replace("[예약 요청]", `[예약 요청] ${r.code}`);
         form.hidden = true;
         const done = $("done"); done.hidden = false;
