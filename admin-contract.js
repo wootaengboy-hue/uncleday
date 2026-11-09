@@ -9,6 +9,9 @@ const CT_VARS = [
 const CT_LANGS = [["ko", "한국어"], ["vi", "베트남어"], ["en", "영어"]];
 const CT_COMPANY = [["name", "회사명", "정식 명칭 (예: 주식회사 엉클데이)"], ["bizno", "회사_사업자번호", "000-00-00000"], ["addr", "회사_주소", "사업장 주소"], ["ceo", "회사_대표자", "대표자 이름"], ["contact", "회사_연락처", "카카오톡·잘로·이메일"]];
 const CT_LINK_DAYS = 14;
+// 계약서 언어 조합: 두 언어는 PDF 한 파일에 앞뒤로 묶어요 (두 번째 언어는 새 쪽에서 시작)
+const CT_COMBOS = [["ko+vi", "한국어 + 베트남어 (함께)"], ["ko+en", "한국어 + 영어 (함께)"], ["ko", "한국어만"], ["vi", "베트남어만"], ["en", "영어만"]];
+const ctHas = (ct, combo) => combo.split("+").every(k => ct[k]);
 let CT = null;
 
 async function loadCt(force) {
@@ -127,7 +130,8 @@ async function openContractSend(id, livePv) {
   const c = pv.contract = { ...(pv.contract || {}), ...(livePv ? livePv.contract : {}) };
   const rate = livePv ? livePv.commission_rate : pv.commission_rate;
   if (!c.date) c.date = ctToday();
-  const langs = CT_LANGS.filter(([k]) => ct[k]); let lang = langs.some(([k]) => k === (c.ctLang || c.msgLang)) ? (c.ctLang || c.msgLang) : "ko";
+  delete c.ctLang;   // 예전 버전에서 저절로 저장된 값은 버려요
+  let lang = c.ctLangs && ctHas(ct, c.ctLangs) ? c.ctLangs : ctHas(ct, "ko+vi") ? "ko+vi" : "ko";
   const F = [["legalName", "정식 상호 {{업체명}}", s.name.vi || s.name.en || s.name.ko], ["taxId", "세금번호 MST {{업체_세금번호}}", "예: 0312345678"], ["rep", "대표자 {{업체_대표자}}", "사업자등록증의 대표자"],
     ["legalAddr", "사업장 주소 {{업체_주소}}", (s.address && (s.address.vi || s.address.en || s.address.ko)) || ""], ["person", "담당자 {{업체_담당자}}", "예: Ms. Linh"], ["phone", "전화", "+84 …"],
     ["zalo", "잘로 (보낼 곳)", "전화번호 또는 zalo.me 링크"], ["email", "이메일 (보낼 곳)", "name@example.com"], ["date", "계약일 {{계약일}}", ""]];
@@ -136,7 +140,7 @@ async function openContractSend(id, livePv) {
     <div class="ct-cols"><div>
       <p class="hint" style="margin:0 0 8px">양식: <b>${esc(ct.ver)}</b> · <a href="#" data-tpl>양식 고치기</a> · 수수료율 <b>${rate ? +rate + "%" : "미입력"}</b> <small>(업체 정보에서 바꿔요)</small></p>
       <div class="ct-grid">${F.map(([k, n, ph]) => `<label class="f"><span>${esc(n)}</span><input data-k="${k}" ${k === "date" ? 'type="date"' : ""} value="${esc(c[k] || "")}" placeholder="${esc(ph)}"></label>`).join("")}
-        <label class="f"><span>계약서 언어</span><select id="ctLang">${CT_LANGS.map(([k, n]) => `<option value="${k}" ${k === lang ? "selected" : ""} ${ct[k] ? "" : "disabled"}>${n}${ct[k] ? "" : " (양식 없음)"}</option>`).join("")}</select></label>
+        <label class="f"><span>계약서 언어</span><select id="ctLang">${CT_COMBOS.map(([k, n]) => `<option value="${k}" ${k === lang ? "selected" : ""} ${ctHas(ct, k) ? "" : "disabled"}>${n}${ctHas(ct, k) ? "" : " (양식 없음)"}</option>`).join("")}</select></label>
         <label class="f"><span>메시지 언어</span><select id="msgLang">${CT_LANGS.map(([k, n]) => `<option value="${k}" ${k === (c.msgLang || "vi") ? "selected" : ""}>${n}</option>`).join("")}</select></label></div>
       <div id="ctWarn" class="ct-warn"></div>
       <div class="ct-acts">
@@ -151,10 +155,13 @@ async function openContractSend(id, livePv) {
     </div><div class="ct-sheet"><div class="ct-paper" id="ctPaper"></div></div></div>
     <div class="btns"><button class="btn" data-no>닫기</button></div></div>`;
   document.body.appendChild(d);
-  const val = () => { d.querySelectorAll("[data-k]").forEach(i => { c[i.dataset.k] = i.value.trim(); }); c.ctLang = lang = d.querySelector("#ctLang").value; c.msgLang = d.querySelector("#msgLang").value; };
+  const val = () => { d.querySelectorAll("[data-k]").forEach(i => { c[i.dataset.k] = i.value.trim(); }); lang = d.querySelector("#ctLang").value; c.msgLang = d.querySelector("#msgLang").value; };
   let cur;
   const draw = () => {
-    val(); cur = ctFill(ct[lang] || ct.ko, ctVals(s, c, rate, lang, ct.company));
+    val();
+    const parts = lang.split("+").map(k => ({ k, ...ctFill(ct[k] || ct.ko, ctVals(s, c, rate, k, ct.company)) }));
+    cur = { html: parts.map(x => `<section class="ct-part" lang="${x.k}">${x.html}</section>`).join(`<div class="html2pdf__page-break"></div>`),
+      miss: parts.reduce((a, x) => a + x.miss, 0), brackets: parts.reduce((a, x) => a + x.brackets, 0) };
     d.querySelector("#ctPaper").innerHTML = cur.html;
     d.querySelector("#ctWarn").innerHTML = cur.miss || cur.brackets ? `⚠️ ${cur.miss ? `빈 칸 <b>${cur.miss}개</b> (노란색)` : ""}${cur.miss && cur.brackets ? " · " : ""}${cur.brackets ? `아직 정하지 않은 [대괄호] <b>${cur.brackets}개</b> — 양식에서 확정해 주세요` : ""}` : "✅ 빈 칸 없이 다 채워졌어요";
     d.querySelector("#ctWarn").classList.toggle("ok", !cur.miss && !cur.brackets);
@@ -169,6 +176,7 @@ async function openContractSend(id, livePv) {
     const r = await sb.from("shop_private").upsert({ shop_id: id, contract: c }, { onConflict: "shop_id" });
     if (r.error) { dbErr(r.error, "계약 정보 저장"); return false; } return true;
   };
+  d.querySelector("#ctLang").addEventListener("change", () => { c.ctLangs = d.querySelector("#ctLang").value; persist(); });   // 직접 고른 경우만 기억해요
   d.querySelectorAll("[data-k], #ctLang, #msgLang").forEach(i => i.addEventListener(i.tagName === "SELECT" ? "change" : "input", draw));
   d.querySelectorAll("[data-k]").forEach(i => i.addEventListener("change", persist));
   d.querySelector("[data-tpl]").onclick = e => { e.preventDefault(); d.remove(); openContractTpl(); };
@@ -184,7 +192,7 @@ async function openContractSend(id, livePv) {
     if (via === "zalo" && !zaloUrl(c.zalo)) { toast("잘로 번호를 먼저 적어 주세요"); d.querySelector('[data-k="zalo"]').focus(); return; }
     if (via === "email" && !/^\S+@\S+\.\S+$/.test(c.email || "")) { toast("이메일 주소를 먼저 적어 주세요"); d.querySelector('[data-k="email"]').focus(); return; }
     if ((cur.miss || cur.brackets) && via !== "download" && !confirm(`빈 칸 ${cur.miss}개, [대괄호] ${cur.brackets}개가 남아 있어요. 그래도 보낼까요?`)) return;
-    const fname = `Uncleday_${name.replace(/[\\/:*?"<>|]+/g, " ").trim()}_${c.date || ctToday()}.pdf`;
+    const fname = `Uncleday_${name.replace(/[\\/:*?"<>|]+/g, " ").trim()}_${lang.toUpperCase().replace("+", "-")}_${c.date || ctToday()}.pdf`;
     const w = via === "zalo" ? window.open("", "_blank") : null;   // 팝업 차단을 피하려고 미리 열어요
     busy(true, [via, "PDF 만드는 중…"]);
     try {
