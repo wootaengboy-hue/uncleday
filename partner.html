@@ -26,6 +26,8 @@ h1{font-size:19px;margin:0}
 .st{display:inline-block;border-radius:999px;padding:4px 12px;font-weight:700;font-size:14px;background:#fff4e5;color:#9a5208}
 .st.confirmed,.st.visited,.st.settled{background:#e6f6f3;color:#1f7a6e}
 .st.cancelled,.st.rejected,.st.noshow{background:#fdecec;color:#9b2c2c}.st.shop_ok{background:#e8f1ff;color:#1d4f91}
+.nope{display:inline-block;margin-left:6px;padding:2px 8px;border-radius:999px;background:#fdecec;color:#9b2c2c;font-size:13px;font-weight:700;vertical-align:middle}
+.pn{flex:0 0 22px;height:22px;border-radius:50%;background:#e6f6ec;color:#1f7a4d;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center}
 dl{display:grid;grid-template-columns:110px 1fr;gap:10px 12px;margin:0}
 dt{color:var(--sub);font-size:13px;padding-top:2px}dd{margin:0;overflow-wrap:anywhere}
 .big{font-size:18px;font-weight:800}
@@ -56,7 +58,7 @@ const T = {
     help: "Có thắc mắc? Nhắn cho Uncle Day qua Zalo/KakaoTalk.", change: "Đổi lại",
     shop_ok: "Đã báo nhận được – chờ Uncle Day xác nhận", reschedule: "Uncle Day đang hỏi khách giờ khác",
     okMsg: "Bạn đã báo NHẬN ĐƯỢC giờ này. Uncle Day sẽ xác nhận với khách và báo lại.", toReject: "Đổi thành không nhận được", toAccept: "✅ Đổi thành nhận được",
-    propTitle: "Không nhận được giờ này", propHint: "Nếu có giờ khác trống, hãy chọn (tối đa 3). Uncle Day sẽ hỏi lại khách.", addTime: "+ Thêm giờ khác", sendReject: "Gửi: không nhận được", cancel: "Quay lại",
+    notThis: "Không nhận được giờ này", propTitle: "Giờ khác có thể nhận", propHint: "Chọn giờ khác mà cơ sở có thể nhận (tối đa 3, không bắt buộc). Uncle Day sẽ hỏi lại khách.", addTime: "+ Thêm giờ khác", sendReject: "Gửi: không nhận được", cancel: "Quay lại",
     rejectedMsg: "Bạn đã báo không nhận được giờ này.", proposed: "Giờ bạn đề xuất", resMsg: "Uncle Day đang hỏi khách chọn giờ khác. Khi khách chọn, bạn sẽ nhận yêu cầu mới.",
     changed: n => `🔁 Lịch đã được ĐỔI GIỜ (lần ${n}). Vui lòng kiểm tra giờ mới bên dưới.` },
   en: { title: "Booking from Uncle Day", code: "Booking no.", status: "Status", date: "Date & time", svc: "Service", ppl: "Guests", guest: "Guest name", note: "Notes", price: "Estimated price",
@@ -68,7 +70,7 @@ const T = {
     help: "Questions? Message Uncle Day on Zalo/KakaoTalk.", change: "Change",
     shop_ok: "You said OK – Uncle Day is confirming", reschedule: "Uncle Day is asking the guest for another time",
     okMsg: "You said this time WORKS. Uncle Day will confirm with the guest and let you know.", toReject: "Change to: can't take it", toAccept: "✅ Change to: OK",
-    propTitle: "Can't take this time", propHint: "If you have other free times, pick up to 3. Uncle Day will ask the guest.", addTime: "+ Add another time", sendReject: "Send: can't take it", cancel: "Back",
+    notThis: "Can't take this time", propTitle: "Other times you CAN take", propHint: "Pick other times that work for you (up to 3, optional). Uncle Day will ask the guest.", addTime: "+ Add another time", sendReject: "Send: can't take it", cancel: "Back",
     rejectedMsg: "You said you can't take this time.", proposed: "Times you suggested", resMsg: "Uncle Day is asking the guest to pick another time. You'll get a new request when they do.",
     changed: n => `🔁 This booking was MOVED to a new time (change #${n}). Please check the new time below.` },
   ko: { title: "엉클데이 예약", code: "예약번호", status: "상태", date: "방문 일시", svc: "메뉴", ppl: "인원", guest: "손님 이름", note: "요청사항", price: "예상 금액",
@@ -80,7 +82,7 @@ const T = {
     help: "문의는 엉클데이 잘로/카카오톡으로 주세요.", change: "바꾸기",
     shop_ok: "가능으로 답함 · 엉클데이 확정 대기", reschedule: "엉클데이가 손님에게 다른 시간 안내 중",
     okMsg: "이 시간 가능으로 답했어요. 엉클데이가 손님에게 확정 안내하고 알려 드릴게요.", toReject: "불가로 바꾸기", toAccept: "✅ 가능으로 바꾸기",
-    propTitle: "이 시간은 불가", propHint: "다른 가능한 시간이 있으면 골라 주세요 (최대 3개). 엉클데이가 손님에게 다시 물어봐요.", addTime: "+ 다른 시간 추가", sendReject: "불가로 보내기", cancel: "돌아가기",
+    notThis: "이 시간은 불가", propTitle: "가능한 다른 시간", propHint: "가능한 다른 시간을 골라 주세요 (최대 3개, 선택). 엉클데이가 손님에게 다시 물어봐요.", addTime: "+ 다른 시간 추가", sendReject: "불가로 보내기", cancel: "돌아가기",
     rejectedMsg: "이 시간은 불가로 답했어요.", proposed: "제안한 시간", resMsg: "엉클데이가 손님에게 다른 시간을 고르도록 안내하고 있어요. 손님이 고르면 새 요청이 와요.",
     changed: n => `🔁 시간이 변경된 예약이에요 (${n}번째 변경). 아래 새 시간을 확인해 주세요.` }
 };
@@ -113,8 +115,8 @@ function draw() {
   const closed = ["settled", "cancelled"].includes(b.status);
   const showVisit = ["confirmed", "shop_ok", "visited", "noshow"].includes(b.status) || changing;
   const S = slots();
-  const propBox = proposing ? `<div class="amt"><b>${t("propTitle")}</b><p class="hint">${t("propHint")}</p>
-      ${props.map((p, i) => `<div style="display:flex;gap:8px"><input type="date" data-pd="${i}" value="${esc(p.date)}" style="flex:1;min-width:0;padding:10px;border:1px solid var(--line);border-radius:10px;font-size:15px"><select data-pt="${i}" style="padding:10px;border:1px solid var(--line);border-radius:10px;font-size:15px"><option value="">--:--</option>${S.map(x => `<option ${x === p.time ? "selected" : ""}>${x}</option>`).join("")}</select></div>`).join("")}
+  const propBox = proposing ? `<div class="amt"><b>✅ ${t("propTitle")}</b><p class="hint">${t("propHint")}</p>
+      ${props.map((p, i) => `<div style="display:flex;gap:8px;align-items:center"><span class="pn">${i + 1}</span><input type="date" data-pd="${i}" value="${esc(p.date)}" style="flex:1;min-width:0;padding:10px;border:1px solid var(--line);border-radius:10px;font-size:15px"><select data-pt="${i}" style="padding:10px;border:1px solid var(--line);border-radius:10px;font-size:15px"><option value="">--:--</option>${S.map(x => `<option ${x === p.time ? "selected" : ""}>${x}</option>`).join("")}</select></div>`).join("")}
       ${props.length < 3 ? `<button class="btn" data-a="add">${t("addTime")}</button>` : ""}
       <textarea id="memo" placeholder="${t("memo")}"></textarea>
       <button class="btn no" data-a="reject">${t("sendReject")}</button><button class="btn" data-a="back">${t("cancel")}</button></div>` : "";
@@ -122,7 +124,7 @@ function draw() {
     <div><div class="hint">${t("code")}</div><div class="code">${esc(b.code)}</div></div>
     <div><span class="st ${esc(b.status)}">${t(b.status)}</span></div>
     <dl>
-      <dt>${t("date")}</dt><dd class="big">${esc(d)} ${esc(b.visit_time || "")}</dd>
+      <dt>${t("date")}</dt><dd class="big">${esc(d)} ${esc(b.visit_time || "")}${proposing || b.status === "rejected" ? ` <span class="nope">❌ ${t("notThis")}</span>` : ""}</dd>
       <dt>${t("svc")}</dt><dd><b>${esc(svc)}</b>${b.menu_min ? ` · ${b.menu_min}′` : ""}</dd>
       <dt>${t("ppl")}</dt><dd><b>${esc(t("ppln")(b.people))}</b></dd>
       <dt>${t("guest")}</dt><dd>${esc(b.customer_name)}</dd>
