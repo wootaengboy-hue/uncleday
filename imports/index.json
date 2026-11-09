@@ -53,6 +53,14 @@
    "count": 1,
    "created": "2026-11-09",
    "kind": "tasks"
+  },
+  {
+   "id": "2026-11-09-contract",
+   "file": "2026-11-09-contract.json",
+   "title": "입점 계약서 초안 v2 · 팀 논의",
+   "count": 10,
+   "created": "2026-11-09",
+   "kind": "tasks"
   }
  ]
 }
