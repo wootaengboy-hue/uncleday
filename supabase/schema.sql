@@ -967,7 +967,7 @@ begin
   k := case new.kind when 'mention' then '💬 언급' when 'assign' then '👉 담당 지정' when 'ref' then '👥 참조' when 'comment' then '🗨️ 새 댓글' else '🔔 알림' end;
   perform slack_send('team', k || ' → *' || coalesce(who, new.recipient_email) || '* · ' || coalesce(nick(new.actor), '') || E'\n'
     || case new.target_type when 'task' then '할 일: ' else '영업: ' end || coalesce(new.title, '')
-    || coalesce(E'\n> ' || left(replace(regexp_replace(new.body, '<[^>]+>', ' ', 'g'), E'\n', ' '), 200), ''));
+    || coalesce(E'\n> ' || left(replace(regexp_replace(regexp_replace(new.body, '⟦q:[^|⟧]*\|([^⟧]*)⟧', '“\1” →', 'g'), '<[^>]+>', ' ', 'g'), E'\n', ' '), 200), ''));
   return new;
 end $$;
 drop trigger if exists slack_team on public.notifications;

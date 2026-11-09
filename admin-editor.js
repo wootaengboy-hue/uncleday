@@ -1,8 +1,8 @@
 /* 엉클데이 관리자 — 노션처럼 쓰는 메모 편집기 (제목, 목록, 체크리스트, 토글, 구분선, 강조 상자, 템플릿)
    '/'를 입력하면 블록 메뉴가 떠요. 저장은 안전하게 거른 HTML로 해요. */
 const RICH_TAGS = { P: [], H2: [], H3: [], UL: ["class"], OL: [], LI: ["data-done"], B: [], STRONG: [], I: [], EM: [], S: [], STRIKE: [], U: [], A: ["href"],
-  BR: [], HR: [], BLOCKQUOTE: [], DIV: ["class"], SPAN: [], IMG: ["src", "alt", "class"] };
-const RICH_CLASS = ["check", "toggle", "open", "tg-head", "tg-body", "callout", "sm"];
+  BR: [], HR: [], BLOCKQUOTE: [], DIV: ["class"], SPAN: [], IMG: ["src", "alt", "class"], MARK: ["class", "data-c"] };
+const RICH_CLASS = ["check", "toggle", "open", "tg-head", "tg-body", "callout", "sm", "cmark"];
 function richClean(html) {
   const doc = new DOMParser().parseFromString(`<div>${html || ""}</div>`, "text/html");
   const walk = el => [...el.childNodes].forEach(n => {
@@ -15,6 +15,7 @@ function richClean(html) {
       if (!ok.includes(a.name)) n.removeAttribute(a.name);
       else if (a.name === "class") { const c = a.value.split(/\s+/).filter(x => RICH_CLASS.includes(x)).join(" "); c ? n.setAttribute("class", c) : n.removeAttribute("class"); }
       else if (a.name === "href" && !/^https?:\/\//i.test(a.value)) n.removeAttribute("href");
+      else if (a.name === "data-c" && !/^[a-z0-9-]{1,40}$/i.test(a.value)) n.removeAttribute("data-c");
       else if (a.name === "src" && !(/^https:\/\//i.test(a.value) || (typeof SUPA !== "undefined" && SUPA.url && a.value.startsWith(SUPA.url + "/storage/")))) n.removeAttribute("src");
     });
     if (n.tagName === "IMG" && !n.getAttribute("src")) { n.remove(); return; }

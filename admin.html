@@ -334,6 +334,11 @@ table.t tfoot td{font-weight:800;background:#fafbfc}
 .pill.gray{background:#eceae4;color:#5f5b52}.pill.blue{background:#dbeafe;color:#1d4ed8}.pill.green{background:#dcf2e3;color:#116241}
 .pill.amber{background:#fdf0c8;color:#9a6700}.pill.red{background:#fde2e1;color:#c0362c}
 .kcard.drag{opacity:.4}
+mark.cmark{background:#fff3b0;border-bottom:2px solid #f0b429;border-radius:2px;padding:0 1px;cursor:pointer;color:inherit}mark.cmark.flash,.cmt.flash{animation:cmtflash 1.4s}
+@keyframes cmtflash{0%,60%{background:#ffd666;box-shadow:0 0 0 4px #ffd66688}100%{}}
+.sel-cmt{position:fixed;z-index:200;border:0;background:#1f2937;color:#fff;font:inherit;font-size:13px;font-weight:700;padding:6px 11px;border-radius:9px;box-shadow:0 6px 18px #0004;cursor:pointer}
+.cmt-q{margin:3px 0 4px;padding:4px 9px;border-left:3px solid #f0b429;background:#fff9e3;border-radius:6px;font-size:13px;color:#5b5143;cursor:pointer}.cmt-q.gone{border-left-color:#c9c4b8;background:#f4f2ec;color:#8a857a;cursor:default}
+.cmt-quote{display:flex;justify-content:space-between;gap:8px;align-items:center;background:#fff9e3;border:1px dashed #f0b429;border-radius:9px;padding:6px 10px;margin:6px 0;font-size:13px}.cmt-quote button{border:0;background:none;cursor:pointer;color:#8a857a}
 .kcard.drop-before{box-shadow:0 -3px 0 0 var(--main)}.kcol.drop-end .kcards > .kcard:last-child{box-shadow:0 3px 0 0 var(--main)}
 .kcard{position:relative}.kcard .kt{padding-right:46px}
 .crm-bar{display:grid;gap:10px;margin:16px 0 10px}.crm-segs{display:flex;flex-wrap:wrap;gap:6px}.crm-segs .chip small{opacity:.7;margin-left:3px}
@@ -536,17 +541,17 @@ table.t tfoot td{font-weight:800;background:#fafbfc}
 <div id="layer"></div>
 <div id="printArea"></div>
 
-<script src="config.js?v=20261109j"></script>
+<script src="config.js?v=20261109k"></script>
 <script src="vendor/supabase.js"></script>
-<script src="data.js?v=20261109j"></script>
-<script src="shops.js?v=20261109j"></script>
-<script src="catimgs.js?v=20261109j"></script>
-<script src="admin-notes.js?v=20261109j"></script>
-<script src="admin-shops.js?v=20261109j"></script>
-<script src="admin-editor.js?v=20261109j"></script>
-<script src="admin-guide.js?v=20261109j"></script>
-<script src="admin-work.js?v=20261109j"></script>
-<script src="admin-crm.js?v=20261109j"></script>
-<script src="admin.js?v=20261109j"></script>
+<script src="data.js?v=20261109k"></script>
+<script src="shops.js?v=20261109k"></script>
+<script src="catimgs.js?v=20261109k"></script>
+<script src="admin-notes.js?v=20261109k"></script>
+<script src="admin-shops.js?v=20261109k"></script>
+<script src="admin-editor.js?v=20261109k"></script>
+<script src="admin-guide.js?v=20261109k"></script>
+<script src="admin-work.js?v=20261109k"></script>
+<script src="admin-crm.js?v=20261109k"></script>
+<script src="admin.js?v=20261109k"></script>
 </body>
 </html>

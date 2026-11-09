@@ -1157,7 +1157,7 @@ async function afterLogin(session) {
 
 /* ===== 창 닫기: Esc 키나 창 바깥(어두운 곳)을 누르면 닫혀요. 고친 내용이 있으면 한 번 물어봐요 ===== */
 (() => {
-  const snap = d => [...d.querySelectorAll("input, select, textarea")].map(i => i.type === "checkbox" || i.type === "radio" ? i.checked : i.value).join("\u0001")
+  const snap = window.overlaySnap = d => [...d.querySelectorAll("input, select, textarea")].map(i => i.type === "checkbox" || i.type === "radio" ? i.checked : i.value).join("\u0001")
     + "\u0002" + [...d.querySelectorAll("[contenteditable=true]")].map(e => e.innerHTML).join("\u0001");
   new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => {
     if (n.nodeType === 1 && n.classList.contains("overlay")) setTimeout(() => { n._snap = snap(n); }, 300);   // 내용이 다 그려진 뒤의 모습을 기억
