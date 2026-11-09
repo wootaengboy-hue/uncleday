@@ -151,7 +151,7 @@ function editTask(id, preset = {}) {
       </div>
       <div class="f"><span>참조 <small class="hint">— 함께 알아야 하는 사람 (여러 명). 눌러서 고르거나 <b>@이름</b>을 입력하세요</small></span><div class="people" id="tRefs"></div>
         <div class="at-wrap"><input id="tRefAt" class="at-in" placeholder="@이름 입력 → Enter" autocomplete="off"></div></div>
-      ${id ? `<div class="f"><span>💬 댓글</span><div id="tCmt"></div></div>` : `<div class="hint">💬 댓글은 저장한 뒤에 달 수 있어요.</div>`}
+      ${id ? `<div class="f"><span>📎 첨부파일</span><div id="tFiles"></div></div><div class="f"><span>💬 댓글</span><div id="tCmt"></div></div>` : `<div class="hint">📎 파일과 💬 댓글은 저장한 뒤에 올릴 수 있어요.</div>`}
       ${id ? `<div class="hint">만든 사람: ${esc(x.created_by || "")} · ${dt(x.created_at)}${x.done_at ? ` · 완료 ${dt(x.done_at)}` : ""}</div>` : ""}
     </div>
     <div class="btns">${id ? `<button class="btn danger" data-del style="margin-right:auto">삭제</button>` : ""}<button class="btn" data-no>닫기</button><button class="btn main" data-yes title="Ctrl+S">저장</button></div></div>`;
@@ -162,6 +162,7 @@ function editTask(id, preset = {}) {
   d.querySelector("#tTitle").focus();
   const cmtHost = id ? d.querySelector("#tCmt") : null;
   if (id) commentBox(cmtHost, "task", id, { editor: ed, onAnchor: () => save(true) });
+  if (id) fileBox(d.querySelector("#tFiles"), "task", id);
   // 메모에서 글자를 고르면 💬 댓글 버튼이 떠요 (노션처럼)
   const fb = document.createElement("button"); fb.type = "button"; fb.className = "sel-cmt"; fb.textContent = "💬 댓글"; fb.hidden = true; d.appendChild(fb);
   const selIn = () => { const s = getSelection(); if (!s.rangeCount || s.isCollapsed) return null; const r = s.getRangeAt(0); return ed.el.contains(r.commonAncestorContainer) && s.toString().trim() ? r : null; };
@@ -347,6 +348,7 @@ async function openLead(id) {
           <button class="btn danger sm" id="lDel">삭제</button></div>
       </div>
       <div class="box"><h3>할 일 <small>이 업체와 관련된 일</small></h3><div id="lTasks"></div><div class="btn-row"><button class="btn sm" id="lTaskAdd">＋ 할 일 만들기</button></div></div>
+      <div class="box"><h3>📎 첨부파일 <small>계약서·사업자등록증 (관리자만 열람)</small></h3><div id="lFiles"></div></div>
       <div class="box"><h3>💬 댓글 <small>관리자끼리 의견 나누기</small></h3><div id="lCmt"></div></div>
       <div class="box"><h3>연락 기록 <small>업체와 연락한 내역</small></h3>
         <div style="display:flex;gap:6px;flex-wrap:wrap"><select id="logK" style="padding:8px;border:1px solid var(--line);border-radius:9px">${Object.entries(LOGK).map(([k, n]) => `<option value="${k}">${n}</option>`).join("")}</select>
@@ -357,6 +359,7 @@ async function openLead(id) {
   $("pCancel").onclick = close; $("ov").onclick = e => { if (e.target.id === "ov") close(); };
   const led = richEditor($("lMemo"), l.memo || "");
   commentBox($("lCmt"), "lead", l.id);
+  fileBox($("lFiles"), "lead", l.id);
   const save = async (patch, msg = "저장했어요") => {
     try { const r = await q(sb.from("leads").update(patch).eq("id", l.id).select().single()); LEADS[LEADS.indexOf(l)] = r; l = r; toast(msg); drawHead(); loadLog(); } catch (e) {}
   };
@@ -481,6 +484,66 @@ const QRE = /^⟦q:([a-z0-9-]+)\|([^⟧]*)⟧\s*/i;
 const cmtQuote = t => { const m = String(t || "").match(QRE); return m ? { id: m[1], quote: m[2], rest: t.slice(m[0].length) } : null; };
 const cmtPlain = t => String(t || "").replace(QRE, (m, id, q) => `“${q}” `);
 const cmtHtml = t => esc(t).replace(/@([\w.\-가-힣]+)/g, '<b class="mention">@$1</b>').replace(/\n/g, "<br>");
+// 📎 첨부파일 (비공개 저장소 'files'): 관리자만, 누를 때마다 5분짜리 임시 링크
+const FILE_TYPES = { pdf: "application/pdf", doc: "application/msword", docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  xls: "application/vnd.ms-excel", xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  ppt: "application/vnd.ms-powerpoint", pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  hwp: "application/x-hwp", hwpx: "application/vnd.hancom.hwpx", txt: "text/plain", csv: "text/csv",
+  jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp", heic: "image/heic" };
+const FILE_MAX = 10 * 1024 * 1024;
+const fileIcon = n => { const e = (n.split(".").pop() || "").toLowerCase(); return e === "pdf" ? "📕" : /docx?|hwpx?|txt/.test(e) ? "📄" : /xlsx?|csv/.test(e) ? "📊" : /pptx?/.test(e) ? "📽️" : /jpe?g|png|webp|heic/.test(e) ? "🖼️" : "📎"; };
+const fileSize = b => b >= 1048576 ? (b / 1048576).toFixed(1) + "MB" : Math.max(1, Math.round(b / 1024)) + "KB";
+async function fileBox(host, type, id) {
+  host.innerHTML = `<div class="files"><div class="file-list"><div class="hint">불러오는 중…</div></div>
+    <label class="btn sm file-add">📎 파일 올리기<input type="file" multiple hidden accept="${Object.keys(FILE_TYPES).map(e => "." + e).join(",")}"></label>
+    <span class="hint">PDF·워드·엑셀·한글·사진, 한 파일 10MB까지 · 관리자만 열 수 있어요</span></div>`;
+  const list = host.querySelector(".file-list"), inp = host.querySelector("input[type=file]");
+  const load = async () => {
+    const r = await sb.from("attachments").select("*").eq("target_type", type).eq("target_id", id).order("created_at");
+    if (r.error) { list.innerHTML = /attachments|PGRST205|42P01/.test(r.error.message + r.error.code) ? `<div class="hint">⚠️ 파일 기능을 쓰려면 Supabase에서 <b>supabase/files.sql</b>을 한 번 실행해 주세요.</div>` : `<div class="hint">불러오지 못했어요</div>`; inp.disabled = true; return; }
+    list.innerHTML = r.data.map(f => { const mine = f.uploaded_by === (ME.email || "").toLowerCase();
+      return `<div class="file" data-f="${f.id}"><button type="button" class="file-open" title="열기 (5분짜리 임시 링크)">${fileIcon(f.name)} <b>${esc(f.name)}</b></button>
+        <span class="hint">${fileSize(f.size)} · ${esc(who(f.uploaded_by || ""))} · ${dt(f.created_at)}</span>${mine ? `<button type="button" class="file-del" title="지우기">✕</button>` : ""}</div>`; }).join("");
+    r.data.forEach(f => { const el = list.querySelector(`[data-f="${f.id}"]`);
+      el.querySelector(".file-open").onclick = async () => {
+        const w = window.open("", "_blank");   // 팝업 차단을 피하려고 먼저 창을 열어요
+        const u = await sb.storage.from("files").createSignedUrl(f.path, 300, /^image\/|pdf/.test(f.mime || "") ? undefined : { download: f.name });
+        if (u.error) { if (w) w.close(); dbErr(u.error, "파일 열기"); return; }
+        if (w) w.location = u.data.signedUrl; else location.href = u.data.signedUrl;
+      };
+      const del = el.querySelector(".file-del");
+      if (del) del.onclick = () => confirmBox(`"${f.name}" 파일을 지울까요?`, async () => {
+        const a = await sb.from("attachments").delete().eq("id", f.id); if (a.error) { dbErr(a.error, "삭제"); return; }
+        await sb.storage.from("files").remove([f.path]); toast("파일을 지웠어요"); load();
+      }, "지운 파일은 되살릴 수 없어요.");
+    });
+  };
+  inp.onchange = async () => {
+    const files = [...inp.files]; inp.value = ""; if (!files.length) return;
+    const bad = [], done = [];
+    list.insertAdjacentHTML("beforeend", `<div class="hint up-ing">⏳ 올리는 중… (${files.length}개)</div>`);
+    for (const file of files) {
+      const ext = (file.name.split(".").pop() || "").toLowerCase(), mime = FILE_TYPES[ext];
+      if (!mime) { bad.push(`${file.name} (올릴 수 없는 종류)`); continue; }
+      if (file.size > FILE_MAX) { bad.push(`${file.name} (10MB 초과: ${fileSize(file.size)})`); continue; }
+      // 저장소 주소에는 한글을 못 써서 영문 이름으로 저장하고, 원래 이름은 표에 따로 적어요
+      const path = `${type}/${id}/${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const up = await sb.storage.from("files").upload(path, file, { contentType: mime, upsert: false });
+      if (up.error) { dbErr(up.error, "파일 올리기"); continue; }
+      const a = await sb.from("attachments").insert({ target_type: type, target_id: id, path, name: file.name.slice(0, 200), size: file.size, mime });
+      if (a.error) { await sb.storage.from("files").remove([path]); dbErr(a.error, "파일 올리기"); continue; }
+      done.push(file.name);
+    }
+    if (bad.length) toast(`못 올린 파일: ${bad.join(", ")}`, 5000); else if (done.length) toast(`📎 ${done.length}개 올렸어요`);
+    load();
+  };
+  // 파일을 끌어다 놓아도 올라가요
+  host.addEventListener("dragover", e => { if (e.dataTransfer && [...e.dataTransfer.types].includes("Files")) { e.preventDefault(); host.classList.add("drop"); } });
+  host.addEventListener("dragleave", () => host.classList.remove("drop"));
+  host.addEventListener("drop", e => { if (!e.dataTransfer || !e.dataTransfer.files.length) return; e.preventDefault(); host.classList.remove("drop"); const dt2 = new DataTransfer(); [...e.dataTransfer.files].forEach(f => dt2.items.add(f)); inp.files = dt2.files; inp.onchange(); });
+  load();
+}
+
 async function commentBox(host, type, id, opts = {}) {
   host.innerHTML = `<div class="cmts"><div class="cmt-list"><div class="hint">불러오는 중…</div></div>
     <div class="cmt-quote" hidden></div>
