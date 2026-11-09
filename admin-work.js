@@ -192,12 +192,62 @@ function editTask(id, preset = {}) {
     { whole: true, skip: a => refs.includes(a.email) || a.email === d.querySelector("#tWho").value });
   d.querySelector("#tWho").onchange = () => { refs = refs.filter(v => v !== d.querySelector("#tWho").value); drawRefs(); };
   d.querySelector("[data-no]").onclick = () => { d.remove(); if (TAB === "work") drawWork(); if (preset._after) preset._after(); };
+  // 동시 작성 대비: 연 시점의 내용(base)과 저장 직전 최신본을 비교해서 '내가 바꾼 칸'만 저장
+  let base = id ? { ...x } : null;
+  const FIELDS = ["title", "memo", "status", "due", "priority", "assignee", "shop_id", "lead_id", "watchers"];
+  const nv = (k, v) => { if (k === "memo") return richClean(richFrom(v || "")); if (k === "watchers") return JSON.stringify([...(v || [])].sort()); if (k === "priority") return +v; return v === "" || v === undefined ? null : v; };
+  const same = (k, a, b) => nv(k, a) === nv(k, b);
+  const memoClash = name => new Promise(res => {
+    const m = document.createElement("div"); m.className = "overlay center";
+    m.innerHTML = `<div class="modal" style="width:min(460px,calc(100% - 24px))"><h2>⚠️ 메모를 동시에 고쳤어요</h2>
+      <p class="hint" style="margin:8px 0 14px">내가 이 카드를 열어 둔 사이에 다른 분이 메모를 먼저 저장했어요. 어떻게 할까요?</p>
+      <div style="display:grid;gap:8px"><button class="btn main" data-k="both">둘 다 남기기 (추천) — 상대 내용 아래에 내 내용을 붙여요</button>
+      <button class="btn" data-k="mine">내 것으로 저장 — 상대가 쓴 메모는 지워져요</button>
+      <button class="btn" data-k="theirs">상대 것 유지 — 내 메모 수정은 버려요</button>
+      <button class="btn" data-k="">취소</button></div></div>`;
+    document.body.appendChild(m); m.querySelectorAll("[data-k]").forEach(b => b.onclick = () => { m.remove(); res(b.dataset.k); });
+  });
+  if (id) {   // 열어 둔 동안 다른 분이 저장하면 알려 줘요
+    const tick = setInterval(async () => {
+      if (!d.isConnected) { clearInterval(tick); return; }
+      const r = await sb.from("tasks").select("updated_at").eq("id", id).maybeSingle();
+      if (r.data && r.data.updated_at !== base.updated_at && !d.querySelector(".clash")) {
+        const n = document.createElement("div"); n.className = "clash";
+        n.innerHTML = "⚠️ 다른 분이 방금 이 카드를 저장했어요. 그대로 <b>저장</b>하면 서로 고친 부분이 합쳐져요.";
+        d.querySelector(".modal h2").after(n);
+      }
+    }, 15000);
+  }
   async function save(silent) {
     const row = { title: d.querySelector("#tTitle").value.trim(), memo: ed.get(), status: d.querySelector("#tSt").value, due: d.querySelector("#tDue").value || null,
       priority: +d.querySelector("#tPri").value, assignee: d.querySelector("#tWho").value || null, shop_id: d.querySelector("#tShop").value || null, lead_id: d.querySelector("#tLead").value || null, watchers: refs.filter(v => v !== (d.querySelector("#tWho").value || "")) };
     if (!row.title) { toast("제목을 적어 주세요"); return false; }
     try {
-      if (id) { const r = await q(sb.from("tasks").update(row).eq("id", id).select().single()); const i = TASKS.findIndex(y => y.id === id); if (i >= 0) TASKS[i] = r; }
+      if (id) {
+        const cur = await q(sb.from("tasks").select("*").eq("id", id).single(), "최신 내용 확인");
+        const theirs = cur.updated_at !== base.updated_at ? FIELDS.filter(k => !same(k, cur[k], base[k])) : [];
+        const mine = FIELDS.filter(k => !same(k, row[k], base[k]));
+        const patch = {}; mine.forEach(k => patch[k] = row[k]);
+        let merged = theirs.length > 0;
+        if (mine.includes("memo") && theirs.includes("memo") && !same("memo", row.memo, cur.memo)) {
+          const how = await memoClash(); if (!how) return false;
+          if (how === "both") patch.memo = nv("memo", cur.memo) + `<hr><p><b>✏️ ${esc(who(ME.email))} 님이 동시에 고친 내용</b></p>` + row.memo;
+          else if (how === "theirs") delete patch.memo;
+        }
+        let r = cur;
+        if (Object.keys(patch).length) {
+          const u = await sb.from("tasks").update(patch).eq("id", id).lt("updated_at", new Date(Date.parse(cur.updated_at) + 1).toISOString()).select();   // 확인한 뒤에 누가 또 저장했으면 0건
+          if (u.error) { dbErr(u.error, "저장"); return false; }
+          if (!u.data.length) { toast("방금 다른 분도 저장했어요. 저장을 한 번 더 눌러 주세요", 4000); return false; }
+          r = u.data[0];
+        }
+        const i = TASKS.findIndex(y => y.id === id); if (i >= 0) TASKS[i] = r; base = { ...r };
+        if (merged) {   // 상대가 바꾼 내용을 화면에 반영하려고 다시 열어요
+          d.remove(); if (TAB === "work") drawWork(); drawCounts(); editTask(id, { _after: preset._after });
+          toast(Object.keys(patch).length ? "다른 분이 고친 내용과 합쳐서 저장했어요 ✅" : "다른 분이 고친 최신 내용으로 새로 불러왔어요", 4000); return true;
+        }
+        if (!Object.keys(patch).length) { if (!silent) toast("바뀐 내용이 없어요"); if (window.overlaySnap) d._snap = overlaySnap(d); return true; }
+      }
       else {
         const r = await q(sb.from("tasks").insert(row).select().single()); TASKS.unshift(r);
         d.remove(); if (TAB === "work") drawWork(); drawCounts(); editTask(r.id, { _after: preset._after }); toast("저장했어요 · 이제 댓글을 달 수 있어요"); return true;
