@@ -78,7 +78,13 @@ function drawCities() {
 function drawCats() {
   const gImg = c => catImg(c.id) || c.members.map(catImg).find(Boolean) || "";
   $("catGrid").classList.toggle("two", CATEGORIES.length <= 3);
-  $("catGrid").innerHTML = CATEGORIES.map(c =>
+  $("catGrid").innerHTML = CATEGORIES.length <= 3
+    // 묶음 카테고리: 사진이 카드 전체를 채우고 글자는 사진 위에
+    ? CATEGORIES.map(c => { const n = SHOPS.filter(s => catGroup(s.cat).id === c.id).length;
+        return `<button class="cat-hero ${c.id === state.cat ? "on" : ""} cat-${c.id}" data-id="${c.id}"${gImg(c) ? ` style="background-image:url('${gImg(c)}')"` : ""}>
+          <span class="ch-shade"></span><span class="ch-txt"><b>${tx(c.name)}</b><small>${tx(c.desc)}</small></span>
+          <span class="ch-cnt">${n ? (lang === "ko" ? n + "곳" : lang === "vi" ? n + " cơ sở" : n + " shops") : ui("soon")}</span>${c.id === state.cat ? `<span class="ch-on">✓</span>` : ""}</button>`; }).join("")
+    : CATEGORIES.map(c =>
     `<button class="cat ${c.id === state.cat ? "on" : ""} ${gImg(c) ? "has-img" : ""}" data-id="${c.id}">${gImg(c) ? `<i class="cat-img" style="background-image:url('${gImg(c)}')"></i>` : `<span>${c.icon}</span>`}<b class="cat-n">${tx(c.name)}</b>${c.desc ? `<small class="cat-d">${tx(c.desc)}</small>` : ""}${SHOPS.some(s => catGroup(s.cat).id === c.id) ? "" : `<em class="soon">${ui("soon")}</em>`}</button>`).join("");
   $("catGrid").querySelectorAll("button").forEach(el => el.onclick = () => {
     state.cat = state.cat === el.dataset.id ? "" : el.dataset.id;
