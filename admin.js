@@ -252,6 +252,8 @@ function drawBookings() {
       <button class="btn main" id="bkNew">＋ 예약 직접 등록</button>
       <button class="btn" id="bkExp">⬇ 엑셀(CSV)</button>
     </div>
+    ${(() => { const since = Date.now() - 30 * 86400e3, web = BOOKINGS.filter(b => b.source === "web" && Date.parse(b.created_at) > since), k = web.filter(b => KAKAO.has(b.id)).length;
+      return web.length ? `<p class="hint" style="margin:4px 0 8px">💬 최근 30일 사이트에서 바로 들어온 예약 <b>${web.length}건</b> 중 손님이 '카톡으로 확정 받기'를 누른 예약 <b>${k}건 (${Math.round(k / web.length * 100)}%)</b> · 안 누른 손님은 예약 상세에서 📱 문자로 보내요</p>` : ""; })()}
     <div class="tscroll"><table class="t"><thead><tr><th>예약번호</th><th>방문</th><th>업체</th><th class="hide-m">메뉴</th><th>손님</th><th>상태</th><th title="📨 업체에 알림 · 🏪 업체 답 · 📣 손님 안내 · 🙋 손님 방문 확인 · ⭐ 후기">흔적</th><th class="num">결제 / 수수료</th></tr></thead><tbody>
     ${list.map(b => `<tr class="click" data-b="${b.id}">
       <td><span class="bk-code">${esc(b.code)}</span><br><span class="src">${SRC[b.source] || b.source} · ${dt(b.created_at)}</span></td>
@@ -277,19 +279,21 @@ function drawBookings() {
 }
 const TOLD = new Set();   // 손님 안내 기록이 있는 예약 (이벤트에서)
 const FOLLOWED = new Set();   // 방문 뒤 안부(별점) 메시지를 보낸 예약
+const KAKAO = new Set();      // 손님이 '카톡으로 확정 받기'를 누른 예약 (채널 채팅방이 있을 가능성)
+const phoneOf = b => { const c = String(b.contact || ""); if (/[a-z]/i.test(c.replace(/^(tel|phone|전화)[:：]?/i, ""))) return ""; const n = c.replace(/[^\d+]/g, ""); return n.replace("+", "").length >= 9 ? n : ""; };
 // 방문 시간이 지났는데(3일 안) 손님 방문 확인이나 후기가 없고, 안부 메시지도 아직 안 보낸 예약
 const visitEnd = b => b.visit_date && b.visit_time ? Date.parse(`${b.visit_date}T${b.visit_time}:00+07:00`) + (b.menu_min || 60) * 60000 : null;
 const needFollow = b => { const e = visitEnd(b); return !!e && ["confirmed", "visited"].includes(b.status) && Date.now() > e && Date.now() - e < 3 * 86400e3
   && !FOLLOWED.has(b.id) && !(b.customer_visit_at && RVS.some(r => r.booking_id === b.id)); };
 function marks(b) {
   const rv = RVS.some(r => r.booking_id === b.id);
-  const m = [["📨", b.sent_to_shop_at, "업체에 알림"], ["🏪", b.shop_replied_at, "업체가 링크로 답함"], ["📣", TOLD.has(b.id), "손님에게 안내"], ["🙋", b.customer_visit_at, "손님 방문 확인"], ["⭐", rv, "후기"]];
+  const m = [["📨", b.sent_to_shop_at, "업체에 알림"], ["🏪", b.shop_replied_at, "업체가 링크로 답함"], ["📣", TOLD.has(b.id), "손님에게 안내"], ["🙋", b.customer_visit_at, "손님 방문 확인"], ["⭐", rv, "후기"], ["💬", KAKAO.has(b.id), "손님이 '카톡으로 확정 받기' 누름"]];
   return `<span class="marks">${m.map(([i, on, t]) => `<i class="${on ? "on" : ""}" title="${t}${on && typeof on === "string" ? " " + dt(on) : ""}">${i}</i>`).join("")}</span>`;
 }
 async function loadTold() {
   // "확정 안내"를 보낸 예약만 (시간 변경 안내는 확정 안내가 아니에요)
-  const r = await sb.from("booking_events").select("booking_id,action,detail").in("action", ["sent_to_customer", "sent_followup"]);
-  if (!r.error) { TOLD.clear(); FOLLOWED.clear(); r.data.forEach(x => { if (x.action === "sent_followup") { FOLLOWED.add(x.booking_id); return; } const st = x.detail && x.detail.status; if (!st || st === "confirmed") TOLD.add(x.booking_id); }); }
+  const r = await sb.from("booking_events").select("booking_id,action,detail").in("action", ["sent_to_customer", "sent_followup", "customer_kakao"]);
+  if (!r.error) { TOLD.clear(); FOLLOWED.clear(); KAKAO.clear(); r.data.forEach(x => { if (x.action === "sent_followup") { FOLLOWED.add(x.booking_id); return; } if (x.action === "customer_kakao") { KAKAO.add(x.booking_id); return; } const st = x.detail && x.detail.status; if (!st || st === "confirmed") TOLD.add(x.booking_id); }); }
   BOOKINGS.forEach(b => b._custTold = TOLD.has(b.id));
 }
 function exportBookings(list) {
@@ -484,10 +488,19 @@ async function openBooking(id) {
     b = await updBooking(b.id, { sent_to_shop_at: new Date().toISOString() }).catch(() => b);
     await logEvent(b.id, "sent_to_shop", { lang: msgLang, change: b.change_count || 0 }); drawTop(); loadEvents();
   }
+  let via = KAKAO.has(b.id) || !phoneOf(b) ? "kakao" : "sms";   // 카톡 연결 안 한 손님은 문자가 기본
+  const viaHtml = () => `<div class="via"><span>손님에게 보낼 곳</span>
+      <label><input type="radio" name="via" value="kakao" ${via === "kakao" ? "checked" : ""}> 💬 카톡 채널 ${KAKAO.has(b.id) ? "<small class='ok'>(손님이 연결 버튼 누름)</small>" : "<small>(연결 기록 없음)</small>"}</label>
+      <label><input type="radio" name="via" value="sms" ${via === "sms" ? "checked" : ""} ${phoneOf(b) ? "" : "disabled"}> 📱 문자 ${phoneOf(b) ? `<small>${esc(phoneOf(b))}</small>` : "<small>(전화번호 없음)</small>"}</label></div>`;
+  async function sendTo(text, label) {
+    if (via === "sms" && phoneOf(b)) {
+      await copy(text, `${label}를 복사했어요. 문자 앱이 열리면 내용을 확인하고 보내세요.`);
+      location.href = `sms:${phoneOf(b)}${/iPhone|iPad|Mac/.test(navigator.userAgent) ? "&" : "?"}body=${encodeURIComponent(text)}`;
+    } else { await copy(text, `${label}를 복사했어요. 카카오톡 채널 채팅창에 붙여넣기만 하세요.`); window.open(KAKAO_CENTER, "_blank"); }
+  }
   async function sendCust(what) {
-    await copy(custMsg(b), "손님 메시지를 복사했어요. 카카오톡 채널 채팅창에 붙여넣기만 하세요.");
-    window.open(KAKAO_CENTER, "_blank");
-    await logEvent(b.id, "sent_to_customer", { status: b.status, what }); if (b.status === "confirmed") { TOLD.add(b.id); b._custTold = true; } drawTop(); loadEvents();
+    await sendTo(custMsg(b), "손님 메시지");
+    await logEvent(b.id, "sent_to_customer", { status: b.status, what, via }); if (b.status === "confirmed") { TOLD.add(b.id); b._custTold = true; } drawTop(); loadEvents();
   }
   let editRows = null;   // 손님에게 안내할 시간을 고치는 중
   function drawNext() {
@@ -499,7 +512,7 @@ async function openBooking(id) {
           : `<p>업체에 예약 가능한지 물어봐요. 누르면 ${msgLang === "vi" ? "베트남어" : msgLang === "en" ? "영어" : "한국어"} 메시지가 복사되고${shopZalo ? " 업체 잘로 대화창이 열려요" : "요 (업체 잘로 번호가 없어요 — 업체 수정 → 계약·정산)"}.</p><div class="btn-row"><button class="btn main" data-nx="shop">📨 업체에 확인 요청 보내기</button></div>`}`;
     } else if (st === "shop_ok") {
       h = `<h3>👉 지금 할 일 · 예약 확정</h3><p>👍 업체가 <b>${fdk(b.visit_date)} ${esc(b.visit_time || "")}</b> 가능하다고 답했어요.</p>
-        <div class="btn-row"><button class="btn main" data-nx="confirm">✅ 예약 확정하고 손님에게 안내</button></div><p class="hint">누르면 예약 확정으로 바뀌고, 손님 확정 메시지가 복사되고 카카오톡 채널 관리자센터가 열려요.</p>`;
+        <div class="btn-row"><button class="btn main" data-nx="confirm">✅ 예약 확정하고 손님에게 안내</button></div><p class="hint">누르면 예약 확정으로 바뀌고, 손님 확정 메시지가 복사돼요. 아래에서 고른 곳(카톡 채널 관리자센터 또는 문자 앱)이 열려요.</p>`;
     } else if (st === "rejected" || st === "reschedule") {
       const prop = b.proposed_times || [], editing = st === "rejected" || !!editRows;
       const offer = editRows || (st === "reschedule" ? (b.offer_times || []) : (prop.length ? prop : [{ date: b.visit_date || "", time: "" }]));
@@ -507,7 +520,7 @@ async function openBooking(id) {
         <p>${st === "reschedule" ? "🔁 손님에게 다시 안내할 시간을 고쳐요." : "❌"} 업체가 <b>${fdk(b.visit_date)} ${esc(b.visit_time || "")}</b>은 불가라고 했어요.${prop.length ? ` 업체가 제안한 시간: <b>${prop.map(p => fdk(p.date) + " " + esc(p.time)).join(" · ")}</b>` : " 제안한 시간이 없어요 — 업체와 이야기한 가능한 시간을 적어 주세요."}</p>
         <div id="offRows">${offer.map((o, i) => `<div class="off-row"><input type="date" data-od="${i}" value="${esc(o.date || "")}"><input type="time" step="1800" data-ot="${i}" value="${esc(o.time || "")}"><button class="btn sm" data-odel="${i}" title="빼기">✕</button></div>`).join("")}</div>
         <div class="btn-row"><button class="btn sm" data-nx="addOff">+ 시간 추가 (최대 3개)</button><button class="btn main" data-nx="offer">🔁 손님에게 시간 변경 안내</button></div>
-        <p class="hint">누르면 "시간 변경 안내"로 바뀌고, 손님 예약확인증에 이 시간들이 버튼으로 떠요. 손님 메시지가 복사되고 카카오톡 채널 관리자센터가 열려요.</p>`
+        <p class="hint">누르면 "시간 변경 안내"로 바뀌고, 손님 예약확인증에 이 시간들이 버튼으로 떠요. 손님 메시지가 복사되고 아래에서 고른 곳(카톡 채널 또는 문자)이 열려요.</p>`
         : `<h3>⏳ 손님 답 기다리는 중 · 시간 변경 안내함</h3><p>손님이 예약확인증에서 시간을 누르면 자동으로 <b>업체 확인 요청</b> 단계로 돌아가요. 카톡으로 답이 오면 아래에서 대신 골라 주세요.</p>
         <div class="off-list">${offer.map((o, i) => `<div class="off-row"><b>${fdk(o.date)} ${esc(o.time)}</b><button class="btn sm main" data-pick="${i}">손님이 이 시간 골랐어요</button></div>`).join("")}</div>
         <div class="btn-row"><button class="btn sm" data-nx="resend">📋 안내 메시지 다시 복사</button><button class="btn sm" data-nx="reoffer">시간 다시 고르기</button></div>`;
@@ -519,7 +532,9 @@ async function openBooking(id) {
       h = b._custTold || TOLD.has(b.id) ? `<h3>✅ 확정 · 손님 안내 완료</h3><p class="hint">손님이 다녀가면 업체가 링크에서 결제 금액을 넣어요. (안 넣으면 아래에서 직접 방문 완료 처리)</p>`
         : `<h3>👉 지금 할 일 · 손님에게 확정 안내</h3><div class="btn-row"><button class="btn main" data-nx="tell">📣 손님에게 확정 메시지 보내기</button></div>`;
     }
-    nb.innerHTML = h; nb.hidden = !h;
+    const toCust = /data-nx="(confirm|offer|tell|follow|resend)"/.test(h);
+    nb.innerHTML = h + (toCust ? viaHtml() : ""); nb.hidden = !h;
+    nb.querySelectorAll('[name="via"]').forEach(r => r.onchange = () => { via = r.value; });
     const rows = () => [...nb.querySelectorAll("[data-od]")].map(i => ({ date: i.value, time: (nb.querySelector(`[data-ot="${i.dataset.od}"]`) || {}).value || "" }));
     nb.querySelectorAll("[data-odel]").forEach(x => x.onclick = () => { const r = rows(); r.splice(+x.dataset.odel, 1); editRows = r.length ? r : [{ date: b.visit_date || "", time: "" }]; drawNext(); });
     nb.querySelectorAll("[data-pick]").forEach(x => x.onclick = () => confirmBox("손님이 이 시간을 골랐다고 처리할까요?", async () => {
@@ -531,8 +546,8 @@ async function openBooking(id) {
       if (a === "shop") return sendShop();
       if (a === "tell" || a === "resend") return sendCust(a);
       if (a === "follow") {
-        await copy(followMsg(b), "안부 메시지를 복사했어요. 카카오톡 채널 채팅창에 붙여넣기만 하세요."); window.open(KAKAO_CENTER, "_blank");
-        await logEvent(b.id, "sent_followup", { lang: b.lang }); FOLLOWED.add(b.id); drawTop(); loadEvents(); return;
+        await sendTo(followMsg(b), "안부 메시지");
+        await logEvent(b.id, "sent_followup", { lang: b.lang, via }); FOLLOWED.add(b.id); drawTop(); loadEvents(); return;
       }
       if (a === "confirm") { try { b = await updBooking(b.id, { status: "confirmed" }, "예약 확정"); } catch (e) { return; } return sendCust("confirm"); }
       if (a === "addOff") { const r = rows(); if (r.length >= 3) { toast("최대 3개까지예요"); return; } r.push({ date: (r[r.length - 1] || {}).date || b.visit_date || "", time: "" }); editRows = r; drawNext(); return; }
@@ -606,7 +621,7 @@ async function openBooking(id) {
     ];
     $("trace").innerHTML = rows.map(([ok, t]) => `<div><span class="${ok ? "y" : "n"}">${ok ? "✓" : "○"}</span><span>${esc(t)}</span></div>`).join("");
   }
-  const EVN = { created: "예약 접수", status: "상태 변경", edit: "정보 수정", sent_to_shop: "업체에 메시지 보냄", sent_to_customer: "손님에게 안내 보냄", customer_visited: "손님이 체크인·방문 확인", sent_followup: "안부(별점) 메시지 보냄", shop_memo: "업체 메모", memo: "메모" };
+  const EVN = { created: "예약 접수", status: "상태 변경", edit: "정보 수정", sent_to_shop: "업체에 메시지 보냄", sent_to_customer: "손님에게 안내 보냄", customer_visited: "손님이 체크인·방문 확인", sent_followup: "안부(별점) 메시지 보냄", customer_kakao: "손님이 '카톡으로 확정 받기' 누름", shop_memo: "업체 메모", memo: "메모" };
   const FN = { status: "상태", paid_amount: "결제 금액", commission_rate: "수수료율", visit_date: "방문일", visit_time: "시간", people: "인원", menu_name: "메뉴", shop_id: "업체", customer_name: "이름", contact: "연락처", settlement_id: "정산서", source: "경로" };
   const fv = (k, v) => v == null ? "없음" : k === "status" ? ST_SHORT[v] || v : k === "paid_amount" ? vnd(v) : k === "commission_rate" ? v + "%" : k === "settlement_id" ? "연결됨" : k === "source" ? SRC[v] || v : String(v);
   async function loadEvents() {

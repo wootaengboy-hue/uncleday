@@ -362,12 +362,18 @@ ${f.text}
         const kmsg = msg.replace("[예약 요청]", `[예약 요청] ${r.code}`);
         form.hidden = true;
         const done = $("done"); done.hidden = false;
-        done.innerHTML = `<h2>✅ ${ui("bkDoneTitle")}</h2>
+        done.innerHTML = `<h2>✅ ${ui("bkStep1")}</h2>
           <p class="bk-code"><small>${ui("vCode")}</small><b>${esc(r.code)}</b></p>
-          <p>${ui("bkDoneDesc")}</p>
-          <a class="btn big-btn" href="${link}">${ui("bkVoucher")}</a>
-          <a class="btn kakao-link" id="bkKakao" href="${SITE.kakao}" target="_blank">${ui("bkKakao")}</a>`;
-        $("bkKakao").onclick = () => { try { navigator.clipboard.writeText(kmsg + "\n" + new URL(link, location.href).href); alertBox(ui("bkKakaoCopied")); } catch (e) {} };
+          <div class="kstep" id="kStep"><span class="kstep-n">2/2</span><b>${ui("kStepTitle")}</b><p>${ui("kStepDesc")}</p>
+            <a class="btn big-btn kstep-btn" id="bkKakao" href="${SITE.kakao}" target="_blank" rel="noopener">💬 ${ui("kStepBtn")}</a>
+            <small>${ui("kStepNote")}</small></div>
+          <p class="hint">${ui("bkDoneDesc")}</p>
+          <a class="btn" href="${link}">${ui("bkVoucher")}</a>`;
+        $("bkKakao").onclick = () => {
+          try { navigator.clipboard.writeText(`[${ui("kMsgHead")}] ${r.code} ${f.name || ""}\n${new URL(link, location.href).href}`); } catch (e) {}
+          LIVE.rpc("customer_action", { t: r.token, action: "kakao" }).catch(() => {});   // 누른 기록 (관리자 화면에 💬 표시)
+          setTimeout(() => { $("kStep").classList.add("ok"); $("kStep").innerHTML = `<b>✅ ${ui("kStepDone")}</b><p>${ui("kStepDoneDesc")}</p><a class="btn" href="${SITE.kakao}" target="_blank" rel="noopener">💬 ${ui("kStepAgain")}</a>`; }, 400);
+        };
         try { const k = "uncleday-my-bookings"; const a = JSON.parse(localStorage.getItem(k) || "[]"); a.unshift({ code: r.code, token: r.token, shop: shop.id, date: f.date }); localStorage.setItem(k, JSON.stringify(a.slice(0, 20))); } catch (e) {}
         done.scrollIntoView({ behavior: "smooth" });
         return;

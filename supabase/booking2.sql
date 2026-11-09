@@ -54,6 +54,10 @@ begin
   elsif action = 'cancel' then
     if b.status not in ('requested', 'shop_ok', 'confirmed', 'rejected', 'reschedule') then raise exception '이미 처리된 예약이라 취소할 수 없어요. 상담으로 문의해 주세요'; end if;
     update bookings set status = 'cancelled' where id = b.id;
+  elsif action = 'kakao' then   -- 손님이 '카톡으로 확정 받기'를 누름 (채널 채팅방이 생겼을 가능성)
+    if not exists (select 1 from booking_events e where e.booking_id = b.id and e.action = 'customer_kakao') then
+      insert into booking_events (booking_id, action, detail) values (b.id, 'customer_kakao', '{}');
+    end if;
   elsif action = 'pick' then
     if b.status <> 'reschedule' then raise exception '지금은 시간을 바꿀 수 없어요. 상담으로 문의해 주세요'; end if;
     o := b.offer_times -> pick;

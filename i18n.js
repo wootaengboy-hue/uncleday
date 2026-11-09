@@ -172,3 +172,11 @@ Object.assign(UI.en, { ciTitle: "Have you arrived at the shop?", ciDesc: "Show t
   rateTitle: "How was it today?", rateHint: "Tap a star. Even one tap really helps the next guests.", rateThanks: "Thank you! Add a line and it becomes a review." });
 Object.assign(UI.vi, { ciTitle: "Bạn đã đến cơ sở chưa?", ciDesc: "Đưa màn hình này cho nhân viên và bấm check-in. Việc này ghi nhận bạn đặt qua Uncle Day để chúng tôi hỗ trợ ngay nếu có vấn đề.", ciBtn: "📍 Tôi đã đến · Check-in", ciDone: "Đã check-in. Chúc bạn thư giãn!",
   rateTitle: "Hôm nay thế nào?", rateHint: "Hãy bấm sao. Chỉ một lần bấm cũng giúp ích cho khách sau.", rateThanks: "Cảm ơn bạn! Viết thêm một dòng để thành đánh giá." });
+
+/* 예약 완료 2단계: 카톡으로 확정 받기 */
+Object.assign(UI.ko, { bkStep1: "예약 요청 완료 (1/2)", kStepTitle: "마지막 단계 · 카톡으로 확정 받기", kStepDesc: "예약 확정·시간 변경 소식을 카카오톡으로 보내 드려요. 버튼을 누르면 예약번호가 복사되고 엉클데이 채팅이 열려요. 붙여넣고 보내기만 하면 끝이에요.",
+  kStepBtn: "카톡으로 확정 받기", kStepNote: "카톡을 안 쓰시면 남겨 주신 번호로 문자를 보내 드려요.", kMsgHead: "예약확인", kStepDone: "거의 끝났어요!", kStepDoneDesc: "열린 카톡 채팅창에 붙여넣기 하고 보내 주세요. 확정되면 그 채팅으로 바로 알려 드릴게요.", kStepAgain: "카톡 채팅 다시 열기" });
+Object.assign(UI.en, { bkStep1: "Booking request sent (1/2)", kStepTitle: "Last step · Get your confirmation on KakaoTalk", kStepDesc: "We send confirmations and time changes on KakaoTalk. Tap the button: your booking number is copied and our chat opens. Just paste and send.",
+  kStepBtn: "Get confirmation on KakaoTalk", kStepNote: "No KakaoTalk? We'll text the number you gave us.", kMsgHead: "Booking", kStepDone: "Almost done!", kStepDoneDesc: "Paste into the KakaoTalk chat that opened and send it. We'll tell you there as soon as it's confirmed.", kStepAgain: "Open KakaoTalk chat again" });
+Object.assign(UI.vi, { bkStep1: "Đã gửi yêu cầu đặt lịch (1/2)", kStepTitle: "Bước cuối · Nhận xác nhận qua KakaoTalk", kStepDesc: "Chúng tôi gửi xác nhận và thay đổi giờ qua KakaoTalk. Bấm nút: mã đặt lịch được sao chép và khung chat mở ra. Chỉ cần dán và gửi.",
+  kStepBtn: "Nhận xác nhận qua KakaoTalk", kStepNote: "Không dùng KakaoTalk? Chúng tôi sẽ nhắn tin SMS đến số bạn để lại.", kMsgHead: "Đặt lịch", kStepDone: "Sắp xong rồi!", kStepDoneDesc: "Dán vào khung chat KakaoTalk vừa mở và gửi. Khi được xác nhận, chúng tôi sẽ báo ngay trong chat.", kStepAgain: "Mở lại chat KakaoTalk" });
