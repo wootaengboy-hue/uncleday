@@ -52,10 +52,19 @@ function draw(b) {
   const offers = b.status === "reschedule" ? (b.offer_times || []) : [];
   const past = ["visited", "settled"].includes(b.status);
   const canVisit = !b.customer_visit_at && !["cancelled", "rejected"].includes(b.status);
+  // 방문 당일엔 '도착 체크인', 방문 뒤엔 '별점 한 번' (베트남 시간 기준)
+  const start = b.visit_date && b.visit_time ? Date.parse(`${b.visit_date}T${b.visit_time}:00+07:00`) : null;
+  const end = start ? start + (b.menu_min || 60) * 60000 : null, now = Date.now();
+  const checkin = start && b.status === "confirmed" && !b.customer_visit_at && now >= start - 2 * 3600e3 && now < end;
+  const inside = start && b.customer_visit_at && now < end;
+  const rate = !b.reviewed && (past || (end && now >= end)) && ["confirmed", "visited", "settled", "noshow"].includes(b.status);
   document.title = `${ui("vTitle")} ${b.code} | ${tx(SITE.name)}`;
   box.innerHTML = `<div class="done voucher">
     <div class="v-head"><small>${ui("vTitle")}</small><b class="v-code">${esc(b.code)}</b>
       <span class="v-st st-${esc(b.status)}">${ui("st_" + b.status)}</span></div>
+    ${checkin ? `<div class="ci-box"><b>📍 ${ui("ciTitle")}</b><p>${ui("ciDesc")}</p><button class="btn big-btn" id="vCheckin">${ui("ciBtn")}</button></div>` : ""}
+    ${inside ? `<p class="v-ok">✅ ${ui("ciDone")}</p>` : ""}
+    ${rate ? `<div class="rate-box"><b>${ui("rateTitle")}</b><div class="rate-stars">${[1, 2, 3, 4, 5].map(n => `<button type="button" data-rate="${n}" aria-label="${n}">★</button>`).join("")}</div><small>${ui("rateHint")}</small></div>` : ""}
     ${s.img ? `<img class="v-img" src="${esc(s.img)}" alt="" style="object-position:${esc(s.imgPos || "50% 50%")}">` : ""}
     <dl class="v-info">
       <dt>${ui("vShop")}</dt><dd><b>${esc(s.name ? tx(s.name) : b.shop_name)}</b>${s.address ? `<br><small>${esc(tx(s.address))}</small>` : ""}${s.map ? ` <a href="${esc(s.map)}" target="_blank" rel="noopener">${ui("vMap")}</a>` : ""}</dd>
@@ -72,9 +81,9 @@ function draw(b) {
     ${b.change_count && b.status !== "reschedule" ? `<p class="v-ok" style="background:#fff4e5;color:#9a5208">🔁 ${ui("vChanged", { n: b.change_count })}</p>` : ""}
     ${b.status === "confirmed" ? `<p class="v-show">📱 ${ui("vShow")}</p>` : ""}
     <div class="v-btns">
-      ${canVisit && (past || b.status === "confirmed" || b.status === "noshow") ? `<button class="btn big-btn" id="vVisit">${ui("vVisited")}</button>` : ""}
-      ${b.customer_visit_at ? `<p class="v-ok">${ui("vVisitedDone")}</p>` : ""}
-      ${!b.reviewed && (past || b.customer_visit_at) ? `<button class="btn" id="vRv">${ui("vReview")}</button>` : ""}
+      ${canVisit && !start && (past || b.status === "confirmed" || b.status === "noshow") ? `<button class="btn big-btn" id="vVisit">${ui("vVisited")}</button>` : ""}
+      ${b.customer_visit_at && !inside ? `<p class="v-ok">${ui("vVisitedDone")}</p>` : ""}
+      ${!b.reviewed && !rate && (past || (b.customer_visit_at && !inside)) ? `<button class="btn" id="vRv">${ui("vReview")}</button>` : ""}
       ${b.reviewed ? `<p class="v-ok">${ui("vReviewed")}</p>` : ""}
       <a class="btn kakao-link" href="${SITE.kakao}" target="_blank">💬 ${ui("vAsk")}</a>
       <button class="btn" id="vLink">${ui("vCopyLink")}</button>
@@ -91,6 +100,12 @@ function draw(b) {
     document.body.appendChild(d); d.querySelector("[data-n]").onclick = () => d.remove(); d.querySelector("[data-y]").onclick = () => { d.remove(); act("pick", +x.dataset.pick); };
   });
   if ($("vVisit")) $("vVisit").onclick = () => act("visited");
+  if ($("vCheckin")) $("vCheckin").onclick = () => act("visited");
+  box.querySelectorAll("[data-rate]").forEach(x => x.onclick = async () => {
+    const n = +x.dataset.rate; let nb = b;
+    if (!b.customer_visit_at) { try { nb = await LIVE.rpc("customer_action", { t, action: "visited" }); } catch (e) {} }   // 별 한 번 = 방문 확인
+    draw({ ...nb, _rate: n }); openRv(n); toastV(ui("rateThanks"));
+  });
   $("vLink").onclick = () => { try { navigator.clipboard.writeText(location.href); toastV(ui("vLinkCopied")); } catch (e) {} };
   if ($("vCancel")) $("vCancel").onclick = () => {
     const d = document.createElement("div"); d.className = "lightbox";
@@ -100,16 +115,19 @@ function draw(b) {
     d.querySelector("[data-n]").onclick = () => d.remove();
     d.querySelector("[data-y]").onclick = () => { d.remove(); act("cancel"); };
   };
-  if ($("vRv")) $("vRv").onclick = () => {
-    $("vRv").hidden = true;
-    let st = 0;
+  if ($("vRv")) $("vRv").onclick = () => openRv(0);
+  function openRv(preset) {
+    if ($("vRv")) $("vRv").hidden = true;
+    box.querySelectorAll(".rate-box").forEach(x => x.hidden = true);
+    let st = preset || 0;
     $("vRvBox").innerHTML = `<form id="rvForm" class="form">
       <div class="f-stars"><span>${ui("rvStars")}</span><div id="rvStarBtns">${[1, 2, 3, 4, 5].map(n => `<button type="button" data-s="${n}">★</button>`).join("")}</div></div>
       <label>${ui("rvName")}<input name="name" required maxlength="20" value="${esc(b.customer_name || "")}"></label>
       <label>${ui("rvText")}<textarea name="text" rows="4" required minlength="10" maxlength="1000" placeholder="${ui("rvTextPh")}"></textarea></label>
       <button class="btn big-btn" type="submit">${ui("rvSend")}</button><small>${ui("rvNotice")}</small></form>`;
     const f = $("rvForm");
-    f.querySelectorAll("[data-s]").forEach(x => x.onclick = () => { st = +x.dataset.s; f.querySelectorAll("[data-s]").forEach(y => y.classList.toggle("on", +y.dataset.s <= st)); });
+    const paint = () => f.querySelectorAll("[data-s]").forEach(y => y.classList.toggle("on", +y.dataset.s <= st)); paint();
+    f.querySelectorAll("[data-s]").forEach(x => x.onclick = () => { st = +x.dataset.s; paint(); });
     f.scrollIntoView({ behavior: "smooth" });
     f.onsubmit = async e => {
       e.preventDefault();
@@ -120,7 +138,7 @@ function draw(b) {
         draw(await LIVE.rpc("booking_for_customer", { t }));
       } catch (err) { toastV(err.message); }
     };
-  };
+  }
 }
 addEventListener("hashchange", load);
 load();

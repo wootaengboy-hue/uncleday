@@ -542,3 +542,18 @@ h1, h2, h3, .head h1, .cat-title, .partner h2 { font-weight: 800; }
 .res-box p { margin: 0 0 10px; font-size: 14px; color: #555; }
 .res-list { display: grid; gap: 8px; }
 .res-opt { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; background: #fff; border: 1px solid #ecdcb8; border-radius: 10px; font-weight: 700; }
+
+/* 예약확인증: 도착 체크인 · 별점 */
+.ci-box, .rate-box { margin: 12px 0; padding: 16px; border-radius: 14px; text-align: center; }
+.ci-box { background: #e9f7f1; border: 2px solid #1f7a4d; }
+.ci-box b, .rate-box b { display: block; font-size: 18px; margin-bottom: 4px; }
+.ci-box p { margin: 0 0 12px; font-size: 14px; color: #36574a; }
+.ci-box .big-btn { width: 100%; }
+.rate-box { background: #fff8e6; border: 2px solid #f5b84c; }
+.rate-stars { display: flex; justify-content: center; gap: 6px; margin: 8px 0; }
+.rate-stars button { border: 0; background: none; font-size: 40px; line-height: 1; color: #e3d5b0; cursor: pointer; padding: 0 2px; transition: transform .1s, color .1s; }
+.rate-stars button:hover, .rate-stars button:hover ~ button { color: #e3d5b0; }
+.rate-stars:hover button { color: #f5a524; }
+.rate-stars button:hover ~ button { color: #e3d5b0; }
+.rate-stars button:active { transform: scale(1.2); }
+.rate-box small { color: #8a6d1f; }

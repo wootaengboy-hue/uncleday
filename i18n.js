@@ -164,3 +164,11 @@ Object.assign(UI.vi, { pickDT: "Chọn ngày và giờ", pickTime: "Chọn giờ
   st_shop_ok: "Cơ sở đã kiểm tra · sắp xác nhận", st_reschedule: "Cơ sở cần đổi giờ khác",
   vResTitle: "Bạn có thể chọn giờ khác không?", vResDesc: "Cơ sở không nhận được giờ bạn chọn. Hãy chọn một giờ bên dưới, chúng tôi sẽ kiểm tra lại và xác nhận.",
   vResPick: "Đổi sang giờ này", vResAsk: "Gửi yêu cầu đổi sang giờ này?", vResDone: "Đã gửi yêu cầu đổi giờ. Chúng tôi sẽ sớm xác nhận.", vResNone: "Nếu không có giờ phù hợp, hãy nhắn giờ bạn muốn qua KakaoTalk.", vChanged: "Đã đổi giờ {n} lần" });
+
+/* 도착 체크인 · 별점 한 번 */
+Object.assign(UI.ko, { ciTitle: "매장에 도착하셨나요?", ciDesc: "직원에게 이 화면을 보여 주고 체크인을 눌러 주세요. 엉클데이 예약으로 오신 게 기록돼서, 혹시 문제가 생기면 저희가 바로 도와드릴 수 있어요.", ciBtn: "📍 도착했어요 · 체크인", ciDone: "체크인했어요. 즐거운 시간 보내세요!",
+  rateTitle: "오늘 어떠셨어요?", rateHint: "별을 눌러 주세요. 한 번만 눌러도 다음 손님들께 큰 도움이 돼요.", rateThanks: "고마워요! 한 줄만 더 남겨 주시면 후기로 올라가요." });
+Object.assign(UI.en, { ciTitle: "Have you arrived at the shop?", ciDesc: "Show this screen to the staff and tap check-in. It records that you came through Uncle Day, so we can help right away if anything goes wrong.", ciBtn: "📍 I'm here · Check in", ciDone: "You're checked in. Enjoy!",
+  rateTitle: "How was it today?", rateHint: "Tap a star. Even one tap really helps the next guests.", rateThanks: "Thank you! Add a line and it becomes a review." });
+Object.assign(UI.vi, { ciTitle: "Bạn đã đến cơ sở chưa?", ciDesc: "Đưa màn hình này cho nhân viên và bấm check-in. Việc này ghi nhận bạn đặt qua Uncle Day để chúng tôi hỗ trợ ngay nếu có vấn đề.", ciBtn: "📍 Tôi đã đến · Check-in", ciDone: "Đã check-in. Chúc bạn thư giãn!",
+  rateTitle: "Hôm nay thế nào?", rateHint: "Hãy bấm sao. Chỉ một lần bấm cũng giúp ích cho khách sau.", rateThanks: "Cảm ơn bạn! Viết thêm một dòng để thành đánh giá." });
