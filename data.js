@@ -157,14 +157,14 @@ const FAQ = [
 // 5) 사이트에 보이는 카테고리: 업체가 적은 동안은 2개로 묶어서 보여 줘요
 //    나중에 업체가 많아지면 members를 나눠 묶음을 늘리면 돼요 (업체 데이터는 안 바꿔도 돼요)
 const CATEGORIES = [
-  { id: "spabody", icon: "💆", name: { ko: "Spa & Body", en: "Spa & Body", vi: "Spa & Body" },
-    desc: { ko: "마사지 · 스파 · 바디케어", en: "Massage · Spa · Body care", vi: "Massage · Spa · Chăm sóc cơ thể" },
-    members: ["massage", "spa"] },
   { id: "beauty", icon: "✨", name: { ko: "Skin & Beauty", en: "Skin & Beauty", vi: "Skin & Beauty" },
     desc: { ko: "피부관리 · 피부과 · 헤어 · 네일 등", en: "Skincare · Clinics · Hair · Nails", vi: "Chăm sóc da · Da liễu · Tóc · Nail" },
-    members: ["skin", "derma", "surgery", "hair", "nail", "body", "dental", "package"] }
+    members: ["skin", "derma", "surgery", "hair", "nail", "body", "dental", "package"] },
+  { id: "spabody", icon: "💆", name: { ko: "Spa & Body", en: "Spa & Body", vi: "Spa & Body" },
+    desc: { ko: "마사지 · 스파 · 바디케어", en: "Massage · Spa · Body care", vi: "Massage · Spa · Chăm sóc cơ thể" },
+    members: ["massage", "spa"] }
 ];
 CATEGORIES.forEach(g => { g.sub = g.members.map(id => CATEGORY_DETAIL.find(c => c.id === id)).filter(Boolean).map(c => c.name); });
 // 업체의 세부 카테고리 → 사이트 묶음 (모르는 값은 Skin & Beauty로)
-const catGroup = id => CATEGORIES.find(c => c.id === id || c.members.includes(id)) || CATEGORIES[CATEGORIES.length - 1];
+const catGroup = id => CATEGORIES.find(c => c.id === id || c.members.includes(id)) || CATEGORIES.find(c => c.id === "beauty") || CATEGORIES[0];
 const catDetail = id => CATEGORY_DETAIL.find(c => c.id === id);
