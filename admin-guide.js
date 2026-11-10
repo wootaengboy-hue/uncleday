@@ -1,10 +1,17 @@
 /* 낙서장 → 📘 사용 안내: 팀원용 튜토리얼 (내용은 여기서 고쳐요) */
 const GUIDE = [
   { sec: "📢 새 소식", items: [
+    { ic: "🆕", t: "11월 10일 업데이트", b: `
+      <ul><li><b>👤 손님 로그인 연결 완료</b> — 카카오·구글은 손님에게 보여요. 네이버(검수 대기)·페이스북(비즈니스 인증 대기)은 설정만 끝내고 숨겨 뒀어요 (아래 "채팅 · 로그인" → 로그인 현황).</li>
+      <li><b>🔒 개인정보처리방침</b> — <code>www.uncleday.com/privacy.html</code> (한·영·베), 사이트 맨 아래 링크. 문의 메일 uncledayadmin@gmail.com.</li>
+      <li><b>💬 상담하기 = 사이트 채팅</b> — 위쪽 상담하기, 업체 화면 아래 💬 상담 버튼이 카톡 대신 사이트 채팅을 열어요. 업체 화면 아래 바는 <b>📅 날짜 골라 예약하기 + 💬 상담</b>, 예약 폼이 보이면 바가 숨어요.</li>
+      <li><b>📋 예약 → 전체</b>는 최근 접수 순, <b>내 예약</b>은 로그인한 채 사이트에서 한 예약(관리자 계정 포함)이 보여요.</li>
+      <li><b>🌐 브랜드 이름 번역 금지</b> — 크롬 자동 번역이 "Uncle Day"를 "데이 삼촌"으로 바꾸지 않아요.</li>
+      <li>예약 연락처에 <b>전화번호</b> 안내 추가, 메인 카테고리의 업체 수 표시 숨김.</li></ul>` },
     { ic: "🆕", t: "11월 9일 업데이트", b: `
       <ul><li><b>할 일 저장해도 창이 안 닫혀요</b> — 저장하면 "저장했어요 ✅"만 뜨고 계속 쓸 수 있어요. <b>Ctrl+S</b>로도 저장. 다 쓰면 닫기·Esc.</li>
       <li><b>💬 문구에 댓글 달기</b> — 노션처럼 메모 속 문구에 바로 댓글 (아래 "낙서장" 참고).</li>
-      <li><b>💬 사이트 채팅 · 👤 손님 로그인</b> — 손님이 사이트 안에서 바로 채팅하고, 카카오·네이버·구글·페이스북으로 로그인할 수 있어요 (아래 "채팅 · 로그인" 참고, chat.sql 실행 필요).</li>
+      <li><b>💬 사이트 채팅 · 👤 손님 로그인</b> — 손님이 사이트 안에서 바로 채팅하고, 카카오·구글(+ 네이버·페이스북 준비 중)로 로그인할 수 있어요 (아래 "채팅 · 로그인" 참고, chat.sql 실행 필요).</li>
       <li><b>🗂 카테고리 2개로</b> — 사이트에는 <b>Spa & Body</b>(마사지·스파)와 <b>Skin & Beauty</b>(나머지 전부) 두 개만 보여요. 업체 수정의 <b>세부 카테고리</b>는 그대로 고르면 되고, 업체가 많아지면 묶음만 다시 나누면 돼요. 메인 화면 카테고리 사진은 업체 탭 → 🖼 카테고리 사진 맨 위 두 줄에서 바꿔요.</li>
       <li><b>💬 예약하면 바로 채팅으로</b> — 손님이 예약하면 사이트 채팅창이 열리고 예약 진행 상황(접수·확정·시간 변경)이 자동으로 쌓여요. 손님 안내 기본값도 사이트 채팅이에요 (카톡·문자는 '같이 보내기').</li>
       <li><b>📍 도착 체크인 · ⭐ 별점 한 번</b> — 방문 당일엔 예약확인증 맨 위에 체크인 버튼이, 방문 뒤엔 별점이 떠요. 둘 다 "손님이 다녀왔다"는 기록이 돼요. 방문이 지나도 기록이 없으면 대시보드에 💌 안부 메시지 할 일이 떠요.</li>
@@ -198,45 +205,85 @@ const GUIDE = [
       <li>끝난 대화는 <b>✓ 대화 끝내기</b>. 손님이 다시 보내면 자동으로 다시 열려요.</li></ol>
       <p class="tip">💡 <b>예약 안내가 채팅에 자동으로 쌓여요.</b> 손님이 예약하면 "예약 요청을 받았어요", 예약 확정 버튼을 누르면 "예약이 확정됐어요", 시간 변경 안내를 보내면 가능한 시간 목록, 손님이 시간을 고르면 "변경 요청을 받았어요", 취소되면 취소 안내가 그 예약의 채팅에 "엉클데이 (자동 안내)" 이름으로 들어가요. 💌 안부 메시지도 채팅에 같이 남아요. 손님이 사이트에 다시 오면 💬에 빨간 점이 떠요.</p>
       <p class="tip">💡 대화는 같은 휴대폰·브라우저로 다시 오면 자동으로 이어지고, 예약확인증 링크나 로그인으로 오면 어느 기기에서나 이어져요.</p>` },
-    { ic: "👤", t: "손님 로그인 켜기 (공통 설정)", b: `
-      <p>로그인 버튼은 사이트 위쪽에 이미 있어요. 각 회사(카카오·구글·페이스북·네이버)에 우리 앱을 등록하고 키를 Supabase에 넣어야 실제로 동작해요. <b>키는 Claude에게 보내지 말고 Supabase에 직접 넣어요.</b></p>
-      <ol><li>Supabase → <b>Authentication → URL Configuration</b>
-        <ul><li>Site URL: <code>https://www.uncleday.com</code></li><li>Redirect URLs에 추가: <code>https://www.uncleday.com/**</code></li></ul></li>
-      <li>각 회사 개발자 화면에 넣을 <b>콜백(Redirect) 주소</b>: <code>https://miftvdayembakwtvckxk.supabase.co/auth/v1/callback</code></li>
-      <li>Supabase → <b>Authentication → Sign In / Providers</b>에서 각 로그인을 켜고 받은 키를 넣어요.</li></ol>
-      <p class="warn">⚠️ 정식으로 손님을 받기 전에 <b>개인정보처리방침</b> 페이지가 꼭 있어야 해요 (페이스북·카카오 검수에도 필요해요).</p>` },
-    { ic: "🟡", t: "카카오 로그인", b: `
-      <ol><li><a href="https://developers.kakao.com" target="_blank" rel="noopener">developers.kakao.com</a> → 내 애플리케이션 → 애플리케이션 추가 (앱 이름: 엉클데이)</li>
-      <li>앱 키 → <b>REST API 키</b> 복사</li>
-      <li>카카오 로그인 → 활성화 <b>ON</b> → Redirect URI에 위 콜백 주소 등록</li>
-      <li>카카오 로그인 → 보안 → <b>Client Secret</b> 발급·사용함</li>
-      <li>동의항목: 닉네임(필수), 카카오계정 이메일(선택). 이메일을 필수로 받으려면 비즈 앱 전환(사업자등록 후)이 필요해요.</li>
-      <li>Supabase → Providers → <b>Kakao</b> 켜기 → Client ID = REST API 키, Client Secret 입력 → 저장</li></ol>
-      <p class="tip">💡 이메일을 안 주는 손님 때문에 로그인이 실패하면, Supabase 카카오 설정에 "이메일 없이 허용" 옵션이 있으면 켜고, 없으면 이메일 동의를 '필수'로 바꿔야 해요 (비즈 앱 필요).</p>` },
-    { ic: "🔵", t: "구글 로그인", b: `
-      <ol><li><a href="https://console.cloud.google.com" target="_blank" rel="noopener">console.cloud.google.com</a> → 프로젝트 만들기 (엉클데이)</li>
-      <li>API 및 서비스 → <b>OAuth 동의 화면</b>: 외부(External), 앱 이름 엉클데이, 지원 이메일, 앱 도메인 uncleday.com</li>
-      <li>사용자 인증 정보 → <b>OAuth 클라이언트 ID 만들기</b> → 웹 애플리케이션 → 승인된 리디렉션 URI에 위 콜백 주소</li>
-      <li>클라이언트 ID·보안 비밀 → Supabase → Providers → <b>Google</b>에 입력</li>
-      <li>테스트가 끝나면 동의 화면을 <b>프로덕션으로 게시</b>해야 아무나 로그인할 수 있어요.</li></ol>` },
-    { ic: "🔷", t: "페이스북 로그인", b: `
-      <ol><li><a href="https://developers.facebook.com" target="_blank" rel="noopener">developers.facebook.com</a> → 앱 만들기 → 사용 사례 "Facebook 로그인으로 사용자 인증"</li>
-      <li>Facebook 로그인 → 설정 → <b>유효한 OAuth 리디렉션 URI</b>에 위 콜백 주소</li>
-      <li>앱 설정 → 기본 설정: <b>앱 ID·앱 시크릿 코드</b>, 개인정보처리방침 URL, 앱 도메인 uncleday.com</li>
-      <li>Supabase → Providers → <b>Facebook</b>에 앱 ID(Client ID)·시크릿 입력</li>
-      <li>앱을 <b>라이브(공개)</b>로 바꿔야 일반 손님이 쓸 수 있어요. 메타가 비즈니스 인증을 요구할 수 있어요.</li></ol>` },
-    { ic: "🟢", t: "네이버 로그인 (직접 연결)", b: `
-      <ol><li><a href="https://developers.naver.com/apps" target="_blank" rel="noopener">developers.naver.com</a> → 애플리케이션 등록 → 사용 API: <b>네이버 로그인</b>, 제공 정보: 이름·이메일</li>
-      <li>환경: PC 웹 → 서비스 URL <code>https://www.uncleday.com</code></li>
-      <li>Supabase → Providers → <b>New Provider → Manual configuration (OAuth2)</b>
-        <ul><li>Identifier: <code>custom:naver</code> · Name: 네이버</li>
-        <li>Authorization URL: <code>https://nid.naver.com/oauth2.0/authorize</code></li>
-        <li>Token URL: <code>https://nid.naver.com/oauth2.0/token</code></li>
-        <li>Userinfo URL: <code>https://openapi.naver.com/v1/nid/me</code></li>
-        <li>Client ID·Secret: 네이버에서 받은 값 · PKCE: 끄기 · Email optional: 켜기</li></ul></li>
-      <li>Supabase 화면에 보이는 <b>Callback URL</b>을 복사해 네이버 앱의 Callback URL에 넣어요.</li>
-      <li>네이버는 실제 서비스 전에 <b>검수 요청</b>이 필요해요 (그 전엔 등록한 개발자 계정만 로그인 가능).</li></ol>
-      <p class="warn">⚠️ 네이버는 사용자 정보를 다른 회사와 조금 다른 모양으로 줘서, 연결해 보고 로그인이 안 되면 Claude에게 말해 주세요. 작은 중계 기능을 추가로 만들어야 할 수 있어요.</p>` }
+    { ic: "📋", t: "손님 로그인 현황 (11월 10일 기준)", b: `
+      <div class="tscroll"><table class="t"><thead><tr><th>로그인</th><th>설정</th><th>손님에게</th><th>남은 일</th></tr></thead><tbody>
+      <tr><td>🟡 카카오</td><td>✅ 완료</td><td style="white-space:nowrap">✅ 보임</td><td>-</td></tr>
+      <tr><td>🔵 구글</td><td>✅ 완료</td><td style="white-space:nowrap">✅ 보임</td><td>-</td></tr>
+      <tr><td>🟢 네이버</td><td>✅ 완료 (중계 기능 사용)</td><td style="white-space:nowrap">🙈 숨김</td><td>네이버 <b>검수 승인</b> 기다리는 중 → 승인되면 Claude에게 "네이버 버튼 켜 줘"</td></tr>
+      <tr><td>🔷 페이스북</td><td>✅ 완료 (개발 모드)</td><td style="white-space:nowrap">🙈 숨김</td><td>메타 <b>비즈니스 인증 → 앱 게시</b> 필요 (사업자등록 후 추천) → 끝나면 Claude에게 "페이스북 버튼 켜 줘"</td></tr>
+      </tbody></table></div>
+      <p class="tip">💡 숨긴 네이버 버튼은 주소 끝에 <code>?naver=1</code>을 붙여 들어오면 보여요 (검수 담당자·테스트용): <code>https://www.uncleday.com/?naver=1</code></p>
+      <p class="tip">💡 로그인한 손님은 위쪽 <b>내 예약</b>에서 예약 목록을 보고, 💬 채팅은 다른 기기에서도 가장 최근 대화(예약 진행 안내 포함)가 이어져요. 로그인한 채 예약하면 이름·이메일이 예약 폼에 미리 채워져요.</p>
+      <p class="warn">⚠️ 앱 키·시크릿(Client Secret, 앱 시크릿 코드 등)은 Claude나 메신저에 보내지 말고 Supabase에만 직접 넣어요. 캡처할 때도 가려 주세요. 실수로 보였으면 그 회사 화면에서 <b>재발급</b> 후 Supabase에 새 값을 넣어요.</p>` },
+    { ic: "⚙️", t: "공통 설정 (Supabase) — 한 번만", b: `
+      <ol><li><b>Authentication → URL Configuration</b>
+        <ul><li>Site URL: <code>https://www.uncleday.com</code></li><li>Redirect URLs: <code>https://www.uncleday.com/**</code></li></ul></li>
+      <li><b>Authentication → Sign In / Providers</b> 맨 위 User Signups
+        <ul><li><b>Allow new users to sign up</b>: <b>ON</b> — 꺼져 있으면 새 손님이 소셜 로그인할 때 "Signups not allowed for this instance" 오류가 나요.</li>
+        <li><b>Confirm email</b>: <b>ON</b> — 이메일·비밀번호 가입은 메일 인증을 해야만 로그인돼요 (남이 직원 이메일로 가입해도 못 써요).</li>
+        <li>Allow manual linking / anonymous sign-ins: OFF</li></ul></li>
+      <li>같은 화면 <b>Email</b>: Enable email provider <b>ON</b> (관리자 로그인용). Minimum password length는 <b>8</b> 추천.</li>
+      <li>각 회사 개발자 화면에 넣는 <b>콜백(Redirect) 주소</b> — 네 곳 모두 같아요: <code>https://miftvdayembakwtvckxk.supabase.co/auth/v1/callback</code></li></ol>
+      <p class="tip">💡 소셜 로그인 계정(카카오·구글·네이버·페이스북)은 관리자가 될 수 없게 막혀 있어요. 관리자는 이메일 로그인 + 관리자 목록에 있는 사람만.</p>
+      <p class="tip">💡 개인정보처리방침: <code>https://www.uncleday.com/privacy.html</code> (한·영·베, 각 회사 검수에 이 주소를 써요). 데이터 삭제 안내는 <code>#delete</code>(한국어) · <code>#delete-en</code>(영어).</p>
+      <p class="tip">💡 앱 아이콘: 128×128(카카오)·1024×1024(페이스북) 크기로 만든 동그란 엉클데이 아이콘을 썼어요. 다시 필요하면 Claude에게 요청.</p>` },
+    { ic: "🔵", t: "구글 로그인 — 한 과정", b: `
+      <ol><li><a href="https://console.cloud.google.com" target="_blank" rel="noopener">console.cloud.google.com</a> → 프로젝트 <b>uncleday</b> → <b>Google 인증 플랫폼</b> → <b>시작하기</b>
+        <ul><li>앱 이름 <code>엉클데이</code> · 지원 이메일 · 대상 <b>외부</b> · 연락처 이메일 → 만들기</li></ul></li>
+      <li><b>클라이언트 → 클라이언트 만들기</b> → 웹 애플리케이션 → <b>승인된 리디렉션 URI</b>에 콜백 주소 → 만들기 → 클라이언트 ID·보안 비밀번호 복사 (보안 비밀번호는 한 번만 보여줄 수 있어요)</li>
+      <li>Supabase → Sign In / Providers → <b>Google</b> 켜기 → Client ID·Secret 넣고 저장</li>
+      <li><b>브랜딩</b>: 홈페이지 <code>https://www.uncleday.com</code>, 개인정보처리방침 <code>https://www.uncleday.com/privacy.html</code>, 승인된 도메인 <code>uncleday.com</code>·<code>miftvdayembakwtvckxk.supabase.co</code>, 개발자 이메일 → 저장. <b>로고는 비워 둬요</b> (올리면 구글 심사가 붙어요).</li>
+      <li><b>대상 → 앱 게시</b> → 게시 상태가 <b>프로덕션 단계</b>면 끝 (게시 전엔 테스트 사용자만 로그인돼요)</li></ol>
+      <p class="tip">💡 구글 로그인 화면에 <code>miftvdayembakwtvckxk.supabase.co(으)로 이동</code>이 보이는 건 정상이에요. uncleday.com으로 바꾸려면 Supabase 유료(Pro + 커스텀 도메인, 월 약 35달러)가 필요해요.</p>
+      <p class="tip">💡 구글은 항상 이메일이 있어서 "Allow users without an email"은 상관없어요.</p>` },
+    { ic: "🟡", t: "카카오 로그인 — 한 과정", b: `
+      <ol><li><a href="https://developers.kakao.com" target="_blank" rel="noopener">developers.kakao.com</a> → <b>앱 생성</b>: 아이콘(128 엉클데이 아이콘) · 앱 이름 <code>엉클데이</code> · 회사명 <code>엉클데이</code> · 카테고리</li>
+      <li>대시보드 <b>비즈 앱 등록</b> → <b>개인 개발자</b>로 본인인증 + 약관 동의 (사업자등록 없이 가능, 이메일 동의항목을 열려면 필요)</li>
+      <li><b>앱 → 플랫폼 키 → REST API 키</b> 상세
+        <ul><li><b>카카오 로그인 리다이렉트 URI</b>에 콜백 주소 등록 (비즈니스 인증 리다이렉트 URI는 비워 둠)</li>
+        <li><b>클라이언트 시크릿</b>: 카카오 로그인 코드 발급 · 활성화 <b>ON</b></li>
+        <li>예전 안내의 "플랫폼(Web) 사이트 도메인"은 새 화면에 없어요 — 안 해도 돼요.</li></ul></li>
+      <li><b>카카오 로그인</b> 사용 설정 <b>ON</b> → <b>동의항목</b>
+        <ul><li>닉네임: 필수 — 목적 <code>엉클데이 회원 식별 및 예약·상담 시 예약자 이름 표시</code></li>
+        <li>프로필 사진: 선택 — 목적 <code>엉클데이 내 예약 화면에서 로그인 계정 표시</code></li>
+        <li>카카오계정(이메일): 선택 — 목적 <code>예약 확인 및 상담 답변 안내, 계정 삭제 요청 시 본인 확인</code> · "값이 없는 경우 입력 요청" 체크는 <b>안 함</b> (로그인 단계가 늘어나서)</li>
+        <li>나머지(성별·연령대·생일 등): 사용 안 함</li></ul></li>
+      <li>Supabase → <b>Kakao</b> 켜기 → REST API Key = REST API 키, Client Secret = 시크릿 코드 → <b>Allow users without an email ON</b> → 저장</li></ol>
+      <p class="tip">💡 한 번 동의한 손님은 다음부터 동의 화면 없이 바로 로그인돼요 (정상).</p>` },
+    { ic: "🟢", t: "네이버 로그인 — 한 과정 (중계 기능 포함)", b: `
+      <ol><li><a href="https://developers.naver.com/apps" target="_blank" rel="noopener">developers.naver.com</a> → 애플리케이션 등록
+        <ul><li>이름 <code>엉클데이</code> · 사용 API <b>네이버 로그인</b> · 제공 정보 <b>이름(필수)·이메일(필수)</b>만</li>
+        <li>서비스 환경 <b>PC 웹</b> + <b>모바일 웹</b>: 서비스 URL <code>https://www.uncleday.com</code> · Callback URL = 콜백 주소</li></ul></li>
+      <li>Supabase → Sign In / Providers → <b>Create Custom Auth Provider</b>
+        <ul><li>Identifier <code>naver</code> (custom:naver) · Display Name <code>네이버</code> · <b>Manual configuration</b></li>
+        <li>Authorization URL <code>https://nid.naver.com/oauth2.0/authorize</code> · Token URL <code>https://nid.naver.com/oauth2.0/token</code></li>
+        <li><b>Userinfo URL</b> <code>https://miftvdayembakwtvckxk.supabase.co/functions/v1/naver-userinfo</code> (아래 중계 기능 주소)</li>
+        <li>Issuer는 비워 두고(필수면 <code>https://nid.naver.com</code>), Scopes 비움, PKCE 끔, <b>Allow users without email ON</b></li></ul></li>
+      <li><b>중계 기능</b> (Edge Function <code>naver-userinfo</code>) — 네이버는 사용자 정보를 한 번 더 감싸서 줘서 Supabase가 못 읽어요 ("missing provider id" 오류). 그래서 풀어 주는 작은 기능을 둬요.
+        <ul><li>Supabase → <b>Edge Functions → Deploy a new function → Via Editor</b> → 이름 <code>naver-userinfo</code></li>
+        <li>코드: GitHub <code>supabase/functions/naver-userinfo/index.ts</code> 내용 그대로 붙여넣기 → Deploy</li>
+        <li>함수 설정에서 <b>Verify JWT 끄기</b> (켜져 있으면 로그인 실패)</li>
+        <li>@naver.com 메일만 이메일로 저장해요 (확인 안 된 메일로 다른 계정과 잘못 합쳐지지 않게)</li></ul></li>
+      <li>네이버 앱 → <b>개인정보 국외이전 정보 등록</b>: 국가 <b>미국</b> · 이전받는 자 <code>Supabase Inc.</code> · 연락처 <code>privacy@supabase.com</code> · 항목 <code>네이버 회원 식별값, 이름, 이메일</code> · 방법 <code>서비스 이용 시 네트워크를 통한 전송</code> · 목적 <code>회원 정보 저장 및 로그인 처리, 예약·상담 내역 보관</code> · 기간 <code>회원 탈퇴 시 또는 위탁 계약 종료 시까지</code> (서버는 서울 ap-northeast-2, 운영사가 미국이라 등록)</li>
+      <li><b>검수요청</b>: 제공 정보 활용처 캡처(내 예약 화면·예약 폼) + 이름·이메일 첨부 체크 · 적용 형태 <b>신규 회원 가입</b> · 이용 절차 캡처 3장(1 로그인 버튼 → 2 네이버 동의 → 3 로그인 완료) · 추가 서류 <b>없음</b> · 로그인 플러스 OFF · 연결 끊기 Callback 비움</li></ol>
+      <p class="tip">💡 검수 전(개발 중)에는 앱을 등록한 아이디(멤버관리에 추가한 아이디)만 로그인돼요. 반려되면 사유를 캡처해서 Claude에게.</p>` },
+    { ic: "🔷", t: "페이스북 로그인 — 한 과정 (게시 대기)", b: `
+      <ol><li><a href="https://developers.facebook.com" target="_blank" rel="noopener">developers.facebook.com</a> → 앱 만들기 → 이름 <code>엉클데이</code> · 이메일 <code>uncledayadmin@gmail.com</code> · 사용 사례 <b>Facebook 로그인으로 사용자 인증 및 데이터 요청</b> · 비즈니스 포트폴리오 연결 안 함</li>
+      <li>이용 사례 → 맞춤 설정 → <b>권한 및 기능</b>: <b>email</b> 추가 (public_profile은 기본) — 나머지 권한은 추가하지 않아요</li>
+      <li>이용 사례 → <b>설정</b>: 유효한 OAuth 리디렉션 URI = 콜백 주소 → 저장</li>
+      <li>앱 설정 → <b>기본 설정</b>: 앱 도메인 <code>uncleday.com</code> · 개인정보처리방침 <code>https://www.uncleday.com/privacy.html</code> · 데이터 삭제 지침 URL <code>https://www.uncleday.com/privacy.html#delete-en</code> · 아이콘(1024) · 카테고리 → 저장</li>
+      <li>Supabase → <b>Facebook</b> 켜기 → Client ID = 앱 ID, Secret = 앱 시크릿 코드 → <b>Allow users without an email ON</b> (휴대폰으로만 가입한 사람 있음) → 저장</li>
+      <li>남은 일: <b>게시 → 비즈니스 인증</b> (사업자 또는 개인 신원 확인) → 앱 게시. 게시 전엔 앱을 만든 본인 계정만 로그인돼요.</li></ol>
+      <p class="tip">💡 개발 모드에서 동의 화면 위에 "로그인 검수를 위해 제출" 빨간 상자가 보이는 건 개발자에게만 보이는 안내예요.</p>` },
+    { ic: "🛠", t: "로그인 문제 해결 · 테스트 요령", b: `
+      <ul><li>로그인 실패 시 사이트에 <b>"로그인을 시작하지 못했어요 (이유)"</b> 알림이 떠요. 괄호 안 내용을 Claude에게 알려 주세요.
+        <ul><li><code>Signups not allowed for this instance</code> → 공통 설정의 Allow new users to sign up을 켜요</li>
+        <li><code>error missing provider id</code> → (네이버) Userinfo URL이 중계 기능 주소인지, Verify JWT가 꺼졌는지 확인</li>
+        <li>KOE로 시작하는 코드 → 카카오 설정 문제 (리다이렉트 URI·동의항목·시크릿 확인)</li></ul></li>
+      <li>원인 찾기: Supabase → <b>Logs</b> → Log Type <b>Auth</b> (+ Warning 4xx) → 그 시간대 줄을 눌러 봐요. "DEPRECATION NOTICE" 줄은 무시해도 돼요.</li>
+      <li>처음 가입하는 손님처럼 다시 테스트: Supabase → <b>Authentication → Users</b>에서 그 계정 삭제. <b>Provider가 email인 줄(관리자 계정)은 절대 지우지 마세요.</b> 지워도 예약·채팅 기록은 남고 "내 예약" 연결만 끊겨요.</li>
+      <li>동의 화면부터 다시 보려면 테스트한 사람이 자기 계정에서 연결 끊기: 카카오톡 → 설정 → 카카오계정 → <b>연결된 서비스 관리</b> / 네이버 → 내정보 → 이력관리 → <b>연결된 서비스 관리</b> (손님은 할 필요 없어요)</li>
+      <li>관리자도 사이트에서 로그인한 채 손님처럼 예약하면 <b>내 예약</b>에 보여요. 관리자 페이지에서 직접 등록한 예약은 연결되지 않아요.</li></ul>` }
   ]},
   { sec: "👥 고객", items: [
     { ic: "👥", t: "고객 관리 — 손님 카드는 어떻게 생기나요", b: `
