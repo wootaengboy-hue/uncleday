@@ -1434,7 +1434,8 @@ create index if not exists bookings_user_idx on public.bookings (user_id);
 create or replace function public.bookings_owner() returns trigger
 language plpgsql security definer set search_path = public as $$
 begin
-  if new.user_id is null and auth.uid() is not null and not is_admin() then new.user_id := auth.uid(); end if;
+  -- 사이트 예약 화면(create_booking)으로 들어온 예약만, 그때 로그인한 사람에게 연결 (관리자가 관리자 페이지에서 대신 넣은 예약은 연결 안 함)
+  if new.user_id is null and auth.uid() is not null and current_setting('app.actor', true) = '손님' then new.user_id := auth.uid(); end if;
   return new;
 end $$;
 drop trigger if exists bookings_owner on public.bookings;
