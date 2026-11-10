@@ -175,7 +175,8 @@ create or replace function public.claim_booking(t text) returns boolean
 language plpgsql security definer set search_path = public as $$
 declare n int;
 begin
-  if auth.uid() is null or coalesce(t, '') = '' then return false; end if;
+  -- 관리자는 손님 예약확인증을 자주 열어 보니까, 남의 예약을 가져가지 않게 제외
+  if auth.uid() is null or coalesce(t, '') = '' or is_admin() then return false; end if;
   update bookings set user_id = auth.uid() where customer_token = t and user_id is null;
   get diagnostics n = row_count;
   return n > 0;
