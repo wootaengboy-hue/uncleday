@@ -20,10 +20,12 @@ const ACCT = (() => {
   const t = k => T[L()][k];
   const PROVIDERS = [
     { id: "kakao", cls: "kakao", n: { ko: "카카오로 시작하기", en: "Continue with Kakao", vi: "Tiếp tục với Kakao" }, mark: "K" },
-    { id: "custom:naver", cls: "naver", n: { ko: "네이버로 시작하기", en: "Continue with Naver", vi: "Tiếp tục với Naver" }, mark: "N" },
+    { id: "custom:naver", off: "naver", cls: "naver", n: { ko: "네이버로 시작하기", en: "Continue with Naver", vi: "Tiếp tục với Naver" }, mark: "N" },
     { id: "google", cls: "google", n: { ko: "구글로 시작하기", en: "Continue with Google", vi: "Tiếp tục với Google" }, mark: "G" },
     { id: "facebook", off: true, cls: "facebook", n: { ko: "페이스북으로 시작하기", en: "Continue with Facebook", vi: "Tiếp tục với Facebook" }, mark: "f" }];
 
+  // 승인 전이라 숨긴 로그인(네이버)은 주소에 ?naver=1 을 붙여 들어오면 보여요 (검수 담당자·테스트용, 이 브라우저에 기억)
+  const unlocked = id => { try { if (new URLSearchParams(location.search).get(id) === "1") localStorage.setItem("ud-show-" + id, "1"); return localStorage.getItem("ud-show-" + id) === "1"; } catch (e) { return false; } };
   const stored = () => { try { return !!localStorage.getItem(SKEY); } catch (e) { return false; } };
   function set(s) { user = s ? s.user : null; window.UD_TOKEN = s ? s.access_token : null; drawBtn(); subs.forEach(f => { try { f(user); } catch (e) {} }); }
   function load() {
@@ -76,7 +78,7 @@ const ACCT = (() => {
   }
   function openLogin() {
     const s = openSheet(`<h2>${t("title")}</h2><p class="acct-desc">${t("desc")}</p>
-      <div class="acct-provs">${PROVIDERS.filter(p => !p.off).map(p => `<button class="acct-p ${p.cls}" data-p="${p.id}">${p.n[L()]}</button>`).join("")}</div>
+      <div class="acct-provs">${PROVIDERS.filter(p => !p.off || (typeof p.off === "string" && unlocked(p.off))).map(p => `<button class="acct-p ${p.cls}" data-p="${p.id}">${p.n[L()]}</button>`).join("")}</div>
       <p class="acct-skip">${t("skip")}</p><p class="acct-terms">${t("terms")}</p>`);
     s.querySelectorAll("[data-p]").forEach(b => b.onclick = () => { b.disabled = true; login(b.dataset.p); });
   }

@@ -242,6 +242,8 @@ function drawBookings() {
   const list = filteredBookings();
   const sortKey = b => (isOpenSt(b.status) ? "0" : "1") + (b.visit_date || "9999") + (b.visit_time || "");
   if (bkF.st === "open" || bkF.st === "requested" || bkF.st === "confirmed") list.sort((a, b) => sortKey(a).localeCompare(sortKey(b)));
+  // 전체: 들어온 순서 (가장 최근에 접수된 예약이 맨 위)
+  else if (bkF.st === "all") list.sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
   const td = bkF.todo ? TODO.find(t => t[0] === bkF.todo) : null;
   const shopOpts = [...new Set(BOOKINGS.map(b => b.shop_id).filter(Boolean))].map(id => [id, shopName({ shop_id: id })]).sort((a, b) => a[1].localeCompare(b[1]));
   $("tab-bk").innerHTML = `
