@@ -254,8 +254,6 @@ function drawBookings() {
       <button class="btn main" id="bkNew">＋ 예약 직접 등록</button>
       <button class="btn" id="bkExp">⬇ 엑셀(CSV)</button>
     </div>
-    ${(() => { const since = Date.now() - 30 * 86400e3, web = BOOKINGS.filter(b => b.source === "web" && Date.parse(b.created_at) > since), k = web.filter(b => KAKAO.has(b.id)).length;
-      return web.length ? `<p class="hint" style="margin:4px 0 8px">💬 최근 30일 사이트에서 바로 들어온 예약 <b>${web.length}건</b> 중 손님이 '카톡으로 확정 받기'를 누른 예약 <b>${k}건 (${Math.round(k / web.length * 100)}%)</b> · 안 누른 손님은 예약 상세에서 📱 문자로 보내요</p>` : ""; })()}
     <div class="tscroll"><table class="t"><thead><tr><th>예약번호</th><th>방문</th><th>업체</th><th class="hide-m">메뉴</th><th>손님</th><th>상태</th><th title="📨 업체에 알림 · 🏪 업체 답 · 📣 손님 안내 · 🙋 손님 방문 확인 · ⭐ 후기">흔적</th><th class="num">결제 / 수수료</th></tr></thead><tbody>
     ${list.map(b => `<tr class="click" data-b="${b.id}">
       <td><span class="bk-code">${esc(b.code)}</span><br><span class="src">${SRC[b.source] || b.source} · ${dt(b.created_at)}</span></td>
@@ -490,18 +488,26 @@ async function openBooking(id) {
     b = await updBooking(b.id, { sent_to_shop_at: new Date().toISOString() }).catch(() => b);
     await logEvent(b.id, "sent_to_shop", { lang: msgLang, change: b.change_count || 0 }); drawTop(); loadEvents();
   }
-  let via = KAKAO.has(b.id) || !phoneOf(b) ? "kakao" : "sms";   // 카톡 연결 안 한 손님은 문자가 기본
-  const viaHtml = () => `<div class="via"><span>손님에게 보낼 곳</span>
-      <label><input type="radio" name="via" value="kakao" ${via === "kakao" ? "checked" : ""}> 💬 카톡 채널 ${KAKAO.has(b.id) ? "<small class='ok'>(손님이 연결 버튼 누름)</small>" : "<small>(연결 기록 없음)</small>"}</label>
-      <label><input type="radio" name="via" value="sms" ${via === "sms" ? "checked" : ""} ${phoneOf(b) ? "" : "disabled"}> 📱 문자 ${phoneOf(b) ? `<small>${esc(phoneOf(b))}</small>` : "<small>(전화번호 없음)</small>"}</label></div>`;
-  async function sendTo(text, label) {
+  // 손님 안내는 기본으로 사이트 채팅에 들어가요 (확정·시간 변경은 상태가 바뀌는 순간 자동). 카톡·문자는 '같이 보내기'로 골라요
+  let via = "site", bkThread = null;
+  sb.from("chat_threads").select("id,guest_seen_at,last_at,last_from").eq("booking_id", b.id).maybeSingle().then(r => { if (!r.error) { bkThread = r.data; if ($("nextBox")) drawNext(); } });
+  const seenTxt = () => !bkThread ? "<small>(아직 채팅 기록 없음)</small>" : bkThread.guest_seen_at && bkThread.guest_seen_at >= bkThread.last_at ? "<small class='ok'>✓ 손님이 최신 안내를 봤어요</small>" : `<small>(손님이 아직 안 봤어요${bkThread.guest_seen_at ? ` · 마지막으로 본 때 ${esc(dt(bkThread.guest_seen_at))}` : ""})</small>`;
+  const viaHtml = () => `<div class="via"><span>손님 안내</span>
+      <label><input type="radio" name="via" value="site" ${via === "site" ? "checked" : ""}> 💬 사이트 채팅만 ${seenTxt()}</label>
+      <label><input type="radio" name="via" value="kakao" ${via === "kakao" ? "checked" : ""}> + 카톡 채널</label>
+      <label><input type="radio" name="via" value="sms" ${via === "sms" ? "checked" : ""} ${phoneOf(b) ? "" : "disabled"}> + 📱 문자 ${phoneOf(b) ? `<small>${esc(phoneOf(b))}</small>` : "<small>(전화번호 없음)</small>"}</label></div>
+      <p class="hint" style="margin:4px 0 0">사이트 채팅에는 항상 남아요. 손님이 한동안 안 보면 카톡이나 문자로 한 번 더 알려 주세요.</p>`;
+  // auto = 상태가 바뀌면서 채팅에 이미 자동 안내가 들어간 경우 (확정·시간 변경)
+  async function sendTo(text, label, auto) {
+    if (!auto) await sb.rpc("chat_booking_reply", { bid: b.id, body: text }).then(r => r.error && console.warn(r.error));
+    if (via === "site") { toast(`💬 ${label}를 사이트 채팅에 남겼어요`); return; }
     if (via === "sms" && phoneOf(b)) {
       await copy(text, `${label}를 복사했어요. 문자 앱이 열리면 내용을 확인하고 보내세요.`);
       location.href = `sms:${phoneOf(b)}${/iPhone|iPad|Mac/.test(navigator.userAgent) ? "&" : "?"}body=${encodeURIComponent(text)}`;
     } else { await copy(text, `${label}를 복사했어요. 카카오톡 채널 채팅창에 붙여넣기만 하세요.`); window.open(KAKAO_CENTER, "_blank"); }
   }
   async function sendCust(what) {
-    await sendTo(custMsg(b), "손님 메시지");
+    await sendTo(custMsg(b), "손님 안내", what === "confirm" || what === "reschedule" || what === "tell");   // 확정은 상태가 바뀔 때 채팅에 이미 자동으로 들어가요
     await logEvent(b.id, "sent_to_customer", { status: b.status, what, via }); if (b.status === "confirmed") { TOLD.add(b.id); b._custTold = true; } drawTop(); loadEvents();
   }
   let editRows = null;   // 손님에게 안내할 시간을 고치는 중
@@ -514,7 +520,7 @@ async function openBooking(id) {
           : `<p>업체에 예약 가능한지 물어봐요. 누르면 ${msgLang === "vi" ? "베트남어" : msgLang === "en" ? "영어" : "한국어"} 메시지가 복사되고${shopZalo ? " 업체 잘로 대화창이 열려요" : "요 (업체 잘로 번호가 없어요 — 업체 수정 → 계약·정산)"}.</p><div class="btn-row"><button class="btn main" data-nx="shop">📨 업체에 확인 요청 보내기</button></div>`}`;
     } else if (st === "shop_ok") {
       h = `<h3>👉 지금 할 일 · 예약 확정</h3><p>👍 업체가 <b>${fdk(b.visit_date)} ${esc(b.visit_time || "")}</b> 가능하다고 답했어요.</p>
-        <div class="btn-row"><button class="btn main" data-nx="confirm">✅ 예약 확정하고 손님에게 안내</button></div><p class="hint">누르면 예약 확정으로 바뀌고, 손님 확정 메시지가 복사돼요. 아래에서 고른 곳(카톡 채널 관리자센터 또는 문자 앱)이 열려요.</p>`;
+        <div class="btn-row"><button class="btn main" data-nx="confirm">✅ 예약 확정하고 손님에게 안내</button></div><p class="hint">누르면 예약 확정으로 바뀌고, 손님 사이트 채팅에 확정 안내가 바로 들어가요. 아래에서 카톡·문자를 고르면 그 메시지도 복사돼요.</p>`;
     } else if (st === "rejected" || st === "reschedule") {
       const prop = b.proposed_times || [], editing = st === "rejected" || !!editRows;
       const offer = editRows || (st === "reschedule" ? (b.offer_times || []) : (prop.length ? prop : [{ date: b.visit_date || "", time: "" }]));
@@ -522,10 +528,10 @@ async function openBooking(id) {
         <p>${st === "reschedule" ? "🔁 손님에게 다시 안내할 시간을 고쳐요." : "❌"} 업체가 <b>${fdk(b.visit_date)} ${esc(b.visit_time || "")}</b>은 불가라고 했어요.${prop.length ? ` 업체가 제안한 시간: <b>${prop.map(p => fdk(p.date) + " " + esc(p.time)).join(" · ")}</b>` : " 제안한 시간이 없어요 — 업체와 이야기한 가능한 시간을 적어 주세요."}</p>
         <div id="offRows">${offer.map((o, i) => `<div class="off-row"><input type="date" data-od="${i}" value="${esc(o.date || "")}"><input type="time" step="1800" data-ot="${i}" value="${esc(o.time || "")}"><button class="btn sm" data-odel="${i}" title="빼기">✕</button></div>`).join("")}</div>
         <div class="btn-row"><button class="btn sm" data-nx="addOff">+ 시간 추가 (최대 3개)</button><button class="btn main" data-nx="offer">🔁 손님에게 시간 변경 안내</button></div>
-        <p class="hint">누르면 "시간 변경 안내"로 바뀌고, 손님 예약확인증에 이 시간들이 버튼으로 떠요. 손님 메시지가 복사되고 아래에서 고른 곳(카톡 채널 또는 문자)이 열려요.</p>`
+        <p class="hint">누르면 "시간 변경 안내"로 바뀌고, 손님 예약확인증에 이 시간들이 버튼으로 떠요. 손님 사이트 채팅에 가능한 시간 목록이 바로 들어가요. 아래에서 카톡·문자를 고르면 그 메시지도 복사돼요.</p>`
         : `<h3>⏳ 손님 답 기다리는 중 · 시간 변경 안내함</h3><p>손님이 예약확인증에서 시간을 누르면 자동으로 <b>업체 확인 요청</b> 단계로 돌아가요. 카톡으로 답이 오면 아래에서 대신 골라 주세요.</p>
         <div class="off-list">${offer.map((o, i) => `<div class="off-row"><b>${fdk(o.date)} ${esc(o.time)}</b><button class="btn sm main" data-pick="${i}">손님이 이 시간 골랐어요</button></div>`).join("")}</div>
-        <div class="btn-row"><button class="btn sm" data-nx="resend">📋 안내 메시지 다시 복사</button><button class="btn sm" data-nx="reoffer">시간 다시 고르기</button></div>`;
+        <div class="btn-row"><button class="btn sm" data-nx="resend">🔁 안내 다시 보내기</button><button class="btn sm" data-nx="reoffer">시간 다시 고르기</button></div>`;
     }
     if (needFollow(b)) {
       h = `<h3>👉 지금 할 일 · 안부(별점) 메시지</h3><p>방문 시간이 지났어요. ${b.customer_visit_at ? "손님이 체크인했지만 아직 별점·후기가 없어요." : "손님이 아직 체크인·방문 확인을 안 했어요."} 별 한 번만 눌러 달라고 부탁해요. 별을 누르면 방문 확인도 같이 기록돼요.</p>
@@ -548,8 +554,7 @@ async function openBooking(id) {
       if (a === "shop") return sendShop();
       if (a === "tell" || a === "resend") return sendCust(a);
       if (a === "follow") {
-        await sendTo(followMsg(b), "안부 메시지");
-        sb.rpc("chat_booking_reply", { bid: b.id, body: followMsg(b) }).then(() => {});   // 사이트 채팅창에도 남겨요
+        await sendTo(followMsg(b), "안부 메시지", false);
         await logEvent(b.id, "sent_followup", { lang: b.lang, via }); FOLLOWED.add(b.id); drawTop(); loadEvents(); return;
       }
       if (a === "confirm") { try { b = await updBooking(b.id, { status: "confirmed" }, "예약 확정"); } catch (e) { return; } return sendCust("confirm"); }

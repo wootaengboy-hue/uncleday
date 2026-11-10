@@ -361,29 +361,20 @@ ${f.text}
       try {
         const r = await LIVE.rpc("create_booking", { p: { shop_id: shop.id, menu: +f.menu, date: f.date, time: f.time, people: +f.people, name: f.name, contact: f.contact, note: f.note, coupon: f.coupon || "", marketing: f.marketing === "1", lang } });
         const link = `booking.html?v=2#${r.token}`;
-        // 이 브라우저의 💬 채팅을 방금 예약의 대화방으로 이어 둬요 (예약 안내가 자동으로 쌓여요)
-        LIVE.rpc("chat_get", { bt: r.token }).then(c => { if (c && c.token) { try { localStorage.setItem("ud-chat", c.token); } catch (e) {} if (typeof CHAT !== "undefined" && CHAT) CHAT.poll(true); } }).catch(() => {});
-        const kmsg = msg.replace("[예약 요청]", `[예약 요청] ${r.code}`);
         form.hidden = true;
         const done = $("done"); done.hidden = false;
-        done.innerHTML = `<h2>✅ ${ui("bkStep1")}</h2>
+        done.innerHTML = `<h2>✅ ${ui("kAllDone")}</h2>
           <p class="bk-code"><small>${ui("vCode")}</small><b>${esc(r.code)}</b></p>
-          <div class="kstep" id="kStep"><span class="kstep-n">2/2</span><b>${ui("kStepTitle")}</b><p>${ui("kStepDesc")}</p>
-            <a class="btn big-btn kstep-btn" id="bkKakao" href="${SITE.kakao}" target="_blank" rel="noopener">💬 ${ui("kStepBtn")}</a>
-            <small>${ui("kStepNote")}</small></div>
-          <p class="hint">${ui("bkDoneDesc")}</p>
+          <div class="kstep ok"><b>💬 ${ui("chLive")}</b><p>${ui("chLiveDesc")}</p>
+            <button class="btn big-btn" type="button" id="bkChat">💬 ${ui("chOpen")}</button></div>
           <a class="btn" href="${link}">${ui("bkVoucher")}</a>`;
-        $("bkKakao").onclick = () => {
-          try { navigator.clipboard.writeText(`[${ui("kMsgHead")}] ${r.code} ${f.name || ""}\n${new URL(link, location.href).href}`); } catch (e) {}
-          LIVE.rpc("customer_action", { t: r.token, action: "kakao" }).catch(() => {});   // 누른 기록 (관리자 화면에 💬 표시)
-          setTimeout(() => {
-            done.querySelector("h2").textContent = "✅ " + ui("kAllDone");
-            $("kStep").classList.add("ok");
-            $("kStep").innerHTML = `<b>${ui("kStepDone")}</b><p>${ui("kStepDoneDesc")}</p><a class="k-again" href="${SITE.kakao}" target="_blank" rel="noopener">${ui("kStepAgain")}</a>`;
-            const big = done.querySelector('a.btn[href*="booking.html"]'); if (big) big.classList.add("big-btn");
-            const h = done.querySelector("p.hint"); if (h) h.remove();
-          }, 400);
-        };
+        // 예약하는 순간 이 브라우저의 💬 채팅을 이 예약의 대화방으로 바꾸고 바로 열어요 (진행 상황이 실시간으로 쌓여요)
+        const openChat = () => { if (typeof CHAT !== "undefined" && CHAT) CHAT.open(); };
+        $("bkChat").onclick = openChat;
+        LIVE.rpc("chat_get", { bt: r.token }).then(c => {
+          if (c && c.token) { try { localStorage.setItem("ud-chat", c.token); } catch (e) {} }
+          if (typeof CHAT !== "undefined" && CHAT) { CHAT.poll(true); setTimeout(openChat, 600); }
+        }).catch(() => {});
         try { const k = "uncleday-my-bookings"; const a = JSON.parse(localStorage.getItem(k) || "[]"); a.unshift({ code: r.code, token: r.token, shop: shop.id, date: f.date }); localStorage.setItem(k, JSON.stringify(a.slice(0, 20))); } catch (e) {}
         done.scrollIntoView({ behavior: "smooth" });
         return;

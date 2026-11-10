@@ -38,7 +38,7 @@ const CHAT = (() => {
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mount); else mount();
 
   // 아래쪽 고정 버튼(예약하기 바)이 있으면 그 위로
-  function place() { const bar = [...document.querySelectorAll(".cta-bar")].find(x => x.offsetParent !== null); const up = bar ? bar.offsetHeight + 12 : 0; fab.style.bottom = (18 + up) + "px"; box.style.bottom = (84 + up) + "px"; }
+  function place() { const bar = [...document.querySelectorAll(".cta-bar")].find(x => x.getBoundingClientRect().height > 0 && getComputedStyle(x).display !== "none" && getComputedStyle(x).visibility !== "hidden"); const up = bar ? bar.offsetHeight + 12 : 0; fab.style.bottom = (18 + up) + "px"; box.style.bottom = (84 + up) + "px"; }
   window.addEventListener("resize", place); window.addEventListener("hashchange", () => setTimeout(place, 300)); setInterval(place, 2000);
 
   function draw() {
