@@ -671,3 +671,7 @@ footer .foot-priv { display: inline-block; margin: 2px 12px 0 0; color: #fff; te
 .cta-bar.solo .cta-ask { flex: 1 1 auto; max-width: 520px; background: var(--accent, #E8743B); color: #fff; border-color: transparent; }
 .cta-bar.away { transform: translateY(110%); opacity: 0; pointer-events: none; }
 .chat-fab.by-bar { opacity: 0; pointer-events: none; transform: scale(.6); }
+/* 예약하기 버튼은 <button>이라 브라우저 기본 입체 테두리가 생겨서 지움 */
+.cta-bar .cta-book { border: 0; font: inherit; font-weight: 700; cursor: pointer; padding: 12px 16px; }
+.cta-bar .cta-ask { padding: 10.5px 16px; }
+.cta-bar { background: #FFF8E8; }
