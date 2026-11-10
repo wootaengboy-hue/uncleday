@@ -361,6 +361,8 @@ ${f.text}
       try {
         const r = await LIVE.rpc("create_booking", { p: { shop_id: shop.id, menu: +f.menu, date: f.date, time: f.time, people: +f.people, name: f.name, contact: f.contact, note: f.note, coupon: f.coupon || "", marketing: f.marketing === "1", lang } });
         const link = `booking.html?v=2#${r.token}`;
+        // 이 브라우저의 💬 채팅을 방금 예약의 대화방으로 이어 둬요 (예약 안내가 자동으로 쌓여요)
+        LIVE.rpc("chat_get", { bt: r.token }).then(c => { if (c && c.token) { try { localStorage.setItem("ud-chat", c.token); } catch (e) {} if (typeof CHAT !== "undefined" && CHAT) CHAT.poll(true); } }).catch(() => {});
         const kmsg = msg.replace("[예약 요청]", `[예약 요청] ${r.code}`);
         form.hidden = true;
         const done = $("done"); done.hidden = false;

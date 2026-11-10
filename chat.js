@@ -19,6 +19,8 @@ const CHAT = (() => {
       keep: "Cuộc trò chuyện vẫn được lưu khi bạn đóng cửa sổ. Bấm 💬 để tiếp tục.", login: "Đăng nhập để tiếp tục trên thiết bị khác", kakao: "Chat KakaoTalk", me: "Tôi", us: "Uncle Day",
       err: "Không gửi được. Vui lòng thử lại.", bk: c => `Hỏi về lịch ${c}` } };
   const t = k => T[L()][k];
+  // 메시지 속 엉클데이 주소는 짧은 버튼 모양 링크로
+  const linkify = h => h.replace(/https:\/\/(?:www\.)?uncleday\.com\/[^\s<]*/g, u => `<a class="cb-a" href="${u}">${/booking\.html/.test(u) ? ({ ko: "📄 예약확인증 열기", en: "📄 Open voucher", vi: "📄 Mở phiếu đặt lịch" })[L()] : u}</a>`);
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const get = () => { try { return localStorage.getItem(KEY) || ""; } catch (e) { return ""; } };
   const put = v => { try { v ? localStorage.setItem(KEY, v) : localStorage.removeItem(KEY); } catch (e) {} };
@@ -45,7 +47,7 @@ const CHAT = (() => {
     box.innerHTML = `<div class="cb-head"><div><b>${t("title")}</b><small>${t("sub")}</small></div><button type="button" class="cb-x" aria-label="close">✕</button></div>
       <div class="cb-list">
         <div class="cb-m us"><span>${booking ? `<b>${esc(t("bk")(booking))}</b><br>` : ""}${esc(t("hello")).replace(/\n/g, "<br>")}</span></div>
-        ${msgs.map(m => `<div class="cb-m ${m.from === "admin" ? "us" : "me"}"><span>${esc(m.body).replace(/\n/g, "<br>")}</span><time>${fmt(m.at)}</time></div>`).join("")}
+        ${msgs.map(m => `<div class="cb-m ${m.from === "admin" ? "us" : "me"}"><span>${linkify(esc(m.body)).replace(/\n/g, "<br>")}</span><time>${fmt(m.at)}</time></div>`).join("")}
       </div>
       <form class="cb-form">
         ${showForm ? `<div class="cb-who"><input name="name" placeholder="${t("name")}" maxlength="60" autocomplete="name"><input name="contact" placeholder="${t("contact")}" maxlength="100" autocomplete="tel"></div>` : ""}

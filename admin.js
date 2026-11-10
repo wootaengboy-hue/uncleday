@@ -549,6 +549,7 @@ async function openBooking(id) {
       if (a === "tell" || a === "resend") return sendCust(a);
       if (a === "follow") {
         await sendTo(followMsg(b), "안부 메시지");
+        sb.rpc("chat_booking_reply", { bid: b.id, body: followMsg(b) }).then(() => {});   // 사이트 채팅창에도 남겨요
         await logEvent(b.id, "sent_followup", { lang: b.lang, via }); FOLLOWED.add(b.id); drawTop(); loadEvents(); return;
       }
       if (a === "confirm") { try { b = await updBooking(b.id, { status: "confirmed" }, "예약 확정"); } catch (e) { return; } return sendCust("confirm"); }

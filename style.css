@@ -657,3 +657,6 @@ h1, h2, h3, .head h1, .cat-title, .partner h2 { font-weight: 800; }
 /* 로그인 버튼이 들어가도 휴대폰 첫 줄에 로고·언어·로그인·상담하기가 한 줄로 */
 @media (max-width: 400px) { .logo img.logo-full { height: 50px; } .top-in { gap: 5px; } }
 @media (max-width: 370px) { .logo img.logo-full { height: 44px; } .langs { gap: 2px; } .top-in > .btn.kakao-link { padding: 7px 10px; } }
+
+.cb-a { display: inline-block; margin-top: 4px; padding: 5px 10px; border-radius: 8px; background: #eef7f2; color: #1f7a4d; font-weight: 700; text-decoration: none; }
+.cb-m.me .cb-a { background: rgba(255,255,255,.2); color: #fff; }
