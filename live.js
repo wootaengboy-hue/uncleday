@@ -14,7 +14,9 @@ const LIVE = (() => {
   if (on) { try { cached = localStorage.getItem(KEY); apply(JSON.parse(cached || "null")); } catch (e) {} }
 
   async function rpc(name, args) {
-    const r = await fetch(`${SUPA.url}/rest/v1/rpc/${name}`, { method: "POST", headers: { ...headers, "Content-Type": "application/json" }, body: JSON.stringify(args) });
+    // 로그인한 손님이면 그 사람 열쇠로 (내 예약·채팅 이어가기)
+    const h = { ...headers, "Content-Type": "application/json", ...(window.UD_TOKEN ? { Authorization: "Bearer " + window.UD_TOKEN } : {}) };
+    const r = await fetch(`${SUPA.url}/rest/v1/rpc/${name}`, { method: "POST", headers: h, body: JSON.stringify(args) });
     const t = await r.text(); let j = null; try { j = JSON.parse(t); } catch (e) {}
     if (!r.ok) { const e = new Error((j && j.message) || "error " + r.status); e.status = r.status; e.server = !!(j && j.message); throw e; }
     return j;

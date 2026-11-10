@@ -360,6 +360,24 @@ mark.cmark{background:#fff3b0;border-bottom:2px solid #f0b429;border-radius:2px;
 .via{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin-top:10px;padding-top:10px;border-top:1px dashed #b9dcc6;font-size:13.5px}.via>span{font-weight:700;color:var(--sub)}.via label{display:flex;gap:4px;align-items:center;cursor:pointer}.via small{color:var(--sub)}.via small.ok{color:#1f7a4d;font-weight:700}
 .next-box{border:2px solid #1f7a4d;background:#f3fbf6}.next-box h3{margin-top:0}.next-box .warn{margin:6px 0}
 .off-row{display:flex;gap:8px;align-items:center;margin:6px 0;flex-wrap:wrap}.off-row input{padding:8px 10px;border:1px solid var(--line);border-radius:9px;font:inherit}.off-row b{min-width:150px}
+.chat-wrap{display:grid;grid-template-columns:320px minmax(0,1fr);gap:14px;height:calc(100vh - 190px);min-height:460px}
+.chat-side{display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.chat-flt{display:flex;gap:6px;padding:10px;border-bottom:1px solid var(--line)}.chat-flt .pill{border:1px solid var(--line);background:#fff;border-radius:999px;padding:4px 11px;font:inherit;font-size:13px;cursor:pointer}.chat-flt .pill.on{background:var(--g,#1f7a4d);color:#fff;border-color:transparent}
+.chat-threads{overflow-y:auto;flex:1}
+.ct-row{display:grid;grid-template-columns:1fr auto;gap:2px 8px;width:100%;text-align:left;border:0;border-bottom:1px solid #f1ece0;background:#fff;padding:11px 12px;font:inherit;cursor:pointer}
+.ct-row:hover{background:#faf7ef}.ct-row.on{background:#eef7f2}.ct-row.new .ct-n::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff4d4f;margin-right:6px;vertical-align:middle}
+.ct-n{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ct-t{font-size:11.5px;color:var(--sub)}.ct-b{grid-column:1/-1;font-size:12.5px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ct-row.new .ct-b{color:#1f2328;font-weight:600}
+.chat-main{display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;min-width:0}
+.chat-empty{margin:auto;text-align:center;padding:20px}
+.cm-head{display:flex;gap:10px;align-items:center;padding:11px 14px;border-bottom:1px solid var(--line)}.cm-head>div:nth-child(2){flex:1;min-width:0}.cm-acts{display:flex;gap:6px}.cm-back{display:none}
+.cm-list{flex:1;overflow-y:auto;padding:14px;background:#faf6ec;display:flex;flex-direction:column;gap:8px}
+.cm{display:flex;flex-direction:column;max-width:75%}.cm span{padding:9px 12px;border-radius:14px;font-size:14px;line-height:1.5;word-break:break-word}.cm time{font-size:11px;color:var(--sub);margin:2px 6px 0}
+.cm.them{align-self:flex-start}.cm.them span{background:#fff;border:1px solid #eee3cc;border-top-left-radius:4px}
+.cm.us{align-self:flex-end;align-items:flex-end}.cm.us span{background:#1f7a4d;color:#fff;border-top-right-radius:4px}
+.cm-read{align-self:flex-end;font-size:11.5px;color:var(--sub)}
+.cm-form{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line)}.cm-form textarea{flex:1;resize:none;padding:9px 11px;border:1px solid var(--line);border-radius:10px;font:inherit}
+.cm-ping{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 12px;border-top:1px dashed var(--line);background:#fffaf0;font-size:12.5px;color:var(--sub)}
+@media (max-width:800px){.chat-wrap{grid-template-columns:1fr;height:auto}.chat-wrap.has-cur .chat-side{display:none}.chat-wrap:not(.has-cur) .chat-main{display:none}.chat-main{height:calc(100vh - 170px)}.cm-back{display:inline-flex}.chat-side{max-height:none}}
 .sel-cmt{position:fixed;z-index:200;border:0;background:#1f2937;color:#fff;font:inherit;font-size:13px;font-weight:700;padding:6px 11px;border-radius:9px;box-shadow:0 6px 18px #0004;cursor:pointer}
 .cmt-q{margin:3px 0 4px;padding:4px 9px;border-left:3px solid #f0b429;background:#fff9e3;border-radius:6px;font-size:13px;color:#5b5143;cursor:pointer}.cmt-q.gone{border-left-color:#c9c4b8;background:#f4f2ec;color:#8a857a;cursor:default}
 .cmt-quote{display:flex;justify-content:space-between;gap:8px;align-items:center;background:#fff9e3;border:1px dashed #f0b429;border-radius:9px;padding:6px 10px;margin:6px 0;font-size:13px}.cmt-quote button{border:0;background:none;cursor:pointer;color:#8a857a}
@@ -512,6 +530,7 @@ mark.cmark{background:#fff3b0;border-bottom:2px solid #f0b429;border-radius:2px;
   <button data-tab="dash" class="on">📊 대시보드</button>
   <button data-tab="work">📝 낙서장<span class="cnt" id="cntWork"></span></button>
   <button data-tab="bk">📅 예약<span class="cnt" id="cntBk"></span></button>
+  <button data-tab="chat">💬 채팅<span class="cnt" id="cntChat"></span></button>
   <button data-tab="crm">👥 고객</button>
   <button data-tab="settle">💰 정산</button>
   <button data-tab="shops">🏪 업체 <span class="hint" id="shopCount"></span></button>
@@ -527,6 +546,7 @@ mark.cmark{background:#fff3b0;border-bottom:2px solid #f0b429;border-radius:2px;
   <section id="tab-dash" data-pane="dash"></section>
   <section id="tab-work" data-pane="work" hidden></section>
   <section id="tab-bk" data-pane="bk" hidden></section>
+  <section id="tab-chat" data-pane="chat" hidden></section>
   <section id="tab-crm" data-pane="crm" hidden></section>
   <section id="tab-settle" data-pane="settle" hidden></section>
 
@@ -568,19 +588,20 @@ mark.cmark{background:#fff3b0;border-bottom:2px solid #f0b429;border-radius:2px;
 <div id="layer"></div>
 <div id="printArea"></div>
 
-<script src="config.js?v=20261110c"></script>
+<script src="config.js?v=20261110d"></script>
 <script src="vendor/supabase.js"></script>
-<script src="data.js?v=20261110c"></script>
-<script src="shops.js?v=20261110c"></script>
-<script src="catimgs.js?v=20261110c"></script>
-<script src="admin-notes.js?v=20261110c"></script>
-<script src="admin-shops.js?v=20261110c"></script>
-<script src="admin-editor.js?v=20261110c"></script>
-<script src="admin-guide.js?v=20261110c"></script>
-<script src="admin-work.js?v=20261110c"></script>
-<script src="admin-crm.js?v=20261110c"></script>
-<script src="admin-contract-default.js?v=20261110c"></script>
-<script src="admin-contract.js?v=20261110c"></script>
-<script src="admin.js?v=20261110c"></script>
+<script src="data.js?v=20261110d"></script>
+<script src="shops.js?v=20261110d"></script>
+<script src="catimgs.js?v=20261110d"></script>
+<script src="admin-notes.js?v=20261110d"></script>
+<script src="admin-shops.js?v=20261110d"></script>
+<script src="admin-editor.js?v=20261110d"></script>
+<script src="admin-guide.js?v=20261110d"></script>
+<script src="admin-work.js?v=20261110d"></script>
+<script src="admin-crm.js?v=20261110d"></script>
+<script src="admin-chat.js?v=20261110d"></script>
+<script src="admin-contract-default.js?v=20261110d"></script>
+<script src="admin-contract.js?v=20261110d"></script>
+<script src="admin.js?v=20261110d"></script>
 </body>
 </html>

@@ -336,6 +336,8 @@ ${f.text}
     $("bookTitle").scrollIntoView({ behavior: "smooth" });
   });
 
+  // 로그인한 손님이면 이름 칸을 미리 채워요
+  if (typeof ACCT !== "undefined") ACCT.onUser(u => { const n = form.querySelector('[name="name"]'); if (u && n && !n.value) n.value = ACCT.name(); });
   form.onsubmit = async e => {
     e.preventDefault();
     if (!fDate.value || !fTime.value) { alertBox(ui("pickDTFirst")); $("bkPanel").hidden = false; $("bkSum").classList.add("open"); drawCal(); drawSlots(); $("bkSum").scrollIntoView({ behavior: "smooth", block: "center" }); return; }

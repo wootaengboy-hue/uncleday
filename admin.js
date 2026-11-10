@@ -92,7 +92,7 @@ function dailyChart(m) {
   return `<div class="dim-card wide"><h3>날짜별 방문자 <small>막대 위에 마우스를 올리면 숫자가 보여요</small></h3><div class="day-chart">${v.map((n, i) => `<div class="day-col" title="${+m.slice(5)}월 ${i + 1}일 · 방문자 ${n}명 · 업체 조회 ${h[i]}회"><i style="height:${n ? Math.max(3, n / max * 100) : 0}%"></i><small>${(i + 1) % 5 === 0 || i === 0 ? i + 1 : ""}</small></div>`).join("")}</div></div>`;
 }
 const statSum = (m, kind, shop, day) => (STATS[m] || []).filter(r => r.kind === kind && (shop === undefined || r.shop_id === shop) && (!day || r.day === day)).reduce((t, r) => t + r.n, 0);
-async function loadAll() { await Promise.all([loadShops(), loadBookings(), loadSettles(), loadReviews(), loadWork()]); }
+async function loadAll() { await Promise.all([loadShops(), loadBookings(), loadSettles(), loadReviews(), loadWork(), loadThreads().catch(() => {})]); }
 
 /* ===== 할 일 (놓치면 안 되는 것) ===== */
 const TODO = [
@@ -115,7 +115,7 @@ function showTab(t) {
   document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
   document.querySelectorAll("[data-pane]").forEach(p => p.hidden = p.dataset.pane !== t);
   if (location.hash.slice(1) !== t) history.replaceState(null, "", "#" + t);
-  ({ dash: drawDash, work: drawWork, bk: drawBookings, crm: drawCrm, settle: drawSettle, shops: drawList, rv: drawReviews, acc: drawAccount })[t]();
+  ({ dash: drawDash, work: drawWork, bk: drawBookings, chat: drawChat, crm: drawCrm, settle: drawSettle, shops: drawList, rv: drawReviews, acc: drawAccount })[t]();
   drawCounts();
 }
 function drawCounts() {
@@ -125,6 +125,8 @@ function drawCounts() {
   $("cntRv").textContent = r || "";
   document.title = (n ? `(${n}) ` : "") + "엉클데이 관리자";
   const w = workTodos().reduce((t, x) => t + x[3], 0); $("cntWork").textContent = w || "";
+  const c = typeof chatCount === "function" ? chatCount() : 0;
+  if (c && !n) document.title = `(💬${c}) 엉클데이 관리자`;
 }
 window.onShopsChanged = () => { if (TAB !== "shops") showTab(TAB); };
 
@@ -875,7 +877,8 @@ function drawReviews() {
 /* ===== 계정 ===== */
 const SLACK_EVS = [["booking", "📅 새 예약", "사이트·카톡으로 들어온 예약"], ["shop", "🏪 업체 답", "업체가 링크로 확정·불가·방문 완료(금액)를 눌렀을 때"],
   ["customer", "🙋 손님 행동", "손님이 '다녀왔어요'·취소를 눌렀을 때"], ["review", "⭐ 새 후기", "게시를 기다리는 후기"],
-  ["team", "💬 팀 알림", "낙서장 @언급·담당 지정·참조·댓글 (🔔와 같은 내용)"], ["lead", "🤝 영업 단계", "영업 업체 추가·단계 변경"]];
+  ["team", "💬 팀 알림", "낙서장 @언급·담당 지정·참조·댓글 (🔔와 같은 내용)"], ["lead", "🤝 영업 단계", "영업 업체 추가·단계 변경"],
+  ["chat", "💬 사이트 채팅", "손님이 사이트·예약확인증 채팅으로 보낸 메시지 (연달아 보내면 3분에 한 번)"]];
 async function drawSlack() {
   const box = $("slackBox"); if (!box) return;
   const r = await sb.from("slack_cfg").select("*").eq("id", 1).maybeSingle();

@@ -4,6 +4,7 @@ const GUIDE = [
     { ic: "🆕", t: "11월 9일 업데이트", b: `
       <ul><li><b>할 일 저장해도 창이 안 닫혀요</b> — 저장하면 "저장했어요 ✅"만 뜨고 계속 쓸 수 있어요. <b>Ctrl+S</b>로도 저장. 다 쓰면 닫기·Esc.</li>
       <li><b>💬 문구에 댓글 달기</b> — 노션처럼 메모 속 문구에 바로 댓글 (아래 "낙서장" 참고).</li>
+      <li><b>💬 사이트 채팅 · 👤 손님 로그인</b> — 손님이 사이트 안에서 바로 채팅하고, 카카오·네이버·구글·페이스북으로 로그인할 수 있어요 (아래 "채팅 · 로그인" 참고, chat.sql 실행 필요).</li>
       <li><b>🗂 카테고리 2개로</b> — 사이트에는 <b>Spa & Body</b>(마사지·스파)와 <b>Skin & Beauty</b>(나머지 전부) 두 개만 보여요. 업체 수정의 <b>세부 카테고리</b>는 그대로 고르면 되고, 업체가 많아지면 묶음만 다시 나누면 돼요. 메인 화면 카테고리 사진은 업체 탭 → 🖼 카테고리 사진 맨 위 두 줄에서 바꿔요.</li>
       <li><b>💬 카톡으로 확정 받기 · 📱 문자</b> — 손님은 예약 완료 화면의 "마지막 단계" 버튼으로 우리 카톡 채널에 예약번호를 보내요. 누른 예약은 💬 표시가 붙고, 안 누른 손님에게는 예약 상세에서 📱 문자로 보낼 수 있어요. (booking2.sql 다시 실행 필요)</li>
       <li><b>📍 도착 체크인 · ⭐ 별점 한 번</b> — 방문 당일엔 예약확인증 맨 위에 체크인 버튼이, 방문 뒤엔 별점이 떠요. 둘 다 "손님이 다녀왔다"는 기록이 돼요. 방문이 지나도 기록이 없으면 대시보드에 💌 안부 메시지 할 일이 떠요.</li>
@@ -185,6 +186,55 @@ const GUIDE = [
       <p>⚙️ 계정 → 💬 슬랙 알림에서 받을 종류를 고르거나, 잠깐 끌 수 있어요. 관리자가 직접 바꾼 예약 상태는 보내지 않아요.</p>
       <p><b>종류별로 다른 채널에 받기</b>: 슬랙 앱 설정 → <b>Incoming Webhooks → Add New Webhook</b>으로 채널마다 주소를 하나씩 더 만들고, 알림 종류 칸에 붙여넣은 뒤 <b>저장</b>해요. 비워 둔 종류는 기본 채널로 가요.<br>우리 채널: <b>#예약</b>(새 예약·업체 답·손님 행동) · <b>#후기</b>(새 후기) · <b>#엉클놀이</b>(팀 알림·영업 단계)</p>
       <p class="tip">💡 슬랙 앱을 휴대폰에 깔면 예약·업체 답을 바로 알림으로 받아요. 팀 대화는 슬랙 채널 스레드에서 나누면 돼요.</p>` }
+  ]},
+  { sec: "💬 채팅 · 👤 로그인", items: [
+    { ic: "💬", t: "사이트 채팅 쓰는 법", b: `
+      <ol><li>처음 한 번 Supabase에서 <b>supabase/chat.sql</b>을 실행해요.</li>
+      <li>손님은 사이트 오른쪽 아래 <b>💬</b>나 예약확인증의 <b>엉클데이에 채팅으로 문의</b>로 메시지를 보내요.</li>
+      <li>관리자 페이지 <b>💬 채팅</b> 탭에 대화가 모이고, 안 읽은 대화는 빨간 점과 숫자로 보여요. 슬랙 "💬 사이트 채팅" 알림도 와요 (연달아 보내면 3분에 한 번).</li>
+      <li>대화를 누르고 답장을 적어 <b>Enter</b>. 예약확인증에서 온 대화는 예약번호 버튼으로 바로 예약을 열 수 있어요.</li>
+      <li>손님이 안 읽으면 <b>📱 답장 알림 문자</b> (전화번호를 남긴 경우) 또는 <b>📋 알림 메시지 복사</b>로 "답장이 왔어요 + 링크"를 보내요. 링크를 누르면 그 대화가 그대로 열려요.</li>
+      <li>끝난 대화는 <b>✓ 대화 끝내기</b>. 손님이 다시 보내면 자동으로 다시 열려요.</li></ol>
+      <p class="tip">💡 대화는 같은 휴대폰·브라우저로 다시 오면 자동으로 이어지고, 예약확인증 링크나 로그인으로 오면 어느 기기에서나 이어져요.</p>` },
+    { ic: "👤", t: "손님 로그인 켜기 (공통 설정)", b: `
+      <p>로그인 버튼은 사이트 위쪽에 이미 있어요. 각 회사(카카오·구글·페이스북·네이버)에 우리 앱을 등록하고 키를 Supabase에 넣어야 실제로 동작해요. <b>키는 Claude에게 보내지 말고 Supabase에 직접 넣어요.</b></p>
+      <ol><li>Supabase → <b>Authentication → URL Configuration</b>
+        <ul><li>Site URL: <code>https://www.uncleday.com</code></li><li>Redirect URLs에 추가: <code>https://www.uncleday.com/**</code></li></ul></li>
+      <li>각 회사 개발자 화면에 넣을 <b>콜백(Redirect) 주소</b>: <code>https://miftvdayembakwtvckxk.supabase.co/auth/v1/callback</code></li>
+      <li>Supabase → <b>Authentication → Sign In / Providers</b>에서 각 로그인을 켜고 받은 키를 넣어요.</li></ol>
+      <p class="warn">⚠️ 정식으로 손님을 받기 전에 <b>개인정보처리방침</b> 페이지가 꼭 있어야 해요 (페이스북·카카오 검수에도 필요해요).</p>` },
+    { ic: "🟡", t: "카카오 로그인", b: `
+      <ol><li><a href="https://developers.kakao.com" target="_blank" rel="noopener">developers.kakao.com</a> → 내 애플리케이션 → 애플리케이션 추가 (앱 이름: 엉클데이)</li>
+      <li>앱 키 → <b>REST API 키</b> 복사</li>
+      <li>카카오 로그인 → 활성화 <b>ON</b> → Redirect URI에 위 콜백 주소 등록</li>
+      <li>카카오 로그인 → 보안 → <b>Client Secret</b> 발급·사용함</li>
+      <li>동의항목: 닉네임(필수), 카카오계정 이메일(선택). 이메일을 필수로 받으려면 비즈 앱 전환(사업자등록 후)이 필요해요.</li>
+      <li>Supabase → Providers → <b>Kakao</b> 켜기 → Client ID = REST API 키, Client Secret 입력 → 저장</li></ol>
+      <p class="tip">💡 이메일을 안 주는 손님 때문에 로그인이 실패하면, Supabase 카카오 설정에 "이메일 없이 허용" 옵션이 있으면 켜고, 없으면 이메일 동의를 '필수'로 바꿔야 해요 (비즈 앱 필요).</p>` },
+    { ic: "🔵", t: "구글 로그인", b: `
+      <ol><li><a href="https://console.cloud.google.com" target="_blank" rel="noopener">console.cloud.google.com</a> → 프로젝트 만들기 (엉클데이)</li>
+      <li>API 및 서비스 → <b>OAuth 동의 화면</b>: 외부(External), 앱 이름 엉클데이, 지원 이메일, 앱 도메인 uncleday.com</li>
+      <li>사용자 인증 정보 → <b>OAuth 클라이언트 ID 만들기</b> → 웹 애플리케이션 → 승인된 리디렉션 URI에 위 콜백 주소</li>
+      <li>클라이언트 ID·보안 비밀 → Supabase → Providers → <b>Google</b>에 입력</li>
+      <li>테스트가 끝나면 동의 화면을 <b>프로덕션으로 게시</b>해야 아무나 로그인할 수 있어요.</li></ol>` },
+    { ic: "🔷", t: "페이스북 로그인", b: `
+      <ol><li><a href="https://developers.facebook.com" target="_blank" rel="noopener">developers.facebook.com</a> → 앱 만들기 → 사용 사례 "Facebook 로그인으로 사용자 인증"</li>
+      <li>Facebook 로그인 → 설정 → <b>유효한 OAuth 리디렉션 URI</b>에 위 콜백 주소</li>
+      <li>앱 설정 → 기본 설정: <b>앱 ID·앱 시크릿 코드</b>, 개인정보처리방침 URL, 앱 도메인 uncleday.com</li>
+      <li>Supabase → Providers → <b>Facebook</b>에 앱 ID(Client ID)·시크릿 입력</li>
+      <li>앱을 <b>라이브(공개)</b>로 바꿔야 일반 손님이 쓸 수 있어요. 메타가 비즈니스 인증을 요구할 수 있어요.</li></ol>` },
+    { ic: "🟢", t: "네이버 로그인 (직접 연결)", b: `
+      <ol><li><a href="https://developers.naver.com/apps" target="_blank" rel="noopener">developers.naver.com</a> → 애플리케이션 등록 → 사용 API: <b>네이버 로그인</b>, 제공 정보: 이름·이메일</li>
+      <li>환경: PC 웹 → 서비스 URL <code>https://www.uncleday.com</code></li>
+      <li>Supabase → Providers → <b>New Provider → Manual configuration (OAuth2)</b>
+        <ul><li>Identifier: <code>custom:naver</code> · Name: 네이버</li>
+        <li>Authorization URL: <code>https://nid.naver.com/oauth2.0/authorize</code></li>
+        <li>Token URL: <code>https://nid.naver.com/oauth2.0/token</code></li>
+        <li>Userinfo URL: <code>https://openapi.naver.com/v1/nid/me</code></li>
+        <li>Client ID·Secret: 네이버에서 받은 값 · PKCE: 끄기 · Email optional: 켜기</li></ul></li>
+      <li>Supabase 화면에 보이는 <b>Callback URL</b>을 복사해 네이버 앱의 Callback URL에 넣어요.</li>
+      <li>네이버는 실제 서비스 전에 <b>검수 요청</b>이 필요해요 (그 전엔 등록한 개발자 계정만 로그인 가능).</li></ol>
+      <p class="warn">⚠️ 네이버는 사용자 정보를 다른 회사와 조금 다른 모양으로 줘서, 연결해 보고 로그인이 안 되면 Claude에게 말해 주세요. 작은 중계 기능을 추가로 만들어야 할 수 있어요.</p>` }
   ]},
   { sec: "👥 고객", items: [
     { ic: "👥", t: "고객 관리 — 손님 카드는 어떻게 생기나요", b: `

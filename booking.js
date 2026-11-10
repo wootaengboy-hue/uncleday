@@ -85,7 +85,8 @@ function draw(b) {
       ${b.customer_visit_at && !inside ? `<p class="v-ok">${ui("vVisitedDone")}</p>` : ""}
       ${!b.reviewed && !rate && (past || (b.customer_visit_at && !inside)) ? `<button class="btn" id="vRv">${ui("vReview")}</button>` : ""}
       ${b.reviewed ? `<p class="v-ok">${ui("vReviewed")}</p>` : ""}
-      <a class="btn kakao-link" href="${SITE.kakao}" target="_blank">💬 ${ui("vAsk")}</a>
+      <button class="btn" type="button" id="vChat">💬 ${ui("vChat")}</button>
+      <a class="btn kakao-link" href="${SITE.kakao}" target="_blank">${ui("vAsk")}</a>
       <button class="btn" id="vLink">${ui("vCopyLink")}</button>
       ${open ? `<button class="btn v-cancel" id="vCancel">${ui("vCancel")}</button>` : ""}
     </div>
@@ -100,6 +101,7 @@ function draw(b) {
     document.body.appendChild(d); d.querySelector("[data-n]").onclick = () => d.remove(); d.querySelector("[data-y]").onclick = () => { d.remove(); act("pick", +x.dataset.pick); };
   });
   if ($("vVisit")) $("vVisit").onclick = () => act("visited");
+  if ($("vChat")) $("vChat").onclick = () => { if (typeof CHAT !== "undefined" && CHAT) CHAT.open(); };
   if ($("vCheckin")) $("vCheckin").onclick = () => act("visited");
   box.querySelectorAll("[data-rate]").forEach(x => x.onclick = async () => {
     const n = +x.dataset.rate; let nb = b;
