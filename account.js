@@ -33,8 +33,15 @@ const ACCT = (() => {
       if (!window.supabase) await new Promise((ok, no) => { const s = document.createElement("script"); s.src = "vendor/supabase.js"; s.onload = ok; s.onerror = no; document.head.appendChild(s); });
       sb = supabase.createClient(SUPA.url, SUPA.key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: "pkce" } });
       sb.auth.onAuthStateChange((ev, s) => set(s));
-      const { data } = await sb.auth.getSession(); set(data.session);
+      const hadCode = /[?&]code=/.test(location.search);
+      const { data, error: se } = await sb.auth.getSession(); set(data.session);
+      if (hadCode && !data.session) setTimeout(() => alert(t("fail") + "\n(" + ((se && se.message) || "code exchange failed") + ")"), 300);
       // 로그인하고 돌아왔으면 주소의 ?code= 를 지우고 원래 보던 화면으로
+      // 로그인 실패로 돌아왔으면 이유를 보여줘요 (예전엔 조용히 지워져서 "아무 일도 안 일어난" 것처럼 보였어요)
+      const qs = new URLSearchParams(location.search), hs = new URLSearchParams(location.hash.slice(1));
+      const err = qs.get("error_description") || qs.get("error") || hs.get("error_description") || (hs.get("error") ? hs.get("error") : "");
+      if (err) setTimeout(() => alert(t("fail") + "\n(" + err.replace(/\+/g, " ") + ")"), 300);
+      if (hs.get("error")) history.replaceState(null, "", location.pathname + location.search);
       if (/[?&](code|error)=/.test(location.search)) {
         let back = ""; try { back = sessionStorage.getItem(BACK) || ""; sessionStorage.removeItem(BACK); } catch (e) {}
         history.replaceState(null, "", location.pathname + (back || location.hash));
@@ -93,7 +100,7 @@ const ACCT = (() => {
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
   if (on) {
-    const start = () => { drawBtn(); if (stored() || /[?&](code|error)=/.test(location.search)) load().catch(() => {}); };
+    const start = () => { drawBtn(); if (stored() || /[?&](code|error)=/.test(location.search) || /[#&]error=/.test(location.hash)) load().catch(() => {}); };
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
   }
   return { on, load, login, logout, openLogin, user: () => user, name, onUser: f => { subs.push(f); if (user) f(user); }, redraw: drawBtn };
