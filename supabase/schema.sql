@@ -1500,7 +1500,8 @@ begin
     if found then return th; end if;
   end if;
   if auth.uid() is not null then
-    select * into th from chat_threads where user_id = auth.uid() and booking_id is null order by last_at desc limit 1;
+    -- 로그인한 손님: 가장 최근 대화 (예약 진행 안내가 쌓인 예약 대화 포함) → 다른 기기에서도 이어서 봐요
+    select * into th from chat_threads where user_id = auth.uid() order by last_at desc limit 1;
   end if;
   return th;
 end $$;
