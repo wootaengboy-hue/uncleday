@@ -43,6 +43,9 @@ function drawCommon() {
   if (window.SPA) $("siteName").setAttribute("href", "#");
   $("footName").textContent = tx(SITE.name);
   $("footInfo").textContent = `${tx(SITE.slogan)} · ${SITE.email} · ${tx(SITE.hours)}`;
+  { const fi = $("footInfo"); let pl = document.getElementById("footPriv");
+    if (!pl) { pl = document.createElement("a"); pl.id = "footPriv"; pl.className = "foot-priv"; pl.href = "privacy.html"; fi.after(pl); }
+    pl.textContent = { ko: "개인정보처리방침", en: "Privacy Policy", vi: "Chính sách quyền riêng tư" }[lang] || "Privacy Policy"; }
   document.querySelectorAll(".kakao-link").forEach(a => a.href = SITE.kakao);
   $("langs").innerHTML = LANGS.map(l =>
     `<button class="chip ${l.id === lang ? "on" : ""}" data-l="${l.id}" title="${l.label}"><span class="lg-full">${l.label}</span><span class="lg-short">${l.id.toUpperCase()}</span></button>`).join("");

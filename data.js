@@ -13,7 +13,7 @@ const SITE = {
   slogan: { ko: "베트남 뷰티, 믿을 수 있는 곳만 골라 연결해 드려요",
             en: "Trusted beauty services in Vietnam, booked for you", vi: "Dịch vụ làm đẹp uy tín tại Việt Nam, đặt lịch giúp bạn" },
   kakao: "https://pf.kakao.com/_xgkuxeX/chat",   // 엉클데이 카카오톡 채널 (누르면 바로 1:1 채팅)
-  email: "hello@example.com",         // 예약 요청 받을 이메일
+  email: "uncledayadmin@gmail.com",         // 예약 요청 받을 이메일
   formEndpoint: "",                   // (선택) 예약을 자동 수신할 폼 주소. 비워두면 카톡/이메일 방식. README 참고
   hours: { ko: "매일 09:00 ~ 21:00 (한국시간)", en: "Daily 09:00–21:00 (KST)", vi: "Hằng ngày 07:00–19:00 (giờ Việt Nam)" },
   // 환율: 베트남 동(VND) 1동이 얼마인지. ※ 샘플 값입니다. 가끔 직접 갱신하세요.

@@ -660,3 +660,5 @@ h1, h2, h3, .head h1, .cat-title, .partner h2 { font-weight: 800; }
 
 .cb-a { display: inline-block; margin-top: 4px; padding: 5px 10px; border-radius: 8px; background: #eef7f2; color: #1f7a4d; font-weight: 700; text-decoration: none; }
 .cb-m.me .cb-a { background: rgba(255,255,255,.2); color: #fff; }
+
+footer .foot-priv { display: inline-block; margin: 2px 12px 0 0; color: #fff; text-decoration: underline; font-size: 13px; }
