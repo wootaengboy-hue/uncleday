@@ -41,6 +41,8 @@ async function load() {
   try { b = await LIVE.rpc("booking_for_customer", { t }); } catch (e) {}
   if (!b) { findForm(ui("vNotFound")); return; }
   draw(b);
+  // 로그인한 상태면 이 예약을 내 예약 목록에 연결
+  if (typeof ACCT !== "undefined" && ACCT.on) { let done = false; ACCT.onUser(u => { if (u && !done) { done = true; LIVE.rpc("claim_booking", { t }).catch(() => {}); } }); }
 }
 
 function draw(b) {

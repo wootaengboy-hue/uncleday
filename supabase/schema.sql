@@ -1580,6 +1580,19 @@ end $$;
 revoke all on function public.chat_get(text, text, bigint, boolean), public.chat_send(text, text, text, text, text, text, text), public.my_bookings() from public;
 grant execute on function public.chat_get(text, text, bigint, boolean), public.chat_send(text, text, text, text, text, text, text) to anon, authenticated;
 grant execute on function public.my_bookings() to authenticated;
+
+-- 로그인한 상태로 예약확인증을 열면, 아직 주인이 없는 그 예약을 내 예약에 붙여요 (예전 예약 연결용)
+create or replace function public.claim_booking(t text) returns boolean
+language plpgsql security definer set search_path = public as $$
+declare n int;
+begin
+  if auth.uid() is null or coalesce(t, '') = '' then return false; end if;
+  update bookings set user_id = auth.uid() where customer_token = t and user_id is null;
+  get diagnostics n = row_count;
+  return n > 0;
+end $$;
+revoke all on function public.claim_booking(text) from public, anon;
+grant execute on function public.claim_booking(text) to authenticated;
 revoke all on function public.chat_reply(uuid, text) from public, anon;
 grant execute on function public.chat_reply(uuid, text) to authenticated;
 
