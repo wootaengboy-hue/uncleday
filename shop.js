@@ -348,7 +348,9 @@ ${f.text}
   });
 
   // 로그인한 손님이면 이름 칸을 미리 채워요
-  if (typeof ACCT !== "undefined") ACCT.onUser(u => { const n = form.querySelector('[name="name"]'); if (u && n && !n.value) n.value = ACCT.name(); });
+  // 로그인한 손님: 이름과 (있으면) 이메일을 예약 폼에 미리 채워요. 손님이 바꿀 수 있어요
+  if (typeof ACCT !== "undefined") ACCT.onUser(u => { if (!u) return; const n = form.querySelector('[name="name"]'), c = form.querySelector('[name="contact"]');
+    if (n && !n.value) n.value = ACCT.name(); if (c && !c.value && u.email) c.value = u.email; });
   form.onsubmit = async e => {
     e.preventDefault();
     if (!fDate.value || !fTime.value) { alertBox(ui("pickDTFirst")); $("bkPanel").hidden = false; $("bkSum").classList.add("open"); drawCal(); drawSlots(); $("bkSum").scrollIntoView({ behavior: "smooth", block: "center" }); return; }
