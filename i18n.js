@@ -186,3 +186,7 @@ Object.assign(UI.ko, { vChat: "엉클데이에 채팅으로 문의" }); Object.a
 Object.assign(UI.ko, { chLive: "진행 상황은 채팅으로 바로 알려 드려요", chLiveDesc: "업체 확인, 예약 확정, 시간 변경 안내가 오른쪽 아래 💬 채팅창에 실시간으로 남아요. 궁금한 점도 거기서 바로 물어보세요.", chOpen: "채팅창 열기" });
 Object.assign(UI.en, { chLive: "We'll update you in the chat", chLiveDesc: "Shop check, confirmation and any time changes show up live in the 💬 chat at the bottom right. Ask us anything there too.", chOpen: "Open chat" });
 Object.assign(UI.vi, { chLive: "Chúng tôi sẽ cập nhật trong khung chat", chLiveDesc: "Việc kiểm tra, xác nhận và thay đổi giờ sẽ hiện ngay trong khung chat 💬 ở góc dưới bên phải. Có câu hỏi cũng nhắn tại đó.", chOpen: "Mở chat" });
+
+Object.assign(UI.ko, { ctaBook: "날짜 골라 예약하기", ctaAsk: "상담", ctaAskFull: "엉클데이에 상담하기" });
+Object.assign(UI.en, { ctaBook: "Pick a date & book", ctaAsk: "Ask", ctaAskFull: "Chat with Uncle Day" });
+Object.assign(UI.vi, { ctaBook: "Chọn ngày & đặt lịch", ctaAsk: "Hỏi", ctaAskFull: "Chat với Uncle Day" });

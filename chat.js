@@ -38,7 +38,8 @@ const CHAT = (() => {
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mount); else mount();
 
   // 아래쪽 고정 버튼(예약하기 바)이 있으면 그 위로
-  function place() { const bar = [...document.querySelectorAll(".cta-bar")].find(x => x.getBoundingClientRect().height > 0 && getComputedStyle(x).display !== "none" && getComputedStyle(x).visibility !== "hidden"); const up = bar ? bar.offsetHeight + 12 : 0; fab.style.bottom = (18 + up) + "px"; box.style.bottom = (84 + up) + "px"; }
+  // 아래 고정 바에 이미 "상담" 버튼이 있으면 💬 동그라미는 숨겨요 (같은 기능 버튼이 두 개 보이지 않게)
+  function place() { const bar = [...document.querySelectorAll(".cta-bar")].find(x => !x.classList.contains("away") && x.getBoundingClientRect().height > 0 && getComputedStyle(x).display !== "none" && getComputedStyle(x).visibility !== "hidden"); const up = bar ? bar.offsetHeight + 12 : 0; fab.style.bottom = (18 + up) + "px"; box.style.bottom = (84 + up) + "px"; fab.classList.toggle("by-bar", !!(bar && bar.querySelector("[data-chat]")) && !open); }
   window.addEventListener("resize", place); window.addEventListener("hashchange", () => setTimeout(place, 300)); setInterval(place, 2000);
 
   function draw() {
@@ -91,14 +92,22 @@ const CHAT = (() => {
     } catch (e) {}
   }
   function toggle(v) {
-    open = v; box.hidden = !open; fab.classList.toggle("on", open);
+    open = v; box.hidden = !open; fab.classList.toggle("on", open); place();
     clearInterval(timer);
     if (open) { fab.querySelector(".cf-dot").hidden = true; draw(); poll(true); timer = setInterval(() => poll(false), 4000); setTimeout(() => { const ta = box.querySelector("textarea"); if (ta && innerWidth > 600) ta.focus(); }, 50); }
     else timer = setInterval(() => poll(false), 60000);
   }
   fab.onclick = () => toggle(!open);
+  // 상단 "상담하기"·업체 화면 아래 "상담" 버튼 → 사이트 채팅 열기
+  document.addEventListener("click", e => {
+    const a = e.target.closest("[data-chat]"); if (!a) return;
+    e.preventDefault(); e.stopPropagation(); toggle(true);
+    const m = (window.SHOP_ID && [0, window.SHOP_ID]) || location.hash.match(/^#\/shop\/([^/?]+)/) || (/shop\.html$/.test(location.pathname) && [0, location.hash.slice(1)]);
+    const shop = m && typeof SHOPS !== "undefined" && SHOPS.find(s => s.id === decodeURIComponent(m[1]));
+    if (shop && !msgs.length) setTimeout(() => { const ta = box.querySelector("textarea[name=body]"); if (ta && !ta.value) { ta.value = ({ ko: `[${tx(shop.name)}] 문의드려요\n`, en: `Question about ${tx(shop.name)}\n`, vi: `Hỏi về ${tx(shop.name)}\n` })[L()]; ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); ta.oninput && ta.oninput(); } }, 80);
+  }, true);
   // 처음: 예전 대화가 있으면 안 읽은 답장이 있는지 확인
   setTimeout(() => poll(true), 1500); timer = setInterval(() => poll(false), 60000);
   if (typeof ACCT !== "undefined") ACCT.onUser(() => { if (!open) poll(true); });
-  return { open: () => toggle(true), poll };
+  return { open: () => toggle(true), poll, place };
 })();

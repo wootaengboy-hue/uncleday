@@ -22,7 +22,7 @@ const ACCT = (() => {
     { id: "kakao", cls: "kakao", n: { ko: "카카오로 시작하기", en: "Continue with Kakao", vi: "Tiếp tục với Kakao" }, mark: "K" },
     { id: "custom:naver", cls: "naver", n: { ko: "네이버로 시작하기", en: "Continue with Naver", vi: "Tiếp tục với Naver" }, mark: "N" },
     { id: "google", cls: "google", n: { ko: "구글로 시작하기", en: "Continue with Google", vi: "Tiếp tục với Google" }, mark: "G" },
-    { id: "facebook", cls: "facebook", n: { ko: "페이스북으로 시작하기", en: "Continue with Facebook", vi: "Tiếp tục với Facebook" }, mark: "f" }];
+    { id: "facebook", off: true, cls: "facebook", n: { ko: "페이스북으로 시작하기", en: "Continue with Facebook", vi: "Tiếp tục với Facebook" }, mark: "f" }];
 
   const stored = () => { try { return !!localStorage.getItem(SKEY); } catch (e) { return false; } };
   function set(s) { user = s ? s.user : null; window.UD_TOKEN = s ? s.access_token : null; drawBtn(); subs.forEach(f => { try { f(user); } catch (e) {} }); }
@@ -76,7 +76,7 @@ const ACCT = (() => {
   }
   function openLogin() {
     const s = openSheet(`<h2>${t("title")}</h2><p class="acct-desc">${t("desc")}</p>
-      <div class="acct-provs">${PROVIDERS.map(p => `<button class="acct-p ${p.cls}" data-p="${p.id}">${p.n[L()]}</button>`).join("")}</div>
+      <div class="acct-provs">${PROVIDERS.filter(p => !p.off).map(p => `<button class="acct-p ${p.cls}" data-p="${p.id}">${p.n[L()]}</button>`).join("")}</div>
       <p class="acct-skip">${t("skip")}</p><p class="acct-terms">${t("terms")}</p>`);
     s.querySelectorAll("[data-p]").forEach(b => b.onclick = () => { b.disabled = true; login(b.dataset.p); });
   }

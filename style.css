@@ -662,3 +662,12 @@ h1, h2, h3, .head h1, .cat-title, .partner h2 { font-weight: 800; }
 .cb-m.me .cb-a { background: rgba(255,255,255,.2); color: #fff; }
 
 footer .foot-priv { display: inline-block; margin: 2px 12px 0 0; color: #fff; text-decoration: underline; font-size: 13px; }
+
+/* 업체 화면 아래 고정 바: 예약하기 + 상담 (예약 폼이 보이면 숨김) */
+.cta-bar { display: flex; gap: 8px; justify-content: center; transition: transform .25s ease, opacity .25s ease; }
+.cta-bar .btn { margin: 0; }
+.cta-bar .cta-book { flex: 1 1 auto; max-width: 400px; }
+.cta-bar .cta-ask { flex: 0 0 auto; background: #fff; color: var(--navy, #1E3A5F); border: 1.5px solid currentColor; box-shadow: none; }
+.cta-bar.solo .cta-ask { flex: 1 1 auto; max-width: 520px; background: var(--accent, #E8743B); color: #fff; border-color: transparent; }
+.cta-bar.away { transform: translateY(110%); opacity: 0; pointer-events: none; }
+.chat-fab.by-bar { opacity: 0; pointer-events: none; transform: scale(.6); }

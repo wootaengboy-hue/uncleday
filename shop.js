@@ -14,7 +14,7 @@ function copyText(text) {
   return ok;
 }
 document.addEventListener("click", e => {
-  const a = e.target.closest("a.kakao-link"); if (!a || a.id === "bkKakao") return;
+  const a = e.target.closest("a.kakao-link"); if (!a || a.id === "bkKakao" || (a.hasAttribute("data-chat") && typeof CHAT !== "undefined" && CHAT)) return;
   const m = (window.SHOP_ID && [0, window.SHOP_ID]) || location.hash.match(/^#\/shop\/(.+)$/) || (/shop\.html$/.test(location.pathname) && [0, location.hash.slice(1)]);
   const shop = m && SHOPS.find(s => s.id === decodeURIComponent(m[1])); if (!shop) return;
   e.preventDefault();
@@ -224,8 +224,19 @@ if (!shop) {
   document.querySelectorAll(".board").forEach(b => b.onclick = () => openBoard(+b.dataset.b));
 
   // 화면 아래에 항상 보이는 문의 버튼
-  document.body.insertAdjacentHTML("beforeend", `<div class="cta-bar"><a class="btn kakao-link" href="${SITE.kakao}" target="_blank">💬 ${ui("askBtn")}</a><small class="cta-hint">${ui("askCopyHint")}</small></div>`);
+  // 예약 가능 업체: [📅 예약하기] + [💬 상담]  /  준비 중 업체: [💬 상담하기]
+  // 예약 폼이 화면에 보이는 동안에는 바를 숨겨서 "예약 요청하기"와 버튼이 겹치지 않게
+  // 사이트 채팅이 켜져 있으면 채팅창이 열리고(chat.js), 아니면 카톡 채널로 이동
+  const askHtml = `<a class="btn cta-ask" href="${SITE.kakao}" target="_blank" rel="noopener" data-chat>💬 ${ui(pending ? "ctaAskFull" : "ctaAsk")}</a>`;
+  document.body.insertAdjacentHTML("beforeend", `<div class="cta-bar ${pending ? "solo" : ""}">${pending ? "" : `<button type="button" class="btn cta-book">📅 ${ui("ctaBook")}</button>`}${askHtml}</div>`);
   document.body.classList.add("has-cta");
+  const bar = document.querySelector(".cta-bar");
+  const cb = bar.querySelector(".cta-book"); if (cb) cb.onclick = () => { $("bookTitle").scrollIntoView({ behavior: "smooth" }); };
+  if (!pending && "IntersectionObserver" in window) {
+    const seen = new Set();
+    const io = new IntersectionObserver(es => { es.forEach(x => x.isIntersecting ? seen.add(x.target) : seen.delete(x.target)); bar.classList.toggle("away", seen.size > 0); if (typeof CHAT !== "undefined" && CHAT && CHAT.place) CHAT.place(); });
+    [$("bookTitle"), $("form")].forEach(el => el && io.observe(el));
+  }
 
   // 이용 후기 보내기 (확인 후 관리자 페이지에서 게시)
   let rvStar = 0;
