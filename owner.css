@@ -139,3 +139,31 @@ textarea.inp { min-height: 64px; resize: vertical; }
 .login h1 { font-size: 24px; margin: 4px 0 0; line-height: 1.25; }
 .spin { opacity: .6; pointer-events: none; }
 @media (min-width: 481px) { .app { box-shadow: 0 0 0 1px var(--line); } }
+
+/* ---- PC·태블릿 (넓은 화면): 왼쪽 메뉴 + 오른쪽 상세 서랍 ---- */
+@media (min-width: 960px) {
+  html, body { background: var(--bg); }
+  .app { max-width: none; margin: 0; padding-left: 220px; box-shadow: none; }
+  .hdr { padding: 14px 28px; }
+  .hdr .shop b { font-size: 18px; }
+  .body { padding: 22px 28px 40px; max-width: 980px; width: 100%; }
+  .tabs { left: 0; top: 0; bottom: 0; transform: none; width: 220px; max-width: none; display: flex; flex-direction: column; gap: 4px;
+    border-top: 0; border-right: 1px solid var(--line); padding: 84px 12px 16px; }
+  .tab { flex-direction: row; justify-content: flex-start; gap: 12px; font-size: 15px; padding: 12px 14px; border-radius: 12px; min-height: 48px; }
+  .tab.on { background: var(--green-t); }
+  .tab .dot { position: static; margin-left: auto; font-size: 11px; }
+  .ov { pointer-events: none; background: transparent; justify-content: flex-end; }
+  .ov-in { pointer-events: auto; max-width: 480px; box-shadow: -8px 0 32px rgba(14,40,67,.14); border-left: 1px solid var(--line); }
+  .slots { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+  .ov .slots { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .stats { grid-template-columns: repeat(3, minmax(0, 220px)); }
+  .toast { bottom: 24px; left: calc(50% + 110px); }
+  .trow:hover, .req:hover { filter: brightness(.98); }
+  .trow.sel { background: #F7F3EA; border-radius: 10px; }
+}
+@media (min-width: 1400px) { .body { max-width: 1040px; } }
+@media (min-width: 960px) {
+  .app:not(.in) { padding-left: 0; }
+  .app:not(.in) .login { width: 100%; max-width: 440px; margin: 48px auto; flex: none; border-radius: 20px; border: 1px solid var(--line); }
+}
+@media (min-width: 960px) { .app.drawer .body { max-width: calc(100vw - 220px - 480px); } .app.drawer .hdr .langs { margin-right: 470px; } }

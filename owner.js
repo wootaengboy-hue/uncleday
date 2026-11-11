@@ -154,6 +154,7 @@
 
   // ---- 화면: 로그인 ----
   function drawLogin(err) {
+    $app.classList.remove("in");
     $app.innerHTML = `<div class="login">
       <div class="row"><img src="images/owner-192.png" alt="Uncle Day"><div class="grow"></div>${langBtns()}</div>
       <div><h1>${t("loginTitle")}</h1><p class="muted" style="margin:6px 0 0">${t("loginNote")}</p></div>
@@ -180,6 +181,7 @@
 
   // ---- 화면: 새 비밀번호 ----
   function drawNewPw(err) {
+    $app.classList.remove("in");
     $app.innerHTML = `<div class="login">
       <div class="row"><img src="images/owner-192.png" alt="Uncle Day"><div class="grow"></div>${langBtns()}</div>
       <div><h1>${t("newPwTitle")}</h1><p class="muted" style="margin:6px 0 0">${t("newPwNote")}</p></div>
@@ -211,6 +213,7 @@
     if (!me) return;
     const s = curShop(), reqN = rows.filter(b => b.status === "requested").length;
     document.title = (reqN ? `(${reqN}) ` : "") + "Uncle Day · " + shopName(s);
+    $app.classList.add("in");
     $app.innerHTML = `<header class="hdr"><img src="images/owner-192.png" alt="Uncle Day">
         <div class="shop"><b>${esc(shopName(s))}</b><small>${t("title")}</small></div>${langBtns()}</header>
       <main class="body" id="main"></main>
@@ -363,14 +366,17 @@
   }
 
   // ---- 예약 상세 ----
+  const wide = () => window.matchMedia && matchMedia("(min-width: 960px)").matches;
   function openDetail(id) { detail = id; proposing = false; picks = []; pDay = null; drawDetail(); }
   function closeDetail() { detail = null; proposing = false; drawDetail(); }
   function drawDetail() {
     let ov = document.getElementById("ov");
     const b = detail && rows.find(x => x.id === detail);
-    if (!b) { if (ov) ov.remove(); document.body.style.overflow = ""; return; }
+    $app.classList.toggle("drawer", !!b);
+    if (!b) { if (ov) ov.remove(); document.body.style.overflow = ""; document.querySelectorAll(".trow.sel,.req.sel").forEach(x => x.classList.remove("sel")); return; }
     if (!ov) { ov = document.createElement("div"); ov.id = "ov"; ov.className = "ov"; document.body.appendChild(ov); }
-    document.body.style.overflow = "hidden";
+    document.body.style.overflow = wide() ? "" : "hidden";
+    document.querySelectorAll(".trow,.req").forEach(x => x.classList.toggle("sel", x.dataset.open === b.id));
     const st = b.status, td = today(), afterVisit = b.visit_date && b.visit_date <= td;
     const ln = T.langName[b.lang] ? T.langName[b.lang][li()] : (b.lang || "-");
     const times = arr => (arr || []).map(x => typeof x === "string" ? x : `${x.date ? dateLabel(x.date) + " " : ""}${x.time || ""}`).filter(Boolean).join(" · ");
