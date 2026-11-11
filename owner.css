@@ -197,3 +197,12 @@ textarea.inp { min-height: 64px; resize: vertical; }
 .staffchips { display: flex; flex-wrap: wrap; gap: 6px; }
 .schip { font-size: 13px; font-weight: 600; background: #F5F2EA; border-radius: 999px; padding: 4px 10px; }
 .legend2 { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--sub); margin-top: 10px; }
+/* 일정 탭: 날짜별 시간은 넓게, 요일별 영업시간은 필요한 만큼만 */
+.cols.sch > .col:last-child { width: 100%; max-width: 520px; }
+@media (min-width: 1200px) {
+  .cols.sch { grid-template-columns: minmax(0, 1fr) minmax(380px, 440px); }
+  .cols.sch > .col:last-child { max-width: none; }
+  .cols.sch .slots { grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); }
+  .cols.sch .days .day { flex: 1 0 52px; }
+}
+@media (min-width: 1800px) { .cols.sch .slots { grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); } .cols.sch .sl { min-height: 54px; font-size: 14px; } }

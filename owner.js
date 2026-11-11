@@ -328,7 +328,7 @@
     const slots = slotsOfDay(schedDay);
     const timeOpts = sel => Array.from({ length: 41 }, (_, i) => toStr(360 + i * 30)).map(x => `<option ${x === sel ? "selected" : ""}>${x}</option>`).join("");
     const owner = isOwner(), dirty = !!hoursDraft;
-    return `<div class="cols"><div class="col">
+    return `<div class="cols sch"><div class="col">
       ${window.OwnerBoard ? `<button class="req" data-act="rota" style="border-color:#B9D6C5;background:#F1F8F3"><div class="tm" style="min-width:auto">👥</div><div class="grow"><span class="nm">${t("rotaT")}</span><span class="sub">${t("rotaS")}</span></div><span class="bd ok">›</span></button>` : ""}
       <div class="sec"><h2>${t("dayTitle")}</h2><span></span></div>
       <div class="card" style="display:flex;flex-direction:column;gap:12px">
