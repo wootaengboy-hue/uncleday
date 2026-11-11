@@ -8,8 +8,10 @@
   const LANGS = ["vi", "ko", "en"];
   const T = {
     vBoard: ["Bảng phòng", "현황판", "Board"],
-    openAll: ["Mở cửa", "영업 시작", "Open"], openNow: ["Đang mở cửa", "영업 중", "Open"], closedNow: ["Đã đóng cửa", "영업 마감됨", "Closed"], openAgain: ["Mở lại", "다시 영업 시작", "Reopen"],
-    closeBusy: ["{n} KTV đang làm sẽ chấm ra sau khi xong", "시술 중인 {n}명은 끝난 뒤 퇴근 처리해 주세요", "{n} working staff: clock out after they finish"], closeAll: ["Đóng cửa", "영업 마감", "Close"], openHint: ["Chấm vào cho tất cả nhân viên làm hôm nay", "오늘 근무자를 모두 출근 처리해요", "Clock in everyone working today"],
+    stBefore: ["Chưa mở · mở lúc {n}", "영업 전 · {n} 오픈", "Not open · opens {n}"], stOpen: ["Đang mở cửa", "영업 중", "Open"], stSince: ["mở từ {n}", "{n}부터", "since {n}"],
+    stAfter: ["Đã hết giờ · {n}", "영업 종료 · {n}", "Closed · {n}"], stClosed: ["Đã đóng cửa lúc {n}", "{n} 영업 마감", "Closed at {n}"], stDayoff: ["Hôm nay nghỉ", "오늘 휴무일", "Closed today"],
+    openEarly: ["Mở cửa ngay", "지금 영업 시작", "Open now"], closeNow: ["Đóng cửa", "영업 마감", "Close"], extend: ["Mở thêm giờ", "영업 연장", "Stay open"], reopen: ["Mở lại", "다시 영업 시작", "Reopen"], openAnyway: ["Vẫn mở cửa", "그래도 영업 시작", "Open anyway"],
+    closedOk: ["Đã đóng cửa", "영업을 마감했어요", "Closed"], closedStill: ["Đã đóng cửa · còn {n} nhân viên chưa chấm ra", "영업 마감했어요 · 아직 퇴근 안 한 직원 {n}명", "Closed · {n} staff still clocked in"], closeAll: ["Đóng cửa", "영업 마감", "Close"], openHint: ["Chấm vào cho tất cả nhân viên làm hôm nay", "오늘 근무자를 모두 출근 처리해요", "Clock in everyone working today"],
     openDone: ["Đã chấm vào {n} người", "{n}명 출근 처리했어요", "{n} clocked in"], closeDone: ["Đã chấm ra {n} người", "{n}명 퇴근 처리했어요", "{n} clocked out"], vSched: ["Lịch làm", "근무표", "Rota"], vSet: ["⚙️ Cài đặt", "⚙️ 매장 설정", "⚙️ Setup"], refresh: ["↻", "↻", "↻"],
     kWork: ["Đang làm", "시술 중", "In session"], kWait: ["Khách chờ", "대기 손님", "Waiting"], kDone: ["Xong hôm nay", "오늘 완료", "Done today"], kRev: ["Doanh thu", "오늘 매출", "Revenue"],
     expT: ["Khách Uncle Day hôm nay", "오늘 올 엉클데이 손님", "Uncle Day guests today"], arrive: ["Đã đến", "도착", "Arrived"],
@@ -393,11 +395,17 @@
     root.querySelector("#obTop").innerHTML = `<button class="ob-vt ${view === "board" ? "on" : ""}" data-v="board">🗺️ ${t("vBoard")}</button><button class="ob-vt ${view === "sched" ? "on" : ""}" data-v="sched">📅 ${t("vSched")}${n ? `<span class="n">${n}</span>` : ""}</button><span class="ob-sp"></span>${openBtn()}${owner() ? `<button class="ob-vt" data-a="set">${t("vSet")}</button>` : ""}<button class="ob-vt" data-a="reload" aria-label="refresh">${t("refresh")}</button>`;
   }
   function openBtn() {
-    const sch = data.staff.filter(s => s.code !== "O" && !s.in_at), inN = data.staff.filter(s => s.in_at && !s.out_at);
-    if (inN.length) return `<span class="ob-vt on" style="cursor:default">🟢 ${t("openNow")} · ${inN.length}/${data.staff.length}</span><button class="ob-vt" data-a="closeall">🌙 ${t("closeAll")}</button>`;
-    if (data.staff.some(s => s.out_at)) return `<span class="ob-vt" style="cursor:default">🌙 ${t("closedNow")}</span>${sch.length || data.staff.some(s => s.out_at && s.code !== "O") ? `<button class="ob-vt on" data-a="openall">☀️ ${t("openAgain")}</button>` : ""}`;
-    if (sch.length) return `<button class="ob-vt on" data-a="openall" title="${esc(t("openHint"))}">☀️ ${t("openAll")}</button>`;
-    return "";
+    const ss = data.shop_state; if (!ss) return "";
+    const hrs = ss.open && ss.close ? ss.open + "–" + ss.close : "";
+    const map = {
+      before: [`⏳ ${t("stBefore", { n: ss.open || "" })}`, "open", "openEarly", ""],
+      open_auto: [`🟢 ${t("stOpen")} · ${hrs}`, "close", "closeNow", "on"],
+      open_manual: [`🟢 ${t("stOpen")} · ${t("stSince", { n: tm(ss.opened_at) })}`, "close", "closeNow", "on"],
+      after: [`🌙 ${t("stAfter", { n: ss.close || "" })}`, "open", "extend", ""],
+      closed_manual: [`🌙 ${t("stClosed", { n: tm(ss.closed_at) })}`, "open", "reopen", ""],
+      dayoff: [`🌙 ${t("stDayoff")}`, "open", "openAnyway", ""]
+    }[ss.status] || ["", "open", "openEarly", ""];
+    return `<span class="ob-vt ${map[3]}" style="cursor:default">${map[0]}</span><button class="ob-vt" data-a="shop${map[1]}">${map[1] === "open" ? "☀️" : "🌙"} ${t(map[2])}</button>`;
   }
   function renderFloorChips() {
     root.querySelector("#obFl").innerHTML = G.floors.slice().reverse().map(f => { const all = f.rooms.reduce((a, r) => a + r.st.length, 0), a = f.rooms.reduce((nn, r) => nn + r.st.filter(s => data.sessions.some(x => x.status === "working" && x.station === s.id)).length, 0); return `<span class="ob-fchip">${t("fchip", { f: f.num, a: a ? `<b>${a}</b>` : "0", b: all })}</span>`; }).join("");
@@ -593,14 +601,10 @@
     const b = e.target.closest("[data-a]"); if (!b) return;
     const a = b.dataset.a, id = b.dataset.id;
     if (a === "set") { openSet(); return; }
-    if (a === "openall" || a === "closeall") {
-      if (busy) return; busy = true;
-      const busyIds = new Set(data.sessions.filter(x => x.status === "working").map(x => x.staff_id));
-      const list = a === "openall" ? data.staff.filter(s => s.code !== "O" && (!s.in_at || s.out_at)) : data.staff.filter(s => s.in_at && !s.out_at && !busyIds.has(s.id));
-      if (a === "closeall" && busyIds.size) C.toast(t("closeBusy", { n: busyIds.size }));
-      try { for (const s of list) await C.rpc("staff_attend", { shop: C.shopId, sid: s.id, action: a === "openall" ? "in" : "out" }); C.toast(t(a === "openall" ? "openDone" : "closeDone", { n: list.length })); }
-      catch (e) { C.toast(C.errMsg(e)); } finally { busy = false; }
-      await load(); return;
+    if (a === "shopopen" || a === "shopclose") {
+      const r = await call("shop_open", { action: a === "shopopen" ? "open" : "close" });
+      if (r && a === "shopclose") { const still = r.staff.filter(x => x.in_at && !x.out_at).length; C.toast(still ? t("closedStill", { n: still }) : t("closedOk")); }
+      return;
     }
     if (a === "reload") { await load(); if (view === "sched") loadSched(); return; }
     if (a === "addg") {
