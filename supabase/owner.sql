@@ -232,3 +232,25 @@ grant execute on function public.shop_hours_of(text), public.shop_availability(t
 grant execute on function public.owner_me(), public.owner_pw_changed(), public.owner_bookings(text),
   public.owner_reply(uuid, text, bigint, text, jsonb), public.owner_schedule(text, date, date),
   public.owner_hours_save(text, jsonb, int, int), public.owner_closure(text, date, text, boolean) to authenticated;
+
+-- 정산 보기 (사장님만): 최근 6개월 월별 방문·결제·수수료 + 엉클데이가 보낸 정산서 + 고른 달의 예약별 내역
+create or replace function public.owner_settle(shop text, mon text default null) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare m text := coalesce(nullif(mon, ''), to_char((now() at time zone 'Asia/Ho_Chi_Minh')::date, 'YYYY-MM'));
+begin
+  perform owner_check(shop, true);
+  if m !~ '^\d{4}-\d{2}$' then raise exception 'Bad month'; end if;
+  return jsonb_build_object(
+    'month', m,
+    'months', coalesce((select jsonb_agg(x order by x ->> 'month' desc) from (
+        select jsonb_build_object('month', to_char(visit_date, 'YYYY-MM'), 'visits', count(*), 'paid', coalesce(sum(paid_amount), 0), 'commission', coalesce(sum(commission), 0)) x
+        from bookings where shop_id = shop and status in ('visited', 'settled') and visit_date >= (date_trunc('month', now()) - interval '5 months')::date
+        group by to_char(visit_date, 'YYYY-MM')) y), '[]'::jsonb),
+    'statements', coalesce((select jsonb_agg(jsonb_build_object('month', s.month, 'count', s.booking_count, 'paid', s.total_paid, 'commission', s.total_commission,
+        'status', s.status, 'billed_at', s.billed_at, 'paid_at', s.paid_at) order by s.month desc)
+        from settlements s where s.shop_id = shop and s.status <> 'void'), '[]'::jsonb),
+    'rows', coalesce((select jsonb_agg(jsonb_build_object('code', b.code, 'date', b.visit_date, 'time', b.visit_time, 'name', b.customer_name, 'people', b.people,
+        'menu_name', b.menu_name, 'paid', b.paid_amount, 'commission', b.commission, 'settled', b.status = 'settled') order by b.visit_date, b.visit_time)
+        from bookings b where b.shop_id = shop and b.status in ('visited', 'settled') and to_char(b.visit_date, 'YYYY-MM') = m), '[]'::jsonb));
+end $$;
+grant execute on function public.owner_settle(text, text) to authenticated;

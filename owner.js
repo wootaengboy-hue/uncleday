@@ -24,6 +24,15 @@
     pwShort: ["Mật khẩu cần ít nhất 8 ký tự.", "8자 이상으로 정해 주세요.", "Use at least 8 characters."],
     pwDiff: ["Hai mật khẩu không giống nhau.", "두 비밀번호가 달라요.", "The passwords don't match."],
     save: ["Lưu", "저장", "Save"],
+    tabSettle: ["Đối soát", "정산", "Statement"],
+    settleTitle: ["Đối soát tháng", "월별 정산", "Monthly statement"],
+    sVisits: ["Lượt khách đã đến", "방문 완료", "Completed visits"], sPaid: ["Tổng khách đã trả", "손님 결제 합계", "Total paid by guests"], sFee: ["Phí Uncle Day", "엉클데이 수수료", "Uncle Day fee"],
+    sStatus: ["Trạng thái", "상태", "Status"], sOpen: ["Đang tính (chưa lập)", "집계 중 (정산서 전)", "In progress"], sBilled: ["Đã gửi bảng đối soát · chờ thanh toán", "정산서 발송 · 입금 대기", "Statement sent · awaiting payment"], sPaidSt: ["Đã thanh toán", "입금 완료", "Paid"],
+    sRows: ["Từng lịch hẹn", "예약별 내역", "Each booking"], sNone: ["Tháng này chưa có khách đến.", "이 달에는 방문 완료된 예약이 없어요.", "No completed visits this month."],
+    sOnly: ["Chỉ chủ cửa hàng mới xem được đối soát.", "정산은 사장님 계정만 볼 수 있어요.", "Only the owner can see statements."],
+    sNote: ["Phí được tính trên số tiền khách đã trả theo hợp đồng. Nếu số tiền sai, hãy sửa ở lịch hẹn hoặc nhắn Uncle Day trước khi lập bảng đối soát.", "수수료는 계약에 따라 손님 결제 금액으로 계산돼요. 금액이 틀리면 정산서가 나오기 전에 엉클데이에 알려 주세요.", "The fee is calculated from the amount paid, per your contract. If an amount is wrong, tell Uncle Day before the statement is made."],
+    sSettled: ["đã đối soát", "정산됨", "settled"],
+    sStmt: ["Trong bảng đối soát đã gửi", "보낸 정산서에 포함", "In the sent statement"],
     tabHome: ["Hôm nay", "오늘", "Today"], tabBookings: ["Đặt lịch", "예약", "Bookings"], tabSchedule: ["Lịch", "일정", "Schedule"], tabMore: ["Thêm", "더보기", "More"],
     install: ["Cài Uncle Day lên màn hình chính để mở nhanh như ứng dụng", "홈 화면에 설치하면 앱처럼 바로 열 수 있어요", "Add Uncle Day to your home screen to open it like an app"],
     installBtn: ["Cách cài", "설치 방법", "How to"],
@@ -108,7 +117,7 @@
     mShop: ["Cửa hàng", "업체", "Shop"], mLang: ["Ngôn ngữ", "언어", "Language"], mInstall: ["Cài lên màn hình chính", "홈 화면에 설치", "Add to home screen"],
     mPw: ["Đổi mật khẩu", "비밀번호 변경", "Change password"], mLogout: ["Đăng xuất", "로그아웃", "Log out"],
     mAccount: ["Tài khoản", "계정", "Account"], roleOwner: ["Chủ", "사장님", "Owner"], roleStaff: ["Nhân viên", "직원", "Staff"],
-    soon: ["Sắp có: sửa dịch vụ & giá, đối soát, đánh giá, tài khoản nhân viên, thông báo trên điện thoại.", "곧 추가: 메뉴·가격 수정, 정산, 리뷰, 직원 계정, 휴대폰 알림", "Coming soon: menu & price edits, statements, reviews, staff accounts, phone alerts."],
+    soon: ["Sắp có: sửa dịch vụ & giá, đánh giá, tài khoản nhân viên, thông báo trên điện thoại, bảng phòng & kỹ thuật viên.", "곧 추가: 메뉴·가격 수정, 리뷰, 직원 계정, 휴대폰 알림, 시술 현황판", "Coming soon: menu & price edits, reviews, staff accounts, phone alerts, room & therapist board."],
     contactUD: ["Cần hỗ trợ? Nhắn Uncle Day qua Zalo như trước.", "도움이 필요하면 지금처럼 잘로로 엉클데이에 연락하세요.", "Need help? Message Uncle Day on Zalo as usual."],
     refresh: ["Làm mới", "새로고침", "Refresh"]
   };
@@ -221,14 +230,16 @@
         ${tabBtn("home", t("tabHome"), '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>')}
         ${tabBtn("bookings", t("tabBookings"), '<rect x="4" y="5" width="16" height="16" rx="3"/><path d="M8 3v4M16 3v4M4 10h16"/>', reqN)}
         ${tabBtn("schedule", t("tabSchedule"), '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>')}
+        ${tabBtn("settle", t("tabSettle"), '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/>')}
         ${tabBtn("more", t("tabMore"), '<path d="M4 7h16M4 12h16M4 17h16"/>')}
       </nav>`;
     bindLang();
-    $app.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => { tab = b.dataset.tab; if (tab === "schedule" && !sched) loadSched(); draw(); window.scrollTo(0, 0); });
+    $app.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => { tab = b.dataset.tab; if (tab === "schedule" && !sched) loadSched(); if (tab === "settle") loadSettle(settle && settle.month); draw(); window.scrollTo(0, 0); });
     const m = document.getElementById("main");
     if (tab === "home") m.innerHTML = homeHtml();
     else if (tab === "bookings") m.innerHTML = bookingsHtml();
     else if (tab === "schedule") m.innerHTML = scheduleHtml();
+    else if (tab === "settle") m.innerHTML = settleHtml();
     else m.innerHTML = moreHtml();
     bindMain(m);
     drawDetail();
@@ -311,6 +322,38 @@
   }
   function draft() { if (!hoursDraft) hoursDraft = { week: JSON.parse(JSON.stringify(sched.week)), cap: sched.capacity, cut: sched.cutoff_min }; return hoursDraft; }
 
+  // ---- 정산 ----
+  let settle = null;
+  async function loadSettle(mon) {
+    if (!isOwner()) { settle = null; return; }
+    try { settle = await rpc("owner_settle", { shop: shopId, mon: mon || null }); } catch (e) { toast(errMsg(e)); }
+    if (tab === "settle") draw();
+  }
+  const monLabel = m => { const [y, mm] = m.split("-"); return lang === "ko" ? `${+mm}월` : lang === "vi" ? `T${+mm}/${y}` : new Date(Date.UTC(+y, +mm - 1, 1)).toLocaleString("en-US", { month: "short", year: "numeric", timeZone: "UTC" }); };
+  function settleHtml() {
+    if (!isOwner()) return `<div class="info">${t("sOnly")}</div>`;
+    if (!settle) return `<div class="card empty">…</div>`;
+    const cur = today().slice(0, 7), months = [...new Set([cur, ...(settle.months || []).map(x => x.month), settle.month])].sort().reverse().slice(0, 6);
+    const sum = (settle.months || []).find(x => x.month === settle.month) || { visits: 0, paid: 0, commission: 0 };
+    const stm = (settle.statements || []).find(x => x.month === settle.month);
+    const stLabel = !stm ? t("sOpen") : stm.status === "paid" ? t("sPaidSt") : t("sBilled");
+    const stCls = !stm ? "wait" : stm.status === "paid" ? "ok" : "ask";
+    return `<div class="sec"><h2>${t("settleTitle")}</h2><span></span></div>
+      <div class="chips">${months.map(m => `<button class="chip ${m === settle.month ? "on" : ""}" data-mon="${m}">${esc(monLabel(m))}</button>`).join("")}</div>
+      <div class="card">
+        <div class="kv"><span>${t("sStatus")}</span><b><span class="bd ${stCls}">${stLabel}</span></b></div>
+        <div class="kv"><span>${t("sVisits")}</span><b>${sum.visits}</b></div>
+        <div class="kv"><span>${t("sPaid")}</span><b>${vnd(sum.paid)}</b></div>
+        <div class="kv"><span>${t("sFee")}</span><b style="font-size:17px">${vnd(sum.commission)}</b></div>
+        ${stm ? `<div class="kv"><span>${t("sStmt")}</span><b>${stm.count} · ${vnd(stm.commission)}</b></div>` : ""}
+      </div>
+      <p class="muted" style="margin:0 2px">${t("sNote")}</p>
+      <div class="sec"><h2>${t("sRows")}</h2><span>${(settle.rows || []).length}</span></div>
+      ${(settle.rows || []).length ? `<div class="list">${settle.rows.map(r => `<div class="trow"><div class="tm" style="font-size:15px">${esc(r.date.slice(8))}/${esc(r.date.slice(5, 7))}<small>${esc(r.time || "")}</small></div>
+          <div class="grow"><span class="nm">${esc(r.name || "-")} · ${t("people", r.people)}</span><span class="sub">${esc(r.code)}${r.settled ? " · " + t("sSettled") : ""}</span></div>
+          <div style="text-align:right"><b style="display:block">${vnd(r.paid)}</b><span class="sub">${t("sFee")} ${vnd(r.commission)}</span></div></div>`).join("")}</div>` : `<div class="card empty">${t("sNone")}</div>`}`;
+  }
+
   // ---- 더보기 ----
   function moreHtml() {
     const s = curShop();
@@ -329,9 +372,10 @@
   function bindMain(m) {
     m.querySelectorAll("[data-open]").forEach(b => b.onclick = () => openDetail(b.dataset.open));
     m.querySelectorAll("[data-btab]").forEach(b => b.onclick = () => { bTab = b.dataset.btab; draw(); });
+    m.querySelectorAll("[data-mon]").forEach(b => b.onclick = () => loadSettle(b.dataset.mon));
     m.querySelectorAll("[data-day]").forEach(b => b.onclick = () => { schedDay = b.dataset.day; draw(); });
     m.querySelectorAll("[data-slot]").forEach(b => b.onclick = () => toggleClosure(schedDay, b.dataset.slot));
-    m.querySelectorAll("[data-shop]").forEach(b => b.onclick = () => { shopId = b.dataset.shop; store("ud-owner-shop", shopId); sched = null; hoursDraft = null; load(); });
+    m.querySelectorAll("[data-shop]").forEach(b => b.onclick = () => { shopId = b.dataset.shop; store("ud-owner-shop", shopId); sched = null; settle = null; hoursDraft = null; load(); });
     m.querySelectorAll("[data-wsw]").forEach(b => b.onclick = () => { const d = draft(), i = +b.dataset.wsw; d.week[i].closed = !d.week[i].closed; draw(); });
     m.querySelectorAll("[data-wo]").forEach(s => s.onchange = () => { draft().week[+s.dataset.wo].open = s.value; draw(); });
     m.querySelectorAll("[data-wc]").forEach(s => s.onchange = () => { draft().week[+s.dataset.wc].close = s.value; draw(); });
