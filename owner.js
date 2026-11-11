@@ -36,7 +36,7 @@
     tabBoard: ["Bảng phòng", "현황판", "Board"],
     shopToday: ["Cửa hàng hôm nay", "오늘 매장", "Shop today"], lgIdle: ["Đang chờ", "대기 중", "Free"], lgWork: ["Đang làm", "시술 중", "In session"], lgOff: ["Chưa vào / đã về", "출근 전 · 퇴근", "Not in / gone"], lgDay: ["Nghỉ", "휴무", "Day off"], ssBefore: ["Mở lúc {n}", "{n} 오픈 예정", "Opens {n}"], ssOpen: ["Đang mở cửa", "영업 중", "Open"], ssAfter: ["Đã đóng cửa", "영업 종료", "Closed"], ssDayoff: ["Nghỉ hôm nay", "오늘 휴무일", "Closed today"], bIn: ["Đi làm", "출근", "Clocked in"], bWork: ["Đang làm", "시술 중", "In session"], bWait: ["Khách chờ", "대기 · 올 손님", "Waiting"], bDone: ["Xong · doanh thu", "완료 · 매출", "Done · revenue"],
     openBoard: ["Mở bảng phòng", "현황판 열기", "Open board"], boardStart: ["Bắt đầu bảng phòng", "현황판 시작하기", "Start the room board"], boardStartS: ["Nhập phòng, dịch vụ và nhân viên một lần", "방 · 코스 · 직원을 한 번만 넣으면 돼요", "Add rooms, services and staff once"], soonT: ["Sắp có", "곧 추가", "Coming soon"],
-    rotaT: ["Lịch làm của nhân viên", "직원 근무표", "Staff rota"], rotaS: ["Xếp ca sáng · chiều · nghỉ, duyệt yêu cầu", "오전 · 오후 · 휴무 짜기, 요청 승인", "Plan AM · PM · days off, approve requests"],
+    rotaT: ["Lịch làm của nhân viên", "직원 근무표", "Staff rota"], rotaS: ["Xếp ca mở cửa · đóng cửa · nghỉ, duyệt yêu cầu", "오픈조 · 마감조 · 휴무 짜기, 요청 승인", "Plan opening · closing · days off, approve requests"],
     tabHome: ["Hôm nay", "오늘", "Today"], tabBookings: ["Đặt lịch", "예약", "Bookings"], tabSchedule: ["Lịch", "일정", "Schedule"], tabMore: ["Thêm", "더보기", "More"],
     install: ["Cài Uncle Day lên màn hình chính để mở nhanh như ứng dụng", "홈 화면에 설치하면 앱처럼 바로 열 수 있어요", "Add Uncle Day to your home screen to open it like an app"],
     installBtn: ["Cách cài", "설치 방법", "How to"],
@@ -290,12 +290,12 @@
     const sec = `<div class="sec"><h2>${t("shopToday")}</h2><span></span></div>`;
     if (!d) return sec + `<div class="card empty">…</div>`;
     if (!d.staff.length) return sec + `<button class="req" data-act="toboard" style="border-color:#B9D6C5;background:#F1F8F3"><div class="tm" style="min-width:auto">🗺️</div><div class="grow"><span class="nm">${t("boardStart")}</span><span class="sub">${t("boardStartS")}</span></div><span class="bd ok">›</span></button>`;
-    const work = d.sessions.filter(x => x.status === "working").length, done = d.sessions.filter(x => x.status === "done");
+    const work = d.sessions.filter(x => x.status === "working").length, done = d.sessions.filter(x => x.status === "done"), doneG = done.filter(x => (x.grp || x.id) === x.id);
     const wait = d.guests.filter(g => g.status === "waiting").length, inN = d.staff.filter(x => x.in_at && !x.out_at).length;
     const rev = done.reduce((a, x) => a + (+x.paid || 0), 0);
     const st = x => x.code === "O" && !x.in_at ? "🌙" : !x.in_at ? "⚪" : x.out_at ? "⚪" : d.sessions.some(y => y.status === "working" && y.staff_id === x.id) ? "🔴" : "🟢";
     const ss = d.shop_state || {}, stTxt = { before: "⏳ " + t("ssBefore", ss.open || ""), open_auto: "🟢 " + t("ssOpen"), open_manual: "🟢 " + t("ssOpen"), after: "🌙 " + t("ssAfter"), closed_manual: "🌙 " + t("ssAfter"), dayoff: "🌙 " + t("ssDayoff") }[ss.status] || "";
-    return `<div class="sec"><h2>${t("shopToday")}</h2><span>${stTxt}${ss.open ? ` · ${esc(ss.open)}–${esc(ss.close)}` : ""}</span></div><div class="stats st4"><div class="stat"><b>${inN}/${d.staff.length}</b><span>${t("bIn")}</span></div><div class="stat"><b>${work}</b><span>${t("bWork")}</span></div><div class="stat"><b>${wait + d.expected.length}</b><span>${t("bWait")}</span></div><div class="stat"><b>${done.length} · ${rev >= 1e6 ? (Math.round(rev / 1e5) / 10).toString().replace(".", ",") + "tr₫" : vnd(rev)}</b><span>${t("bDone")}</span></div></div>
+    return `<div class="sec"><h2>${t("shopToday")}</h2><span>${stTxt}${ss.open ? ` · ${esc(ss.open)}–${esc(ss.close)}` : ""}</span></div><div class="stats st4"><div class="stat"><b>${inN}/${d.staff.length}</b><span>${t("bIn")}</span></div><div class="stat"><b>${work}</b><span>${t("bWork")}</span></div><div class="stat"><b>${wait + d.expected.length}</b><span>${t("bWait")}</span></div><div class="stat"><b>${doneG.length} · ${rev >= 1e6 ? (Math.round(rev / 1e5) / 10).toString().replace(".", ",") + "tr₫" : vnd(rev)}</b><span>${t("bDone")}</span></div></div>
       <div class="card"><div class="staffchips">${d.staff.map(x => `<span class="schip">${st(x)} ${esc(x.name)}</span>`).join("")}</div>
       <div class="legend2">${[["🟢", "lgIdle"], ["🔴", "lgWork"], ["⚪", "lgOff"], ["🌙", "lgDay"]].map(([e, k]) => `<span>${e} ${t(k)}</span>`).join("")}</div>
       <button class="btn main" data-act="toboard" style="margin-top:12px">🗺️ ${t("openBoard")}</button></div>`;

@@ -19,6 +19,7 @@
     walkT: ["Tiếp nhận khách", "손님 접수", "Add a guest"], gName: ["Tên khách", "손님 이름", "Guest name"], course: ["Dịch vụ", "코스", "Service"], ppl: ["Số khách", "인원", "Guests"], addG: ["Tiếp nhận", "접수", "Add"],
     waitT: ["Khách đang chờ", "기다리는 손님", "Waiting guests"], noWait: ["Chưa có khách chờ.", "기다리는 손님이 없어요.", "No one is waiting."],
     assign: ["Phân công", "배정", "Assign"], leave: ["Về", "나감", "Left"], tp: ["Kỹ thuật viên", "테라피스트", "Therapist"], bed: ["Giường / ghế", "베드 / 체어", "Bed / chair"], choose: ["Chọn", "선택", "Choose"], start: ["Bắt đầu", "시작", "Start"],
+    tpPick: ["Chọn KTV (tối đa 4 người)", "테라피스트 고르기 (최대 4명)", "Therapists (up to 4)"], tpN: ["{n} người", "{n}명", "{n}"], max4: ["Tối đa 4 KTV cho một khách.", "손님 한 명에 테라피스트는 4명까지예요.", "Up to 4 therapists per guest."],
     noTp: ["Không có KTV đang rảnh (chưa chấm vào?).", "대기 중인 테라피스트가 없어요 (출근 처리를 했나요?).", "No free therapist (clocked in?)."], noBed: ["Không có chỗ trống phù hợp.", "이 코스에 맞는 빈 자리가 없어요.", "No suitable free bed."],
     workT: ["Đang làm", "시술 중", "In session"], noWork: ["Chưa có ca nào.", "진행 중인 시술이 없어요.", "Nothing in progress."],
     left: ["còn {n}′", "{n}분 남음", "{n} min left"], over: ["quá {n}′", "{n}분 지남", "{n} min over"], ext: ["+15′", "+15분", "+15 min"], finish: ["Xong", "끝내기", "Finish"], cancel: ["Hủy ca", "시술 취소", "Cancel"],
@@ -30,18 +31,18 @@
     roleTp: ["KTV", "테라피스트", "Therapist"], roleRcp: ["Lễ tân", "리셉션", "Reception"],
     lounge: ["Phòng chờ NV", "직원 대기실", "Staff lounge"], counter: ["Quầy lễ tân", "카운터", "Reception"], entrance: ["LỐI VÀO", "입구", "ENTRANCE"], stairs: ["CẦU THANG", "계 단", "STAIRS"],
     room: ["P.{n}", "{n}호", "Rm {n}"], free: ["Trống", "비어 있음", "Free"], busyN: ["Đang làm {n}", "시술 중 {n}", "Busy {n}"], fchip: ["Tầng {f} · {a}/{b}", "{f}F · 시술 {a}/{b}", "{f}F · {a}/{b}"],
-    sh_A: ["Sáng", "오전", "AM"], sh_B: ["Chiều", "오후", "PM"], sh_F: ["Cả ngày", "종일", "Full"], sh_O: ["Nghỉ", "휴무", "Off"], sh_C: ["Giờ riêng", "시간 지정", "Custom"], sh_null: ["Mặc định", "평소대로", "Default"],
+    sh_A: ["Ca mở cửa", "오픈조", "Opening"], sh_B: ["Ca đóng cửa", "마감조", "Closing"], sh_F: ["Cả ngày", "종일", "Full"], sh_O: ["Nghỉ", "휴무", "Off"], sh_C: ["Giờ riêng", "시간 지정", "Custom"], sh_null: ["Mặc định", "평소대로", "Default"],
     hrsN: ["{n} giờ", "{n}시간", "{n} h"], wkTot: ["Tuần {n}h", "주 {n}시간", "{n}h / wk"], pickT: ["{a} · {b}", "{a} · {b}", "{a} · {b}"], pickC: ["Tự đặt giờ", "시간 직접 정하기", "Set hours"], pickSave: ["Lưu giờ", "이 시간으로", "Save"], nextDay: ["(hôm sau)", "(다음날)", "(+1)"], badHrs: ["Giờ kết thúc phải sau giờ bắt đầu.", "끝나는 시간이 시작 시간보다 늦어야 해요.", "End must be after start."],
     bedW: ["Giường", "베드", "Bed"], chairW: ["Ghế", "체어", "Chair"], anyW: ["Giường·Ghế", "베드·체어", "Bed·Chair"],
     eq_rf: ["Máy RF", "고주파", "RF"], eq_led: ["Đèn LED", "LED", "LED"], eq_hydra: ["Hydra", "아쿠아필", "Hydra"], eq_steam: ["Xông hơi", "스티머", "Steamer"],
-    thisWk: ["Tuần này", "이번 주", "This week"], minL: ["Tối thiểu sáng {a} · chiều {b}", "최소 인원 오전 {a} · 오후 {b}", "Minimum AM {a} · PM {b}"], cov: ["S {a} · C {b}", "오전 {a} · 오후 {b}", "AM {a} · PM {b}"],
-    cellHint: ["Bấm ô để chọn ca hoặc tự đặt giờ (vd: làm 4 tiếng)", "칸을 누르면 오전 · 오후 · 종일 · 휴무를 고르거나 시간을 직접 정할 수 있어요 (4시간 근무 등)", "Tap a cell to pick a shift or set custom hours (e.g. 4 hours)"],
+    thisWk: ["Tuần này", "이번 주", "This week"], minL: ["Tối thiểu: mở cửa {a} · đóng cửa {b}", "최소 인원 오픈 {a} · 마감 {b}", "Minimum opening {a} · closing {b}"], cov: ["Mở {a} · Đóng {b}", "오픈 {a} · 마감 {b}", "Open {a} · Close {b}"],
+    cellHint: ["Bấm ô để chọn ca hoặc tự đặt giờ (vd: làm 4 tiếng)", "칸을 누르면 오픈조 · 마감조 · 종일 · 휴무를 고르거나 시간을 직접 정할 수 있어요 (4시간 근무 등)", "Tap a cell to pick a shift or set custom hours (e.g. 4 hours)"],
     reqT: ["Yêu cầu của nhân viên", "직원 요청", "Staff requests"], noReq: ["Chưa có yêu cầu.", "요청이 없어요.", "No requests."], ok: ["Duyệt", "승인", "Approve"], no: ["Từ chối", "거절", "Decline"],
     r_off: ["Xin nghỉ", "휴무 신청", "Day off"], r_shift: ["Đổi ca → {n}", "근무 변경 → {n}", "Change → {n}"], r_swap: ["Đổi ca với {n}", "{n}와 교대", "Swap with {n}"], must: ["Bắt buộc", "꼭 휴무", "Must"],
     st_peer: ["Chờ đồng nghiệp", "동료 확인 중", "Waiting for colleague"], st_pending: ["Chờ duyệt", "확인 필요", "Pending"], st_ok: ["Đã duyệt", "승인됨", "Approved"], st_no: ["Từ chối", "거절됨", "Declined"], st_cancelled: ["Đã hủy", "취소됨", "Cancelled"],
     staffOnlyReq: ["Nhân viên sẽ gửi yêu cầu từ màn hình riêng (bước tiếp theo).", "직원 화면에서 요청을 보내는 기능은 다음 단계에서 열려요.", "Staff will send requests from their own screen (next step)."],
     setT: ["Cài đặt cửa hàng", "매장 설정", "Shop setup"], close: ["Đóng", "닫기", "Close"], tShop: ["Cửa hàng", "매장", "Shop"], tFloors: ["Tầng · Phòng", "층 · 방", "Floors · Rooms"], tCourses: ["Dịch vụ", "코스", "Services"], tStaff: ["Nhân viên", "직원", "Staff"],
-    kind: ["Loại hình", "업종", "Type"], massage: ["Spa massage", "마사지샵", "Massage spa"], skin: ["Chăm sóc da", "피부관리샵", "Skin care"], minAm: ["Tối thiểu ca sáng", "오전 최소 인원", "Min AM"], minPm: ["Tối thiểu ca chiều", "오후 최소 인원", "Min PM"],
+    kind: ["Loại hình", "업종", "Type"], massage: ["Spa massage", "마사지샵", "Massage spa"], skin: ["Chăm sóc da", "피부관리샵", "Skin care"], minAm: ["Tối thiểu ca mở cửa", "오픈 최소 인원", "Min opening"], minPm: ["Tối thiểu ca đóng cửa", "마감 최소 인원", "Min closing"],
     shiftTimes: ["Giờ các ca", "근무 시간", "Shift times"],
     f1Note: ["Tầng 1 là quầy lễ tân và phòng chờ. Phòng làm từ tầng 2. Tối đa 7 giường/ghế mỗi tầng.", "1층은 카운터와 직원 대기실이에요. 시술방은 2층부터, 한 층에 베드·체어 7개까지예요.", "Floor 1 is reception and the staff lounge. Rooms start on floor 2, up to 7 beds per floor."],
     addRoom: ["+ Thêm phòng", "+ 방 추가", "+ Room"], addFloor: ["+ Thêm tầng", "+ 층 추가", "+ Floor"], delFloor: ["Xóa tầng", "층 삭제", "Remove floor"], eqL: ["Máy", "장비", "Equipment"],
@@ -143,7 +144,7 @@
   /* ---------- 상태 ---------- */
   let C = null, root = null, data = null, view = "board", skew = 0, pollT = 0, tickT = 0, raf = 0, last = 0, anim = 0;
   let geoSig = "", G = null, plan = null, W = new Map(), GW = new Map(), prevSess = new Map(), prevGuest = new Map(), pendOcc = new Set();
-  let open = { assign: null, finish: null }, setOpen = false, setTab = "floors", draft = null, staffDraft = null, rmAsk = null, sched = null, weekFrom = null, busy = false;
+  let open = { assign: null, finish: null, tps: [] }, setOpen = false, setTab = "floors", draft = null, staffDraft = null, rmAsk = null, sched = null, weekFrom = null, busy = false;
   const nowMs = () => Date.now() + skew;
   const owner = () => C && C.isOwner;
 
@@ -163,6 +164,8 @@
 
   /* ---------- 상태 계산 ---------- */
   const sessOf = sid => data.sessions.find(x => x.status === "working" && x.staff_id === sid);
+  const grpOf = x => x.grp || x.id, isLead = x => grpOf(x) === x.id;
+  const mates = x => data.sessions.filter(y => grpOf(y) === grpOf(x) && y.status === x.status).sort((a, b) => (isLead(b) - isLead(a)) || String(a.id).localeCompare(String(b.id)));
   function stOf(s) {
     if (s.code === "O" && !s.in_at) return "dayoff";
     if (!s.in_at) return "off";
@@ -262,19 +265,21 @@
   const chDesk = () => { const f = G.f1; return [f.desk, { x: f.desk.x, y: f.my }, { x: G.DX, y: f.my }, { x: G.DX, y: f.cy }, { x: G.SHX, y: f.cy }]; };
   const chD = p => { const f = G.f1; return [p, { x: p.x, y: f.dy }, { x: G.DX, y: f.dy }, { x: G.DX, y: f.cy }, { x: G.SHX, y: f.cy }]; };
   const chSlot = s => { const f = G.f1; return [s, { x: s.x, y: f.ly }, { x: G.LD, y: f.ly }, { x: G.LD, y: f.cy }, { x: G.SHX, y: f.cy }]; };
-  const chTp = s => { const r = s.room; return [s.tpSpot, { x: s.tpSpot.x, y: r.lane }, { x: r.rx, y: r.lane }, { x: r.rx, y: r.f.cy }, { x: G.SHX, y: r.f.cy }]; };
+  const TPOFF = [[0, 0], [-44, 0], [26, -30], [-70, -30]];
+  const tpAt = (s, n) => { const o = TPOFF[(n || 0) % 4]; return { x: s.tpSpot.x + o[0], y: s.tpSpot.y + o[1] }; };
+  const chTp = (s, n) => { const r = s.room, p = tpAt(s, n); return [p, { x: p.x, y: r.lane }, { x: r.rx, y: r.lane }, { x: r.rx, y: r.f.cy }, { x: G.SHX, y: r.f.cy }]; };
   const chCu = s => { const r = s.room; return [s.cuSpot, { x: s.cuSpot.x, y: r.lane }, { x: r.rx, y: r.lane }, { x: r.rx, y: r.f.cy }, { x: G.SHX, y: r.f.cy }]; };
   function chainOf(loc) {
     if (!loc || loc.k === "out") return chEnt();
     if (loc.k === "slot") return chSlot(loc.p);
     if (loc.k === "desk") return chD(loc.p);
     if (loc.k === "seat") return chSeat(loc.p);
-    if (loc.k === "st") return loc.cu ? chCu(loc.s) : chTp(loc.s);
+    if (loc.k === "st") return loc.cu ? chCu(loc.s) : chTp(loc.s, loc.n);
     if (loc.k === "pay") return chDesk();
     return chEnt();
   }
-  const ptOf = loc => !loc || loc.k === "out" ? G.f1.ent : loc.k === "st" ? (loc.cu ? loc.s.cuSpot : loc.s.tpSpot) : loc.k === "pay" ? G.f1.desk : loc.p;
-  const sameLoc = (a, b) => a && b && a.k === b.k && (a.k === "out" || a.k === "pay" || (a.k === "st" ? a.s === b.s : eqp(a.p, b.p)));
+  const ptOf = loc => !loc || loc.k === "out" ? G.f1.ent : loc.k === "st" ? (loc.cu ? loc.s.cuSpot : tpAt(loc.s, loc.n)) : loc.k === "pay" ? G.f1.desk : loc.p;
+  const sameLoc = (a, b) => a && b && a.k === b.k && (a.k === "out" || a.k === "pay" || (a.k === "st" ? a.s === b.s && !!a.cu === !!b.cu && (a.n || 0) === (b.n || 0) : eqp(a.p, b.p)));
   function mkW(look, cu) {
     const el = document.createElement("div"); el.className = "ob-w" + (cu ? " cu" : ""); el.hidden = true;
     el.innerHTML = '<div class="ob-spr"></div><div class="ob-tag"></div>'; plan.appendChild(el);
@@ -328,13 +333,17 @@
       let loc = { k: "out" };
       if (state === "idle") loc = { k: "slot", p: slotOf(s) };
       else if (state === "desk") loc = { k: "desk", p: deskOf(s) };
-      else if (state === "work" && G.st.get(x.station)) loc = { k: "st", s: G.st.get(x.station) };
+      else if (state === "work" && G.st.get(x.station)) loc = { k: "st", s: G.st.get(x.station), n: Math.max(0, mates(x).indexOf(x)) };
       const first = !w.loc;
-      if (first) { placeAt(w, loc); if (loc.k === "st") { w.dir = "side"; w.flip = true; w.work = true; } }
-      else goTo(w, loc, () => { if (loc.k === "st") { w.dir = "side"; w.flip = true; w.work = stOf(s) === "work"; } else { w.dir = "down"; w.flip = false; } });
+      const fl = !((loc.n || 0) % 2);
+      if (loc.k === "st") w.el.classList.toggle("hi", (loc.n || 0) % 2 === 1);
+      if (first) { placeAt(w, loc); if (loc.k === "st") { w.dir = "side"; w.flip = fl; w.work = true; } }
+      else goTo(w, loc, () => { if (loc.k === "st") { w.dir = "side"; w.flip = fl; w.work = stOf(s) === "work"; } else { w.dir = "down"; w.flip = false; } });
       if (!w.moving && loc.k === "st") w.work = true;
-      const lbl = w.moving ? "move" : state;
-      w.tag.innerHTML = `<span class="r">${esc(s.name)}<span class="s ${PILL[lbl]}">${DOT[lbl]}${lbl === "idle" ? "" : `<span> ${t("s_" + lbl)}</span>`}</span></span>${state === "work" ? '<span class="pb"><i data-end="' + esc(x.ends_at) + '" data-start="' + esc(x.started_at) + '"></i></span>' : ""}`;
+      const lbl = w.moving ? "move" : state, gn = loc.k === "st" ? loc.n || 0 : 0, gm = state === "work" && x ? mates(x).length : 1;
+      if (state === "work" && !w.moving && gn > 0) { w.tag.innerHTML = `<span class="r">${esc(s.name)}</span>`; w.tag.classList.add("mini"); return; }
+      w.tag.classList.remove("mini");
+      w.tag.innerHTML = `<span class="r">${esc(s.name)}<span class="s ${PILL[lbl]}">${DOT[lbl]}${lbl === "idle" ? "" : `<span> ${t("s_" + lbl)}${lbl === "work" && gm > 1 ? " · " + t("tpN", { n: gm }) : ""}</span>`}</span></span>${state === "work" ? '<span class="pb"><i data-end="' + esc(x.ends_at) + '" data-start="' + esc(x.started_at) + '"></i></span>' : ""}`;
     });
     W.forEach((w, id) => { if (!seen.has(id)) { w.el.remove(); W.delete(id); } });
     // 손님
@@ -349,13 +358,13 @@
       if (!w.loc) goTo(w, { k: "seat", p: seat }, () => { w.dir = "up"; }); else goTo(w, { k: "seat", p: seat }, () => { w.dir = "up"; });
     });
     // 시술 시작한 손님: 자리 → 베드로 걸어가고 사라져요
-    data.sessions.filter(x => x.status === "working").forEach(x => {
+    data.sessions.filter(x => x.status === "working" && isLead(x)).forEach(x => {
       const w = GW.get(x.guest_id), s = G.st.get(x.station);
       if (w && s && !(w.loc && w.loc.k === "st")) { pendOcc.add(x.station); goTo(w, { k: "st", s, cu: true }, () => { w.el.hidden = true; pendOcc.delete(x.station); GW.delete(x.guest_id); w.el.remove(); }); }
       gSeen.add(x.guest_id);
     });
     // 끝난 손님: 베드 → 카운터 → 입구
-    data.sessions.filter(x => x.status === "done" && prevSess.get(x.id) === "working").forEach((x, i) => {
+    data.sessions.filter(x => x.status === "done" && isLead(x) && prevSess.get(x.id) === "working").forEach((x, i) => {
       const s = G.st.get(x.station); if (!s) return;
       const w = mkW(lookOf({ hair: "short", hc: 2, top: "tee", tc: 1, bottom: "pants", bc: 3 }, i), true); w.tag.innerHTML = `<span>${esc(x.guest_name || "")}</span>`;
       const k = "done-" + x.id; GW.set(k, w); placeAt(w, { k: "st", s, cu: true }); w.el.hidden = false;
@@ -454,9 +463,10 @@
   }
   function stationsFree(c) { return [...G.st.values()].filter(s => !data.sessions.some(x => x.status === "working" && x.station === s.id) && courseFits(s, c)); }
   function renderSide() {
-    const work = data.sessions.filter(x => x.status === "working"), done = data.sessions.filter(x => x.status === "done");
+    const work = data.sessions.filter(x => x.status === "working" && isLead(x)), done = data.sessions.filter(x => x.status === "done" && isLead(x));
+    const names = x => mates(x).map(y => esc(y.staff_name)).join(", "), sumPaid = x => mates(x).reduce((a, y) => a + (+y.paid || 0), 0), sumPrice = x => mates(x).reduce((a, y) => a + (+y.price || 0), 0);
     const waiting = data.guests.filter(g => g.status === "waiting");
-    root.querySelector("#obK").innerHTML = [[work.length, "kWork"], [waiting.length, "kWait"], [done.length, "kDone"], [vnd(done.reduce((a, x) => a + (+x.paid || 0), 0)), "kRev"]].map(([v, k]) => `<div class="ob-kpi"><b>${v}</b><span>${t(k)}</span></div>`).join("");
+    root.querySelector("#obK").innerHTML = [[work.length, "kWork"], [waiting.length, "kWait"], [done.length, "kDone"], [vnd(done.reduce((a, x) => a + sumPaid(x), 0)), "kRev"]].map(([v, k]) => `<div class="ob-kpi"><b>${v}</b><span>${t(k)}</span></div>`).join("");
     root.querySelector("#obFirst").innerHTML = !data.staff.length ? `<p class="info" style="margin:0">${t("firstRun")}</p>` : "";
     const cs = root.querySelector("#obGC"), cv = cs.value;
     cs.innerHTML = (data.layout.courses || []).map((c, i) => `<option value="${i}" ${String(i) === cv ? "selected" : ""}>${esc(cName(c))} · ${c.min}′</option>`).join("");
@@ -468,17 +478,17 @@
       let h = `<div class="ob-row"><div class="g"><b>${esc(g.name)}${g.source === "ud" ? '<span class="ob-ud">UD</span>' : ""}</b><small>${esc(cName(g.course))} · ${g.course.min}′ · ${g.people}</small></div><button class="ob-btn" data-a="assign" data-id="${g.id}">${t("assign")}</button><button class="ob-btn l" data-a="leave" data-id="${g.id}">${t("leave")}</button></div>`;
       if (open.assign === g.id) {
         const fr = stationsFree(g.course);
-        h += `<div class="ob-sheet">${idle.length ? `<select class="ob-in" id="obAT">${idle.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join("")}</select>` : `<p class="ob-note">${t("noTp")}</p>`}
+        h += `<div class="ob-sheet">${idle.length ? `<div class="ob-note">${t("tpPick")} · <b>${t("tpN", { n: open.tps.length })}</b></div><div class="ob-tps">${idle.map(s => `<button type="button" class="ob-chip ${open.tps.includes(s.id) ? "on" : ""}" data-a="tpk" data-id="${s.id}" aria-pressed="${open.tps.includes(s.id)}">${open.tps.includes(s.id) ? "✓ " : ""}${esc(s.name)}</button>`).join("")}</div>` : `<p class="ob-note">${t("noTp")}</p>`}
           ${fr.length ? `<select class="ob-in" id="obAS">${fr.map(s => `<option value="${esc(s.id)}">${s.room.floor}F · ${esc(t("room", { n: s.room.n }))}${s.room.st.length > 1 ? " #" + s.b : ""} · ${t(s.type === "chair" ? "chairW" : "bedW")}</option>`).join("")}</select>` : `<p class="ob-note">${t("noBed")}</p>`}
-          <button class="ob-btn full" data-a="startx" data-id="${g.id}" ${idle.length && fr.length ? "" : "disabled"}>${t("start")}</button></div>`;
+          <button class="ob-btn full" data-a="startx" data-id="${g.id}" ${open.tps.length && fr.length ? "" : "disabled"}>${t("start")}${open.tps.length > 1 ? " · " + t("tpN", { n: open.tps.length }) : ""}</button></div>`;
       }
       return h;
     }).join("") : `<p class="ob-empty">${t("noWait")}</p>`);
     root.querySelector("#obWork").innerHTML = `<h3><span>${t("workT")}</span><small>${work.length}</small></h3>` + (work.length ? work.map(x => {
       const s = G.st.get(x.station);
-      let h = `<div class="ob-row"><div class="g"><b>${esc(x.staff_name)} · ${s ? esc(t("room", { n: s.room.n })) + (s.room.st.length > 1 ? " #" + s.b : "") : esc(x.station)}</b><small>${esc(x.guest_name || "")}${x.ud ? '<span class="ob-ud">UD</span>' : ""} · ${esc(x.course_name || "")} · <span data-left="${esc(x.ends_at)}"></span></small><div class="ob-pb"><i data-end="${esc(x.ends_at)}" data-start="${esc(x.started_at)}"></i></div></div>
+      let h = `<div class="ob-row"><div class="g"><b>${names(x)} · ${s ? esc(t("room", { n: s.room.n })) + (s.room.st.length > 1 ? " #" + s.b : "") : esc(x.station)}</b><small>${esc(x.guest_name || "")}${x.ud ? '<span class="ob-ud">UD</span>' : ""} · ${esc(x.course_name || "")} · <span data-left="${esc(x.ends_at)}"></span></small><div class="ob-pb"><i data-end="${esc(x.ends_at)}" data-start="${esc(x.started_at)}"></i></div></div>
         <button class="ob-btn l" data-a="ext" data-id="${x.id}">${t("ext")}</button><button class="ob-btn" data-a="fin" data-id="${x.id}">${t("finish")}</button></div>`;
-      if (open.finish === x.id) h += `<div class="ob-sheet"><label class="ob-note" for="obPaid">${t("paid")}</label><input class="ob-in" id="obPaid" inputmode="numeric" value="${x.price || ""}">${x.ud ? `<p class="ob-note">${t("udAuto")}</p>` : ""}<div class="ob-f2"><button class="ob-btn r" data-a="cancelx" data-id="${x.id}">${t("cancel")}</button><button class="ob-btn" data-a="finx" data-id="${x.id}">${t("save")}</button></div></div>`;
+      if (open.finish === x.id) h += `<div class="ob-sheet"><label class="ob-note" for="obPaid">${t("paid")}</label><input class="ob-in" id="obPaid" inputmode="numeric" value="${sumPrice(x) || ""}">${x.ud ? `<p class="ob-note">${t("udAuto")}</p>` : ""}<div class="ob-f2"><button class="ob-btn r" data-a="cancelx" data-id="${x.id}">${t("cancel")}</button><button class="ob-btn" data-a="finx" data-id="${x.id}">${t("save")}</button></div></div>`;
       return h;
     }).join("") : `<p class="ob-empty">${t("noWork")}</p>`);
     root.querySelector("#obAtt").innerHTML = `<h3><span>${t("attT")}</span><small>${data.staff.filter(s => s.in_at).length}/${data.staff.length}</small></h3>${legend()}` + data.staff.map((s, i) => {
@@ -488,7 +498,7 @@
       const off = owner() && !s.in_at ? `<button class="ob-btn l" data-a="${s.code === "O" ? "on" : "off"}" data-id="${s.id}">${t(s.code === "O" ? "dayOn" : "dayOff")}</button>` : "";
       return `<div class="ob-row"><span class="ob-av" style="${avStyle(s, i)}"></span><div class="g"><b>${esc(s.name)} <span class="ob-pill ${PILL[st]}">${DOT[st]} ${t("s_" + st)}</span></b><small>${t(s.role === "rcp" ? "roleRcp" : "roleTp")}${s.reviews ? ` · ⭐${s.stars} (${s.reviews})` : ""}${s.role === "tp" ? ` · ${s.done_today} · ${vnd(s.rev_today)}` : ""}</small><small>${info}</small></div>${off}${btn}</div>`;
     }).join("");
-    root.querySelector("#obDone").innerHTML = `<h3><span>${t("doneT")}</span><small>${done.length}</small></h3>` + (done.length ? done.map(x => `<div class="ob-row"><div class="g"><b>[${tm(x.done_at)}] ${esc(x.staff_name)} · ${esc(t("room", { n: (x.station || "").split("-")[0] }))}</b><small>${esc(x.guest_name || "")}${x.ud ? '<span class="ob-ud">UD</span>' : ""} · ${esc(x.course_name || "")}</small></div><b style="font-size:13px">${vnd(x.paid)}</b></div>`).join("") : `<p class="ob-empty">${t("noDone")}</p>`);
+    root.querySelector("#obDone").innerHTML = `<h3><span>${t("doneT")}</span><small>${done.length}</small></h3>` + (done.length ? done.map(x => `<div class="ob-row"><div class="g"><b>[${tm(x.done_at)}] ${names(x)} · ${esc(t("room", { n: (x.station || "").split("-")[0] }))}</b><small>${esc(x.guest_name || "")}${x.ud ? '<span class="ob-ud">UD</span>' : ""} · ${esc(x.course_name || "")}</small></div><b style="font-size:13px">${vnd(sumPaid(x))}</b></div>`).join("") : `<p class="ob-empty">${t("noDone")}</p>`);
   }
   const legend = () => `<div class="ob-legend">${[["🟢", "lgIdle"], ["🔴", "lgWork"], ["🟡", "lgMove"], ["⚪", "lgOff"], ["🌙", "lgDay"]].map(([d, k]) => `<span>${d} ${t(k)}</span>`).join("")}</div>`;
   function tick() {
@@ -674,19 +684,20 @@
       return;
     }
     if (a === "checkin") { await call("guest_checkin", { bid: id }); return; }
-    if (a === "assign") { open.assign = open.assign === id ? null : id; renderSide(); return; }
+    if (a === "assign") { open.assign = open.assign === id ? null : id; const f = data.staff.find(s => s.role === "tp" && stOf(s) === "idle"); open.tps = f ? [f.id] : []; renderSide(); return; }
+    if (a === "tpk") { const k = open.tps.indexOf(id); if (k >= 0) open.tps.splice(k, 1); else if (open.tps.length >= 4) { C.toast(t("max4")); return; } else open.tps.push(id); renderSide(); return; }
     if (a === "leave") { await call("guest_leave", { gid: id }); return; }
     if (a === "startx") {
-      const tp = root.querySelector("#obAT"), stn = root.querySelector("#obAS"); if (!tp || !stn) return;
-      const g = data.guests.find(x => x.id === id), s = data.staff.find(x => x.id === tp.value);
-      if (await call("session_start", { gid: id, sid: tp.value, stn: stn.value })) { open.assign = null; C.toast(t("sent", { a: s ? s.name : "", b: stn.options[stn.selectedIndex].text })); }
+      const stn = root.querySelector("#obAS"), ids = open.tps.slice(); if (!ids.length || !stn) return;
+      const nm = ids.map(i => (data.staff.find(x => x.id === i) || {}).name).filter(Boolean).join(", ");
+      if (await call("session_begin", { gid: id, tps: ids, stn: stn.value })) { open.assign = null; open.tps = []; C.toast(t("sent", { a: nm, b: stn.options[stn.selectedIndex].text })); }
       return;
     }
     if (a === "ext") { await call("session_extend", { xid: id, mins: 15 }); return; }
     if (a === "fin") { open.finish = open.finish === id ? null : id; renderSide(); const p = root.querySelector("#obPaid"); if (p) p.focus(); return; }
     if (a === "finx") {
-      const v = parseInt(String(root.querySelector("#obPaid").value).replace(/\D/g, ""), 10), x = data.sessions.find(y => y.id === id);
-      if (await call("session_finish", { xid: id, paid: isNaN(v) ? null : v })) { open.finish = null; C.toast(t("doneToast", { n: x ? x.staff_name : "" })); }
+      const v = parseInt(String(root.querySelector("#obPaid").value).replace(/\D/g, ""), 10), x = data.sessions.find(y => y.id === id), xn = x ? mates(x).map(y => y.staff_name).join(", ") : "";
+      if (await call("session_finish", { xid: id, paid: isNaN(v) ? null : v })) { open.finish = null; C.toast(t("doneToast", { n: xn })); }
       return;
     }
     if (a === "cancelx") { if (await call("session_cancel", { xid: id })) open.finish = null; return; }

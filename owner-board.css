@@ -178,3 +178,7 @@
 /* 근무표를 옆으로 넘겨도 직원 이름은 왼쪽에 고정 */
 .ob-sg tbody th, .ob-sg thead th:first-child { position: sticky; left: 0; z-index: 1; background: #fff; box-shadow: 1px 0 0 var(--line2); }
 .ob-sg thead th:first-child { background: #FCFAF6; }
+/* 테라피스트 여러 명 고르기 */
+.ob-tps { display: flex; flex-wrap: wrap; gap: 6px; }
+.ob-tps .ob-chip { min-height: 40px; }
+.ob-tag.mini { padding: 0 4px; font-size: 10px; box-shadow: none; }
