@@ -167,3 +167,12 @@ textarea.inp { min-height: 64px; resize: vertical; }
   .app:not(.in) .login { width: 100%; max-width: 440px; margin: 48px auto; flex: none; border-radius: 20px; border: 1px solid var(--line); }
 }
 @media (min-width: 960px) { .app.drawer .body { max-width: calc(100vw - 220px - 480px); } .app.drawer .hdr .langs { margin-right: 470px; } }
+/* 홈 두 칸 (넓은 화면) */
+.cols, .col { display: flex; flex-direction: column; gap: 14px; }
+@media (min-width: 1200px) {
+  .body { max-width: 1360px; }
+  .cols { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+  .app.drawer .cols { grid-template-columns: minmax(0, 1fr); }
+  .slots { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+}
+@media (min-width: 1200px) { .body > .list, .body > .card, .body > .info, .body > .chips, .body > .sec, .body > .muted { max-width: 900px; } .body .cols .list, .body .cols .card { max-width: none; } }

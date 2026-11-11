@@ -47,7 +47,8 @@
     monthTitle: ["Tháng này", "이번 달", "This month"],
     statVisits: ["Khách đã đến", "방문 완료", "Visits"], statPaid: ["Khách đã trả", "결제 합계", "Paid by guests"], statReply: ["Trả lời TB", "평균 답변", "Avg. reply"],
     min: ["phút", "분", "min"],
-    dueLeft: ["còn {n} phút", "{n}분 남음", "{n} min left"], dueLate: ["trễ {n} phút", "{n}분 지남", "{n} min late"],
+    dueLeft: ["còn {n}", "{n} 남음", "{n} left"], dueLate: ["trễ {n}", "{n} 지남", "{n} late"],
+    mins: ["{n} phút", "{n}분", "{n} min"], hours: ["{n} giờ", "{n}시간", "{n} h"], days: ["{n} ngày", "{n}일", "{n} d"],
     people: ["{n} khách", "{n}명", "{n} guests"],
     today: ["Hôm nay", "오늘", "Today"], tomorrow: ["Ngày mai", "내일", "Tomorrow"],
     st_requested: ["Chờ bạn trả lời", "답변 필요", "Needs reply"],
@@ -156,7 +157,8 @@
   const isOwner = () => { const s = curShop(); return s && s.role === "owner"; };
   const menuLabel = b => { const n = b.menu && b.menu.name ? (b.menu.name[lang] || b.menu.name.vi || b.menu_name) : b.menu_name; return `${n || "-"}${b.menu_min ? ` · ${b.menu_min} ${t("min")}` : ""}`; };
   const badge = st => "bd " + ({ requested: "ask", shop_ok: "wait", confirmed: "ok", rejected: "wait", reschedule: "wait", visited: "done", settled: "done", noshow: "bad", cancelled: "bad" }[st] || "wait");
-  const dueOf = b => { const base = Date.parse(b.sent_to_shop_at || b.created_at); const left = Math.round((base + 30 * 60e3 - Date.now()) / 60e3); return left >= 0 ? { late: false, text: t("dueLeft", left) } : { late: true, text: t("dueLate", -left) }; };
+  const dur = m => m >= 1440 ? t("days", Math.floor(m / 1440)) : m >= 60 ? t("hours", Math.floor(m / 60)) : t("mins", m);
+  const dueOf = b => { const base = Date.parse(b.sent_to_shop_at || b.created_at); const left = Math.round((base + 30 * 60e3 - Date.now()) / 60e3); return left >= 0 ? { late: false, text: t("dueLeft", dur(left)) } : { late: true, text: t("dueLate", dur(-left)) }; };
   const row = (b, withDate) => `<button class="trow" data-open="${b.id}"><div class="tm">${esc(b.visit_time || "--:--")}${withDate ? `<small>${esc(dateLabel(b.visit_date))}</small>` : ""}</div>
       <div class="grow"><span class="nm">${esc(b.customer_name || "-")} · ${t("people", b.people)}</span><span class="sub">${esc(menuLabel(b))}</span></div>
       <span class="${badge(b.status)}">${t("st_" + b.status)}</span></button>`;
@@ -258,17 +260,20 @@
     const replied = rows.filter(b => b.shop_replied_at && (b.created_at || "").startsWith(mo)).map(b => (Date.parse(b.shop_replied_at) - Date.parse(b.sent_to_shop_at || b.created_at)) / 60e3).filter(x => x >= 0 && x < 24 * 60);
     const avg = replied.length ? Math.round(replied.reduce((a, b) => a + b, 0) / replied.length) : null;
     return `${!standalone() && read("ud-owner-inst") !== "x" ? `<div class="inst"><p>${t("install")}</p><button data-act="inst">${t("installBtn")}</button><button class="x" data-act="instx" aria-label="close">✕</button></div>` : ""}
+      <div class="cols"><div class="col">
       <div class="sec"><h2>${t("needReply")} (${reqs.length})</h2><span>${t("replyGoal")}</span></div>
       ${reqs.length ? reqs.map(b => { const d = dueOf(b); return `<button class="req ${d.late ? "late" : ""}" data-open="${b.id}"><div class="tm">${esc(b.visit_time || "--:--")}<small>${esc(dateLabel(b.visit_date))}</small></div>
           <div class="grow"><span class="nm">${esc(b.customer_name || "-")} · ${t("people", b.people)}</span><span class="sub">${esc(menuLabel(b))}</span></div><span class="due ${d.late ? "late" : ""}">${d.text}</span></button>`; }).join("")
         : `<div class="card empty">${t("noReqs")}</div>`}
       <div class="sec"><h2>${t("todayGuests")}</h2><span>${esc(dateLabel(td))}</span></div>
       ${todays.length ? `<div class="list">${todays.map(b => row(b)).join("")}</div>` : `<div class="card empty">${t("noToday")}</div>`}
+      </div><div class="col">
       ${soon.length ? `<div class="sec"><h2>${t("next7")}</h2><span></span></div><div class="list">${soon.map(b => row(b, true)).join("")}</div>` : ""}
       <div class="sec"><h2>${t("monthTitle")}</h2><span></span></div>
       <div class="stats"><div class="stat"><b>${mine.length}</b><span>${t("statVisits")}</span></div>
         <div class="stat"><b>${paid >= 1e6 ? (Math.round(paid / 1e5) / 10).toString().replace(".", ",") + "tr₫" : vnd(paid)}</b><span>${t("statPaid")}</span></div>
-        <div class="stat"><b>${avg == null ? "-" : avg + " " + t("min")}</b><span>${t("statReply")}</span></div></div>`;
+        <div class="stat"><b>${avg == null ? "-" : avg + " " + t("min")}</b><span>${t("statReply")}</span></div></div>
+      </div></div>`;
   }
 
   // ---- 예약 목록 ----
