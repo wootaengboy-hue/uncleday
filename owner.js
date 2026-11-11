@@ -32,6 +32,9 @@
     sOnly: ["Chỉ chủ cửa hàng mới xem được đối soát.", "정산은 사장님 계정만 볼 수 있어요.", "Only the owner can see statements."],
     sNote: ["Phí được tính trên số tiền khách đã trả theo hợp đồng. Nếu số tiền sai, hãy sửa ở lịch hẹn hoặc nhắn Uncle Day trước khi lập bảng đối soát.", "수수료는 계약에 따라 손님 결제 금액으로 계산돼요. 금액이 틀리면 정산서가 나오기 전에 엉클데이에 알려 주세요.", "The fee is calculated from the amount paid, per your contract. If an amount is wrong, tell Uncle Day before the statement is made."],
     sSettled: ["đã đối soát", "정산됨", "settled"],
+    sTotal: ["Tổng doanh thu tháng", "이 달 총 매출", "Total sales this month"], sUD: ["Khách Uncle Day", "엉클데이 예약 손님", "Uncle Day bookings"], sWalk: ["Khách vãng lai (tại quầy)", "현장 손님 (워크인)", "Walk-in guests"],
+    sWalkN: ["Lượt khách", "손님", "Guests"], sWalkPaid: ["Doanh thu", "매출", "Sales"], sNoFee: ["Không tính phí", "수수료 없음", "No fee"], sWalkNote: ["Doanh thu khách vãng lai lấy từ Bảng phòng (khi bấm Xong). Uncle Day không tính phí phần này.", "현장 손님 매출은 현황판에서 '끝내기'를 누를 때 기록돼요. 엉클데이 수수료는 붙지 않아요.", "Walk-in sales come from the Board (when you tap Finish). No Uncle Day fee."],
+    sAll: ["Tất cả", "전체", "All"], tagUD: ["Uncle Day", "엉클데이", "Uncle Day"], tagWalk: ["Tại quầy", "현장", "Walk-in"], sRowsAll: ["Từng lượt khách", "손님별 내역", "Each visit"], sNoneAll: ["Tháng này chưa có lượt khách nào.", "이 달에는 기록된 손님이 없어요.", "No visits this month."],
     sStmt: ["Trong bảng đối soát đã gửi", "보낸 정산서에 포함", "In the sent statement"],
     tabBoard: ["Bảng phòng", "현황판", "Board"],
     shopToday: ["Cửa hàng hôm nay", "오늘 매장", "Shop today"], lgIdle: ["Đang chờ", "대기 중", "Free"], lgWork: ["Đang làm", "시술 중", "In session"], lgOff: ["Chưa vào / đã về", "출근 전 · 퇴근", "Not in / gone"], lgDay: ["Nghỉ", "휴무", "Day off"], ssBefore: ["Mở lúc {n}", "{n} 오픈 예정", "Opens {n}"], ssOpen: ["Đang mở cửa", "영업 중", "Open"], ssAfter: ["Đã đóng cửa", "영업 종료", "Closed"], ssDayoff: ["Nghỉ hôm nay", "오늘 휴무일", "Closed today"], bIn: ["Đi làm", "출근", "Clocked in"], bWork: ["Đang làm", "시술 중", "In session"], bWait: ["Khách chờ", "대기 · 올 손님", "Waiting"], bDone: ["Xong · doanh thu", "완료 · 매출", "Done · revenue"],
@@ -242,7 +245,7 @@
         ${tabBtn("more", t("tabMore"), '<path d="M4 7h16M4 12h16M4 17h16"/>')}
       </nav>`;
     bindLang();
-    $app.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => { tab = b.dataset.tab; if (tab === "home") load(true); if (tab === "schedule" && !sched) loadSched(); if (tab === "settle") loadSettle(settle && settle.month); draw(); window.scrollTo(0, 0); });
+    $app.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => { tab = b.dataset.tab; if (tab === "home" || tab === "bookings") load(true); if (tab === "schedule" && !sched) loadSched(); if (tab === "settle") loadSettle(settle && settle.month); draw(); window.scrollTo(0, 0); });
     const m = document.getElementById("main");
     if (tab === "board" && window.OwnerBoard) { window.OwnerBoard.mount(m, { view: boardView, rpc, shopId, lang, isOwner: isOwner(), toast, errMsg, onPending: n => { boardView = null; if (n !== boardPending) { boardPending = n; const d = $app.querySelector('[data-tab="board"] .dot'); if (d) d.textContent = n || ""; else if (n) { const b = $app.querySelector('[data-tab="board"]'); if (b) b.insertAdjacentHTML("beforeend", `<span class="dot">${n}</span>`); } } } }); drawDetail(); return; }
     if (window.OwnerBoard) window.OwnerBoard.unmount();
@@ -355,7 +358,7 @@
   function draft() { if (!hoursDraft) hoursDraft = { week: JSON.parse(JSON.stringify(sched.week)), cap: sched.capacity, cut: sched.cutoff_min }; return hoursDraft; }
 
   // ---- 정산 ----
-  let settle = null;
+  let settle = null, sFilter = "all";
   async function loadSettle(mon) {
     if (!isOwner()) { settle = null; return; }
     try { settle = await rpc("owner_settle", { shop: shopId, mon: mon || null }); } catch (e) { toast(errMsg(e)); }
@@ -367,23 +370,36 @@
     if (!settle) return `<div class="card empty">…</div>`;
     const cur = today().slice(0, 7), months = [...new Set([cur, ...(settle.months || []).map(x => x.month), settle.month])].sort().reverse().slice(0, 6);
     const sum = (settle.months || []).find(x => x.month === settle.month) || { visits: 0, paid: 0, commission: 0 };
+    const wk = (settle.walk_months || []).find(x => x.month === settle.month) || { count: 0, paid: 0 };
     const stm = (settle.statements || []).find(x => x.month === settle.month);
     const stLabel = !stm ? t("sOpen") : stm.status === "paid" ? t("sPaidSt") : t("sBilled");
     const stCls = !stm ? "wait" : stm.status === "paid" ? "ok" : "ask";
+    const md = d => { const [, mm, dd] = String(d).split("-"); return lang === "vi" ? `${+dd}/${+mm}` : `${+mm}/${+dd}`; };
+    const hm = iso => iso ? new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Ho_Chi_Minh" }) : "";
+    const ud = (settle.rows || []).map(r => ({ ud: true, date: r.date, time: (r.time || "").slice(0, 5), name: r.name, people: r.people, sub: [r.code, r.menu_name, r.staff].filter(Boolean).join(" · ") + (r.settled ? " · " + t("sSettled") : ""), paid: r.paid, fee: t("sFee") + " " + vnd(r.commission) }));
+    const wr = (settle.walk_rows || []).map(r => ({ ud: false, date: r.day, time: hm(r.started_at), name: r.guest, people: r.people || 1, sub: [r.course, r.staff].filter(Boolean).join(" · "), paid: r.paid, fee: t("sNoFee") }));
+    const all = ud.concat(wr).filter(r => sFilter === "all" || (sFilter === "ud") === r.ud).sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time));
     return `<div class="cols"><div class="col"><div class="sec"><h2>${t("settleTitle")}</h2><span></span></div>
       <div class="chips">${months.map(m => `<button class="chip ${m === settle.month ? "on" : ""}" data-mon="${m}">${esc(monLabel(m))}</button>`).join("")}</div>
-      <div class="card">
+      <div class="card"><div class="kv"><span>${t("sTotal")}</span><b style="font-size:20px">${vnd((+sum.paid || 0) + (+wk.paid || 0))}</b></div></div>
+      <div class="card"><b style="display:block;margin-bottom:4px"><span class="bd ok">${t("tagUD")}</span> ${t("sUD")}</b>
         <div class="kv"><span>${t("sStatus")}</span><b><span class="bd ${stCls}">${stLabel}</span></b></div>
         <div class="kv"><span>${t("sVisits")}</span><b>${sum.visits}</b></div>
         <div class="kv"><span>${t("sPaid")}</span><b>${vnd(sum.paid)}</b></div>
         <div class="kv"><span>${t("sFee")}</span><b style="font-size:17px">${vnd(sum.commission)}</b></div>
         ${stm ? `<div class="kv"><span>${t("sStmt")}</span><b>${stm.count} · ${vnd(stm.commission)}</b></div>` : ""}
+        <p class="muted" style="margin:6px 0 0">${t("sNote")}</p>
       </div>
-      <p class="muted" style="margin:0 2px">${t("sNote")}</p></div><div class="col">
-      <div class="sec"><h2>${t("sRows")}</h2><span>${(settle.rows || []).length}</span></div>
-      ${(settle.rows || []).length ? `<div class="list">${settle.rows.map(r => `<div class="trow"><div class="tm" style="font-size:15px">${esc(r.date.slice(8))}/${esc(r.date.slice(5, 7))}<small>${esc(r.time || "")}</small></div>
-          <div class="grow"><span class="nm">${esc(r.name || "-")} · ${t("people", r.people)}</span><span class="sub">${esc(r.code)}${r.settled ? " · " + t("sSettled") : ""}</span></div>
-          <div style="text-align:right"><b style="display:block">${vnd(r.paid)}</b><span class="sub">${t("sFee")} ${vnd(r.commission)}</span></div></div>`).join("")}</div>` : `<div class="card empty">${t("sNone")}</div>`}</div></div>`;
+      <div class="card"><b style="display:block;margin-bottom:4px"><span class="bd wait">${t("tagWalk")}</span> ${t("sWalk")}</b>
+        <div class="kv"><span>${t("sWalkN")}</span><b>${wk.count}</b></div>
+        <div class="kv"><span>${t("sWalkPaid")}</span><b style="font-size:17px">${vnd(wk.paid)}</b></div>
+        <p class="muted" style="margin:6px 0 0">${t("sWalkNote")}</p>
+      </div></div><div class="col">
+      <div class="sec"><h2>${t("sRowsAll")}</h2><span>${all.length}</span></div>
+      <div class="chips">${[["all", t("sAll")], ["ud", t("tagUD")], ["walk", t("tagWalk")]].map(([k, l]) => `<button class="chip ${sFilter === k ? "on" : ""}" data-sf="${k}">${esc(l)}</button>`).join("")}</div>
+      ${all.length ? `<div class="list">${all.map(r => `<div class="trow"><div class="tm" style="font-size:15px">${esc(md(r.date))}<small>${esc(r.time || "")}</small></div>
+          <div class="grow"><span class="nm"><span class="bd ${r.ud ? "ok" : "wait"}" style="margin-right:4px">${t(r.ud ? "tagUD" : "tagWalk")}</span>${esc(r.name || "-")} · ${t("people", r.people)}</span><span class="sub">${esc(r.sub)}</span></div>
+          <div style="text-align:right"><b style="display:block">${vnd(r.paid)}</b><span class="sub">${esc(r.fee)}</span></div></div>`).join("")}</div>` : `<div class="card empty">${t("sNoneAll")}</div>`}</div></div>`;
   }
 
   // ---- 더보기 ----
@@ -405,6 +421,7 @@
     m.querySelectorAll("[data-open]").forEach(b => b.onclick = () => openDetail(b.dataset.open));
     m.querySelectorAll("[data-btab]").forEach(b => b.onclick = () => { bTab = b.dataset.btab; draw(); });
     m.querySelectorAll("[data-mon]").forEach(b => b.onclick = () => loadSettle(b.dataset.mon));
+    m.querySelectorAll("[data-sf]").forEach(b => b.onclick = () => { sFilter = b.dataset.sf; draw(); });
     m.querySelectorAll("[data-day]").forEach(b => b.onclick = () => { schedDay = b.dataset.day; draw(); });
     m.querySelectorAll("[data-slot]").forEach(b => b.onclick = () => toggleClosure(schedDay, b.dataset.slot));
     m.querySelectorAll("[data-shop]").forEach(b => b.onclick = () => { shopId = b.dataset.shop; store("ud-owner-shop", shopId); sched = null; settle = null; hoursDraft = null; load(); });

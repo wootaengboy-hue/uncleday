@@ -7,7 +7,13 @@
 (() => {
   const LANGS = ["vi", "ko", "en"];
   const T = {
-    vBoard: ["Bảng phòng", "현황판", "Board"],
+    vBoard: ["Bảng phòng", "현황판", "Board"], vHist: ["Lịch sử", "기록", "History"],
+    hDay: ["Ngày", "하루", "Day"], hWeek: ["Tuần", "주", "Week"], hMonth: ["Tháng", "월", "Month"], hToday: ["Hôm nay", "오늘", "Today"],
+    hGuests: ["Lượt khách", "손님", "Guests"], hSales: ["Doanh thu", "매출 합계", "Sales"], hUD: ["Uncle Day", "엉클데이", "Uncle Day"], hWalk: ["Tại quầy", "현장", "Walk-in"], hLeft: ["Khách bỏ về", "그냥 나간 손님", "Left without service"],
+    hRows: ["Từng lượt làm", "시술 기록", "Sessions"], hStaff: ["Theo nhân viên", "직원별", "By staff"], hNone: ["Không có lượt làm nào.", "이 기간에는 끝난 시술이 없어요.", "No finished sessions."],
+    hCnt: ["Lượt", "시술", "Sessions"], hMin: ["Phút làm", "시술 시간", "Minutes"], hRev: ["Doanh thu", "매출", "Sales"], hAtt: ["Chấm công", "출퇴근", "Attendance"], hDays: ["{n} ngày", "{n}일 출근", "{n} days"],
+    hLateN: ["Trễ {n} lần · {m}′", "지각 {n}번 · {m}분", "Late {n}× · {m}′"], hLate: ["Trễ {m}′", "지각 {m}분", "Late {m}′"], hCsv: ["⬇ Tải Excel (CSV)", "⬇ 엑셀로 받기", "⬇ Excel (CSV)"], hOwner: ["Chỉ chủ cửa hàng mới xem được lịch sử.", "기록은 사장님 계정만 볼 수 있어요.", "Only the owner can see history."],
+    hFee: ["Phí UD {v}", "수수료 {v}", "Fee {v}"], hNoFee: ["Không phí", "수수료 없음", "No fee"], hWorked: ["Làm {h}", "근무 {h}", "Worked {h}"], hGone: ["đã nghỉ", "퇴사", "left"],
     lgIdle: ["Đang chờ / trực quầy", "대기 중 · 카운터 근무", "Free / at desk"], lgWork: ["Đang làm", "시술 중", "In session"], lgMove: ["Đang đi", "이동 중", "Moving"], lgOff: ["Chưa vào / đã về", "출근 전 · 퇴근", "Not in / gone"], lgDay: ["Nghỉ", "휴무", "Day off"],
     stBefore: ["Chưa mở · mở lúc {n}", "영업 전 · {n} 오픈", "Not open · opens {n}"], stOpen: ["Đang mở cửa", "영업 중", "Open"], stSince: ["mở từ {n}", "{n}부터", "since {n}"],
     stAfter: ["Đã hết giờ · {n}", "영업 종료 · {n}", "Closed · {n}"], stClosed: ["Đã đóng cửa lúc {n}", "{n} 영업 마감", "Closed at {n}"], stDayoff: ["Hôm nay nghỉ", "오늘 휴무일", "Closed today"],
@@ -144,7 +150,7 @@
   /* ---------- 상태 ---------- */
   let C = null, root = null, data = null, view = "board", skew = 0, pollT = 0, tickT = 0, raf = 0, last = 0, anim = 0;
   let geoSig = "", G = null, plan = null, W = new Map(), GW = new Map(), prevSess = new Map(), prevGuest = new Map(), pendOcc = new Set();
-  let open = { assign: null, finish: null, tps: [] }, setOpen = false, setTab = "floors", draft = null, staffDraft = null, rmAsk = null, sched = null, weekFrom = null, busy = false;
+  let hist = null, hp = { mode: "day", d: null }, open = { assign: null, finish: null, tps: [] }, setOpen = false, setTab = "floors", draft = null, staffDraft = null, rmAsk = null, sched = null, weekFrom = null, busy = false;
   const nowMs = () => Date.now() + skew;
   const owner = () => C && C.isOwner;
 
@@ -410,10 +416,12 @@
     if (!root.querySelector(".ob")) shell();
     renderTop();
     if (view === "board") {
-      root.querySelector("#obBoard").hidden = false; root.querySelector("#obSched").hidden = true;
+      root.querySelector("#obBoard").hidden = false; root.querySelector("#obSched").hidden = true; root.querySelector("#obHist").hidden = true;
       if (sig !== geoSig || !plan || !plan.isConnected) { geoSig = sig; plan = root.querySelector(".ob-plan"); buildPlan(root.querySelector(".ob-stage")); fit(); }
       syncPlan(); renderSide(); renderFloorChips();
-    } else { root.querySelector("#obBoard").hidden = true; root.querySelector("#obSched").hidden = false; renderSched(); }
+    } else if (view === "hist") { root.querySelector("#obBoard").hidden = true; root.querySelector("#obSched").hidden = true; root.querySelector("#obHist").hidden = false; renderHist(); }
+    else { root.querySelector("#obBoard").hidden = true; root.querySelector("#obSched").hidden = false; renderSched(); }
+    if (view !== "hist") root.querySelector("#obHist").hidden = true;
     if (setOpen) renderSet();
     tick();
   }
@@ -432,12 +440,12 @@
           <div class="ob-card" id="obAtt"></div>
           <div class="ob-card" id="obDone"></div>
         </div></div></div>
-      <div id="obSched" hidden></div><div id="obSet"></div></div>`;
+      <div id="obSched" hidden></div><div id="obHist" hidden></div><div id="obSet"></div></div>`;
     plan = root.querySelector(".ob-plan"); geoSig = "";
   }
   function renderTop() {
     const n = data.pending_req || 0;
-    root.querySelector("#obTop").innerHTML = `<button class="ob-vt ${view === "board" ? "on" : ""}" data-v="board">🗺️ ${t("vBoard")}</button><button class="ob-vt ${view === "sched" ? "on" : ""}" data-v="sched">📅 ${t("vSched")}${n ? `<span class="n">${n}</span>` : ""}</button><span class="ob-sp"></span>${openBtn()}${owner() ? `<button class="ob-vt" data-a="set">${t("vSet")}</button>` : ""}<button class="ob-vt" data-a="reload" aria-label="refresh">${t("refresh")}</button>`;
+    root.querySelector("#obTop").innerHTML = `<button class="ob-vt ${view === "board" ? "on" : ""}" data-v="board">🗺️ ${t("vBoard")}</button><button class="ob-vt ${view === "sched" ? "on" : ""}" data-v="sched">📅 ${t("vSched")}${n ? `<span class="n">${n}</span>` : ""}</button>${owner() ? `<button class="ob-vt ${view === "hist" ? "on" : ""}" data-v="hist">📋 ${t("vHist")}</button>` : ""}<span class="ob-sp"></span>${openBtn()}${owner() ? `<button class="ob-vt" data-a="set">${t("vSet")}</button>` : ""}<button class="ob-vt" data-a="reload" aria-label="refresh">${t("refresh")}</button>`;
   }
   function openBtn() {
     const ss = data.shop_state; if (!ss) return "";
@@ -574,6 +582,64 @@
       pop.style.left = x + "px"; pop.style.top = y + "px"; } else pop.classList.add("sheet");
   }
 
+  /* ---------- 지난 기록 ---------- */
+  function histRange() {
+    if (!hp.d) hp.d = data.today;
+    if (hp.mode === "day") return [hp.d, hp.d];
+    if (hp.mode === "week") { const a = mondayOf(hp.d); return [a, addD(a, 6)]; }
+    const a = hp.d.slice(0, 8) + "01", d = new Date(a + "T00:00:00Z"); d.setUTCMonth(d.getUTCMonth() + 1); d.setUTCDate(0);
+    return [a, d.toISOString().slice(0, 10)];
+  }
+  async function loadHist() {
+    if (!owner()) { hist = { denied: true }; renderHist(); return; }
+    const [d1, d2] = histRange(); hist = Object.assign(hist || {}, { loading: true }); renderHist();
+    try { hist = await C.rpc("board_history", { shop: C.shopId, d1, d2 }); } catch (e) { hist = null; C.toast(errTx(e)); }
+    renderHist();
+  }
+  const hmVN = iso => iso ? new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Ho_Chi_Minh" }) : "";
+  const hrsMin = m => { m = Math.round(+m || 0); const h = Math.floor(m / 60), r = m % 60; return lang === "ko" ? `${h}시간${r ? " " + r + "분" : ""}` : `${h}h${r ? String(r).padStart(2, "0") : ""}`; };
+  function renderHist() {
+    const el = root && root.querySelector("#obHist"); if (!el || view !== "hist") return;
+    if (!owner() || (hist && hist.denied)) { el.innerHTML = `<div class="ob-card"><p class="ob-note">${t("hOwner")}</p></div>`; return; }
+    const [d1, d2] = histRange();
+    const label = hp.mode === "day" ? dLong(d1) : dRange(d1, d2);
+    let h = `<div class="ob-card ob-htool"><div class="ob-fchips">${["day", "week", "month"].map(k => `<button class="ob-chip ${hp.mode === k ? "on" : ""}" data-h="${k}">${t("h" + k[0].toUpperCase() + k.slice(1))}</button>`).join("")}</div>
+      <div class="ob-hnav"><button class="ob-vt" data-h="prev" aria-label="prev">‹</button><b>${label}</b><button class="ob-vt" data-h="next" aria-label="next" ${d2 >= data.today ? "disabled" : ""}>›</button>
+      <button class="ob-vt" data-h="today">${t("hToday")}</button><input type="date" class="ob-in" id="obHD" value="${hp.d}" max="${data.today}" aria-label="date"></div>
+      <span class="ob-sp"></span><button class="ob-vt" data-h="csv" ${hist && hist.rows && hist.rows.length ? "" : "disabled"}>${t("hCsv")}</button></div>`;
+    if (!hist || hist.loading || !hist.rows) { el.innerHTML = h + `<p class="ob-empty">…</p>`; return; }
+    const R = hist.rows, sum = R.reduce((a, r) => a + (+r.paid || 0), 0), udR = R.filter(r => r.ud), wR = R.filter(r => !r.ud);
+    const ppl = rs => rs.reduce((a, r) => a + (+r.people || 1), 0);
+    h += `<div class="ob-kpis ob-hk">${[[ppl(R), "hGuests"], [vnd(sum), "hSales"], [`${ppl(udR)} · ${vnd(udR.reduce((a, r) => a + (+r.paid || 0), 0))}`, "hUD"], [`${ppl(wR)} · ${vnd(wR.reduce((a, r) => a + (+r.paid || 0), 0))}`, "hWalk"]].map(([v, k]) => `<div class="ob-kpi"><b>${v}</b><span>${t(k)}</span></div>`).join("")}</div>`;
+    const multi = d1 !== d2;
+    const rows = R.slice().reverse().map(r => `<div class="ob-hr"><div class="tm">${multi ? `<small>${esc(dShort(r.day))}</small>` : ""}${hmVN(r.started_at)}<small>~ ${hmVN(r.done_at)}</small></div>
+        <div class="g"><b><span class="ob-pill ${r.ud ? "ob-p-idle" : "ob-p-off"}">${t(r.ud ? "hUD" : "hWalk")}</span> ${esc(r.guest || "-")}${(r.people || 1) > 1 ? " · " + t("tpN", { n: r.people }) : ""}</b>
+          <small>${esc(r.course || "")} · ${esc(r.staff || "")}${r.station ? " · " + esc(t("room", { n: String(r.station).split("-")[0] })) : ""}${r.code ? " · " + esc(r.code) : ""}</small></div>
+        <div class="a"><b>${vnd(r.paid)}</b><small>${r.ud ? t("hFee", { v: vnd(r.commission) }) : t("hNoFee")}</small></div></div>`).join("");
+    const st = (hist.staff || []).filter(s => s.active || s.cnt > 0);
+    const srow = s => { const att = s.att;
+      const attTxt = !multi ? (att && att.in_at ? `${hmVN(att.in_at)} ~ ${att.out_at ? hmVN(att.out_at) : "…"}${att.late_min > 0 ? ` · <span class="late">${t("hLate", { m: att.late_min })}</span>` : ""}` : "—")
+        : `${t("hDays", { n: s.days })}${s.work_min ? " · " + t("hWorked", { h: hrsMin(s.work_min) }) : ""}${s.late_n ? ` · <span class="late">${t("hLateN", { n: s.late_n, m: s.late_min })}</span>` : ""}`;
+      return `<div class="ob-hs"><b>${esc(s.name)}${s.active ? "" : ` <small>(${t("hGone")})</small>`}<small>${t(s.role === "rcp" ? "roleRcp" : "tp")}</small></b>
+        <span class="n"><b>${s.cnt}</b><small>${t("hCnt")}</small></span><span class="n"><b>${hrsMin(s.mins)}</b><small>${t("hMin")}</small></span><span class="n"><b>${vnd(s.rev)}</b><small>${t("hRev")}</small></span>
+        <span class="at"><small>${t("hAtt")}</small>${attTxt}</span></div>`; };
+    h += `<div class="ob-hgrid"><div class="ob-card"><h3><span>${t("hRows")}</span><small>${R.length}</small></h3>${R.length ? rows : `<p class="ob-note">${t("hNone")}</p>`}${hist.left ? `<p class="ob-note">${t("hLeft")}: ${hist.left}</p>` : ""}</div>
+      <div class="ob-card"><h3><span>${t("hStaff")}</span><small>${st.length}</small></h3>${st.map(srow).join("")}</div></div>`;
+    el.innerHTML = h;
+  }
+  function csvHist() {
+    if (!hist || !hist.rows) return;
+    const q = v => { const x = String(v == null ? "" : v); return /[",\n]/.test(x) ? '"' + x.replace(/"/g, '""') + '"' : x; };
+    const H = { ko: ["날짜", "시작", "끝", "구분", "손님", "인원", "코스", "테라피스트", "방", "예약번호", "금액", "엉클데이 수수료"], vi: ["Ngày", "Bắt đầu", "Kết thúc", "Loại", "Khách", "Số người", "Dịch vụ", "KTV", "Phòng", "Mã đặt", "Số tiền", "Phí UD"], en: ["Date", "Start", "End", "Type", "Guest", "People", "Course", "Therapists", "Room", "Booking", "Amount", "UD fee"] }[lang];
+    const H2 = { ko: ["직원", "역할", "시술 건수", "시술 시간(분)", "매출", "출근일", "근무 시간(분)", "지각 횟수", "지각(분)"], vi: ["Nhân viên", "Vai trò", "Lượt", "Phút làm", "Doanh thu", "Ngày làm", "Phút có mặt", "Lần trễ", "Phút trễ"], en: ["Staff", "Role", "Sessions", "Minutes", "Sales", "Days", "Worked (min)", "Late count", "Late (min)"] }[lang];
+    const lines = [H.map(q).join(",")].concat(hist.rows.map(r => [r.day, hmVN(r.started_at), hmVN(r.done_at), t(r.ud ? "hUD" : "hWalk"), r.guest, r.people || 1, r.course, r.staff, String(r.station || "").split("-")[0], r.code || "", r.paid || 0, r.ud ? (r.commission || 0) : 0].map(q).join(",")));
+    lines.push("", H2.map(q).join(","));
+    (hist.staff || []).forEach(s => lines.push([s.name, t(s.role === "rcp" ? "roleRcp" : "tp"), s.cnt, s.mins, s.rev, s.days, s.work_min, s.late_n, s.late_min].map(q).join(",")));
+    const blob = new Blob(["\ufeff" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `uncleday-${hist.from}${hist.to !== hist.from ? "_" + hist.to : ""}.csv`;
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+
   /* ---------- 매장 설정 ---------- */
   function openSet() {
     const L = data.layout;
@@ -689,7 +755,12 @@
   /* ---------- 버튼 ---------- */
   async function onClick(e) {
     const sb = e.target.closest("[data-sa]"); if (sb) { if (sb.dataset.sa === "ovx" && e.target !== sb) return; e.preventDefault(); return setAct(sb); }
-    const vb = e.target.closest("[data-v]"); if (vb) { view = vb.dataset.v; if (view === "sched") { sched = null; loadSched(); } render(); return; }
+    const vb = e.target.closest("[data-v]"); if (vb) { view = vb.dataset.v; if (view === "sched") { sched = null; loadSched(); } if (view === "hist") { hist = null; loadHist(); } render(); return; }
+    const hb = e.target.closest("[data-h]"); if (hb) { const k = hb.dataset.h;
+      if (k === "day" || k === "week" || k === "month") hp.mode = k; else if (k === "today") hp.d = data.today;
+      else if (k === "prev" || k === "next") { const sg = k === "prev" ? -1 : 1; if (hp.mode === "day") hp.d = addD(hp.d, sg); else if (hp.mode === "week") hp.d = addD(hp.d, 7 * sg); else { const d = new Date(hp.d + "T00:00:00Z"); d.setUTCDate(1); d.setUTCMonth(d.getUTCMonth() + sg); hp.d = d.toISOString().slice(0, 10); } }
+      else if (k === "csv") { csvHist(); return; }
+      loadHist(); return; }
     if (pick && !e.target.closest(".ob-pop") && !e.target.closest('[data-a="cell"]')) { pick = null; renderPick(); }
     const b = e.target.closest("[data-a]"); if (!b) return;
     const a = b.dataset.a, id = b.dataset.id;
@@ -699,7 +770,7 @@
       if (r && a === "shopclose") { const still = r.staff.filter(x => x.in_at && !x.out_at).length; C.toast(still ? t("closedStill", { n: still }) : t("closedOk")); }
       return;
     }
-    if (a === "reload") { await load(); if (view === "sched") loadSched(); return; }
+    if (a === "reload") { await load(); if (view === "sched") loadSched(); if (view === "hist") loadHist(); return; }
     if (a === "addg") {
       const n = root.querySelector("#obGN"), c = (data.layout.courses || [])[+root.querySelector("#obGC").value];
       if (!n.value.trim() || !c) { n.focus(); return; }
@@ -745,7 +816,8 @@
     if (a === "rok" || a === "rno") { const r = await call("req_decide", { rid: +id, ok: a === "rok" }, true); if (r) { sched = r; renderSched(); load(); } return; }
   }
   function onKey(e) { if (e.key === "Escape" && pick) { pick = null; renderPick(); } }
-  function onChange(e) { if (pick && (e.target.id === "obPkS" || e.target.id === "obPkE")) { pick[e.target.id === "obPkS" ? "s" : "e"] = +e.target.value; renderPick(); return; } if (e.target.dataset.sf && setField(e.target)) renderSet(); }
+  function onChange(e) { if (e.target.id === "obHD" && e.target.value) { hp.d = e.target.value; loadHist(); return; } onChange2(e); }
+  function onChange2(e) { if (pick && (e.target.id === "obPkS" || e.target.id === "obPkE")) { pick[e.target.id === "obPkS" ? "s" : "e"] = +e.target.value; renderPick(); return; } if (e.target.dataset.sf && setField(e.target)) renderSet(); }
   function onInput(e) { if (e.target.tagName === "INPUT" && e.target.dataset.sf) setField(e.target); }
 
   let rz = 0;
@@ -758,7 +830,7 @@
       root.addEventListener("click", onClick); root.addEventListener("change", onChange); root.addEventListener("input", onInput);
       window.addEventListener("resize", onResize); window.addEventListener("keydown", onKey);
       if (data && data.shop && data.shop.id === C.shopId) render(); else { data = null; root.innerHTML = `<p class="ob-empty">…</p>`; }
-      load().then(() => { if (view === "sched" && !sched) loadSched(); });
+      load().then(() => { if (view === "sched" && !sched) loadSched(); if (view === "hist") loadHist(); });
       pollT = setInterval(() => { if (!document.hidden && !busy && !open.assign && !open.finish && !setOpen && !pick) load(); }, 10000);
       tickT = setInterval(tick, 1000);
       last = 0; raf = requestAnimationFrame(loop);
@@ -768,7 +840,7 @@
       clearInterval(pollT); clearInterval(tickT); cancelAnimationFrame(raf); window.removeEventListener("resize", onResize); window.removeEventListener("keydown", onKey); pick = null;
       root.removeEventListener("click", onClick); root.removeEventListener("change", onChange); root.removeEventListener("input", onInput);
       W.forEach(w => w.el.remove()); W.clear(); GW.forEach(w => w.el.remove()); GW.clear();
-      root = null; plan = null; setOpen = false; open = { assign: null, finish: null };
+      root = null; plan = null; setOpen = false; open = { assign: null, finish: null, tps: [] };
     }
   };
 })();
