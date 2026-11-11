@@ -60,6 +60,10 @@ function draw(b) {
   const checkin = start && b.status === "confirmed" && !b.customer_visit_at && now >= start - 2 * 3600e3 && now < end;
   const inside = start && b.customer_visit_at && now < end;
   const rate = !b.reviewed && (past || (end && now >= end)) && ["confirmed", "visited", "settled", "noshow"].includes(b.status);
+  // 담당 테라피스트 (매장 기록) · 고를 수 있는 사람 (기록이 없을 때 그날 출근한 테라피스트)
+  const tps = Array.isArray(b.therapists) ? b.therapists : [], tpOpts = tps.length ? tps : (Array.isArray(b.tp_options) ? b.tp_options : []);
+  const tpDone = Array.isArray(b.tp_reviewed) ? b.tp_reviewed : [], tpLeft = tpOpts.filter(x => !tpDone.includes(x.id));
+  const tpCan = !!b.tp_window && ["confirmed", "visited", "settled"].includes(b.status) && tpLeft.length > 0 && (past || (end && now >= end));
   document.title = `${ui("vTitle")} ${b.code} | ${tx(SITE.name)}`;
   box.innerHTML = `<div class="done voucher">
     <div class="v-head"><small>${ui("vTitle")}</small><b class="v-code">${esc(b.code)}</b>
@@ -74,6 +78,7 @@ function draw(b) {
       <dt>${ui("vMenu")}</dt><dd>${esc(menuName)}${b.menu_min ? ` · ${b.menu_min}${ui("min")}` : ""}</dd>
       <dt>${ui("vPeople")}</dt><dd>${ui("vPeopleN", { n: b.people })}</dd>
       <dt>${ui("vPrice")}</dt><dd>${money(b.list_price)}<br><small>${ui("vPriceNote")}</small></dd>
+      ${tps.length ? `<dt>${ui("vTp")}</dt><dd><b>${tps.map(x => esc(x.name)).join(", ")}</b>${tps.some(x => x.working) ? ` <small>· ${ui("vTpNow")}</small>` : ""}</dd>` : ""}
       <dt>${ui("vName")}</dt><dd>${esc(b.customer_name)}</dd>
       ${b.note ? `<dt>${ui("vNote")}</dt><dd>${esc(b.note)}</dd>` : ""}
     </dl>
@@ -87,12 +92,14 @@ function draw(b) {
       ${b.customer_visit_at && !inside ? `<p class="v-ok">${ui("vVisitedDone")}</p>` : ""}
       ${!b.reviewed && !rate && (past || (b.customer_visit_at && !inside)) ? `<button class="btn" id="vRv">${ui("vReview")}</button>` : ""}
       ${b.reviewed ? `<p class="v-ok">${ui("vReviewed")}</p>` : ""}
+      ${tpDone.length ? `<p class="v-ok">💌 ${ui("tpRvSent")}: ${esc(tpOpts.concat(tps).filter((x, i, a) => tpDone.includes(x.id) && a.findIndex(y => y.id === x.id) === i).map(x => x.name).join(", "))}</p>` : ""}
       <button class="btn" type="button" id="vChat">💬 ${ui("vChat")}</button>
       <a class="btn kakao-link" href="${SITE.kakao}" target="_blank">${ui("vAsk")}</a>
       <button class="btn" id="vLink">${ui("vCopyLink")}</button>
       ${open ? `<button class="btn v-cancel" id="vCancel">${ui("vCancel")}</button>` : ""}
     </div>
     <div id="vRvBox"></div>
+    ${b.reviewed && tpCan ? `<div class="tp-box" id="tpBox"><b>💌 ${ui("tpRvBoxTitle")}</b><p>${ui("tpRvBoxDesc")}</p>${tpForm(tpLeft)}<button class="btn big-btn" type="button" id="tpSend">${ui("tpRvSend")}</button></div>` : ""}
     <p class="v-save">${ui("vSave")}</p>
   </div>`;
   const act = async (a, pick = null) => { try { draw(await LIVE.rpc("customer_action", pick == null ? { t, action: a } : { t, action: a, pick })); if (a === "pick") toastV(ui("vResDone")); } catch (e) { toastV(e.message); } };
@@ -120,6 +127,26 @@ function draw(b) {
     d.querySelector("[data-y]").onclick = () => { d.remove(); act("cancel"); };
   };
   if ($("vRv")) $("vRv").onclick = () => openRv(0);
+  function tpForm(list) {
+    return `<div class="tp-pick"><span>${ui("tpRvWho")}</span><div class="tp-chips">${list.map(x => `<button type="button" class="tp-chip" data-tpid="${esc(x.id)}" aria-pressed="false">${esc(x.name)}</button>`).join("")}</div>
+      <div class="tp-stars" ${b.reviewed ? "" : "hidden"}>${[1, 2, 3, 4, 5].map(n => `<button type="button" data-ts="${n}">★</button>`).join("")}</div>
+      <label>${ui("tpRvNote")}<input name="tpnote" maxlength="200" placeholder="${esc(ui("tpRvPh"))}"></label></div>`;
+  }
+  const tpPicked = root => [...root.querySelectorAll(".tp-chip.on")].map(x => x.dataset.tpid);
+  function bindTp(root) {
+    root.querySelectorAll(".tp-chip").forEach(x => x.onclick = () => { x.classList.toggle("on"); x.setAttribute("aria-pressed", x.classList.contains("on")); });
+    let ts = 5; const paintT = () => root.querySelectorAll("[data-ts]").forEach(y => y.classList.toggle("on", +y.dataset.ts <= ts)); paintT();
+    root.querySelectorAll("[data-ts]").forEach(x => x.onclick = () => { ts = +x.dataset.ts; paintT(); });
+    return () => ts;
+  }
+  async function sendTp(root, stars, name) {
+    const ids = tpPicked(root); if (!ids.length) return null;
+    const note = (root.querySelector('[name="tpnote"]') || {}).value || "";
+    try { const nb = await LIVE.rpc("staff_review_submit", { p: { token: t, staff: ids, stars, text: note, name } }); toastV(ui("tpRvDone")); return nb; }
+    catch (e) { return null; }
+  }
+  if ($("tpBox")) { const box2 = $("tpBox"), getTs = bindTp(box2);
+    $("tpSend").onclick = async () => { if (!tpPicked(box2).length) { toastV(ui("tpRvNeed")); return; } const nb = await sendTp(box2, getTs(), b.customer_name); if (nb) draw(nb); }; }
   function openRv(preset) {
     if ($("vRv")) $("vRv").hidden = true;
     box.querySelectorAll(".rate-box").forEach(x => x.hidden = true);
@@ -128,10 +155,12 @@ function draw(b) {
       <div class="f-stars"><span>${ui("rvStars")}</span><div id="rvStarBtns">${[1, 2, 3, 4, 5].map(n => `<button type="button" data-s="${n}">★</button>`).join("")}</div></div>
       <label>${ui("rvName")}<input name="name" required maxlength="20" value="${esc(b.customer_name || "")}"></label>
       <label>${ui("rvText")}<textarea name="text" rows="4" required minlength="10" maxlength="1000" placeholder="${ui("rvTextPh")}"></textarea></label>
+      ${tpCan ? `<div class="tp-box in"><b>💌 ${ui("tpRvTitle")}</b>${tpForm(tpLeft)}</div>` : ""}
       <button class="btn big-btn" type="submit">${ui("rvSend")}</button><small>${ui("rvNotice")}</small></form>`;
     const f = $("rvForm");
     const paint = () => f.querySelectorAll("[data-s]").forEach(y => y.classList.toggle("on", +y.dataset.s <= st)); paint();
     f.querySelectorAll("[data-s]").forEach(x => x.onclick = () => { st = +x.dataset.s; paint(); });
+    const tpIn = f.querySelector(".tp-box"); if (tpIn) bindTp(tpIn);
     f.scrollIntoView({ behavior: "smooth" });
     f.onsubmit = async e => {
       e.preventDefault();
@@ -139,6 +168,7 @@ function draw(b) {
       const v = Object.fromEntries(new FormData(f));
       try {
         await LIVE.rpc("submit_review", { p: { token: t, stars: st, name: v.name, text: v.text, menu: menuName, month: (b.visit_date || "").slice(0, 7), lang } });
+        if (tpIn) await sendTp(tpIn, st, v.name);
         draw(await LIVE.rpc("booking_for_customer", { t }));
       } catch (err) { toastV(err.message); }
     };

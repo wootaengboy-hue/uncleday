@@ -13,7 +13,8 @@
     hRows: ["Từng lượt làm", "시술 기록", "Sessions"], hStaff: ["Theo nhân viên", "직원별", "By staff"], hNone: ["Không có lượt làm nào.", "이 기간에는 끝난 시술이 없어요.", "No finished sessions."],
     hCnt: ["Lượt", "시술", "Sessions"], hMin: ["Phút làm", "시술 시간", "Minutes"], hRev: ["Doanh thu", "매출", "Sales"], hAtt: ["Chấm công", "출퇴근", "Attendance"], hDays: ["{n} ngày", "{n}일 출근", "{n} days"],
     hLateN: ["Trễ {n} lần · {m}′", "지각 {n}번 · {m}분", "Late {n}× · {m}′"], hLate: ["Trễ {m}′", "지각 {m}분", "Late {m}′"], hCsv: ["⬇ Tải Excel (CSV)", "⬇ 엑셀로 받기", "⬇ Excel (CSV)"], hOwner: ["Chỉ chủ cửa hàng mới xem được lịch sử.", "기록은 사장님 계정만 볼 수 있어요.", "Only the owner can see history."],
-    hNoStaff: ["Chưa ghi KTV", "담당 미기록", "No therapist"], hSetTp: ["Thêm KTV", "담당 넣기", "Add therapist"], hEditTp: ["Đổi", "바꾸기", "Edit"], hSaveTp: ["Lưu", "저장", "Save"], hTpSaved: ["Đã lưu KTV phụ trách.", "담당을 저장했어요.", "Therapist saved."], hByShop: ["nhập tay", "직접 입력", "entered by shop"],
+    hNoStaff: ["Chưa ghi KTV", "담당 미기록", "No therapist"], hSetTp: ["Thêm KTV", "담당 넣기", "Add therapist"], hEditTp: ["Đổi", "바꾸기", "Edit"], hSaveTp: ["Lưu", "저장", "Save"], hTpSaved: ["Đã lưu KTV phụ trách.", "담당을 저장했어요.", "Therapist saved."], hByReview: ["khách xác nhận qua đánh giá", "손님 후기로 확인", "confirmed by guest review"], hRv: ["Đánh giá KTV", "💌 테라피스트 후기", "💌 Therapist reviews"], hRvNone: ["Chưa có đánh giá.", "아직 받은 후기가 없어요.", "No reviews yet."], hRvHint: ["Khách đặt qua Uncle Day có thể viết đánh giá cho KTV sau khi đến. Mỗi đánh giá được xác nhận, Uncle Day thưởng cho KTV.", "엉클데이 예약 손님은 방문 뒤 담당 테라피스트에게 후기를 쓸 수 있어요. 확인된 후기 한 건마다 엉클데이가 테라피스트에게 보너스를 줘요.", "Uncle Day guests can review their therapist after the visit. Uncle Day pays the therapist a bonus per verified review."],
+    hByShop: ["nhập tay", "직접 입력", "entered by shop"],
     hFee: ["Phí UD {v}", "수수료 {v}", "Fee {v}"], hNoFee: ["Không phí", "수수료 없음", "No fee"], hWorked: ["Làm {h}", "근무 {h}", "Worked {h}"], hGone: ["đã nghỉ", "퇴사", "left"],
     lgIdle: ["Đang chờ / trực quầy", "대기 중 · 카운터 근무", "Free / at desk"], lgWork: ["Đang làm", "시술 중", "In session"], lgMove: ["Đang đi", "이동 중", "Moving"], lgOff: ["Chưa vào / đã về", "출근 전 · 퇴근", "Not in / gone"], lgDay: ["Nghỉ", "휴무", "Day off"],
     stBefore: ["Chưa mở · mở lúc {n}", "영업 전 · {n} 오픈", "Not open · opens {n}"], stOpen: ["Đang mở cửa", "영업 중", "Open"], stSince: ["mở từ {n}", "{n}부터", "since {n}"],
@@ -595,6 +596,7 @@
     if (!owner()) { hist = { denied: true }; renderHist(); return; }
     const [d1, d2] = histRange(); hpick = null; hist = Object.assign(hist || {}, { loading: true }); renderHist();
     try { hist = await C.rpc("board_history", { shop: C.shopId, d1, d2 }); } catch (e) { hist = null; C.toast(errTx(e)); }
+    try { const rv = await C.rpc("staff_reviews_list", { shop: C.shopId, lim: 30 }); if (hist) hist.reviews = rv; } catch (e) { /* 후기 기능 SQL 전이면 숨겨요 */ }
     renderHist();
   }
   const hmVN = iso => iso ? new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Ho_Chi_Minh" }) : "";
@@ -618,7 +620,7 @@
         <div class="ob-row2"><button class="ob-btn" data-a="hpsave">${t("hSaveTp")}</button><button class="ob-btn l" data-a="hpclose">${t("close")}</button></div></div>` : "";
     const rows = R.slice().reverse().map(r => `<div class="ob-hr"><div class="tm">${multi ? `<small>${esc(dShort(r.day))}</small>` : ""}${hmVN(r.started_at)}<small>~ ${hmVN(r.done_at)}</small></div>
         <div class="g"><b><span class="ob-pill ${r.ud ? "ob-p-idle" : "ob-p-off"}">${t(r.ud ? "hUD" : "hWalk")}</span> ${esc(r.guest || "-")}${(r.people || 1) > 1 ? " · " + t("tpN", { n: r.people }) : ""}</b>
-          <small>${esc(r.course || "")} · ${r.nostaff ? `<span class="ob-nost">${t("hNoStaff")}</span>` : esc(r.staff || "")}${r.src === "shop" ? ` <i>(${t("hByShop")})</i>` : ""}${r.booking_id ? ` <button class="ob-lnk" data-a="hpopen" data-id="${r.booking_id}">${t(r.nostaff ? "hSetTp" : "hEditTp")}</button>` : ""}${r.station ? " · " + esc(t("room", { n: String(r.station).split("-")[0] })) : ""}${r.code ? " · " + esc(r.code) : ""}</small></div>
+          <small>${esc(r.course || "")} · ${r.nostaff ? `<span class="ob-nost">${t("hNoStaff")}</span>` : esc(r.staff || "")}${r.src === "shop" ? ` <i>(${t("hByShop")})</i>` : r.src === "review" ? ` <i>(💌 ${t("hByReview")})</i>` : ""}${r.booking_id ? ` <button class="ob-lnk" data-a="hpopen" data-id="${r.booking_id}">${t(r.nostaff ? "hSetTp" : "hEditTp")}</button>` : ""}${r.station ? " · " + esc(t("room", { n: String(r.station).split("-")[0] })) : ""}${r.code ? " · " + esc(r.code) : ""}</small></div>
         <div class="a"><b>${vnd(r.paid)}</b><small>${r.ud ? t("hFee", { v: vnd(r.commission) }) : t("hNoFee")}</small></div>${pickHtml(r)}</div>`).join("");
     const st = (hist.staff || []).filter(s => s.active || s.cnt > 0);
     const srow = s => { const att = s.att;
@@ -628,7 +630,8 @@
         <span class="n"><b>${s.cnt}</b><small>${t("hCnt")}</small></span><span class="n"><b>${hrsMin(s.mins)}</b><small>${t("hMin")}</small></span><span class="n"><b>${vnd(s.rev)}</b><small>${t("hRev")}</small></span>
         <span class="at"><small>${t("hAtt")}</small>${attTxt}</span></div>`; };
     h += `<div class="ob-hgrid"><div class="ob-card"><h3><span>${t("hRows")}</span><small>${R.length}</small></h3>${R.length ? rows : `<p class="ob-note">${t("hNone")}</p>`}${hist.left ? `<p class="ob-note">${t("hLeft")}: ${hist.left}</p>` : ""}</div>
-      <div class="ob-card"><h3><span>${t("hStaff")}</span><small>${st.length}</small></h3>${st.map(srow).join("")}</div></div>`;
+      <div style="display:flex;flex-direction:column;gap:10px"><div class="ob-card"><h3><span>${t("hStaff")}</span><small>${st.length}</small></h3>${st.map(srow).join("")}</div>
+      ${Array.isArray(hist.reviews) ? `<div class="ob-card"><h3><span>${t("hRv")}</span><small>${hist.reviews.length}</small></h3>${hist.reviews.length ? hist.reviews.map(v => `<div class="ob-rv"><b>${esc(v.staff_name || "")} <span class="st">${"★".repeat(v.stars)}${"☆".repeat(5 - v.stars)}</span></b>${v.body ? `<p>“${esc(v.body)}”</p>` : ""}<small>${esc(v.customer || "")} · ${esc(dShort(String(v.created_at).slice(0, 10)))}${v.code ? " · " + esc(v.code) : ""}</small></div>`).join("") : `<p class="ob-note">${t("hRvNone")}</p>`}<p class="ob-note">${t("hRvHint")}</p></div>` : ""}</div></div>`;
     el.innerHTML = h;
   }
   function csvHist() {
