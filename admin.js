@@ -115,7 +115,7 @@ function showTab(t) {
   document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
   document.querySelectorAll("[data-pane]").forEach(p => p.hidden = p.dataset.pane !== t);
   if (location.hash.slice(1) !== t) history.replaceState(null, "", "#" + t);
-  ({ dash: drawDash, work: drawWork, bk: drawBookings, chat: drawChat, crm: drawCrm, settle: drawSettle, shops: drawList, rv: drawReviews, acc: drawAccount })[t]();
+  ({ dash: drawDash, work: drawWork, bk: drawBookings, chat: drawChat, crm: drawCrm, settle: drawSettle, shops: drawList, rv: drawReviews, uni: drawUniverse, acc: drawAccount })[t]();
   drawCounts();
 }
 function drawCounts() {
@@ -1254,7 +1254,7 @@ async function afterLogin(session) {
   initShops();
   document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => showTab(b.dataset.tab));
   const h = location.hash.slice(1);
-  showTab(["dash", "work", "bk", "settle", "shops", "rv", "acc"].includes(h) ? h : "dash");
+  showTab(["dash", "work", "bk", "settle", "shops", "rv", "uni", "acc"].includes(h) ? h : "dash");
   offerMigration();
   checkImports();
   initNotis();

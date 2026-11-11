@@ -6,6 +6,7 @@
 <title>엉클데이 관리자</title>
 <meta name="robots" content="noindex,nofollow">
 <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
+<link rel="stylesheet" href="owner-board.css?v=20261112r">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Noto+Sans+KR:wght@400;500;700;800&display=swap">
 <style>
 :root{--main:#116241;--main-d:#0c4a31;--bg:#FFF8E8;--card:#fff;--text:#0E2843;--sub:#5f6b78;--line:#EEE2CB;--warn:#e67e22;--warn-bg:#fff4e5;--ok:#2a9d8f;--ok-bg:#e6f6f3;--danger:#d64545;
@@ -519,6 +520,38 @@ mark.cmark{background:#fff3b0;border-bottom:2px solid #f0b429;border-radius:2px;
 .cmt-new{display:flex;gap:8px;align-items:flex-start}
 .cmt-new textarea{flex:1;min-width:0;padding:7px 10px;border:1px solid var(--line);border-radius:10px;font:inherit;font-size:14px;resize:none;background:#fff}
 @media (max-width:760px){.kanban.tasks{grid-template-columns:repeat(3,82vw)}.kanban.leads{grid-template-columns:repeat(7,78vw)}}
+/* 🌌 유니버스 */
+.uni-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0 4px}
+.uni-seg{display:flex;gap:6px;flex-wrap:wrap}.uni-seg.sm{margin:12px 0 8px}
+.uni-err,.uni-empty,.uni-note{background:#fff;border-radius:14px;padding:14px 16px;margin-top:12px;line-height:1.55}
+.uni-err{background:#fff4e5;color:#9a5208;font-weight:700}.uni-note{background:#f3eefa;color:#4b3566;font-size:14px}
+.uni-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;margin-top:14px}
+.uni-card{background:#fff;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.uni-h{display:flex;justify-content:space-between;gap:8px;align-items:center}.uni-h b{font-size:16px}
+.uni-chip{font-size:12px;font-weight:700;border-radius:999px;padding:3px 9px;background:#eef0f2;color:#3d4651;white-space:nowrap}
+.uni-chip.ok,.uni-chip.paid{background:#e5f0ea;color:#116241}.uni-chip.open{background:#f1e6fa;color:#6b2fa0}
+.uni-chip.pending,.uni-chip.approved{background:#fff4e5;color:#9a5208}.uni-chip.rejected{background:#fde2e1;color:#b42318}
+.uni-nums{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.uni-nums span{background:#f7f5f0;border-radius:10px;padding:8px;font-size:12px;color:#6b7280;display:flex;flex-direction:column;min-width:0}
+.uni-nums b{font-size:16px;color:#0e2843;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.uni-sub{font-size:13px;color:#586474}
+.uni-tw{overflow-x:auto;background:#fff;border-radius:14px;margin-top:10px}
+.uni-t{width:100%;border-collapse:collapse;font-size:14px;min-width:820px}.uni-t th,.uni-t td{padding:10px 12px;border-top:1px solid #eee;text-align:left;vertical-align:top}
+.uni-t th{color:#6b7280;font-weight:600;border-top:0}.uni-t small{color:#6b7280}
+.uni-bonus-set{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#fff;border-radius:14px;padding:12px 16px;margin-top:12px}
+.uni-bonus-set input{width:120px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:15px}
+.uni-owed{background:#fff;border-radius:14px;padding:12px 16px;margin-top:12px;display:grid;gap:6px}
+.uni-or{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid #f0f0f0;padding-top:6px}.uni-or span:first-child{flex:1}
+.uni-rvs{display:grid;gap:8px}.uni-rv{background:#fff;border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:flex-start}
+.uni-rv.hid{opacity:.5}.uni-rv .g{flex:1;display:grid;gap:3px;min-width:0}.uni-rv .g p{margin:0}.uni-rv small{color:#6b7280}
+.uni-rv .st{color:#e0a11b;letter-spacing:1px}.uni-rv .a{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.uni-rv input[type=checkbox]{width:20px;height:20px;margin-top:3px}
+.uni-ov{position:fixed;inset:0;background:rgba(14,40,67,.45);z-index:200;display:flex;padding:12px}
+.uni-ov-in{background:#F5F2EA;border-radius:16px;flex:1;display:flex;flex-direction:column;overflow:hidden}
+.uni-ov-h{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#fff;border-bottom:1px solid #e8e1d3}
+.uni-ov-b{flex:1;overflow:auto;padding:12px}
+.uni-board{--bg:#F5F2EA;--card:#FFFFFF;--line:#E8E1D3;--line2:#F0EADF;--ink:#0E2843;--sub:#586474;--green:#116241;--green-t:#E5F0EA;--orange-t:#FFE7D3;--orange-ink:#A63D00;--red:#B42318;--red-t:#FDECEC;--navy-t:#EAF0F7;font-family:"Be Vietnam Pro","Noto Sans KR",sans-serif;color:var(--ink);font-size:15px}
+@media (max-width:640px){.uni-nums{grid-template-columns:repeat(3,minmax(0,1fr))}.uni-ov{padding:0}.uni-ov-in{border-radius:0}.uni-rv{flex-wrap:wrap}.uni-rv .a{flex-direction:row;align-items:center;width:100%;justify-content:flex-end}}
 </style>
 </head>
 <body>
@@ -538,6 +571,7 @@ mark.cmark{background:#fff3b0;border-bottom:2px solid #f0b429;border-radius:2px;
   <button data-tab="settle">💰 정산</button>
   <button data-tab="shops">🏪 업체 <span class="hint" id="shopCount"></span></button>
   <button data-tab="rv">⭐ 후기<span class="cnt" id="cntRv"></span></button>
+  <button data-tab="uni">🌌 유니버스</button>
   <button data-tab="acc">⚙️ 계정</button>
 </nav></header>
 
@@ -585,6 +619,7 @@ mark.cmark{background:#fff3b0;border-bottom:2px solid #f0b429;border-radius:2px;
   </section>
 
   <section id="tab-rv" data-pane="rv" hidden></section>
+  <section id="tab-uni" data-pane="uni" hidden></section>
   <section id="tab-acc" data-pane="acc" hidden></section>
 </main>
 
@@ -606,6 +641,8 @@ mark.cmark{background:#fff3b0;border-bottom:2px solid #f0b429;border-radius:2px;
 <script src="admin-contract-default.js?v=20261111b"></script>
 <script src="admin-contract.js?v=20261111b"></script>
 <script src="admin-owner.js?v=20261111b"></script>
-<script src="admin.js?v=20261111b"></script>
+<script src="owner-board.js?v=20261112r"></script>
+<script src="admin-universe.js?v=20261112a"></script>
+<script src="admin.js?v=20261112a"></script>
 </body>
 </html>

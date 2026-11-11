@@ -15,6 +15,7 @@
     hLateN: ["Trễ {n} lần · {m}′", "지각 {n}번 · {m}분", "Late {n}× · {m}′"], hLate: ["Trễ {m}′", "지각 {m}분", "Late {m}′"], hCsv: ["⬇ Tải Excel (CSV)", "⬇ 엑셀로 받기", "⬇ Excel (CSV)"], hOwner: ["Chỉ chủ cửa hàng mới xem được lịch sử.", "기록은 사장님 계정만 볼 수 있어요.", "Only the owner can see history."],
     hNoStaff: ["Chưa ghi KTV", "담당 미기록", "No therapist"], hSetTp: ["Thêm KTV", "담당 넣기", "Add therapist"], hEditTp: ["Đổi", "바꾸기", "Edit"], hSaveTp: ["Lưu", "저장", "Save"], hTpSaved: ["Đã lưu KTV phụ trách.", "담당을 저장했어요.", "Therapist saved."], hByReview: ["khách xác nhận qua đánh giá", "손님 후기로 확인", "confirmed by guest review"], hRv: ["Đánh giá KTV", "💌 테라피스트 후기", "💌 Therapist reviews"], hRvNone: ["Chưa có đánh giá.", "아직 받은 후기가 없어요.", "No reviews yet."], hRvHint: ["Khách đặt qua Uncle Day có thể viết đánh giá cho KTV sau khi đến. Mỗi đánh giá được xác nhận, Uncle Day thưởng cho KTV.", "엉클데이 예약 손님은 방문 뒤 담당 테라피스트에게 후기를 쓸 수 있어요. 확인된 후기 한 건마다 엉클데이가 테라피스트에게 보너스를 줘요.", "Uncle Day guests can review their therapist after the visit. Uncle Day pays the therapist a bonus per verified review."],
     hByShop: ["nhập tay", "직접 입력", "entered by shop"],
+    roNote: ["Chỉ xem (quản trị Uncle Day).", "읽기 전용이에요 (엉클데이 관리자 보기).", "Read-only (Uncle Day admin view)."],
     sPhoneSet: ["Đã có số ✓ (nhập để đổi)", "전화번호 등록됨 ✓ (바꾸려면 입력)", "Phone saved ✓ (type to change)"],
     appT: ["📱 Màn hình nhân viên", "📱 직원 화면", "📱 Staff app"], appOn: ["Đang dùng", "사용 중", "On"], appOffS: ["Chưa dùng", "안 씀", "Off"], pinMake: ["Tạo PIN", "PIN 만들기", "Make PIN"], pinRe: ["Tạo lại PIN", "PIN 다시 만들기", "New PIN"], pinOff: ["Tắt", "끄기", "Turn off"],
     pinNeedPhone: ["Hãy nhập số điện thoại và lưu trước.", "먼저 전화번호를 넣고 저장해 주세요.", "Add a phone number and save first."],
@@ -433,13 +434,13 @@
     tick();
   }
   function shell() {
-    root.innerHTML = `<div class="ob"><div class="ob-top" id="obTop"></div>
+    root.innerHTML = `<div class="ob ${C.readOnly ? "ro" : ""}"><div class="ob-top" id="obTop"></div>
       <div id="obBoard"><div class="ob-grid"><div><div class="ob-fchips" id="obFl" style="margin-bottom:8px"></div><div id="obLg" style="margin:-2px 0 8px"></div><div class="ob-stage"><div class="ob-box"><div class="ob-plan"></div></div></div></div>
         <div class="ob-side">
           <div class="ob-kpis" id="obK"></div>
           <div id="obFirst"></div>
           <div class="ob-card" id="obExp" hidden></div>
-          <div class="ob-card"><h3><span>${t("walkT")}</span></h3>
+          <div class="ob-card" id="obWalk"><h3><span>${t("walkT")}</span></h3>
             <div class="ob-f3"><input class="ob-in" id="obGN" placeholder="${t("gName")}" maxlength="40" autocomplete="off"><select class="ob-in" id="obGC" aria-label="${t("course")}"></select><select class="ob-in" id="obGP" aria-label="${t("ppl")}">${[1, 2, 3, 4, 5, 6].map(n => `<option>${n}</option>`).join("")}</select></div>
             <button class="ob-btn full" data-a="addg">${t("addG")}</button></div>
           <div class="ob-card" id="obWait"></div>
@@ -789,6 +790,7 @@
     if (pick && !e.target.closest(".ob-pop") && !e.target.closest('[data-a="cell"]')) { pick = null; renderPick(); }
     const b = e.target.closest("[data-a]"); if (!b) return;
     const a = b.dataset.a, id = b.dataset.id;
+    if (C.readOnly && !["reload", "pkclose", "hpclose"].includes(a)) { C.toast(t("roNote")); return; }
     if (a === "set") { openSet(); return; }
     if (a === "shopopen" || a === "shopclose") {
       const r = await call("shop_open", { action: a === "shopopen" ? "open" : "close" });

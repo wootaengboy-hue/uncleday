@@ -214,3 +214,5 @@
 .ob-pinbox { background: #FFF8E6; border: 2px solid #F5B84C; border-radius: 12px; padding: 10px 12px; display: grid; gap: 4px; }
 .ob-pinbox b { font-size: 14px; } .ob-pinbox .pin { font-size: 22px; letter-spacing: 4px; font-variant-numeric: tabular-nums; color: #0E2843; }
 .ob-pinbox small { color: #6B5A2A; font-size: 12px; }
+/* 관리자 읽기 전용 보기: 조작 버튼 숨김 */
+.ob.ro #obWalk, .ob.ro [data-a="set"], .ob.ro [data-a="shopopen"], .ob.ro [data-a="shopclose"], .ob.ro .ob-side .ob-btn, .ob.ro .ob-side .ob-in, .ob.ro .ob-side .ob-f3, .ob.ro .ob-lnk { display: none !important; }
