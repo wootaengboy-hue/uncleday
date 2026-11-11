@@ -148,13 +148,36 @@
   const nowMs = () => Date.now() + skew;
   const owner = () => C && C.isOwner;
 
+  // 서버 오류 문구를 화면 언어로
+  const ERR = {
+    "This therapist is busy": ["KTV này đang làm cho khách khác.", "이 테라피스트는 지금 다른 손님 시술 중이에요.", "This therapist is busy with another guest."],
+    "This bed is in use": ["Giường này đang có khách.", "이 베드는 지금 사용 중이에요.", "This bed is in use."],
+    "This guest is not waiting": ["Khách này không còn trong danh sách chờ.", "이 손님은 이미 배정됐거나 나갔어요. 새로고침해 주세요.", "This guest is no longer waiting."],
+    "Choose a therapist": ["Hãy chọn KTV.", "테라피스트를 골라 주세요.", "Choose a therapist."],
+    "Up to 4 therapists": ["Tối đa 4 KTV.", "테라피스트는 4명까지예요.", "Up to 4 therapists."],
+    "Unknown bed": ["Không tìm thấy giường.", "베드를 찾을 수 없어요.", "Unknown bed."],
+    "Session not found": ["Không tìm thấy lượt làm.", "시술을 찾을 수 없어요. 새로고침해 주세요.", "Session not found."],
+    "Still in a session": ["Đang làm cho khách, chưa thể tan ca.", "시술 중이라 퇴근할 수 없어요.", "Still in a session."],
+    "Staff not found": ["Không tìm thấy nhân viên.", "직원을 찾을 수 없어요.", "Staff not found."],
+    "Please enter a name": ["Hãy nhập tên.", "이름을 넣어 주세요.", "Please enter a name."],
+    "Please choose a course": ["Hãy chọn dịch vụ.", "코스를 골라 주세요.", "Please choose a course."],
+    "Please enter the amount": ["Hãy nhập số tiền.", "금액을 넣어 주세요.", "Please enter the amount."],
+    "Please check the hours": ["Hãy kiểm tra giờ.", "시간을 확인해 주세요.", "Please check the hours."],
+    "Request not found": ["Không tìm thấy yêu cầu.", "요청을 찾을 수 없어요.", "Request not found."],
+    "This booking is not confirmed": ["Đặt chỗ này chưa được xác nhận.", "아직 확정되지 않은 예약이에요.", "This booking is not confirmed."],
+    "Booking not found": ["Không tìm thấy đặt chỗ.", "예약을 찾을 수 없어요.", "Booking not found."],
+    "Floors: 1 to 6": ["Số tầng: 1–6.", "층은 1~6층까지예요.", "Floors: 1 to 6."],
+    "Rooms: 1 to 40": ["Số phòng: 1–40.", "방은 40개까지예요.", "Rooms: 1 to 40."],
+    "Too many items": ["Quá nhiều đồ vật.", "배치한 물건이 너무 많아요.", "Too many items."],
+  };
+  const errTx = e => { const m = e && e.message, k = m && Object.keys(ERR).find(x => m.indexOf(x) >= 0); return k ? ERR[k][li()] : C.errMsg(e); };
   async function call(fn, args, keep) {
     if (busy) return null; busy = true;
     try { const r = await C.rpc(fn, Object.assign({ shop: C.shopId }, args || {})); if (r && r.layout && !keep) setData(r); return r; }
-    catch (e) { C.toast(C.errMsg(e)); return null; }
+    catch (e) { C.toast(errTx(e)); return null; }
     finally { busy = false; }
   }
-  async function load() { try { setData(await C.rpc("board_get", { shop: C.shopId })); } catch (e) { C.toast(C.errMsg(e)); } }
+  async function load() { try { setData(await C.rpc("board_get", { shop: C.shopId })); } catch (e) { C.toast(errTx(e)); } }
   function setData(d) {
     if (!d || !d.layout) return;
     data = d; skew = Date.parse(d.now) - Date.now();
@@ -167,10 +190,10 @@
   const grpOf = x => x.grp || x.id, isLead = x => grpOf(x) === x.id;
   const mates = x => data.sessions.filter(y => grpOf(y) === grpOf(x) && y.status === x.status).sort((a, b) => (isLead(b) - isLead(a)) || String(a.id).localeCompare(String(b.id)));
   function stOf(s) {
+    if (sessOf(s.id)) return "work";
     if (s.code === "O" && !s.in_at) return "dayoff";
     if (!s.in_at) return "off";
     if (s.out_at) return "gone";
-    if (sessOf(s.id)) return "work";
     return s.role === "rcp" ? "desk" : "idle";
   }
   const PILL = { off: "ob-p-off", gone: "ob-p-off", dayoff: "ob-p-off", idle: "ob-p-idle", desk: "ob-p-idle", work: "ob-p-work", move: "ob-p-move" };
