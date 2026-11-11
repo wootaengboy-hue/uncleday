@@ -186,3 +186,13 @@ textarea.inp { min-height: 64px; resize: vertical; }
   .body > .list.blist { max-width: none; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 28px; }
   .list.blist .trow:nth-child(2) { border-top: 0; }
 }
+/* 넓은 화면: 남는 여백 없이 꽉 채워요 */
+@media (min-width: 1200px) {
+  .body { max-width: none; padding-left: 28px; padding-right: 28px; }
+  .body > .list, .body > .card, .body > .info, .body > .chips, .body > .sec, .body > .muted { max-width: none; }
+  .cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; }
+}
+.stats.st4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 960px) { .stats.st4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.staffchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.schip { font-size: 13px; font-weight: 600; background: #F5F2EA; border-radius: 999px; padding: 4px 10px; }

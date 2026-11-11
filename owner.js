@@ -34,6 +34,8 @@
     sSettled: ["đã đối soát", "정산됨", "settled"],
     sStmt: ["Trong bảng đối soát đã gửi", "보낸 정산서에 포함", "In the sent statement"],
     tabBoard: ["Bảng phòng", "현황판", "Board"],
+    shopToday: ["Cửa hàng hôm nay", "오늘 매장", "Shop today"], bIn: ["Đi làm", "출근", "Clocked in"], bWork: ["Đang làm", "시술 중", "In session"], bWait: ["Khách chờ", "대기 · 올 손님", "Waiting"], bDone: ["Xong · doanh thu", "완료 · 매출", "Done · revenue"],
+    openBoard: ["Mở bảng phòng", "현황판 열기", "Open board"], boardStart: ["Bắt đầu bảng phòng", "현황판 시작하기", "Start the room board"], boardStartS: ["Nhập phòng, dịch vụ và nhân viên một lần", "방 · 코스 · 직원을 한 번만 넣으면 돼요", "Add rooms, services and staff once"], soonT: ["Sắp có", "곧 추가", "Coming soon"],
     rotaT: ["Lịch làm của nhân viên", "직원 근무표", "Staff rota"], rotaS: ["Xếp ca sáng · chiều · nghỉ, duyệt yêu cầu", "오전 · 오후 · 휴무 짜기, 요청 승인", "Plan AM · PM · days off, approve requests"],
     tabHome: ["Hôm nay", "오늘", "Today"], tabBookings: ["Đặt lịch", "예약", "Bookings"], tabSchedule: ["Lịch", "일정", "Schedule"], tabMore: ["Thêm", "더보기", "More"],
     install: ["Cài Uncle Day lên màn hình chính để mở nhanh như ứng dụng", "홈 화면에 설치하면 앱처럼 바로 열 수 있어요", "Add Uncle Day to your home screen to open it like an app"],
@@ -120,7 +122,7 @@
     mShop: ["Cửa hàng", "업체", "Shop"], mLang: ["Ngôn ngữ", "언어", "Language"], mInstall: ["Cài lên màn hình chính", "홈 화면에 설치", "Add to home screen"],
     mPw: ["Đổi mật khẩu", "비밀번호 변경", "Change password"], mLogout: ["Đăng xuất", "로그아웃", "Log out"],
     mAccount: ["Tài khoản", "계정", "Account"], roleOwner: ["Chủ", "사장님", "Owner"], roleStaff: ["Nhân viên", "직원", "Staff"],
-    soon: ["Sắp có: màn hình nhân viên (lịch làm, xin nghỉ), đánh giá KTV, thông báo trên điện thoại.", "곧 추가: 직원 화면(근무표·휴무 요청), 테라피스트 후기, 휴대폰 알림", "Coming soon: staff screen (rota, day-off requests), therapist reviews, phone alerts."],
+    soon: ["Màn hình nhân viên (lịch làm, xin nghỉ), đánh giá KTV, thông báo trên điện thoại.", "직원 화면(근무표·휴무 요청), 테라피스트 후기, 휴대폰 알림", "Staff screen (rota, day-off requests), therapist reviews, phone alerts."],
     contactUD: ["Cần hỗ trợ? Nhắn Uncle Day qua Zalo như trước.", "도움이 필요하면 지금처럼 잘로로 엉클데이에 연락하세요.", "Need help? Message Uncle Day on Zalo as usual."],
     refresh: ["Làm mới", "새로고침", "Refresh"]
   };
@@ -143,7 +145,7 @@
   // ---- 상태 ----
   let sb = null, me = null, shopId = null, rows = [], sched = null, hoursDraft = null;
   let tab = "home", bTab = "new", detail = null, proposing = false, picks = [], pDay = null, schedDay = null, toastMsg = "", busy = false;
-  let knownReq = null, pollTimer = null, boardPending = 0, boardView = null;
+  let knownReq = null, pollTimer = null, boardPending = 0, boardView = null, boardSum = null;
   const store = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} };
   const read = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
 
@@ -240,7 +242,7 @@
         ${tabBtn("more", t("tabMore"), '<path d="M4 7h16M4 12h16M4 17h16"/>')}
       </nav>`;
     bindLang();
-    $app.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => { tab = b.dataset.tab; if (tab === "schedule" && !sched) loadSched(); if (tab === "settle") loadSettle(settle && settle.month); draw(); window.scrollTo(0, 0); });
+    $app.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => { tab = b.dataset.tab; if (tab === "home") load(true); if (tab === "schedule" && !sched) loadSched(); if (tab === "settle") loadSettle(settle && settle.month); draw(); window.scrollTo(0, 0); });
     const m = document.getElementById("main");
     if (tab === "board" && window.OwnerBoard) { window.OwnerBoard.mount(m, { view: boardView, rpc, shopId, lang, isOwner: isOwner(), toast, errMsg, onPending: n => { boardView = null; if (n !== boardPending) { boardPending = n; const d = $app.querySelector('[data-tab="board"] .dot'); if (d) d.textContent = n || ""; else if (n) { const b = $app.querySelector('[data-tab="board"]'); if (b) b.insertAdjacentHTML("beforeend", `<span class="dot">${n}</span>`); } } } }); drawDetail(); return; }
     if (window.OwnerBoard) window.OwnerBoard.unmount();
@@ -279,7 +281,22 @@
       <div class="stats"><div class="stat"><b>${mine.length}</b><span>${t("statVisits")}</span></div>
         <div class="stat"><b>${paid >= 1e6 ? (Math.round(paid / 1e5) / 10).toString().replace(".", ",") + "tr₫" : vnd(paid)}</b><span>${t("statPaid")}</span></div>
         <div class="stat"><b>${avg == null ? "-" : avg + " " + t("min")}</b><span>${t("statReply")}</span></div></div>
+      ${shopTodayHtml()}
       </div></div>`;
+  }
+  function shopTodayHtml() {
+    if (!window.OwnerBoard) return "";
+    const d = boardSum;
+    const sec = `<div class="sec"><h2>${t("shopToday")}</h2><span></span></div>`;
+    if (!d) return sec + `<div class="card empty">…</div>`;
+    if (!d.staff.length) return sec + `<button class="req" data-act="toboard" style="border-color:#B9D6C5;background:#F1F8F3"><div class="tm" style="min-width:auto">🗺️</div><div class="grow"><span class="nm">${t("boardStart")}</span><span class="sub">${t("boardStartS")}</span></div><span class="bd ok">›</span></button>`;
+    const work = d.sessions.filter(x => x.status === "working").length, done = d.sessions.filter(x => x.status === "done");
+    const wait = d.guests.filter(g => g.status === "waiting").length, inN = d.staff.filter(x => x.in_at && !x.out_at).length;
+    const rev = done.reduce((a, x) => a + (+x.paid || 0), 0);
+    const st = x => x.code === "O" && !x.in_at ? "🌙" : !x.in_at ? "⚪" : x.out_at ? "⚪" : d.sessions.some(y => y.status === "working" && y.staff_id === x.id) ? "🔴" : "🟢";
+    return sec + `<div class="stats st4"><div class="stat"><b>${inN}/${d.staff.length}</b><span>${t("bIn")}</span></div><div class="stat"><b>${work}</b><span>${t("bWork")}</span></div><div class="stat"><b>${wait + d.expected.length}</b><span>${t("bWait")}</span></div><div class="stat"><b>${done.length} · ${rev >= 1e6 ? (Math.round(rev / 1e5) / 10).toString().replace(".", ",") + "tr₫" : vnd(rev)}</b><span>${t("bDone")}</span></div></div>
+      <div class="card"><div class="staffchips">${d.staff.map(x => `<span class="schip">${st(x)} ${esc(x.name)}</span>`).join("")}</div>
+      <button class="btn main" data-act="toboard" style="margin-top:12px">🗺️ ${t("openBoard")}</button></div>`;
   }
 
   // ---- 예약 목록 ----
@@ -370,15 +387,15 @@
   // ---- 더보기 ----
   function moreHtml() {
     const s = curShop();
-    return `<div class="list">
+    return `<div class="cols"><div class="col"><div class="list">
         <div class="mrow"><b>${t("mAccount")}</b><span>${esc(me.name || "")} · ${esc(me.phone || "")} · ${t(s && s.role === "staff" ? "roleStaff" : "roleOwner")}</span></div>
         ${me.shops.length > 1 ? me.shops.map(x => `<button class="mrow" data-shop="${esc(x.id)}"><b>${t("mShop")}: ${esc(shopName(x))}</b><span>${x.id === shopId ? "✓" : ""}</span></button>`).join("") : `<div class="mrow"><b>${t("mShop")}</b><span>${esc(shopName(s))}</span></div>`}
         <button class="mrow" data-act="inst"><b>${t("mInstall")}</b><span>›</span></button>
         <button class="mrow" data-act="pw"><b>${t("mPw")}</b><span>›</span></button>
         <button class="mrow" data-act="logout"><b>${t("mLogout")}</b><span>›</span></button>
       </div>
-      <div class="info">${t("contactUD")}</div>
-      <p class="muted" style="margin:0 2px">${t("soon")}</p>`;
+      </div><div class="col"><div class="info">${t("contactUD")}</div>
+      <div class="card"><b style="display:block;margin-bottom:6px">${t("soonT")}</b><p class="muted" style="margin:0">${t("soon")}</p></div></div></div>`;
   }
 
   // ---- 버튼 연결 ----
@@ -399,6 +416,7 @@
     if (a === "inst") { toast(/iPhone|iPad/.test(navigator.userAgent) ? t("installIos") : t("installAndroid")); return; }
     if (a === "instx") { store("ud-owner-inst", "x"); draw(); return; }
     if (a === "refresh") { await load(); return; }
+    if (a === "toboard") { tab = "board"; draw(); window.scrollTo(0, 0); return; }
     if (a === "rota") { tab = "board"; boardView = "sched"; draw(); window.scrollTo(0, 0); return; }
     if (a === "pw") { drawNewPw(); return; }
     if (a === "logout") { await sb.auth.signOut(); me = null; rows = []; sched = null; knownReq = null; drawLogin(); return; }
@@ -524,6 +542,7 @@
       knownReq = req; rows = r;
     } catch (e) { if (!quiet) toast(errMsg(e)); }
     if (tab === "schedule" && !sched) await loadSched();
+    if (window.OwnerBoard && tab === "home") { try { boardSum = await rpc("board_get", { shop: shopId }); } catch (e) { boardSum = null; } }
     // 입력 중이면 화면을 다시 그리지 않아요
     const ae = document.activeElement; if (quiet && ae && /INPUT|TEXTAREA|SELECT/.test(ae.tagName)) return;
     if (quiet && detail) return;
