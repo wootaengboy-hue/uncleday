@@ -2,6 +2,7 @@
 drawCommon();
 const box = $("vbox");
 const token = () => decodeURIComponent(location.hash.slice(1));
+const tpParam = (() => { try { return new URLSearchParams(location.search).get("tp") || ""; } catch (e) { return ""; } })();
 function toastV(t) { const d = document.createElement("div"); d.className = "toast-site"; d.textContent = t; document.body.appendChild(d); setTimeout(() => d.remove(), 2500); }
 const fmtDate = (d, t) => {
   if (!d) return "-";
@@ -15,7 +16,7 @@ function findForm(msg) {
   let mine = []; try { mine = JSON.parse(localStorage.getItem("uncleday-my-bookings") || "[]"); } catch (e) {}
   box.innerHTML = `<div class="done voucher">
     <h1>${ui("vFind")}</h1>${msg ? `<p class="pending-box">${msg}</p>` : ""}
-    <p>${ui("vFindDesc")}</p>
+    ${tpParam ? `<p class="pending-box">💌 ${ui("tpQrFind")}</p>` : ""}<p>${ui("vFindDesc")}</p>
     <form id="findF" class="form" style="padding:0;box-shadow:none">
       <label>${ui("vFindCode")}<input name="c" required autocomplete="off"></label>
       <label>${ui("vFindContact")}<input name="ct" required></label>
@@ -128,7 +129,7 @@ function draw(b) {
   };
   if ($("vRv")) $("vRv").onclick = () => openRv(0);
   function tpForm(list) {
-    return `<div class="tp-pick"><span>${ui("tpRvWho")}</span><div class="tp-chips">${list.map(x => `<button type="button" class="tp-chip" data-tpid="${esc(x.id)}" aria-pressed="false">${esc(x.name)}</button>`).join("")}</div>
+    return `<div class="tp-pick"><span>${ui("tpRvWho")}</span><div class="tp-chips">${list.map(x => `<button type="button" class="tp-chip ${x.id === tpParam ? "on" : ""}" data-tpid="${esc(x.id)}" aria-pressed="${x.id === tpParam}">${esc(x.name)}</button>`).join("")}</div>
       <div class="tp-stars" ${b.reviewed ? "" : "hidden"}>${[1, 2, 3, 4, 5].map(n => `<button type="button" data-ts="${n}">★</button>`).join("")}</div>
       <label>${ui("tpRvNote")}<input name="tpnote" maxlength="200" placeholder="${esc(ui("tpRvPh"))}"></label></div>`;
   }

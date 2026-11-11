@@ -210,3 +210,7 @@
 .ob-rv { border-top: 1px solid var(--line2); padding: 8px 0; display: grid; gap: 3px; }
 .ob-rv b { font-size: 14px; } .ob-rv .st { color: #E0A11B; letter-spacing: 1px; font-size: 13px; }
 .ob-rv p { margin: 0; font-size: 13.5px; } .ob-rv small { color: var(--sub); font-size: 11.5px; }
+.ob-app { flex-wrap: wrap; }
+.ob-pinbox { background: #FFF8E6; border: 2px solid #F5B84C; border-radius: 12px; padding: 10px 12px; display: grid; gap: 4px; }
+.ob-pinbox b { font-size: 14px; } .ob-pinbox .pin { font-size: 22px; letter-spacing: 4px; font-variant-numeric: tabular-nums; color: #0E2843; }
+.ob-pinbox small { color: #6B5A2A; font-size: 12px; }

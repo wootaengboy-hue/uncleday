@@ -195,12 +195,12 @@ Object.assign(UI.vi, { ctaBook: "Chọn ngày & đặt lịch", ctaAsk: "Hỏi",
 Object.assign(UI.ko, { vTp: "담당 테라피스트", vTpNow: "지금 시술 중", tpRvTitle: "담당 테라피스트에게 한마디 (선택)", tpRvWho: "누가 해 주셨나요? (여러 명 고를 수 있어요)",
   tpRvNote: "칭찬 한마디", tpRvPh: "예: 압이 딱 좋았어요", tpRvSend: "테라피스트 후기 보내기", tpRvDone: "테라피스트에게 후기가 전달됐어요. 고마워요!",
   tpRvBoxTitle: "담당 테라피스트도 칭찬해 주세요", tpRvBoxDesc: "고른 테라피스트에게 후기가 전달돼요. 확인된 후기 한 건마다 엉클데이가 테라피스트에게 작은 보너스를 드려요.",
-  tpRvNeed: "테라피스트를 골라 주세요.", tpRvSent: "후기를 남긴 테라피스트" });
+  tpRvNeed: "테라피스트를 골라 주세요.", tpQrFind: "테라피스트 후기를 쓰려면 먼저 내 예약을 찾아 주세요. 예약을 열면 테라피스트를 고를 수 있어요.", tpRvSent: "후기를 남긴 테라피스트" });
 Object.assign(UI.en, { vTp: "Your therapist", vTpNow: "in session now", tpRvTitle: "A word for your therapist (optional)", tpRvWho: "Who took care of you? (you can pick more than one)",
   tpRvNote: "A kind word", tpRvPh: "e.g. The pressure was just right", tpRvSend: "Send to therapist", tpRvDone: "Your review reached the therapist. Thank you!",
   tpRvBoxTitle: "Say thanks to your therapist", tpRvBoxDesc: "Your review goes to the therapist you pick. For each verified review, Uncle Day gives the therapist a small bonus.",
-  tpRvNeed: "Please pick a therapist.", tpRvSent: "Therapists you reviewed" });
+  tpRvNeed: "Please pick a therapist.", tpQrFind: "To review your therapist, first find your booking. You can pick the therapist there.", tpRvSent: "Therapists you reviewed" });
 Object.assign(UI.vi, { vTp: "Kỹ thuật viên phụ trách", vTpNow: "đang làm", tpRvTitle: "Gửi lời cho kỹ thuật viên (không bắt buộc)", tpRvWho: "Ai đã phục vụ bạn? (có thể chọn nhiều người)",
   tpRvNote: "Một lời khen", tpRvPh: "VD: Lực tay rất vừa", tpRvSend: "Gửi cho kỹ thuật viên", tpRvDone: "Đánh giá đã đến kỹ thuật viên. Cảm ơn bạn!",
   tpRvBoxTitle: "Hãy khen kỹ thuật viên của bạn", tpRvBoxDesc: "Đánh giá sẽ đến kỹ thuật viên bạn chọn. Mỗi đánh giá được xác nhận, Uncle Day tặng kỹ thuật viên một khoản thưởng nhỏ.",
-  tpRvNeed: "Hãy chọn kỹ thuật viên.", tpRvSent: "Kỹ thuật viên đã được bạn đánh giá" });
+  tpRvNeed: "Hãy chọn kỹ thuật viên.", tpQrFind: "Để đánh giá kỹ thuật viên, hãy tìm lịch hẹn của bạn trước. Mở lịch hẹn là chọn được kỹ thuật viên.", tpRvSent: "Kỹ thuật viên đã được bạn đánh giá" });

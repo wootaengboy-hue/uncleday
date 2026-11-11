@@ -15,6 +15,11 @@
     hLateN: ["Trễ {n} lần · {m}′", "지각 {n}번 · {m}분", "Late {n}× · {m}′"], hLate: ["Trễ {m}′", "지각 {m}분", "Late {m}′"], hCsv: ["⬇ Tải Excel (CSV)", "⬇ 엑셀로 받기", "⬇ Excel (CSV)"], hOwner: ["Chỉ chủ cửa hàng mới xem được lịch sử.", "기록은 사장님 계정만 볼 수 있어요.", "Only the owner can see history."],
     hNoStaff: ["Chưa ghi KTV", "담당 미기록", "No therapist"], hSetTp: ["Thêm KTV", "담당 넣기", "Add therapist"], hEditTp: ["Đổi", "바꾸기", "Edit"], hSaveTp: ["Lưu", "저장", "Save"], hTpSaved: ["Đã lưu KTV phụ trách.", "담당을 저장했어요.", "Therapist saved."], hByReview: ["khách xác nhận qua đánh giá", "손님 후기로 확인", "confirmed by guest review"], hRv: ["Đánh giá KTV", "💌 테라피스트 후기", "💌 Therapist reviews"], hRvNone: ["Chưa có đánh giá.", "아직 받은 후기가 없어요.", "No reviews yet."], hRvHint: ["Khách đặt qua Uncle Day có thể viết đánh giá cho KTV sau khi đến. Mỗi đánh giá được xác nhận, Uncle Day thưởng cho KTV.", "엉클데이 예약 손님은 방문 뒤 담당 테라피스트에게 후기를 쓸 수 있어요. 확인된 후기 한 건마다 엉클데이가 테라피스트에게 보너스를 줘요.", "Uncle Day guests can review their therapist after the visit. Uncle Day pays the therapist a bonus per verified review."],
     hByShop: ["nhập tay", "직접 입력", "entered by shop"],
+    sPhoneSet: ["Đã có số ✓ (nhập để đổi)", "전화번호 등록됨 ✓ (바꾸려면 입력)", "Phone saved ✓ (type to change)"],
+    appT: ["📱 Màn hình nhân viên", "📱 직원 화면", "📱 Staff app"], appOn: ["Đang dùng", "사용 중", "On"], appOffS: ["Chưa dùng", "안 씀", "Off"], pinMake: ["Tạo PIN", "PIN 만들기", "Make PIN"], pinRe: ["Tạo lại PIN", "PIN 다시 만들기", "New PIN"], pinOff: ["Tắt", "끄기", "Turn off"],
+    pinNeedPhone: ["Hãy nhập số điện thoại và lưu trước.", "먼저 전화번호를 넣고 저장해 주세요.", "Add a phone number and save first."],
+    pinShow: ["Mã PIN của {n}: {p}", "{n}님 PIN: {p}", "{n}'s PIN: {p}"], pinHow: ["Nhân viên vào www.uncleday.com/staff, đăng nhập bằng số điện thoại + PIN này. PIN chỉ hiện một lần. Nếu quên, hãy tạo lại.", "직원에게 www.uncleday.com/staff 에서 전화번호 + 이 PIN으로 로그인하라고 알려 주세요. PIN은 지금 한 번만 보여요. 잊어버리면 다시 만들면 돼요.", "Tell the staff to log in at www.uncleday.com/staff with their phone + this PIN. Shown only once; make a new one if forgotten."],
+    viaPhone: ["chấm công bằng điện thoại", "휴대폰 출근", "clocked in by phone"],
     hFee: ["Phí UD {v}", "수수료 {v}", "Fee {v}"], hNoFee: ["Không phí", "수수료 없음", "No fee"], hWorked: ["Làm {h}", "근무 {h}", "Worked {h}"], hGone: ["đã nghỉ", "퇴사", "left"],
     lgIdle: ["Đang chờ / trực quầy", "대기 중 · 카운터 근무", "Free / at desk"], lgWork: ["Đang làm", "시술 중", "In session"], lgMove: ["Đang đi", "이동 중", "Moving"], lgOff: ["Chưa vào / đã về", "출근 전 · 퇴근", "Not in / gone"], lgDay: ["Nghỉ", "휴무", "Day off"],
     stBefore: ["Chưa mở · mở lúc {n}", "영업 전 · {n} 오픈", "Not open · opens {n}"], stOpen: ["Đang mở cửa", "영업 중", "Open"], stSince: ["mở từ {n}", "{n}부터", "since {n}"],
@@ -152,7 +157,7 @@
   /* ---------- 상태 ---------- */
   let C = null, root = null, data = null, view = "board", skew = 0, pollT = 0, tickT = 0, raf = 0, last = 0, anim = 0;
   let geoSig = "", G = null, plan = null, W = new Map(), GW = new Map(), prevSess = new Map(), prevGuest = new Map(), pendOcc = new Set();
-  let hist = null, hpick = null, hp = { mode: "day", d: null }, open = { assign: null, finish: null, tps: [] }, setOpen = false, setTab = "floors", draft = null, staffDraft = null, rmAsk = null, sched = null, weekFrom = null, busy = false;
+  let pinShow = null, hist = null, hpick = null, hp = { mode: "day", d: null }, open = { assign: null, finish: null, tps: [] }, setOpen = false, setTab = "floors", draft = null, staffDraft = null, rmAsk = null, sched = null, weekFrom = null, busy = false;
   const nowMs = () => Date.now() + skew;
   const owner = () => C && C.isOwner;
 
@@ -526,7 +531,7 @@
     }).join("") : `<p class="ob-empty">${t("noWork")}</p>`);
     root.querySelector("#obAtt").innerHTML = `<h3><span>${t("attT")}</span><small>${data.staff.filter(s => s.in_at).length}/${data.staff.length}</small></h3>${legend()}` + data.staff.map((s, i) => {
       const st = stOf(s);
-      const info = [s.code === "C" && s.hours ? hrsTxt(s.hours) : t("sh_" + s.code)].concat(s.in_at ? [`${tm(s.in_at)} ${s.late_min > 0 ? `<span class="ob-late">${t("late", { n: s.late_min })}</span>` : t("onTime")}`] : []).concat(s.out_at ? ["→ " + tm(s.out_at)] : []).join(" · ");
+      const info = [s.code === "C" && s.hours ? hrsTxt(s.hours) : t("sh_" + s.code)].concat(s.in_at ? [`${s.in_via === "phone" ? `<span title="${esc(t("viaPhone"))}">📱</span>` : ""}${tm(s.in_at)} ${s.late_min > 0 ? `<span class="ob-late">${t("late", { n: s.late_min })}</span>` : t("onTime")}`] : []).concat(s.out_at ? ["→ " + tm(s.out_at)] : []).join(" · ");
       const btn = st === "off" || st === "dayoff" || st === "gone" ? `<button class="ob-btn" data-a="in" data-id="${s.id}">${t("cIn")}</button>` : st !== "work" ? `<button class="ob-btn l" data-a="out" data-id="${s.id}">${t("cOut")}</button>` : "";
       const off = owner() && !s.in_at ? `<button class="ob-btn l" data-a="${s.code === "O" ? "on" : "off"}" data-id="${s.id}">${t(s.code === "O" ? "dayOn" : "dayOff")}</button>` : "";
       return `<div class="ob-row"><span class="ob-av" style="${avStyle(s, i)}"></span><div class="g"><b>${esc(s.name)} <span class="ob-pill ${PILL[st]}">${DOT[st]} ${t("s_" + st)}</span></b><small>${t(s.role === "rcp" ? "roleRcp" : "roleTp")}${s.reviews ? ` · ⭐${s.stars} (${s.reviews})` : ""}${s.role === "tp" ? ` · ${s.done_today} · ${vnd(s.rev_today)}` : ""}</small><small>${info}</small></div>${off}${btn}</div>`;
@@ -652,7 +657,7 @@
     const L = data.layout;
     draft = { kind: L.kind, floors: JSON.parse(JSON.stringify(L.floors || [])), courses: JSON.parse(JSON.stringify(L.courses || [])), shifts: JSON.parse(JSON.stringify(L.shifts || {})), min_am: L.min_am, min_pm: L.min_pm };
     if (!draft.floors.length) draft.floors.push({ rooms: [{ n: "201", type: "bed", count: 1, eq: [] }] });
-    staffDraft = data.staff.map(s => ({ id: s.id, name: s.name, role: s.role, years: s.years, phone: "", def_code: s.def_code, def_start: s.def_start != null ? s.def_start : 840, def_end: s.def_end != null ? s.def_end : 1080, off_day: s.off_day, look: Object.assign(defLook(0), s.look || {}), dirty: false }));
+    pinShow = null; staffDraft = data.staff.map(s => ({ id: s.id, app: !!s.app, has_phone: !!s.has_phone, name: s.name, role: s.role, years: s.years, phone: "", def_code: s.def_code, def_start: s.def_start != null ? s.def_start : 840, def_end: s.def_end != null ? s.def_end : 1080, off_day: s.off_day, look: Object.assign(defLook(0), s.look || {}), dirty: false }));
     setOpen = true; renderSet();
   }
   const opt = (list, v) => list.map(o => `<option value="${esc(o[0])}" ${String(o[0]) === String(v) ? "selected" : ""}>${esc(o[1])}</option>`).join("");
@@ -689,12 +694,14 @@
         const l = s.look;
         b += `<div class="ob-sc"><span class="ob-prev" style="background-image:url(${sheet(lookOf(l, i))})"></span><div style="display:flex;flex-direction:column;gap:6px;min-width:0">
           <div class="ob-srw"><input class="ob-in" data-sf="sn" data-i="${i}" value="${esc(s.name)}" placeholder="${t("sName")}" maxlength="20"><select class="ob-in" data-sf="sr" data-i="${i}">${opt([["tp", t("roleTp")], ["rcp", t("roleRcp")]], s.role)}</select></div>
-          <div class="ob-srw"><input class="ob-in" data-sf="sp" data-i="${i}" value="${esc(s.phone)}" placeholder="${t("sPhone")}" inputmode="tel"><input class="ob-in" data-sf="sy" data-i="${i}" value="${s.years || 0}" inputmode="numeric" style="flex:0 0 70px" aria-label="${t("sYears")}"></div>
+          <div class="ob-srw"><input class="ob-in" data-sf="sp" data-i="${i}" value="${esc(s.phone)}" placeholder="${s.has_phone ? t("sPhoneSet") : t("sPhone")}" inputmode="tel"><input class="ob-in" data-sf="sy" data-i="${i}" value="${s.years || 0}" inputmode="numeric" style="flex:0 0 70px" aria-label="${t("sYears")}"></div>
           <div class="ob-srw"><span class="k">${t("sDef")}</span><select class="ob-in" data-sf="sd" data-i="${i}">${opt(["A", "B", "F", "C"].map(c => [c, t("sh_" + c) + (draft.shifts[c] ? " " + hrsTxt(draft.shifts[c]) : "")]), s.def_code)}</select><span class="k">${t("sOff")}</span><select class="ob-in" data-sf="so" data-i="${i}">${opt([[-1, t("none")]].concat([1, 2, 3, 4, 5, 6, 0].map(k => [k, T.wd[li()][k]])), s.off_day)}</select></div>
           ${s.def_code === "C" ? `<div class="ob-srw"><span class="k">${t("sh_C")}</span><select class="ob-in" data-sf="sds" data-i="${i}">${opt(TIMESC.map(m => [m, fmtX(m)]), s.def_start)}</select>–<select class="ob-in" data-sf="sde" data-i="${i}">${opt(TIMESC.map(m => [m, fmtX(m)]), s.def_end)}</select><span class="ob-pd ${s.def_end > s.def_start ? "" : "bad"}">${s.def_end > s.def_start ? t("hrsN", { n: durH([s.def_start, s.def_end]) }) : "⚠️"}</span></div>` : ""}
           <div class="ob-srw"><span class="k">${t("hair")}</span><select class="ob-in" data-sf="lh" data-i="${i}">${opt(["short", "long", "bun", "pony"].map(k => [k, t("hs_" + k)]), l.hair)}</select>${sws("lhc", i, HAIRC, l.hc)}</div>
           <div class="ob-srw"><span class="k">${t("top")}</span><select class="ob-in" data-sf="lt" data-i="${i}">${opt(["uniform", "tee", "aodai"].map(k => [k, t("tp_" + k)]), l.top)}</select>${sws("ltc", i, TOPC, l.tc)}</div>
           <div class="ob-srw"><span class="k">${t("bottom")}</span><select class="ob-in" data-sf="lb" data-i="${i}">${opt(["pants", "skirt"].map(k => [k, t("bt_" + k)]), l.bottom)}</select>${sws("lbc", i, BOTC, l.bc)}</div>
+          ${s.id ? `<div class="ob-srw ob-app"><span class="k">${t("appT")}</span><span class="ob-pill ${s.app ? "ob-p-idle" : "ob-p-off"}">${t(s.app ? "appOn" : "appOffS")}</span><button class="ob-btn l" data-sa="pin" data-i="${i}">${t(s.app ? "pinRe" : "pinMake")}</button>${s.app ? `<button class="ob-btn l" data-sa="pinoff" data-i="${i}">${t("pinOff")}</button>` : ""}</div>
+          ${pinShow && pinShow.id === s.id ? `<div class="ob-pinbox"><b>${t("pinShow", { n: esc(s.name), p: `<span class="pin">${esc(pinShow.pin)}</span>` })}</b><small>${t("pinHow")}</small></div>` : ""}` : ""}
           <div class="ob-f2">${s.id ? `<button class="ob-btn r" data-sa="rmS" data-i="${i}">${rmAsk === s.id ? t("removeAsk") : t("removeStaff")}</button>` : "<span></span>"}<button class="ob-btn" data-sa="saveS" data-i="${i}" ${s.dirty || !s.id ? "" : "disabled"}>${t("saveStaff")}</button></div>
         </div></div>`;
       });
@@ -725,10 +732,21 @@
       const s = staffDraft[i]; if (rmAsk !== s.id) { rmAsk = s.id; renderSet(); return; }
       rmAsk = null; const r = await call("staff_remove", { sid: s.id }); if (r) { staffDraft.splice(i, 1); C.toast(t("saved")); }
     }
+    else if (a === "pin" || a === "pinoff") {
+      const s = staffDraft[i]; if (!s.id) return;
+      if (a === "pin" && !s.has_phone && !String(s.phone || "").replace(/\D/g, "")) { C.toast(t("pinNeedPhone")); return; }
+      if (a === "pin" && String(s.phone || "").replace(/\D/g, "") && s.dirty) { C.toast(t("pinNeedPhone")); return; }
+      if (busy) return; busy = true;
+      try {
+        if (a === "pin") { const pin = await C.rpc("staff_pin_reset", { shop: C.shopId, sid: s.id }); pinShow = { id: s.id, pin }; s.app = true; }
+        else { await C.rpc("staff_pin_off", { shop: C.shopId, sid: s.id }); s.app = false; if (pinShow && pinShow.id === s.id) pinShow = null; }
+      } catch (e) { C.toast(/phone/i.test(e && e.message) ? t("pinNeedPhone") : errTx(e)); }
+      busy = false;
+    }
     else if (a === "saveS") {
       const s = staffDraft[i]; if (!s.name.trim()) return; if (s.def_code === "C" && !(s.def_end > s.def_start)) { C.toast(t("badHrs")); return; }
       const r = await call("staff_upsert", { s: { id: s.id, name: s.name, role: s.role, years: +s.years || 0, phone: s.phone, def_code: s.def_code, def_start: s.def_code === "C" ? +s.def_start : null, def_end: s.def_code === "C" ? +s.def_end : null, off_day: +s.off_day, look: s.look } });
-      if (r) { const fresh = r.staff.find(x => x.name === s.name.trim() && (s.id ? x.id === s.id : true)); if (fresh) s.id = fresh.id; s.dirty = false; C.toast(t("saved")); }
+      if (r) { const fresh = r.staff.find(x => x.name === s.name.trim() && (s.id ? x.id === s.id : true)); if (fresh) { s.id = fresh.id; s.has_phone = !!fresh.has_phone; s.app = !!fresh.app; } s.dirty = false; C.toast(t("saved")); }
     }
     else if (a === "saveL") {
       draft.courses.forEach(c => { if (!c.ko && !c.vi) c.ko = c.vi = "?"; });
@@ -835,6 +853,7 @@
   function onResize() { clearTimeout(rz); rz = setTimeout(() => { if (!data || view !== "board") return; const sig = JSON.stringify(data.layout.floors) + data.layout.kind + lang + (window.innerWidth >= 1200); if (sig !== geoSig) render(); else fit(); }, 150); }
 
   window.OwnerBoard = {
+    avatar(look, i) { return sheet(lookOf(look || {}, i || 0)); },
     mount(el, ctx) {
       this.unmount();
       C = ctx; root = el; lang = LANGS.includes(ctx.lang) ? ctx.lang : "vi"; if (ctx.view) { view = ctx.view; sched = null; } plan = null; geoSig = ""; W.clear(); GW.clear(); prevSess = new Map();
