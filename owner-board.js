@@ -30,11 +30,12 @@
     roleTp: ["KTV", "테라피스트", "Therapist"], roleRcp: ["Lễ tân", "리셉션", "Reception"],
     lounge: ["Phòng chờ NV", "직원 대기실", "Staff lounge"], counter: ["Quầy lễ tân", "카운터", "Reception"], entrance: ["LỐI VÀO", "입구", "ENTRANCE"], stairs: ["CẦU THANG", "계 단", "STAIRS"],
     room: ["P.{n}", "{n}호", "Rm {n}"], free: ["Trống", "비어 있음", "Free"], busyN: ["Đang làm {n}", "시술 중 {n}", "Busy {n}"], fchip: ["Tầng {f} · {a}/{b}", "{f}F · 시술 {a}/{b}", "{f}F · {a}/{b}"],
-    sh_A: ["Sáng", "오전", "AM"], sh_B: ["Chiều", "오후", "PM"], sh_F: ["Cả ngày", "종일", "Full"], sh_O: ["Nghỉ", "휴무", "Off"],
+    sh_A: ["Sáng", "오전", "AM"], sh_B: ["Chiều", "오후", "PM"], sh_F: ["Cả ngày", "종일", "Full"], sh_O: ["Nghỉ", "휴무", "Off"], sh_C: ["Giờ riêng", "시간 지정", "Custom"], sh_null: ["Mặc định", "평소대로", "Default"],
+    hrsN: ["{n} giờ", "{n}시간", "{n} h"], wkTot: ["Tuần {n}h", "주 {n}시간", "{n}h / wk"], pickT: ["{a} · {b}", "{a} · {b}", "{a} · {b}"], pickC: ["Tự đặt giờ", "시간 직접 정하기", "Set hours"], pickSave: ["Lưu giờ", "이 시간으로", "Save"], nextDay: ["(hôm sau)", "(다음날)", "(+1)"], badHrs: ["Giờ kết thúc phải sau giờ bắt đầu.", "끝나는 시간이 시작 시간보다 늦어야 해요.", "End must be after start."],
     bedW: ["Giường", "베드", "Bed"], chairW: ["Ghế", "체어", "Chair"], anyW: ["Giường·Ghế", "베드·체어", "Bed·Chair"],
     eq_rf: ["Máy RF", "고주파", "RF"], eq_led: ["Đèn LED", "LED", "LED"], eq_hydra: ["Hydra", "아쿠아필", "Hydra"], eq_steam: ["Xông hơi", "스티머", "Steamer"],
     wk: ["Tuần {n}", "{n} 주", "Week of {n}"], minL: ["Tối thiểu sáng {a} · chiều {b}", "최소 인원 오전 {a} · 오후 {b}", "Minimum AM {a} · PM {b}"], cov: ["S {a} · C {b}", "오전 {a} · 오후 {b}", "AM {a} · PM {b}"],
-    cellHint: ["Bấm ô để đổi: Sáng → Chiều → Cả ngày → Nghỉ → mặc định", "칸을 누르면 오전 → 오후 → 종일 → 휴무 → 평소대로", "Tap to cycle: AM → PM → Full → Off → default"],
+    cellHint: ["Bấm ô để chọn ca hoặc tự đặt giờ (vd: làm 4 tiếng)", "칸을 누르면 오전 · 오후 · 종일 · 휴무를 고르거나 시간을 직접 정할 수 있어요 (4시간 근무 등)", "Tap a cell to pick a shift or set custom hours (e.g. 4 hours)"],
     reqT: ["Yêu cầu của nhân viên", "직원 요청", "Staff requests"], noReq: ["Chưa có yêu cầu.", "요청이 없어요.", "No requests."], ok: ["Duyệt", "승인", "Approve"], no: ["Từ chối", "거절", "Decline"],
     r_off: ["Xin nghỉ", "휴무 신청", "Day off"], r_shift: ["Đổi ca → {n}", "근무 변경 → {n}", "Change → {n}"], r_swap: ["Đổi ca với {n}", "{n}와 교대", "Swap with {n}"], must: ["Bắt buộc", "꼭 휴무", "Must"],
     st_peer: ["Chờ đồng nghiệp", "동료 확인 중", "Waiting for colleague"], st_pending: ["Chờ duyệt", "확인 필요", "Pending"], st_ok: ["Đã duyệt", "승인됨", "Approved"], st_no: ["Từ chối", "거절됨", "Declined"], st_cancelled: ["Đã hủy", "취소됨", "Cancelled"],
@@ -64,6 +65,10 @@
   const vnd = n => String(Math.round(+n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ".") + "₫";
   const fmt = m => String(Math.floor(m / 60) % 24).padStart(2, "0") + ":" + String(Math.round(m) % 60).padStart(2, "0");
   const cName = c => (c && (lang === "ko" ? (c.ko || c.vi) : (c.vi || c.ko))) || "";
+  const fmtX = m => fmt(m) + (m >= 1440 ? " " + t("nextDay") : "");
+  const hrsTxt = h => h ? fmt(h[0]) + "–" + fmt(h[1]) : "";
+  const durH = h => h ? Math.round((h[1] - h[0]) / 6) / 10 : 0;
+  const TIMESC = Array.from({ length: 43 }, (_, i) => 360 + i * 30);
   const tm = iso => { if (!iso) return ""; const d = new Date(Date.parse(iso) + 7 * 3600e3); return String(d.getUTCHours()).padStart(2, "0") + ":" + String(d.getUTCMinutes()).padStart(2, "0"); };
 
   /* ---------- 도트 캐릭터 ---------- */
@@ -471,7 +476,7 @@
     }).join("") : `<p class="ob-empty">${t("noWork")}</p>`);
     root.querySelector("#obAtt").innerHTML = `<h3><span>${t("attT")}</span><small>${data.staff.filter(s => s.in_at).length}/${data.staff.length}</small></h3>${legend()}` + data.staff.map((s, i) => {
       const st = stOf(s);
-      const info = [t("sh_" + s.code)].concat(s.in_at ? [`${tm(s.in_at)} ${s.late_min > 0 ? `<span class="ob-late">${t("late", { n: s.late_min })}</span>` : t("onTime")}`] : []).concat(s.out_at ? ["→ " + tm(s.out_at)] : []).join(" · ");
+      const info = [s.code === "C" && s.hours ? hrsTxt(s.hours) : t("sh_" + s.code)].concat(s.in_at ? [`${tm(s.in_at)} ${s.late_min > 0 ? `<span class="ob-late">${t("late", { n: s.late_min })}</span>` : t("onTime")}`] : []).concat(s.out_at ? ["→ " + tm(s.out_at)] : []).join(" · ");
       const btn = st === "off" || st === "dayoff" || st === "gone" ? `<button class="ob-btn" data-a="in" data-id="${s.id}">${t("cIn")}</button>` : st !== "work" ? `<button class="ob-btn l" data-a="out" data-id="${s.id}">${t("cOut")}</button>` : "";
       const off = owner() && !s.in_at ? `<button class="ob-btn l" data-a="${s.code === "O" ? "on" : "off"}" data-id="${s.id}">${t(s.code === "O" ? "dayOn" : "dayOff")}</button>` : "";
       return `<div class="ob-row"><span class="ob-av" style="${avStyle(s, i)}"></span><div class="g"><b>${esc(s.name)} <span class="ob-pill ${PILL[st]}">${DOT[st]} ${t("s_" + st)}</span></b><small>${t(s.role === "rcp" ? "roleRcp" : "roleTp")}${s.reviews ? ` · ⭐${s.stars} (${s.reviews})` : ""}${s.role === "tp" ? ` · ${s.done_today} · ${vnd(s.rev_today)}` : ""}</small><small>${info}</small></div>${off}${btn}</div>`;
@@ -494,19 +499,39 @@
     if (!sched) { el.innerHTML = `<p class="ob-empty">…</p>`; return; }
     const days = Array.from({ length: 7 }, (_, i) => addD(weekFrom, i)), td = data.today, L = sched.layout || {};
     const lab = ds => { const d = new Date(ds + "T00:00:00Z"); return `${T.wd[li()][d.getUTCDay()]} ${d.getUTCDate()}/${d.getUTCMonth() + 1}`; };
-    const shT = c => { const s = (L.shifts || {})[c]; return s ? fmt(s[0]) + "–" + fmt(s[1]) : "🌙"; };
-    const cov = i => { let a = 0, p = 0; sched.staff.forEach(s => { if (s.role !== "tp") return; const c = s.codes[i]; if (c === "A" || c === "F") a++; if (c === "B" || c === "F") p++; }); return { a, p }; };
+    const SH = L.shifts || {}, mid = ((SH.B || [780])[0] + (SH.A || [0, 1140])[1]) / 2;
+    const hOf = (s, i) => (s.hours || [])[i] || (s.codes[i] === "O" ? null : SH[s.codes[i]]);
+    const cov = i => { let a = 0, p = 0; sched.staff.forEach(s => { if (s.role !== "tp") return; const c = s.codes[i], h = hOf(s, i);
+      if (c === "C" && h) { if (h[0] < mid) a++; if (h[1] > mid) p++; return; } if (c === "A" || c === "F") a++; if (c === "B" || c === "F") p++; }); return { a, p }; };
     let h = `<div class="ob-card"><div class="ob-top"><button class="ob-vt" data-a="wk-">‹</button><b>${t("wk", { n: lab(weekFrom) })}</b><button class="ob-vt" data-a="wk+">›</button><span class="ob-sp"></span><small class="ob-note">${t("minL", { a: L.min_am, b: L.min_pm })}</small></div>${owner() ? `<p class="ob-note">${t("cellHint")}</p>` : ""}</div>`;
     h += `<div class="ob-tw"><table class="ob-sg"><thead><tr><th></th>${days.map(ds => `<th class="${ds === td ? "td" : ""}">${lab(ds)}</th>`).join("")}</tr></thead><tbody>`;
     sched.staff.forEach((s, si) => {
-      h += `<tr><th><span style="display:flex;gap:6px;align-items:center"><span class="ob-av" style="${avStyle(s, si)};width:26px;height:35px;background-size:78px 104.2px"></span>${esc(s.name)}</span></th>`;
-      s.codes.forEach((c, i) => { h += `<td><button class="ob-cell ob-k-${c}" data-a="cell" data-id="${s.id}" data-d="${days[i]}" data-c="${c}" ${owner() ? "" : "disabled"}>${t("sh_" + c)}<small>${shT(c)}</small></button></td>`; });
+      const tot = s.codes.reduce((a, c, i) => a + durH(hOf(s, i)), 0);
+      h += `<tr><th><span style="display:flex;gap:6px;align-items:center"><span class="ob-av" style="${avStyle(s, si)};width:26px;height:35px;background-size:78px 104.2px"></span><span>${esc(s.name)}<small class="ob-wh">${t("wkTot", { n: Math.round(tot * 10) / 10 })}</small></span></span></th>`;
+      s.codes.forEach((c, i) => { const hh = hOf(s, i); h += `<td><button class="ob-cell ob-k-${c}" data-a="cell" data-id="${s.id}" data-i="${i}" data-d="${days[i]}" data-c="${c}" ${owner() ? "" : "disabled"}>${c === "C" ? t("hrsN", { n: durH(hh) }) : t("sh_" + c)}<small>${hh ? hrsTxt(hh) : "🌙"}</small></button></td>`; });
       h += "</tr>";
     });
     h += `<tr><th class="ob-cov"></th>${days.map((_, i) => { const c = cov(i), bad = c.a < L.min_am || c.p < L.min_pm; return `<td class="ob-cov ${bad ? "bad" : ""}">${bad ? "⚠️ " : ""}${t("cov", { a: c.a, b: c.p })}</td>`; }).join("")}</tr></tbody></table></div>`;
     const reqs = sched.requests || [];
     h += `<div class="ob-card"><h3><span>${t("reqT")}</span><small>${reqs.filter(q => q.status === "pending").length}</small></h3>` + (reqs.length ? reqs.map(q => `<div class="ob-row"><div class="g"><b>${esc(q.name)} · ${lab(q.day)} · ${q.type === "off" ? t("r_off") : q.type === "shift" ? t("r_shift", { n: t("sh_" + q.want) }) : t("r_swap", { n: esc(q.mate || "") })}${q.must ? ` <span class="ob-pill ob-p-work">${t("must")}</span>` : ""}</b><small>${q.reason ? "“" + esc(q.reason) + "” · " : ""}${t("st_" + q.status)}</small></div>${q.status === "pending" && owner() ? `<button class="ob-btn l" data-a="rno" data-id="${q.id}">${t("no")}</button><button class="ob-btn" data-a="rok" data-id="${q.id}">${t("ok")}</button>` : ""}</div>`).join("") : `<p class="ob-empty">${t("noReq")}</p><p class="ob-note">${t("staffOnlyReq")}</p>`) + "</div>";
-    el.innerHTML = h;
+    el.innerHTML = h + `<div id="obPop"></div>`;
+    pick = null;
+  }
+  // 근무표 칸 고르기
+  let pick = null;
+  function renderPick() {
+    const el = root.querySelector("#obPop"); if (!el) return;
+    if (!pick) { el.innerHTML = ""; return; }
+    const s = sched.staff.find(x => x.id === pick.id), L = sched.layout || {}, SH = L.shifts || {}, d = new Date(pick.d + "T00:00:00Z");
+    const ok = pick.e > pick.s;
+    el.innerHTML = `<div class="ob-pop" role="dialog" aria-modal="true"><div class="ob-ph"><b>${t("pickT", { a: esc(s ? s.name : ""), b: T.wd[li()][d.getUTCDay()] + " " + d.getUTCDate() + "/" + (d.getUTCMonth() + 1) })}</b><button class="ob-x" data-a="pkclose" aria-label="${t("close")}">×</button></div>
+      <div class="ob-pg">${["A", "B", "F", "O", "null"].map(c => `<button class="ob-cell ob-k-${c === "null" ? "N" : c} ${String(pick.c) === c ? "cur" : ""}" data-a="pk" data-c="${c}">${t("sh_" + c)}<small>${c === "O" ? "🌙" : c === "null" ? (s ? (s.def_code === "C" && s.def_start != null ? hrsTxt([s.def_start, s.def_end]) : t("sh_" + s.def_code)) : "") : SH[c] ? hrsTxt(SH[c]) : ""}</small></button>`).join("")}</div>
+      <div class="ob-pc"><b>${t("pickC")}</b><div class="ob-srw"><select class="ob-in" id="obPkS">${opt(TIMESC.map(m => [m, fmtX(m)]), pick.s)}</select>–<select class="ob-in" id="obPkE">${opt(TIMESC.map(m => [m, fmtX(m)]), pick.e)}</select><span class="ob-pd ${ok ? "" : "bad"}">${ok ? t("hrsN", { n: durH([pick.s, pick.e]) }) : "⚠️"}</span></div>
+        <button class="ob-btn full" data-a="pkx" ${ok ? "" : "disabled"}>${t("pickSave")}</button></div></div>`;
+    const pop = el.firstElementChild, wide = window.innerWidth >= 640;
+    if (wide && pick.rect) { const r = pick.rect, W = pop.offsetWidth, H = pop.offsetHeight;
+      let x = Math.min(Math.max(8, r.left + r.width / 2 - W / 2), window.innerWidth - W - 8), y = r.bottom + 6; if (y + H > window.innerHeight - 8) y = Math.max(8, r.top - H - 6);
+      pop.style.left = x + "px"; pop.style.top = y + "px"; } else pop.classList.add("sheet");
   }
 
   /* ---------- 매장 설정 ---------- */
@@ -514,7 +539,7 @@
     const L = data.layout;
     draft = { kind: L.kind, floors: JSON.parse(JSON.stringify(L.floors || [])), courses: JSON.parse(JSON.stringify(L.courses || [])), shifts: JSON.parse(JSON.stringify(L.shifts || {})), min_am: L.min_am, min_pm: L.min_pm };
     if (!draft.floors.length) draft.floors.push({ rooms: [{ n: "201", type: "bed", count: 1, eq: [] }] });
-    staffDraft = data.staff.map(s => ({ id: s.id, name: s.name, role: s.role, years: s.years, phone: "", def_code: s.def_code, off_day: s.off_day, look: Object.assign(defLook(0), s.look || {}), dirty: false }));
+    staffDraft = data.staff.map(s => ({ id: s.id, name: s.name, role: s.role, years: s.years, phone: "", def_code: s.def_code, def_start: s.def_start != null ? s.def_start : 840, def_end: s.def_end != null ? s.def_end : 1080, off_day: s.off_day, look: Object.assign(defLook(0), s.look || {}), dirty: false }));
     setOpen = true; renderSet();
   }
   const opt = (list, v) => list.map(o => `<option value="${esc(o[0])}" ${String(o[0]) === String(v) ? "selected" : ""}>${esc(o[1])}</option>`).join("");
@@ -552,7 +577,8 @@
         b += `<div class="ob-sc"><span class="ob-prev" style="background-image:url(${sheet(lookOf(l, i))})"></span><div style="display:flex;flex-direction:column;gap:6px;min-width:0">
           <div class="ob-srw"><input class="ob-in" data-sf="sn" data-i="${i}" value="${esc(s.name)}" placeholder="${t("sName")}" maxlength="20"><select class="ob-in" data-sf="sr" data-i="${i}">${opt([["tp", t("roleTp")], ["rcp", t("roleRcp")]], s.role)}</select></div>
           <div class="ob-srw"><input class="ob-in" data-sf="sp" data-i="${i}" value="${esc(s.phone)}" placeholder="${t("sPhone")}" inputmode="tel"><input class="ob-in" data-sf="sy" data-i="${i}" value="${s.years || 0}" inputmode="numeric" style="flex:0 0 70px" aria-label="${t("sYears")}"></div>
-          <div class="ob-srw"><span class="k">${t("sDef")}</span><select class="ob-in" data-sf="sd" data-i="${i}">${opt(["A", "B", "F"].map(c => [c, t("sh_" + c)]), s.def_code)}</select><span class="k">${t("sOff")}</span><select class="ob-in" data-sf="so" data-i="${i}">${opt([[-1, t("none")]].concat([1, 2, 3, 4, 5, 6, 0].map(k => [k, T.wd[li()][k]])), s.off_day)}</select></div>
+          <div class="ob-srw"><span class="k">${t("sDef")}</span><select class="ob-in" data-sf="sd" data-i="${i}">${opt(["A", "B", "F", "C"].map(c => [c, t("sh_" + c) + (draft.shifts[c] ? " " + hrsTxt(draft.shifts[c]) : "")]), s.def_code)}</select><span class="k">${t("sOff")}</span><select class="ob-in" data-sf="so" data-i="${i}">${opt([[-1, t("none")]].concat([1, 2, 3, 4, 5, 6, 0].map(k => [k, T.wd[li()][k]])), s.off_day)}</select></div>
+          ${s.def_code === "C" ? `<div class="ob-srw"><span class="k">${t("sh_C")}</span><select class="ob-in" data-sf="sds" data-i="${i}">${opt(TIMESC.map(m => [m, fmtX(m)]), s.def_start)}</select>–<select class="ob-in" data-sf="sde" data-i="${i}">${opt(TIMESC.map(m => [m, fmtX(m)]), s.def_end)}</select><span class="ob-pd ${s.def_end > s.def_start ? "" : "bad"}">${s.def_end > s.def_start ? t("hrsN", { n: durH([s.def_start, s.def_end]) }) : "⚠️"}</span></div>` : ""}
           <div class="ob-srw"><span class="k">${t("hair")}</span><select class="ob-in" data-sf="lh" data-i="${i}">${opt(["short", "long", "bun", "pony"].map(k => [k, t("hs_" + k)]), l.hair)}</select>${sws("lhc", i, HAIRC, l.hc)}</div>
           <div class="ob-srw"><span class="k">${t("top")}</span><select class="ob-in" data-sf="lt" data-i="${i}">${opt(["uniform", "tee", "aodai"].map(k => [k, t("tp_" + k)]), l.top)}</select>${sws("ltc", i, TOPC, l.tc)}</div>
           <div class="ob-srw"><span class="k">${t("bottom")}</span><select class="ob-in" data-sf="lb" data-i="${i}">${opt(["pants", "skirt"].map(k => [k, t("bt_" + k)]), l.bottom)}</select>${sws("lbc", i, BOTC, l.bc)}</div>
@@ -580,15 +606,15 @@
     else if (a === "eq") { const r = draft.floors[i].rooms[j]; r.eq = r.eq || []; const x = r.eq.indexOf(k); x >= 0 ? r.eq.splice(x, 1) : r.eq.push(k); }
     else if (a === "addC") draft.courses.push({ id: "c" + Date.now().toString(36), ko: "", vi: "", min: 60, price: 0, type: "any", eq: "" });
     else if (a === "delC") draft.courses.splice(i, 1);
-    else if (a === "addS") staffDraft.push({ id: null, name: "", role: "tp", years: 0, phone: "", def_code: "A", off_day: -1, look: defLook(staffDraft.length), dirty: true });
+    else if (a === "addS") staffDraft.push({ id: null, name: "", role: "tp", years: 0, phone: "", def_code: "A", def_start: 840, def_end: 1080, off_day: -1, look: defLook(staffDraft.length), dirty: true });
     else if (a === "lhc" || a === "ltc" || a === "lbc") { staffDraft[i].look[{ lhc: "hc", ltc: "tc", lbc: "bc" }[a]] = +k; staffDraft[i].dirty = true; }
     else if (a === "rmS") {
       const s = staffDraft[i]; if (rmAsk !== s.id) { rmAsk = s.id; renderSet(); return; }
       rmAsk = null; const r = await call("staff_remove", { sid: s.id }); if (r) { staffDraft.splice(i, 1); C.toast(t("saved")); }
     }
     else if (a === "saveS") {
-      const s = staffDraft[i]; if (!s.name.trim()) return;
-      const r = await call("staff_upsert", { s: { id: s.id, name: s.name, role: s.role, years: +s.years || 0, phone: s.phone, def_code: s.def_code, off_day: +s.off_day, look: s.look } });
+      const s = staffDraft[i]; if (!s.name.trim()) return; if (s.def_code === "C" && !(s.def_end > s.def_start)) { C.toast(t("badHrs")); return; }
+      const r = await call("staff_upsert", { s: { id: s.id, name: s.name, role: s.role, years: +s.years || 0, phone: s.phone, def_code: s.def_code, def_start: s.def_code === "C" ? +s.def_start : null, def_end: s.def_code === "C" ? +s.def_end : null, off_day: +s.off_day, look: s.look } });
       if (r) { const fresh = r.staff.find(x => x.name === s.name.trim() && (s.id ? x.id === s.id : true)); if (fresh) s.id = fresh.id; s.dirty = false; C.toast(t("saved")); }
     }
     else if (a === "saveL") {
@@ -612,7 +638,8 @@
     else {
       const s = staffDraft[i]; s.dirty = true;
       if (f === "sn") s.name = v; else if (f === "sr") s.role = v; else if (f === "sp") s.phone = v; else if (f === "sy") s.years = v;
-      else if (f === "sd") s.def_code = v; else if (f === "so") s.off_day = +v;
+      else if (f === "sd") { s.def_code = v; return true; } else if (f === "so") s.off_day = +v;
+      else if (f === "sds" || f === "sde") { s[f === "sds" ? "def_start" : "def_end"] = +v; return true; }
       else if (f === "lh") { s.look.hair = v; return true; } else if (f === "lt") { s.look.top = v; return true; } else if (f === "lb") { s.look.bottom = v; return true; }
       const btn = root.querySelector(`[data-sa="saveS"][data-i="${i}"]`); if (btn) btn.disabled = false;
     }
@@ -623,6 +650,7 @@
   async function onClick(e) {
     const sb = e.target.closest("[data-sa]"); if (sb) { if (sb.dataset.sa === "ovx" && e.target !== sb) return; e.preventDefault(); return setAct(sb); }
     const vb = e.target.closest("[data-v]"); if (vb) { view = vb.dataset.v; if (view === "sched") { sched = null; loadSched(); } render(); return; }
+    if (pick && !e.target.closest(".ob-pop") && !e.target.closest('[data-a="cell"]')) { pick = null; renderPick(); }
     const b = e.target.closest("[data-a]"); if (!b) return;
     const a = b.dataset.a, id = b.dataset.id;
     if (a === "set") { openSet(); return; }
@@ -659,13 +687,24 @@
     if (a === "off" || a === "on") { if (await call("shift_set", { sid: id, d: data.today, code: a === "off" ? "O" : null }, true) !== null) await load(); return; }
     if (a === "wk-" || a === "wk+") { weekFrom = addD(weekFrom, a === "wk-" ? -7 : 7); sched = null; renderSched(); loadSched(); return; }
     if (a === "cell") {
-      const order = ["A", "B", "F", "O", null], cur = b.dataset.c, nx = order[(order.indexOf(cur) + 1) % order.length];
-      await call("shift_set", { sid: id, d: b.dataset.d, code: nx }, true); await loadSched(); if (b.dataset.d === data.today) load();
+      const s = sched.staff.find(x => x.id === id), i = +b.dataset.i, hh = (s.hours || [])[i];
+      const base = hh || (s.def_code === "C" && s.def_start != null ? [s.def_start, s.def_end] : null) || [840, 1080];
+      const sameCell = pick && pick.id === id && pick.d === b.dataset.d;
+      pick = sameCell ? null : { id, d: b.dataset.d, c: b.dataset.c, s: base[0], e: base[1], rect: b.getBoundingClientRect() }; renderPick();
+      return;
+    }
+    if (a === "pkclose") { pick = null; renderPick(); return; }
+    if (a === "pk" || a === "pkx") {
+      const p = pick; if (!p) return; const code = b.dataset.c === "null" ? null : b.dataset.c;
+      if (a === "pkx" && !(p.e > p.s)) { C.toast(t("badHrs")); return; }
+      const r = a === "pkx" ? await call("shift_set_custom", { sid: p.id, d: p.d, s: p.s, e: p.e }, true) : await call("shift_set", { sid: p.id, d: p.d, code }, true);
+      pick = null; await loadSched(); if (p.d === data.today) load();
       return;
     }
     if (a === "rok" || a === "rno") { const r = await call("req_decide", { rid: +id, ok: a === "rok" }, true); if (r) { sched = r; renderSched(); load(); } return; }
   }
-  function onChange(e) { if (e.target.dataset.sf && setField(e.target)) renderSet(); }
+  function onKey(e) { if (e.key === "Escape" && pick) { pick = null; renderPick(); } }
+  function onChange(e) { if (pick && (e.target.id === "obPkS" || e.target.id === "obPkE")) { pick[e.target.id === "obPkS" ? "s" : "e"] = +e.target.value; renderPick(); return; } if (e.target.dataset.sf && setField(e.target)) renderSet(); }
   function onInput(e) { if (e.target.tagName === "INPUT" && e.target.dataset.sf) setField(e.target); }
 
   let rz = 0;
@@ -676,16 +715,16 @@
       this.unmount();
       C = ctx; root = el; lang = LANGS.includes(ctx.lang) ? ctx.lang : "vi"; if (ctx.view) { view = ctx.view; sched = null; } plan = null; geoSig = ""; W.clear(); GW.clear(); prevSess = new Map();
       root.addEventListener("click", onClick); root.addEventListener("change", onChange); root.addEventListener("input", onInput);
-      window.addEventListener("resize", onResize);
+      window.addEventListener("resize", onResize); window.addEventListener("keydown", onKey);
       if (data && data.shop && data.shop.id === C.shopId) render(); else { data = null; root.innerHTML = `<p class="ob-empty">…</p>`; }
       load().then(() => { if (view === "sched" && !sched) loadSched(); });
-      pollT = setInterval(() => { if (!document.hidden && !busy && !open.assign && !open.finish && !setOpen) load(); }, 10000);
+      pollT = setInterval(() => { if (!document.hidden && !busy && !open.assign && !open.finish && !setOpen && !pick) load(); }, 10000);
       tickT = setInterval(tick, 1000);
       last = 0; raf = requestAnimationFrame(loop);
     },
     unmount() {
       if (!root) return;
-      clearInterval(pollT); clearInterval(tickT); cancelAnimationFrame(raf); window.removeEventListener("resize", onResize);
+      clearInterval(pollT); clearInterval(tickT); cancelAnimationFrame(raf); window.removeEventListener("resize", onResize); window.removeEventListener("keydown", onKey); pick = null;
       root.removeEventListener("click", onClick); root.removeEventListener("change", onChange); root.removeEventListener("input", onInput);
       W.forEach(w => w.el.remove()); W.clear(); GW.forEach(w => w.el.remove()); GW.clear();
       root = null; plan = null; setOpen = false; open = { assign: null, finish: null };

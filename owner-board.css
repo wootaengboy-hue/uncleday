@@ -160,3 +160,21 @@
 .ob-side.two > .ob-kpis, .ob-side.two > #obFirst, .ob-side.two > #obExp { grid-column: 1 / -1; }
 .ob-side.two > #obFirst:empty, .ob-side.two > #obExp[hidden] { display: none; }
 .ob-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 11.5px; color: var(--sub); }
+/* 근무표: 시간 지정 · 칸 고르기 */
+.ob-k-C { background: #F3E8FF; color: #6B2FA0; }
+.ob-k-N { background: #fff; color: var(--sub, #6B7684); border: 1px dashed #D6CDBB !important; }
+.ob-cell.cur { outline: 2px solid var(--ink, #0E2843); outline-offset: 1px; }
+.ob-wh { display: block; font-size: 11px; font-weight: 500; color: var(--sub, #6B7684); }
+.ob-pop { position: fixed; z-index: 40; width: min(360px, calc(100vw - 16px)); background: #fff; border: 1px solid var(--line, #E8E1D3); border-radius: 16px; box-shadow: 0 12px 36px rgba(14,40,67,.22); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.ob-pop.sheet { left: 0; right: 0; bottom: 0; width: 100%; border-radius: 18px 18px 0 0; padding-bottom: max(14px, env(safe-area-inset-bottom)); }
+.ob-ph { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ob-pg { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.ob-pg .ob-cell { min-width: 0; min-height: 48px; }
+.ob-pc { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--line2, #F0EBE0); padding-top: 10px; }
+.ob-pc .ob-srw select { flex: 1; min-width: 0; }
+.ob-pd { font-weight: 700; font-size: 13px; color: #6B2FA0; white-space: nowrap; }
+.ob-pd.bad { color: var(--red, #D33); }
+@media (max-width: 380px) { .ob-pg { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+/* 근무표를 옆으로 넘겨도 직원 이름은 왼쪽에 고정 */
+.ob-sg tbody th, .ob-sg thead th:first-child { position: sticky; left: 0; z-index: 1; background: #fff; box-shadow: 1px 0 0 var(--line2); }
+.ob-sg thead th:first-child { background: #FCFAF6; }
