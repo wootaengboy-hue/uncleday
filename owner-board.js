@@ -8,6 +8,7 @@
   const LANGS = ["vi", "ko", "en"];
   const T = {
     vBoard: ["Bảng phòng", "현황판", "Board"],
+    lgIdle: ["Đang chờ / trực quầy", "대기 중 · 카운터 근무", "Free / at desk"], lgWork: ["Đang làm", "시술 중", "In session"], lgMove: ["Đang đi", "이동 중", "Moving"], lgOff: ["Chưa vào / đã về", "출근 전 · 퇴근", "Not in / gone"], lgDay: ["Nghỉ", "휴무", "Day off"],
     stBefore: ["Chưa mở · mở lúc {n}", "영업 전 · {n} 오픈", "Not open · opens {n}"], stOpen: ["Đang mở cửa", "영업 중", "Open"], stSince: ["mở từ {n}", "{n}부터", "since {n}"],
     stAfter: ["Đã hết giờ · {n}", "영업 종료 · {n}", "Closed · {n}"], stClosed: ["Đã đóng cửa lúc {n}", "{n} 영업 마감", "Closed at {n}"], stDayoff: ["Hôm nay nghỉ", "오늘 휴무일", "Closed today"],
     openEarly: ["Mở cửa ngay", "지금 영업 시작", "Open now"], closeNow: ["Đóng cửa", "영업 마감", "Close"], extend: ["Mở thêm giờ", "영업 연장", "Stay open"], reopen: ["Mở lại", "다시 영업 시작", "Reopen"], openAnyway: ["Vẫn mở cửa", "그래도 영업 시작", "Open anyway"],
@@ -173,8 +174,8 @@
     G = { floors: [], st: new Map(), rooms: [] };
     const F = floors.length, Hest = 12 + F * 272 + 384;
     let PW = 720;
-    const wide = window.innerWidth >= 1200, cw = stage.clientWidth;
-    if (wide && cw > 0) PW = Math.round(Math.max(720, Math.min(1240, cw / Math.max(0.6, Math.min(1.1, (window.innerHeight - 150) / Hest)))));
+    const L2 = layoutDims(Hest);
+    if (L2.wide) PW = Math.round(Math.max(720, Math.min(1240, L2.planW / L2.sh)));
     const P = PW - 76; G.PW = PW; G.SHX = P + 36; G.DX = P - 40;
     plan.innerHTML = ""; plan.style.width = PW + "px";
     let y = 12;
@@ -374,7 +375,7 @@
   }
   function shell() {
     root.innerHTML = `<div class="ob"><div class="ob-top" id="obTop"></div>
-      <div id="obBoard"><div class="ob-grid"><div><div class="ob-fchips" id="obFl" style="margin-bottom:8px"></div><div class="ob-stage"><div class="ob-box"><div class="ob-plan"></div></div></div></div>
+      <div id="obBoard"><div class="ob-grid"><div><div class="ob-fchips" id="obFl" style="margin-bottom:8px"></div><div id="obLg" style="margin:-2px 0 8px"></div><div class="ob-stage"><div class="ob-box"><div class="ob-plan"></div></div></div></div>
         <div class="ob-side">
           <div class="ob-kpis" id="obK"></div>
           <div id="obFirst"></div>
@@ -408,12 +409,35 @@
     return `<span class="ob-vt ${map[3]}" style="cursor:default">${map[0]}</span><button class="ob-vt" data-a="shop${map[1]}">${map[1] === "open" ? "☀️" : "🌙"} ${t(map[2])}</button>`;
   }
   function renderFloorChips() {
+    const lg = root.querySelector("#obLg"); if (lg && !lg.innerHTML) lg.innerHTML = legend();
     root.querySelector("#obFl").innerHTML = G.floors.slice().reverse().map(f => { const all = f.rooms.reduce((a, r) => a + r.st.length, 0), a = f.rooms.reduce((nn, r) => nn + r.st.filter(s => data.sessions.some(x => x.status === "working" && x.station === s.id)).length, 0); return `<span class="ob-fchip">${t("fchip", { f: f.num, a: a ? `<b>${a}</b>` : "0", b: all })}</span>`; }).join("");
   }
+  /* 반응형: 넓은 화면은 평면도를 화면 높이에 맞추고(최대 66%), 남은 너비는 오른쪽 현황판이 써요.
+     현황판이 넓어지면 글씨를 키우고(최대 1.6배), 더 넓으면 두 줄로 나눠요. */
+  function layoutDims(Hest) {
+    const grid = root.querySelector(".ob-grid"), wide = window.innerWidth >= 1200;
+    const TW = grid ? grid.clientWidth : window.innerWidth;
+    const availH = Math.max(320, window.innerHeight - 150);
+    const planW = Math.max(480, Math.min(TW - 380 - 12, TW * 0.66));
+    const sh = Math.max(0.55, Math.min(1.35, availH / Hest));
+    return { wide, TW, planW, sh, availH };
+  }
   function fit() {
-    const stage = root.querySelector(".ob-stage"), box = root.querySelector(".ob-box"); if (!stage || !G) return;
-    const cw = stage.clientWidth, wide = window.innerWidth >= 1200;
-    let s = cw / G.PW; if (!wide) s = Math.max(0.48, s); else s = Math.min(s, Math.max(0.6, (window.innerHeight - 150) / G.H));
+    const stage = root.querySelector(".ob-stage"), box = root.querySelector(".ob-box"), grid = root.querySelector(".ob-grid"), side = root.querySelector(".ob-side");
+    if (!stage || !G) return;
+    const D = layoutDims(G.H);
+    let s;
+    if (D.wide) {
+      s = Math.min(D.planW / G.PW, D.sh);
+      const bw = Math.round(G.PW * s);
+      grid.style.gridTemplateColumns = `${bw}px minmax(380px, 1fr)`;
+      const sw = Math.max(380, D.TW - bw - 12), z = Math.max(1, Math.min(1.6, sw / 420));
+      side.style.zoom = z; side.classList.toggle("two", sw / z >= 720);
+      side.style.maxHeight = Math.round(D.availH / z) + "px";
+    } else {
+      grid.style.gridTemplateColumns = ""; side.style.zoom = ""; side.classList.remove("two"); side.style.maxHeight = "";
+      s = Math.max(0.48, stage.clientWidth / G.PW);
+    }
     box.style.width = G.PW * s + "px"; box.style.height = G.H * s + "px"; plan.style.transform = `scale(${s})`; plan.classList.toggle("compact", s < 0.78);
   }
   function stationsFree(c) { return [...G.st.values()].filter(s => !data.sessions.some(x => x.status === "working" && x.station === s.id) && courseFits(s, c)); }
@@ -445,7 +469,7 @@
       if (open.finish === x.id) h += `<div class="ob-sheet"><label class="ob-note" for="obPaid">${t("paid")}</label><input class="ob-in" id="obPaid" inputmode="numeric" value="${x.price || ""}">${x.ud ? `<p class="ob-note">${t("udAuto")}</p>` : ""}<div class="ob-f2"><button class="ob-btn r" data-a="cancelx" data-id="${x.id}">${t("cancel")}</button><button class="ob-btn" data-a="finx" data-id="${x.id}">${t("save")}</button></div></div>`;
       return h;
     }).join("") : `<p class="ob-empty">${t("noWork")}</p>`);
-    root.querySelector("#obAtt").innerHTML = `<h3><span>${t("attT")}</span><small>${data.staff.filter(s => s.in_at).length}/${data.staff.length}</small></h3>` + data.staff.map((s, i) => {
+    root.querySelector("#obAtt").innerHTML = `<h3><span>${t("attT")}</span><small>${data.staff.filter(s => s.in_at).length}/${data.staff.length}</small></h3>${legend()}` + data.staff.map((s, i) => {
       const st = stOf(s);
       const info = [t("sh_" + s.code)].concat(s.in_at ? [`${tm(s.in_at)} ${s.late_min > 0 ? `<span class="ob-late">${t("late", { n: s.late_min })}</span>` : t("onTime")}`] : []).concat(s.out_at ? ["→ " + tm(s.out_at)] : []).join(" · ");
       const btn = st === "off" || st === "dayoff" || st === "gone" ? `<button class="ob-btn" data-a="in" data-id="${s.id}">${t("cIn")}</button>` : st !== "work" ? `<button class="ob-btn l" data-a="out" data-id="${s.id}">${t("cOut")}</button>` : "";
@@ -454,6 +478,7 @@
     }).join("");
     root.querySelector("#obDone").innerHTML = `<h3><span>${t("doneT")}</span><small>${done.length}</small></h3>` + (done.length ? done.map(x => `<div class="ob-row"><div class="g"><b>[${tm(x.done_at)}] ${esc(x.staff_name)} · ${esc(t("room", { n: (x.station || "").split("-")[0] }))}</b><small>${esc(x.guest_name || "")}${x.ud ? '<span class="ob-ud">UD</span>' : ""} · ${esc(x.course_name || "")}</small></div><b style="font-size:13px">${vnd(x.paid)}</b></div>`).join("") : `<p class="ob-empty">${t("noDone")}</p>`);
   }
+  const legend = () => `<div class="ob-legend">${[["🟢", "lgIdle"], ["🔴", "lgWork"], ["🟡", "lgMove"], ["⚪", "lgOff"], ["🌙", "lgDay"]].map(([d, k]) => `<span>${d} ${t(k)}</span>`).join("")}</div>`;
   function tick() {
     if (!root) return; const now = nowMs();
     root.querySelectorAll("[data-end]").forEach(el => { const e = Date.parse(el.dataset.end), s = Date.parse(el.dataset.start); if (!e || !s) return; el.style.width = Math.max(0, Math.min(100, (now - s) / (e - s) * 100)) + "%"; });
