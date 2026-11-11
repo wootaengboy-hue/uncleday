@@ -13,6 +13,7 @@
     hRows: ["Từng lượt làm", "시술 기록", "Sessions"], hStaff: ["Theo nhân viên", "직원별", "By staff"], hNone: ["Không có lượt làm nào.", "이 기간에는 끝난 시술이 없어요.", "No finished sessions."],
     hCnt: ["Lượt", "시술", "Sessions"], hMin: ["Phút làm", "시술 시간", "Minutes"], hRev: ["Doanh thu", "매출", "Sales"], hAtt: ["Chấm công", "출퇴근", "Attendance"], hDays: ["{n} ngày", "{n}일 출근", "{n} days"],
     hLateN: ["Trễ {n} lần · {m}′", "지각 {n}번 · {m}분", "Late {n}× · {m}′"], hLate: ["Trễ {m}′", "지각 {m}분", "Late {m}′"], hCsv: ["⬇ Tải Excel (CSV)", "⬇ 엑셀로 받기", "⬇ Excel (CSV)"], hOwner: ["Chỉ chủ cửa hàng mới xem được lịch sử.", "기록은 사장님 계정만 볼 수 있어요.", "Only the owner can see history."],
+    hNoStaff: ["Chưa ghi KTV", "담당 미기록", "No therapist"], hSetTp: ["Thêm KTV", "담당 넣기", "Add therapist"], hEditTp: ["Đổi", "바꾸기", "Edit"], hSaveTp: ["Lưu", "저장", "Save"], hTpSaved: ["Đã lưu KTV phụ trách.", "담당을 저장했어요.", "Therapist saved."], hByShop: ["nhập tay", "직접 입력", "entered by shop"],
     hFee: ["Phí UD {v}", "수수료 {v}", "Fee {v}"], hNoFee: ["Không phí", "수수료 없음", "No fee"], hWorked: ["Làm {h}", "근무 {h}", "Worked {h}"], hGone: ["đã nghỉ", "퇴사", "left"],
     lgIdle: ["Đang chờ / trực quầy", "대기 중 · 카운터 근무", "Free / at desk"], lgWork: ["Đang làm", "시술 중", "In session"], lgMove: ["Đang đi", "이동 중", "Moving"], lgOff: ["Chưa vào / đã về", "출근 전 · 퇴근", "Not in / gone"], lgDay: ["Nghỉ", "휴무", "Day off"],
     stBefore: ["Chưa mở · mở lúc {n}", "영업 전 · {n} 오픈", "Not open · opens {n}"], stOpen: ["Đang mở cửa", "영업 중", "Open"], stSince: ["mở từ {n}", "{n}부터", "since {n}"],
@@ -150,7 +151,7 @@
   /* ---------- 상태 ---------- */
   let C = null, root = null, data = null, view = "board", skew = 0, pollT = 0, tickT = 0, raf = 0, last = 0, anim = 0;
   let geoSig = "", G = null, plan = null, W = new Map(), GW = new Map(), prevSess = new Map(), prevGuest = new Map(), pendOcc = new Set();
-  let hist = null, hp = { mode: "day", d: null }, open = { assign: null, finish: null, tps: [] }, setOpen = false, setTab = "floors", draft = null, staffDraft = null, rmAsk = null, sched = null, weekFrom = null, busy = false;
+  let hist = null, hpick = null, hp = { mode: "day", d: null }, open = { assign: null, finish: null, tps: [] }, setOpen = false, setTab = "floors", draft = null, staffDraft = null, rmAsk = null, sched = null, weekFrom = null, busy = false;
   const nowMs = () => Date.now() + skew;
   const owner = () => C && C.isOwner;
 
@@ -592,7 +593,7 @@
   }
   async function loadHist() {
     if (!owner()) { hist = { denied: true }; renderHist(); return; }
-    const [d1, d2] = histRange(); hist = Object.assign(hist || {}, { loading: true }); renderHist();
+    const [d1, d2] = histRange(); hpick = null; hist = Object.assign(hist || {}, { loading: true }); renderHist();
     try { hist = await C.rpc("board_history", { shop: C.shopId, d1, d2 }); } catch (e) { hist = null; C.toast(errTx(e)); }
     renderHist();
   }
@@ -612,10 +613,13 @@
     const ppl = rs => rs.reduce((a, r) => a + (+r.people || 1), 0);
     h += `<div class="ob-kpis ob-hk">${[[ppl(R), "hGuests"], [vnd(sum), "hSales"], [`${ppl(udR)} · ${vnd(udR.reduce((a, r) => a + (+r.paid || 0), 0))}`, "hUD"], [`${ppl(wR)} · ${vnd(wR.reduce((a, r) => a + (+r.paid || 0), 0))}`, "hWalk"]].map(([v, k]) => `<div class="ob-kpi"><b>${v}</b><span>${t(k)}</span></div>`).join("")}</div>`;
     const multi = d1 !== d2;
+    const tpS = (hist.staff || []).filter(s => s.active && s.role === "tp");
+    const pickHtml = r => hpick && r.booking_id && hpick.bid === r.booking_id ? `<div class="ob-hpk"><div class="ob-tps">${tpS.map(s => `<button type="button" class="ob-chip ${hpick.ids.includes(s.id) ? "on" : ""}" data-a="hpt" data-id="${s.id}">${hpick.ids.includes(s.id) ? "✓ " : ""}${esc(s.name)}</button>`).join("")}</div>
+        <div class="ob-row2"><button class="ob-btn" data-a="hpsave">${t("hSaveTp")}</button><button class="ob-btn l" data-a="hpclose">${t("close")}</button></div></div>` : "";
     const rows = R.slice().reverse().map(r => `<div class="ob-hr"><div class="tm">${multi ? `<small>${esc(dShort(r.day))}</small>` : ""}${hmVN(r.started_at)}<small>~ ${hmVN(r.done_at)}</small></div>
         <div class="g"><b><span class="ob-pill ${r.ud ? "ob-p-idle" : "ob-p-off"}">${t(r.ud ? "hUD" : "hWalk")}</span> ${esc(r.guest || "-")}${(r.people || 1) > 1 ? " · " + t("tpN", { n: r.people }) : ""}</b>
-          <small>${esc(r.course || "")} · ${esc(r.staff || "")}${r.station ? " · " + esc(t("room", { n: String(r.station).split("-")[0] })) : ""}${r.code ? " · " + esc(r.code) : ""}</small></div>
-        <div class="a"><b>${vnd(r.paid)}</b><small>${r.ud ? t("hFee", { v: vnd(r.commission) }) : t("hNoFee")}</small></div></div>`).join("");
+          <small>${esc(r.course || "")} · ${r.nostaff ? `<span class="ob-nost">${t("hNoStaff")}</span>` : esc(r.staff || "")}${r.src === "shop" ? ` <i>(${t("hByShop")})</i>` : ""}${r.booking_id ? ` <button class="ob-lnk" data-a="hpopen" data-id="${r.booking_id}">${t(r.nostaff ? "hSetTp" : "hEditTp")}</button>` : ""}${r.station ? " · " + esc(t("room", { n: String(r.station).split("-")[0] })) : ""}${r.code ? " · " + esc(r.code) : ""}</small></div>
+        <div class="a"><b>${vnd(r.paid)}</b><small>${r.ud ? t("hFee", { v: vnd(r.commission) }) : t("hNoFee")}</small></div>${pickHtml(r)}</div>`).join("");
     const st = (hist.staff || []).filter(s => s.active || s.cnt > 0);
     const srow = s => { const att = s.att;
       const attTxt = !multi ? (att && att.in_at ? `${hmVN(att.in_at)} ~ ${att.out_at ? hmVN(att.out_at) : "…"}${att.late_min > 0 ? ` · <span class="late">${t("hLate", { m: att.late_min })}</span>` : ""}` : "—")
@@ -806,6 +810,10 @@
       return;
     }
     if (a === "pkclose") { pick = null; renderPick(); return; }
+    if (a === "hpopen") { const r = (hist.rows || []).find(x => x.booking_id === id); hpick = hpick && hpick.bid === id ? null : { bid: id, ids: r && r.staff_ids ? r.staff_ids.filter(Boolean) : [] }; renderHist(); return; }
+    if (a === "hpclose") { hpick = null; renderHist(); return; }
+    if (a === "hpt") { if (!hpick) return; const k = hpick.ids.indexOf(id); if (k >= 0) hpick.ids.splice(k, 1); else if (hpick.ids.length >= 4) { C.toast(t("max4")); return; } else hpick.ids.push(id); renderHist(); return; }
+    if (a === "hpsave") { if (!hpick) return; if (await call("booking_staff_set", { bid: hpick.bid, tps: hpick.ids }, true)) { hpick = null; C.toast(t("hTpSaved")); loadHist(); } return; }
     if (a === "pk" || a === "pkx") {
       const p = pick; if (!p) return; const code = b.dataset.c === "null" ? null : b.dataset.c;
       if (a === "pkx" && !(p.e > p.s)) { C.toast(t("badHrs")); return; }

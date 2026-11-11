@@ -102,6 +102,8 @@
     tProposed: ["Đã gửi giờ khác cho Uncle Day.", "다른 시간을 엉클데이에 보냈어요.", "Other times sent to Uncle Day."],
     tRejected: ["Đã báo không nhận.", "불가로 답했어요.", "Declined."],
     tVisited: ["Đã lưu: khách đã đến.", "방문 완료로 저장했어요.", "Saved as visited."],
+    tpOpt: ["KTV phụ trách (không bắt buộc)", "담당 테라피스트 (선택)", "Therapist (optional)"], tpOptHint: ["Không nhớ thì để trống. Có thể thêm sau ở Bảng phòng → Lịch sử.", "모르면 비워 두세요. 나중에 현황판 → 기록에서 넣을 수 있어요.", "Leave empty if unsure. You can add it later in Board → History."],
+    tpSave: ["Lưu KTV phụ trách", "담당 저장", "Save therapist"], tpSaved: ["Đã lưu KTV phụ trách.", "담당을 저장했어요.", "Therapist saved."], tpNone: ["Chưa có KTV phụ trách.", "아직 담당이 기록되지 않았어요.", "No therapist recorded yet."], tpMax: ["Tối đa 4 người.", "4명까지 고를 수 있어요.", "Up to 4."],
     tNoshow: ["Đã ghi nhận: khách không đến.", "노쇼로 기록했어요.", "Recorded as a no-show."],
     tSaved: ["Đã lưu.", "저장했어요.", "Saved."],
     tNew: ["Có đặt lịch mới!", "새 예약이 들어왔어요!", "New booking!"],
@@ -462,7 +464,23 @@
 
   // ---- 예약 상세 ----
   const wide = () => window.matchMedia && matchMedia("(min-width: 960px)").matches;
-  function openDetail(id) { detail = id; proposing = false; picks = []; pDay = null; drawDetail(); }
+  function openDetail(id) { detail = id; proposing = false; picks = []; pDay = null; detTp = null; drawDetail(); }
+  // 담당 테라피스트 고르기 (사장님 페이지에서만, 선택)
+  let detTp = null;
+  async function loadDetTp(b) {
+    detTp = { bid: b.id, loading: true, ids: [], staff: [] };
+    try { const r = await rpc("booking_staff_get", { shop: shopId, bid: b.id }); if (detTp && detTp.bid === b.id) detTp = { bid: b.id, staff: (r.staff || []).filter(s => s.role === "tp"), ids: r.ids || [], saved: (r.ids || []).slice() }; }
+    catch (e) { detTp = { bid: b.id, staff: [], ids: [], err: true }; }
+    if (detail === b.id) drawDetail();
+  }
+  function tpPickHtml(b, withSave) {
+    if (!detTp || detTp.bid !== b.id) { loadDetTp(b); return ""; }
+    if (detTp.loading || !detTp.staff.length) return "";
+    const same = JSON.stringify(detTp.ids) === JSON.stringify(detTp.saved || []);
+    return `<div class="card"><span class="lbl">${t("tpOpt")}</span><div class="chips" style="margin:6px 0 0">${detTp.staff.map(s => `<button type="button" class="chip ${detTp.ids.includes(s.id) ? "on" : ""}" data-tp="${s.id}" aria-pressed="${detTp.ids.includes(s.id)}">${detTp.ids.includes(s.id) ? "✓ " : ""}${esc(s.name)}</button>`).join("")}</div>
+      <p class="muted" style="margin:6px 0 0">${withSave && !detTp.ids.length && !(detTp.saved || []).length ? t("tpNone") + " " : ""}${t("tpOptHint")}</p>
+      ${withSave ? `<button class="btn line" data-d="tpsave" style="margin-top:8px" ${same ? "disabled" : ""}>${t("tpSave")}</button>` : ""}</div>`;
+  }
   function closeDetail() { detail = null; proposing = false; drawDetail(); }
   function drawDetail() {
     let ov = document.getElementById("ov");
@@ -493,11 +511,11 @@
     } else if (["shop_ok", "confirmed"].includes(st)) {
       actions = (st === "shop_ok" ? `<div class="note">${t("waitUD")}</div>` : "")
         + (afterVisit ? `<div class="card"><label><span class="lbl">${t("paidLabel")}</span><input class="inp" id="amt" inputmode="numeric" value="${b.paid_amount ? vnd(b.paid_amount).replace("₫", "") : b.list_price ? vnd(b.list_price).replace("₫", "") : ""}"></label><p class="muted" style="margin:6px 0 0">${t("paidHint")}</p></div>
-            <button class="btn main" data-d="visited">${t("arrived")}</button><button class="btn danger" data-d="noshow">${t("noshow")}</button>`
+            ${tpPickHtml(b, false)}<button class="btn main" data-d="visited">${t("arrived")}</button><button class="btn danger" data-d="noshow">${t("noshow")}</button>`
           : `<p class="muted" style="margin:0 2px">${t("beforeVisit")}</p><button class="btn ghost" data-d="propose">${t("cantLater")}</button>`);
     } else if (st === "rejected") actions = `<div class="note">${t("waitRejected")}${(b.proposed_times || []).length ? `<small>${t("yourTimes")}: ${esc(times(b.proposed_times))}</small>` : ""}</div>`;
     else if (st === "reschedule") actions = `<div class="note">${t("waitResched")}${(b.offer_times || []).length ? `<small>${t("offered")}: ${esc(times(b.offer_times))}</small>` : ""}</div>`;
-    else if (["visited", "settled"].includes(st)) actions = `<div class="note"><b>${t("paidShort")}: ${vnd(b.paid_amount)}</b><small>${t("visitedNote")}</small></div>`;
+    else if (["visited", "settled"].includes(st)) actions = `<div class="note"><b>${t("paidShort")}: ${vnd(b.paid_amount)}</b><small>${t("visitedNote")}</small></div>${tpPickHtml(b, true)}`;
     else if (st === "noshow") actions = `<div class="note">${t("noshowNote")}</div>`;
     else if (st === "cancelled") actions = `<div class="note">${t("cancelNote")}</div>`;
     ov.innerHTML = `<div class="ov-in" role="dialog" aria-modal="true">
@@ -515,6 +533,8 @@
         ${actions}
       </div></div>`;
     ov.querySelectorAll("[data-d]").forEach(x => x.onclick = () => detailAct(b, x.dataset.d));
+    ov.querySelectorAll("[data-tp]").forEach(x => x.onclick = () => { if (!detTp) return; const id = x.dataset.tp, i = detTp.ids.indexOf(id); if (i >= 0) detTp.ids.splice(i, 1); else if (detTp.ids.length >= 4) { toast(t("tpMax")); return; } else detTp.ids.push(id);
+      const a2 = document.getElementById("amt"), av = a2 ? a2.value : null; drawDetail(); const a3 = document.getElementById("amt"); if (a3 && av != null) a3.value = av; });
     ov.querySelectorAll("[data-pday]").forEach(x => x.onclick = () => { pDay = x.dataset.pday; drawDetail(); });
     ov.querySelectorAll("[data-pick]").forEach(x => x.onclick = () => {
       const i = picks.findIndex(p => p.date === pDay && p.time === x.dataset.pick);
@@ -527,6 +547,9 @@
     if (a === "close") return closeDetail();
     if (a === "propose") { proposing = true; picks = []; pDay = null; if (!sched) await loadSched(); return drawDetail(); }
     if (a === "cancelp") { proposing = false; return drawDetail(); }
+    if (a === "tpsave") { if (!detTp || busy) return; busy = true;
+      try { await rpc("booking_staff_set", { shop: shopId, bid: b.id, tps: detTp.ids }); detTp.saved = detTp.ids.slice(); toast(t("tpSaved")); } catch (e) { toast(errMsg(e)); }
+      busy = false; return drawDetail(); }
     if (busy) return;
     const memoEl = document.getElementById("memo"), memo = memoEl ? memoEl.value.trim() : null;
     let args = null, msg = "";
@@ -540,6 +563,7 @@
     try {
       const r = await rpc("owner_reply", { bid: b.id, action: args.action, amount: args.amount == null ? null : args.amount, memo: memo || null, times: args.times || null });
       const i = rows.findIndex(x => x.id === b.id); if (i >= 0) rows[i] = r;
+      if (args.action === "visited" && detTp && detTp.bid === b.id && detTp.ids.length) { try { await rpc("booking_staff_set", { shop: shopId, bid: b.id, tps: detTp.ids }); detTp.saved = detTp.ids.slice(); } catch (e) { toast(errMsg(e)); } }
       proposing = false; picks = []; toast(msg); knownReq = new Set(rows.filter(x => x.status === "requested").map(x => x.id));
       if (sched) loadSched();
     } catch (e) { toast(errMsg(e)); }
