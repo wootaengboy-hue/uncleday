@@ -176,6 +176,7 @@ function openEditor(id, preset, opts = {}) {
         </div>
         <label class="f"><span>계약 메모</span><textarea data-c="memo" placeholder="예: 계약서 사진 위치, 특이 조건, 프로모션 합의 내용">${esc(pv.contract.memo || "")}</textarea></label>
         <div class="hint">수수료율은 <b>새로 들어오는 예약</b>에 적용돼요. 이미 들어온 예약의 수수료율은 예약 화면에서 따로 고칠 수 있어요.</div>
+        <div class="f" style="margin-top:12px"><span>👤 사장님 페이지 계정 <small class="hint">업체가 직접 예약에 답하고 휴무·시간을 막는 페이지</small></span><div id="ownBox"><p class="hint">불러오는 중…</p></div></div>
       </div>
 
       <div class="box"><h3>기본 정보</h3>
@@ -286,6 +287,7 @@ function openEditor(id, preset, opts = {}) {
   $("idIn").oninput = () => { idTouched = true; };
   $("cRate").oninput = () => { pv.commission_rate = Math.min(100, Math.max(0, +$("cRate").value || 0)); };
   $("layer").querySelectorAll("[data-c]").forEach(el => el.oninput = () => { pv.contract[el.dataset.c] = el.value; });
+  if (typeof drawOwnerBox === "function") drawOwnerBox(s.id, isNew || !shops.some(x => x.id === s.id), (s.name && (s.name.vi || s.name.en || s.name.ko)) || s.id);
   $("ctSendBtn").onclick = () => { if (isNew || !shops.some(x => x.id === s.id)) { toast("업체를 먼저 저장한 뒤에 계약서를 보낼 수 있어요"); return; } openContractSend(s.id, pv); };
   $("pChk").onchange = () => { pub = $("pChk").checked; $("pSw").classList.toggle("on", pub); };
   if ($("gpIn")) {

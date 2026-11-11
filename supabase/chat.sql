@@ -9,7 +9,7 @@ declare em text := lower(coalesce(auth.jwt() ->> 'email', ''));
 begin
   if auth.uid() is null then return false; end if;
   if exists (select 1 from admins where user_id = auth.uid()) then return true; end if;
-  if prov <> 'email' then return false; end if;
+  if prov <> 'email' or em like '%@owner.uncleday.com' then return false; end if;
   if not exists (select 1 from admins) or exists (select 1 from admin_emails where lower(email) = em) then
     insert into admins (user_id, email) values (auth.uid(), em) on conflict do nothing;
     return true;
