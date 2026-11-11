@@ -33,6 +33,7 @@
     sNote: ["Phí được tính trên số tiền khách đã trả theo hợp đồng. Nếu số tiền sai, hãy sửa ở lịch hẹn hoặc nhắn Uncle Day trước khi lập bảng đối soát.", "수수료는 계약에 따라 손님 결제 금액으로 계산돼요. 금액이 틀리면 정산서가 나오기 전에 엉클데이에 알려 주세요.", "The fee is calculated from the amount paid, per your contract. If an amount is wrong, tell Uncle Day before the statement is made."],
     sSettled: ["đã đối soát", "정산됨", "settled"],
     sStmt: ["Trong bảng đối soát đã gửi", "보낸 정산서에 포함", "In the sent statement"],
+    tabBoard: ["Bảng phòng", "현황판", "Board"],
     tabHome: ["Hôm nay", "오늘", "Today"], tabBookings: ["Đặt lịch", "예약", "Bookings"], tabSchedule: ["Lịch", "일정", "Schedule"], tabMore: ["Thêm", "더보기", "More"],
     install: ["Cài Uncle Day lên màn hình chính để mở nhanh như ứng dụng", "홈 화면에 설치하면 앱처럼 바로 열 수 있어요", "Add Uncle Day to your home screen to open it like an app"],
     installBtn: ["Cách cài", "설치 방법", "How to"],
@@ -118,7 +119,7 @@
     mShop: ["Cửa hàng", "업체", "Shop"], mLang: ["Ngôn ngữ", "언어", "Language"], mInstall: ["Cài lên màn hình chính", "홈 화면에 설치", "Add to home screen"],
     mPw: ["Đổi mật khẩu", "비밀번호 변경", "Change password"], mLogout: ["Đăng xuất", "로그아웃", "Log out"],
     mAccount: ["Tài khoản", "계정", "Account"], roleOwner: ["Chủ", "사장님", "Owner"], roleStaff: ["Nhân viên", "직원", "Staff"],
-    soon: ["Sắp có: sửa dịch vụ & giá, đánh giá, tài khoản nhân viên, thông báo trên điện thoại, bảng phòng & kỹ thuật viên.", "곧 추가: 메뉴·가격 수정, 리뷰, 직원 계정, 휴대폰 알림, 시술 현황판", "Coming soon: menu & price edits, reviews, staff accounts, phone alerts, room & therapist board."],
+    soon: ["Sắp có: màn hình nhân viên (lịch làm, xin nghỉ), đánh giá KTV, thông báo trên điện thoại.", "곧 추가: 직원 화면(근무표·휴무 요청), 테라피스트 후기, 휴대폰 알림", "Coming soon: staff screen (rota, day-off requests), therapist reviews, phone alerts."],
     contactUD: ["Cần hỗ trợ? Nhắn Uncle Day qua Zalo như trước.", "도움이 필요하면 지금처럼 잘로로 엉클데이에 연락하세요.", "Need help? Message Uncle Day on Zalo as usual."],
     refresh: ["Làm mới", "새로고침", "Refresh"]
   };
@@ -141,7 +142,7 @@
   // ---- 상태 ----
   let sb = null, me = null, shopId = null, rows = [], sched = null, hoursDraft = null;
   let tab = "home", bTab = "new", detail = null, proposing = false, picks = [], pDay = null, schedDay = null, toastMsg = "", busy = false;
-  let knownReq = null, pollTimer = null;
+  let knownReq = null, pollTimer = null, boardPending = 0;
   const store = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} };
   const read = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
 
@@ -225,12 +226,14 @@
     const s = curShop(), reqN = rows.filter(b => b.status === "requested").length;
     document.title = (reqN ? `(${reqN}) ` : "") + "Uncle Day · " + shopName(s);
     $app.classList.add("in");
+    $app.classList.toggle("wide", tab === "board");
     $app.innerHTML = `<header class="hdr"><img src="images/owner-192.png" alt="Uncle Day">
         <div class="shop"><b>${esc(shopName(s))}</b><small>${t("title")}</small></div>${langBtns()}</header>
       <main class="body" id="main"></main>
       <nav class="tabs" aria-label="menu">
         ${tabBtn("home", t("tabHome"), '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>')}
         ${tabBtn("bookings", t("tabBookings"), '<rect x="4" y="5" width="16" height="16" rx="3"/><path d="M8 3v4M16 3v4M4 10h16"/>', reqN)}
+        ${window.OwnerBoard ? tabBtn("board", t("tabBoard"), '<rect x="3" y="4" width="8" height="7" rx="1.5"/><rect x="13" y="4" width="8" height="7" rx="1.5"/><rect x="3" y="13" width="8" height="7" rx="1.5"/><rect x="13" y="13" width="8" height="7" rx="1.5"/>', boardPending) : ""}
         ${tabBtn("schedule", t("tabSchedule"), '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>')}
         ${tabBtn("settle", t("tabSettle"), '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/>')}
         ${tabBtn("more", t("tabMore"), '<path d="M4 7h16M4 12h16M4 17h16"/>')}
@@ -238,6 +241,8 @@
     bindLang();
     $app.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => { tab = b.dataset.tab; if (tab === "schedule" && !sched) loadSched(); if (tab === "settle") loadSettle(settle && settle.month); draw(); window.scrollTo(0, 0); });
     const m = document.getElementById("main");
+    if (tab === "board" && window.OwnerBoard) { window.OwnerBoard.mount(m, { rpc, shopId, lang, isOwner: isOwner(), toast, errMsg, onPending: n => { if (n !== boardPending) { boardPending = n; const d = $app.querySelector('[data-tab="board"] .dot'); if (d) d.textContent = n || ""; else if (n) { const b = $app.querySelector('[data-tab="board"]'); if (b) b.insertAdjacentHTML("beforeend", `<span class="dot">${n}</span>`); } } } }); drawDetail(); return; }
+    if (window.OwnerBoard) window.OwnerBoard.unmount();
     if (tab === "home") m.innerHTML = homeHtml();
     else if (tab === "bookings") m.innerHTML = bookingsHtml();
     else if (tab === "schedule") m.innerHTML = scheduleHtml();
@@ -518,8 +523,10 @@
     // 입력 중이면 화면을 다시 그리지 않아요
     const ae = document.activeElement; if (quiet && ae && /INPUT|TEXTAREA|SELECT/.test(ae.tagName)) return;
     if (quiet && detail) return;
+    if (quiet && tab === "board") { const b = $app.querySelector('[data-tab="bookings"]'); if (b) { const n = r_req(); const d = b.querySelector(".dot"); if (d) d.textContent = n || ""; } return; }
     draw();
   }
+  const r_req = () => rows.filter(b => b.status === "requested").length;
   function ping() {
     toast(t("tNew"));
     try { navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch (e) {}
