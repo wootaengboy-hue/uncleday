@@ -39,6 +39,7 @@
     openNeed: ["Hãy bật hồ sơ nghề nghiệp trước.", "먼저 경력 프로필 저장을 켜 주세요.", "Turn on the career profile first."],
     pinCh: ["Đổi PIN", "PIN 바꾸기", "Change PIN"], pinOld: ["PIN hiện tại", "지금 PIN", "Current PIN"], pinNew: ["PIN mới (6 số)", "새 PIN (숫자 6자리)", "New PIN (6 digits)"], save: ["Lưu", "저장", "Save"], pinDone: ["Đã đổi PIN.", "PIN을 바꿨어요.", "PIN changed."],
     saved: ["Đã lưu.", "저장했어요.", "Saved."], sent: ["Đã gửi yêu cầu.", "요청을 보냈어요.", "Request sent."], refresh: ["↻", "↻", "↻"],
+    notReady: ["Màn hình nhân viên sắp mở. Hãy thử lại sau.", "직원 화면은 곧 열려요. 잠시 뒤 다시 해 주세요.", "The staff app opens soon. Please try later."],
     tErr: ["Có lỗi. Hãy thử lại.", "문제가 생겼어요. 다시 해 주세요.", "Something went wrong. Try again."],
     install: ["Thêm vào màn hình chính để mở nhanh.", "홈 화면에 추가하면 앱처럼 빨리 열 수 있어요.", "Add to home screen to open it like an app."],
     wd: [["CN", "T2", "T3", "T4", "T5", "T6", "T7"], ["일", "월", "화", "수", "목", "금", "토"], ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]],
@@ -72,7 +73,7 @@
   const dShort = ds => { const p = dp(ds); return lang === "vi" ? `${p.w} ${p.d}/${p.m}` : lang === "ko" ? `${p.m}/${p.d} (${p.w})` : `${p.w} ${p.m}/${p.d}`; };
   const addD = (ds, n) => { const d = new Date(ds + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
   const shopName = s => { const n = s && s.name; return n ? (typeof n === "string" ? n : n[lang] || n.vi || n.ko || n.en || "") : ""; };
-  const errTx = e => { const m = e && e.message || "", k = Object.keys(ERR).find(x => m.indexOf(x) >= 0); return k ? ERR[k][li()] : (/fetch|network/i.test(m) ? t("tErr") : (m || t("tErr"))); };
+  const errTx = e => { const m = e && e.message || "", k = Object.keys(ERR).find(x => m.indexOf(x) >= 0); return k ? ERR[k][li()] : /function|schema cache/i.test(m) ? t("notReady") : (/fetch|network/i.test(m) ? t("tErr") : (m || t("tErr"))); };
 
   const $app = document.getElementById("app");
   let sb = null, tok = read("ud-staff-token"), D = null, wk = 0, showTeam = false, req = null, pinOpen = false, busy = false, toastT = null, qrOpen = false;
