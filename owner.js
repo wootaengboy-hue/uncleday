@@ -34,6 +34,7 @@
     sSettled: ["đã đối soát", "정산됨", "settled"],
     sStmt: ["Trong bảng đối soát đã gửi", "보낸 정산서에 포함", "In the sent statement"],
     tabBoard: ["Bảng phòng", "현황판", "Board"],
+    rotaT: ["Lịch làm của nhân viên", "직원 근무표", "Staff rota"], rotaS: ["Xếp ca sáng · chiều · nghỉ, duyệt yêu cầu", "오전 · 오후 · 휴무 짜기, 요청 승인", "Plan AM · PM · days off, approve requests"],
     tabHome: ["Hôm nay", "오늘", "Today"], tabBookings: ["Đặt lịch", "예약", "Bookings"], tabSchedule: ["Lịch", "일정", "Schedule"], tabMore: ["Thêm", "더보기", "More"],
     install: ["Cài Uncle Day lên màn hình chính để mở nhanh như ứng dụng", "홈 화면에 설치하면 앱처럼 바로 열 수 있어요", "Add Uncle Day to your home screen to open it like an app"],
     installBtn: ["Cách cài", "설치 방법", "How to"],
@@ -142,7 +143,7 @@
   // ---- 상태 ----
   let sb = null, me = null, shopId = null, rows = [], sched = null, hoursDraft = null;
   let tab = "home", bTab = "new", detail = null, proposing = false, picks = [], pDay = null, schedDay = null, toastMsg = "", busy = false;
-  let knownReq = null, pollTimer = null, boardPending = 0;
+  let knownReq = null, pollTimer = null, boardPending = 0, boardView = null;
   const store = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} };
   const read = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
 
@@ -241,7 +242,7 @@
     bindLang();
     $app.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => { tab = b.dataset.tab; if (tab === "schedule" && !sched) loadSched(); if (tab === "settle") loadSettle(settle && settle.month); draw(); window.scrollTo(0, 0); });
     const m = document.getElementById("main");
-    if (tab === "board" && window.OwnerBoard) { window.OwnerBoard.mount(m, { rpc, shopId, lang, isOwner: isOwner(), toast, errMsg, onPending: n => { if (n !== boardPending) { boardPending = n; const d = $app.querySelector('[data-tab="board"] .dot'); if (d) d.textContent = n || ""; else if (n) { const b = $app.querySelector('[data-tab="board"]'); if (b) b.insertAdjacentHTML("beforeend", `<span class="dot">${n}</span>`); } } } }); drawDetail(); return; }
+    if (tab === "board" && window.OwnerBoard) { window.OwnerBoard.mount(m, { view: boardView, rpc, shopId, lang, isOwner: isOwner(), toast, errMsg, onPending: n => { boardView = null; if (n !== boardPending) { boardPending = n; const d = $app.querySelector('[data-tab="board"] .dot'); if (d) d.textContent = n || ""; else if (n) { const b = $app.querySelector('[data-tab="board"]'); if (b) b.insertAdjacentHTML("beforeend", `<span class="dot">${n}</span>`); } } } }); drawDetail(); return; }
     if (window.OwnerBoard) window.OwnerBoard.unmount();
     if (tab === "home") m.innerHTML = homeHtml();
     else if (tab === "bookings") m.innerHTML = bookingsHtml();
@@ -289,7 +290,7 @@
     const key = b => (b.visit_date || "") + (b.visit_time || "");
     list.sort((a, b) => ["past", "closed"].includes(bTab) ? key(b).localeCompare(key(a)) : key(a).localeCompare(key(b)));
     return `<div class="chips">${Object.keys(GROUPS).map(k => `<button class="chip ${bTab === k ? "on" : ""}" data-btab="${k}">${t("bt_" + k)}<em>${inTab(k).length}</em></button>`).join("")}</div>
-      ${list.length ? `<div class="list">${list.map(b => row(b, true)).join("")}</div>` : `<div class="card empty">${t("emptyList")}</div>`}
+      ${list.length ? `<div class="list blist">${list.map(b => row(b, true)).join("")}</div>` : `<div class="card empty">${t("emptyList")}</div>`}
       <button class="btn ghost" data-act="refresh">↻ ${t("refresh")}</button>`;
   }
 
@@ -308,7 +309,9 @@
     const slots = slotsOfDay(schedDay);
     const timeOpts = sel => Array.from({ length: 41 }, (_, i) => toStr(360 + i * 30)).map(x => `<option ${x === sel ? "selected" : ""}>${x}</option>`).join("");
     const owner = isOwner(), dirty = !!hoursDraft;
-    return `<div class="sec"><h2>${t("dayTitle")}</h2><span></span></div>
+    return `<div class="cols"><div class="col">
+      ${window.OwnerBoard ? `<button class="req" data-act="rota" style="border-color:#B9D6C5;background:#F1F8F3"><div class="tm" style="min-width:auto">👥</div><div class="grow"><span class="nm">${t("rotaT")}</span><span class="sub">${t("rotaS")}</span></div><span class="bd ok">›</span></button>` : ""}
+      <div class="sec"><h2>${t("dayTitle")}</h2><span></span></div>
       <div class="card" style="display:flex;flex-direction:column;gap:12px">
         <div class="days">${days.map(ds => { const d = new Date(ds + "T00:00:00Z"); const off = closedOf(ds, null) || (weekOf()[wdIdx(ds)] || {}).closed; return `<button class="day ${ds === schedDay ? "on" : ""} ${off ? "off" : ""}" data-day="${ds}">${ds === td ? t("today") : T.wd[li()][wdIdx(ds)]}<b>${d.getUTCDate()}</b></button>`; }).join("")}</div>
         ${w.closed ? `<p class="muted" style="margin:0">${t("weeklyOff")}</p>` : `
@@ -318,7 +321,7 @@
           const cls = blk ? "blk" : n >= cap ? "full" : n > 0 ? "busy" : "";
           return `<button class="sl ${cls}" data-slot="${x}" ${dayOff ? "disabled" : ""}><span>${x}</span><small>${blk ? t("blocked") : n + "/" + cap}</small></button>`; }).join("")}</div>
         <div class="legend"><span><i></i>${t("lgFree")}</span><span><i class="b"></i>${t("lgBooked")}</span><span><i class="f"></i>${t("lgFull")}</span><span><i class="k"></i>${t("lgBlocked")}</span></div>`}
-      </div>
+      </div></div><div class="col">
       <div class="sec"><h2>${t("hoursTitle")}</h2><span>${dirty ? t("unsaved") : ""}</span></div>
       ${owner ? "" : `<div class="info">${t("staffOnly")}</div>`}
       <div class="list">${weekOf().map((d, i) => `<div class="wk"><span class="d">${T.wdLong[li()][i]}</span>
@@ -328,7 +331,7 @@
         <div class="step"><button data-act="capd" ${owner ? "" : "disabled"} aria-label="-">−</button><b>${cap}</b><button data-act="capu" ${owner ? "" : "disabled"} aria-label="+">+</button></div></div>
       <div class="card" style="display:flex;flex-direction:column;gap:10px"><b>${t("cutTitle")}</b>
         <div class="chips">${[0, 1, 2, 3, 6, 12, 24].map(h => `<button class="chip ${(hoursDraft ? hoursDraft.cut : sched.cutoff_min) === h * 60 ? "on" : ""}" data-cut="${h * 60}" ${owner ? "" : "disabled"}>${h === 0 ? "0" : t("cutOpt", h)}</button>`).join("")}</div></div>
-      ${owner ? `<button class="btn main" data-act="savehours" ${dirty ? "" : "disabled"}>${t("saveHours")}</button>` : ""}`;
+      ${owner ? `<button class="btn main" data-act="savehours" ${dirty ? "" : "disabled"}>${t("saveHours")}</button>` : ""}</div></div>`;
   }
   function draft() { if (!hoursDraft) hoursDraft = { week: JSON.parse(JSON.stringify(sched.week)), cap: sched.capacity, cut: sched.cutoff_min }; return hoursDraft; }
 
@@ -348,7 +351,7 @@
     const stm = (settle.statements || []).find(x => x.month === settle.month);
     const stLabel = !stm ? t("sOpen") : stm.status === "paid" ? t("sPaidSt") : t("sBilled");
     const stCls = !stm ? "wait" : stm.status === "paid" ? "ok" : "ask";
-    return `<div class="sec"><h2>${t("settleTitle")}</h2><span></span></div>
+    return `<div class="cols"><div class="col"><div class="sec"><h2>${t("settleTitle")}</h2><span></span></div>
       <div class="chips">${months.map(m => `<button class="chip ${m === settle.month ? "on" : ""}" data-mon="${m}">${esc(monLabel(m))}</button>`).join("")}</div>
       <div class="card">
         <div class="kv"><span>${t("sStatus")}</span><b><span class="bd ${stCls}">${stLabel}</span></b></div>
@@ -357,11 +360,11 @@
         <div class="kv"><span>${t("sFee")}</span><b style="font-size:17px">${vnd(sum.commission)}</b></div>
         ${stm ? `<div class="kv"><span>${t("sStmt")}</span><b>${stm.count} · ${vnd(stm.commission)}</b></div>` : ""}
       </div>
-      <p class="muted" style="margin:0 2px">${t("sNote")}</p>
+      <p class="muted" style="margin:0 2px">${t("sNote")}</p></div><div class="col">
       <div class="sec"><h2>${t("sRows")}</h2><span>${(settle.rows || []).length}</span></div>
       ${(settle.rows || []).length ? `<div class="list">${settle.rows.map(r => `<div class="trow"><div class="tm" style="font-size:15px">${esc(r.date.slice(8))}/${esc(r.date.slice(5, 7))}<small>${esc(r.time || "")}</small></div>
           <div class="grow"><span class="nm">${esc(r.name || "-")} · ${t("people", r.people)}</span><span class="sub">${esc(r.code)}${r.settled ? " · " + t("sSettled") : ""}</span></div>
-          <div style="text-align:right"><b style="display:block">${vnd(r.paid)}</b><span class="sub">${t("sFee")} ${vnd(r.commission)}</span></div></div>`).join("")}</div>` : `<div class="card empty">${t("sNone")}</div>`}`;
+          <div style="text-align:right"><b style="display:block">${vnd(r.paid)}</b><span class="sub">${t("sFee")} ${vnd(r.commission)}</span></div></div>`).join("")}</div>` : `<div class="card empty">${t("sNone")}</div>`}</div></div>`;
   }
 
   // ---- 더보기 ----
@@ -396,6 +399,7 @@
     if (a === "inst") { toast(/iPhone|iPad/.test(navigator.userAgent) ? t("installIos") : t("installAndroid")); return; }
     if (a === "instx") { store("ud-owner-inst", "x"); draw(); return; }
     if (a === "refresh") { await load(); return; }
+    if (a === "rota") { tab = "board"; boardView = "sched"; draw(); window.scrollTo(0, 0); return; }
     if (a === "pw") { drawNewPw(); return; }
     if (a === "logout") { await sb.auth.signOut(); me = null; rows = []; sched = null; knownReq = null; drawLogin(); return; }
     if (a === "capu") { const d = draft(); d.cap = Math.min(50, d.cap + 1); draw(); return; }

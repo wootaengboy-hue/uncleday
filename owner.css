@@ -181,3 +181,8 @@ textarea.inp { min-height: 64px; resize: vertical; }
 .app.wide { max-width: none; }
 .app.wide .body { padding-left: 10px; padding-right: 10px; }
 @media (min-width: 960px) { .app.wide .body { max-width: none; padding-left: 16px; padding-right: 16px; } }
+@media (min-width: 1200px) {
+  .body > .cols { max-width: none; }
+  .body > .list.blist { max-width: none; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 28px; }
+  .list.blist .trow:nth-child(2) { border-top: 0; }
+}

@@ -7,7 +7,9 @@
 (() => {
   const LANGS = ["vi", "ko", "en"];
   const T = {
-    vBoard: ["Bảng phòng", "현황판", "Board"], vSched: ["Lịch làm", "근무표", "Rota"], vSet: ["⚙️ Cài đặt", "⚙️ 매장 설정", "⚙️ Setup"], refresh: ["↻", "↻", "↻"],
+    vBoard: ["Bảng phòng", "현황판", "Board"],
+    openAll: ["Mở cửa", "영업 시작", "Open"], closeAll: ["Đóng cửa", "영업 마감", "Close"], openHint: ["Chấm vào cho tất cả nhân viên làm hôm nay", "오늘 근무자를 모두 출근 처리해요", "Clock in everyone working today"],
+    openDone: ["Đã chấm vào {n} người", "{n}명 출근 처리했어요", "{n} clocked in"], closeDone: ["Đã chấm ra {n} người", "{n}명 퇴근 처리했어요", "{n} clocked out"], vSched: ["Lịch làm", "근무표", "Rota"], vSet: ["⚙️ Cài đặt", "⚙️ 매장 설정", "⚙️ Setup"], refresh: ["↻", "↻", "↻"],
     kWork: ["Đang làm", "시술 중", "In session"], kWait: ["Khách chờ", "대기 손님", "Waiting"], kDone: ["Xong hôm nay", "오늘 완료", "Done today"], kRev: ["Doanh thu", "오늘 매출", "Revenue"],
     expT: ["Khách Uncle Day hôm nay", "오늘 올 엉클데이 손님", "Uncle Day guests today"], arrive: ["Đã đến", "도착", "Arrived"],
     walkT: ["Tiếp nhận khách", "손님 접수", "Add a guest"], gName: ["Tên khách", "손님 이름", "Guest name"], course: ["Dịch vụ", "코스", "Service"], ppl: ["Số khách", "인원", "Guests"], addG: ["Tiếp nhận", "접수", "Add"],
@@ -387,7 +389,13 @@
   }
   function renderTop() {
     const n = data.pending_req || 0;
-    root.querySelector("#obTop").innerHTML = `<button class="ob-vt ${view === "board" ? "on" : ""}" data-v="board">🗺️ ${t("vBoard")}</button><button class="ob-vt ${view === "sched" ? "on" : ""}" data-v="sched">📅 ${t("vSched")}${n ? `<span class="n">${n}</span>` : ""}</button><span class="ob-sp"></span>${owner() ? `<button class="ob-vt" data-a="set">${t("vSet")}</button>` : ""}<button class="ob-vt" data-a="reload" aria-label="refresh">${t("refresh")}</button>`;
+    root.querySelector("#obTop").innerHTML = `<button class="ob-vt ${view === "board" ? "on" : ""}" data-v="board">🗺️ ${t("vBoard")}</button><button class="ob-vt ${view === "sched" ? "on" : ""}" data-v="sched">📅 ${t("vSched")}${n ? `<span class="n">${n}</span>` : ""}</button><span class="ob-sp"></span>${openBtn()}${owner() ? `<button class="ob-vt" data-a="set">${t("vSet")}</button>` : ""}<button class="ob-vt" data-a="reload" aria-label="refresh">${t("refresh")}</button>`;
+  }
+  function openBtn() {
+    const sch = data.staff.filter(s => s.code !== "O" && !s.in_at), inN = data.staff.filter(s => s.in_at && !s.out_at);
+    if (!inN.length && sch.length) return `<button class="ob-vt on" data-a="openall" title="${esc(t("openHint"))}">☀️ ${t("openAll")}</button>`;
+    if (inN.length && !data.sessions.some(x => x.status === "working") && !data.guests.some(g => g.status === "waiting")) return `<button class="ob-vt" data-a="closeall">🌙 ${t("closeAll")}</button>`;
+    return "";
   }
   function renderFloorChips() {
     root.querySelector("#obFl").innerHTML = G.floors.slice().reverse().map(f => { const all = f.rooms.reduce((a, r) => a + r.st.length, 0), a = f.rooms.reduce((nn, r) => nn + r.st.filter(s => data.sessions.some(x => x.status === "working" && x.station === s.id)).length, 0); return `<span class="ob-fchip">${t("fchip", { f: f.num, a: a ? `<b>${a}</b>` : "0", b: all })}</span>`; }).join("");
@@ -583,6 +591,13 @@
     const b = e.target.closest("[data-a]"); if (!b) return;
     const a = b.dataset.a, id = b.dataset.id;
     if (a === "set") { openSet(); return; }
+    if (a === "openall" || a === "closeall") {
+      if (busy) return; busy = true;
+      const list = a === "openall" ? data.staff.filter(s => s.code !== "O" && !s.in_at) : data.staff.filter(s => s.in_at && !s.out_at);
+      try { for (const s of list) await C.rpc("staff_attend", { shop: C.shopId, sid: s.id, action: a === "openall" ? "in" : "out" }); C.toast(t(a === "openall" ? "openDone" : "closeDone", { n: list.length })); }
+      catch (e) { C.toast(C.errMsg(e)); } finally { busy = false; }
+      await load(); return;
+    }
     if (a === "reload") { await load(); if (view === "sched") loadSched(); return; }
     if (a === "addg") {
       const n = root.querySelector("#obGN"), c = (data.layout.courses || [])[+root.querySelector("#obGC").value];
@@ -626,11 +641,11 @@
   window.OwnerBoard = {
     mount(el, ctx) {
       this.unmount();
-      C = ctx; root = el; lang = LANGS.includes(ctx.lang) ? ctx.lang : "vi"; plan = null; geoSig = ""; W.clear(); GW.clear(); prevSess = new Map();
+      C = ctx; root = el; lang = LANGS.includes(ctx.lang) ? ctx.lang : "vi"; if (ctx.view) { view = ctx.view; sched = null; } plan = null; geoSig = ""; W.clear(); GW.clear(); prevSess = new Map();
       root.addEventListener("click", onClick); root.addEventListener("change", onChange); root.addEventListener("input", onInput);
       window.addEventListener("resize", onResize);
       if (data && data.shop && data.shop.id === C.shopId) render(); else { data = null; root.innerHTML = `<p class="ob-empty">…</p>`; }
-      load();
+      load().then(() => { if (view === "sched" && !sched) loadSched(); });
       pollT = setInterval(() => { if (!document.hidden && !busy && !open.assign && !open.finish && !setOpen) load(); }, 10000);
       tickT = setInterval(tick, 1000);
       last = 0; raf = requestAnimationFrame(loop);
