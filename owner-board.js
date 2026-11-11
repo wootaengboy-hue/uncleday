@@ -15,6 +15,11 @@
     hLateN: ["Trễ {n} lần · {m}′", "지각 {n}번 · {m}분", "Late {n}× · {m}′"], hLate: ["Trễ {m}′", "지각 {m}분", "Late {m}′"], hCsv: ["⬇ Tải Excel (CSV)", "⬇ 엑셀로 받기", "⬇ Excel (CSV)"], hOwner: ["Chỉ chủ cửa hàng mới xem được lịch sử.", "기록은 사장님 계정만 볼 수 있어요.", "Only the owner can see history."],
     hNoStaff: ["Chưa ghi KTV", "담당 미기록", "No therapist"], hSetTp: ["Thêm KTV", "담당 넣기", "Add therapist"], hEditTp: ["Đổi", "바꾸기", "Edit"], hSaveTp: ["Lưu", "저장", "Save"], hTpSaved: ["Đã lưu KTV phụ trách.", "담당을 저장했어요.", "Therapist saved."], hByReview: ["khách xác nhận qua đánh giá", "손님 후기로 확인", "confirmed by guest review"], hRv: ["Đánh giá KTV", "💌 테라피스트 후기", "💌 Therapist reviews"], hRvNone: ["Chưa có đánh giá.", "아직 받은 후기가 없어요.", "No reviews yet."], hRvHint: ["Khách đặt qua Uncle Day có thể viết đánh giá cho KTV sau khi đến. Mỗi đánh giá được xác nhận, Uncle Day thưởng cho KTV.", "엉클데이 예약 손님은 방문 뒤 담당 테라피스트에게 후기를 쓸 수 있어요. 확인된 후기 한 건마다 엉클데이가 테라피스트에게 보너스를 줘요.", "Uncle Day guests can review their therapist after the visit. Uncle Day pays the therapist a bonus per verified review."],
     hByShop: ["nhập tay", "직접 입력", "entered by shop"],
+    decoBtn: ["🪴 Trang trí", "🪴 꾸미기", "🪴 Decorate"], decoHint: ["Kéo để di chuyển · bấm đúp để xoá · tối đa 40 món", "끌어서 옮기고, 두 번 누르면 지워요 · 최대 40개", "Drag to move · double-tap to remove · up to 40"],
+    decoSave: ["Lưu trang trí", "꾸미기 저장", "Save"], decoCancel: ["Huỷ", "취소", "Cancel"], decoSaved: ["Đã lưu trang trí.", "꾸민 모습을 저장했어요.", "Decor saved."], decoMax: ["Tối đa 40 món.", "40개까지 놓을 수 있어요.", "Up to 40 items."],
+    dk_plant: ["Chậu cây", "화분", "Plant"], dk_palm: ["Cây cọ", "야자수", "Palm"], dk_flower: ["Hoa", "꽃", "Flowers"], dk_fish: ["Bể cá", "어항", "Aquarium"], dk_lantern: ["Đèn lồng", "등불", "Lantern"], dk_candle: ["Nến thơm", "아로마 캔들", "Candle"], dk_cat: ["Mèo", "고양이", "Cat"], dk_dog: ["Chó", "강아지", "Dog"],
+    qT: ["🎯 Nhiệm vụ hôm nay", "🎯 오늘의 퀘스트", "🎯 Today's quests"], q1: ["Phục vụ {n} lượt khách", "손님 {n}팀 모시기", "Serve {n} guests"], q2: ["Không ai đi trễ", "지각 0명", "Nobody late"], q3: ["Không để khách chờ", "기다리는 손님 0명", "No one waiting"], q4: ["Mọi người đã chấm công", "근무자 모두 출근", "Everyone clocked in"],
+    qDone: ["🎉 Hoàn thành hết! Cả đội làm tốt lắm.", "🎉 오늘 퀘스트 완료! 모두 수고했어요.", "🎉 All done! Great teamwork."],
     roNote: ["Chỉ xem (quản trị Uncle Day).", "읽기 전용이에요 (엉클데이 관리자 보기).", "Read-only (Uncle Day admin view)."],
     sPhoneSet: ["Đã có số ✓ (nhập để đổi)", "전화번호 등록됨 ✓ (바꾸려면 입력)", "Phone saved ✓ (type to change)"],
     appT: ["📱 Màn hình nhân viên", "📱 직원 화면", "📱 Staff app"], appOn: ["Đang dùng", "사용 중", "On"], appOffS: ["Chưa dùng", "안 씀", "Off"], pinMake: ["Tạo PIN", "PIN 만들기", "Make PIN"], pinRe: ["Tạo lại PIN", "PIN 다시 만들기", "New PIN"], pinOff: ["Tắt", "끄기", "Turn off"],
@@ -156,7 +161,7 @@
   const EQ = ["rf", "led", "hydra", "steam"];
 
   /* ---------- 상태 ---------- */
-  let C = null, root = null, data = null, view = "board", skew = 0, pollT = 0, tickT = 0, raf = 0, last = 0, anim = 0;
+  let C = null, root = null, data = null, view = "board", skew = 0, pollT = 0, tickT = 0, emoT = 0, raf = 0, last = 0, anim = 0;
   let geoSig = "", G = null, plan = null, W = new Map(), GW = new Map(), prevSess = new Map(), prevGuest = new Map(), pendOcc = new Set();
   let pinShow = null, hist = null, hpick = null, hp = { mode: "day", d: null }, open = { assign: null, finish: null, tps: [] }, setOpen = false, setTab = "floors", draft = null, staffDraft = null, rmAsk = null, sched = null, weekFrom = null, busy = false;
   const nowMs = () => Date.now() + skew;
@@ -233,7 +238,7 @@
     let y = 12;
     for (let i = F - 1; i >= 0; i--) {
       const f = { num: i + 2, y0: y, cy: y + 222, rooms: [] }; G.floors.push(f);
-      add("ob-slab", 12, y, P - 12, 256, `<span class="ob-fl">${f.num}F</span>`);
+      add("ob-slab", 12, y, P - 12, 256, `<span class="ob-fl">${f.num}F</span>`); G.slabs = (G.slabs || []).concat([{ fl: f.num, x: 12, y, w: P - 12, h: 256 }]);
       add("ob-corr", 15, y + 194, P - 12, 56);
       const rs = floors[i].rooms || [], n = Math.max(1, rs.length), A = P - 24;
       const Tn = Math.max(1, rs.reduce((a, r) => a + (r.count || 1), 0));
@@ -258,7 +263,7 @@
       y += 272;
     }
     const f1 = { y0: y, cy: y + 53 }; G.f1 = f1;
-    add("ob-slab", 12, y, P - 12, 340, '<span class="ob-fl">1F</span>');
+    add("ob-slab", 12, y, P - 12, 340, '<span class="ob-fl">1F</span>'); G.slabs = (G.slabs || []).concat([{ fl: 1, x: 12, y, w: P - 12, h: 340 }]);
     add("ob-corr", 15, y + 26, P - 12, 54);
     add("ob-gap", P - 4, f1.cy - 22, 12, 44);
     const LX = 12 + Math.round((P - 12) * 0.46), lw = LX - 12, CX0 = LX + 6, cwid = P - CX0, DX = G.DX;
@@ -287,6 +292,90 @@
     f1.dspots = [0.28, 0.72, 0.5].map(k => ({ x: CX0 + 27 + Math.round(dw * k), y: y + 164 }));
     f1.ent = { x: DX, y: y + 372 };
     W.forEach(w => w.el.remove()); W.clear(); GW.forEach(w => w.el.remove()); GW.clear(); pendOcc.clear();
+    renderItems();
+  }
+
+  /* ---------- 6단계: 꾸미기 · 펫 · 대기 중 몸짓 · 오늘의 퀘스트 ---------- */
+  const DECO = { plant: "🪴", palm: "🌴", flower: "💐", fish: "🐠", lantern: "🏮", candle: "🕯️", cat: "🐈", dog: "🐕" };
+  const PETS = ["cat", "dog"];
+  let deco = null, pets = [], drag = null, itemSig = "";
+  const itemsNow = () => deco ? deco.items : ((data && data.layout && data.layout.items) || []).filter(it => it && DECO[it.k]);
+  function slabOf(fl) { return (G.slabs || []).find(s => s.fl === fl) || (G.slabs || [])[(G.slabs || []).length - 1]; }
+  function renderItems() {
+    if (!plan || !G.slabs) return;
+    plan.querySelectorAll(".ob-item").forEach(e => e.remove()); pets = [];
+    itemsNow().forEach((it, i) => {
+      const sl = slabOf(it.fl); if (!sl) return;
+      const x = sl.x + Math.max(0.02, Math.min(0.98, +it.rx || 0.5)) * sl.w, y = sl.y + Math.max(0.1, Math.min(0.98, +it.ry || 0.5)) * sl.h;
+      const el = document.createElement("div"); el.className = "ob-item" + (PETS.includes(it.k) ? " pet" : "") + (deco ? " edit" : "");
+      el.dataset.i = i; el.textContent = DECO[it.k]; el.title = t("dk_" + it.k); el.style.left = x + "px"; el.style.top = y + "px";
+      plan.appendChild(el);
+      if (PETS.includes(it.k) && !deco) pets.push({ el, x, y, hx: x, sl, vx: Math.random() < 0.5 ? -1 : 1, rest: Math.random() * 3 });
+    });
+  }
+  function petStep(dt) {
+    pets.forEach(p => {
+      if (p.rest > 0) { p.rest -= dt; p.el.classList.toggle("walk", false); return; }
+      p.x += p.vx * dt * 22;
+      if (Math.abs(p.x - p.hx) > 70 || p.x < p.sl.x + 16 || p.x > p.sl.x + p.sl.w - 16) { p.vx *= -1; p.x += p.vx * 2; p.rest = 1 + Math.random() * 4; }
+      if (Math.random() < dt * 0.15) p.rest = 1 + Math.random() * 3;
+      p.el.style.left = p.x + "px"; p.el.classList.toggle("flip", p.vx > 0); p.el.classList.add("walk");
+    });
+  }
+  function decoBar() {
+    const el = root.querySelector("#obDeco"); if (!el) return;
+    el.hidden = !deco;
+    if (!deco) { el.innerHTML = ""; return; }
+    el.innerHTML = `<div class="ob-deco-bar">${Object.keys(DECO).map(k => `<button class="ob-chip" data-dk="${k}" title="${esc(t("dk_" + k))}">${DECO[k]} <span>${t("dk_" + k)}</span></button>`).join("")}
+      <span class="ob-sp"></span><small class="ob-note">${t("decoHint")}</small><button class="ob-btn l" data-dx="cancel">${t("decoCancel")}</button><button class="ob-btn" data-dx="save">${t("decoSave")}</button></div>`;
+  }
+  function decoStart() { deco = { items: JSON.parse(JSON.stringify(itemsNow())) }; decoBar(); renderItems(); renderTop(); }
+  async function decoEnd(save) {
+    if (save && deco) {
+      const items = deco.items.slice(0, 40).map(it => ({ k: it.k, fl: it.fl, rx: Math.round(it.rx * 1000) / 1000, ry: Math.round(it.ry * 1000) / 1000 }));
+      if (busy) return; busy = true;
+      try { await C.rpc("board_items_save", { shop: C.shopId, items }); data.layout.items = items; C.toast(t("decoSaved")); } catch (e) { C.toast(errTx(e)); busy = false; return; }
+      busy = false;
+    }
+    deco = null; decoBar(); renderItems(); renderTop();
+  }
+  function decoDown(e) {
+    const el = e.target.closest(".ob-item.edit"); if (!el || !deco) return;
+    e.preventDefault(); drag = { i: +el.dataset.i, el, id: e.pointerId }; try { el.setPointerCapture(e.pointerId); } catch (er) {}
+    el.classList.add("drag");
+  }
+  function decoMove(e) {
+    if (!drag || e.pointerId !== drag.id) return;
+    const r = plan.getBoundingClientRect(), sc = r.width / G.PW, px = (e.clientX - r.left) / sc, py = (e.clientY - r.top) / sc;
+    const sl = (G.slabs || []).reduce((b, s) => { const d = py < s.y ? s.y - py : py > s.y + s.h ? py - s.y - s.h : 0; return !b || d < b.d ? { s, d } : b; }, null).s;
+    const it = deco.items[drag.i]; if (!it) return;
+    it.fl = sl.fl; it.rx = Math.max(0.02, Math.min(0.98, (px - sl.x) / sl.w)); it.ry = Math.max(0.1, Math.min(0.98, (py - sl.y) / sl.h));
+    drag.el.style.left = (sl.x + it.rx * sl.w) + "px"; drag.el.style.top = (sl.y + it.ry * sl.h) + "px";
+  }
+  function decoUp(e) { if (!drag || e.pointerId !== drag.id) return; drag.el.classList.remove("drag"); drag = null; }
+  function decoDbl(e) { const el = e.target.closest(".ob-item.edit"); if (!el || !deco) return; deco.items.splice(+el.dataset.i, 1); renderItems(); }
+  // 대기 중인 직원이 가끔 하는 몸짓 (말풍선)
+  const EMO = ["☕", "💬", "📱", "🎵", "😊", "💪", "🍜", "😴"];
+  function emote() {
+    if (!data || view !== "board" || document.hidden) return;
+    const idle = data.staff.filter(s => ["idle", "desk"].includes(stOf(s))).map(s => W.get(s.id)).filter(w => w && !w.moving && !w.el.hidden);
+    if (!idle.length) return;
+    const w = idle[Math.floor(Math.random() * idle.length)], b = document.createElement("div");
+    b.className = "ob-emo"; b.textContent = EMO[Math.floor(Math.random() * EMO.length)]; w.el.appendChild(b); setTimeout(() => b.remove(), 2600);
+  }
+  function renderQuests() {
+    const el = root.querySelector("#obQ"); if (!el || !data) return;
+    const groups = new Set(data.sessions.filter(x => x.status === "done").map(x => x.grp || x.id)).size;
+    const target = Math.max(5, Math.min(30, (G.st ? G.st.size : 4) * 2));
+    const sched = data.staff.filter(s => s.code !== "O"), ins = sched.filter(s => s.in_at).length;
+    const late = data.staff.filter(s => s.in_at && s.late_min > 0).length, waiting = data.guests.filter(g => g.status === "waiting").length;
+    const open = data.shop_state && data.shop_state.is_open;
+    const Q = [[t("q1", { n: target }), Math.min(1, groups / target), `${groups}/${target}`],
+      [t("q4"), sched.length ? ins / sched.length : 1, `${ins}/${sched.length}`],
+      [t("q2"), late ? 0 : (ins ? 1 : 0), late ? `${late}` : (ins ? "✓" : "—")],
+      [t("q3"), open ? (waiting ? 0 : 1) : 0, open ? (waiting ? `${waiting}` : "✓") : "—"]];
+    const all = Q.every(q => q[1] >= 1);
+    el.innerHTML = `<h3><span>${t("qT")}</span></h3>${Q.map(q => `<div class="ob-q ${q[1] >= 1 ? "ok" : ""}"><span>${q[1] >= 1 ? "✅" : "⬜"} ${esc(q[0])}</span><b>${q[2]}</b><i style="--p:${Math.round(q[1] * 100)}%"></i></div>`).join("")}${all ? `<p class="ob-qdone">${t("qDone")}</p>` : ""}`;
   }
   const eqp = (p, q) => p.x === q.x && p.y === q.y;
   function route(a, b) {
@@ -351,7 +440,7 @@
   }
   function loop(ts) {
     const dt = Math.min(0.05, last ? (ts - last) / 1000 : 0); last = ts; anim += dt;
-    W.forEach(w => { step(w, dt); drawW(w); }); GW.forEach(w => { step(w, dt); drawW(w); });
+    W.forEach(w => { step(w, dt); drawW(w); }); GW.forEach(w => { step(w, dt); drawW(w); }); petStep(dt);
     raf = requestAnimationFrame(loop);
   }
 
@@ -427,6 +516,7 @@
       root.querySelector("#obBoard").hidden = false; root.querySelector("#obSched").hidden = true; root.querySelector("#obHist").hidden = true;
       if (sig !== geoSig || !plan || !plan.isConnected) { geoSig = sig; plan = root.querySelector(".ob-plan"); buildPlan(root.querySelector(".ob-stage")); fit(); }
       syncPlan(); renderSide(); renderFloorChips();
+      const isg = JSON.stringify(data.layout.items || []); if (!deco && isg !== itemSig) { itemSig = isg; renderItems(); }
     } else if (view === "hist") { root.querySelector("#obBoard").hidden = true; root.querySelector("#obSched").hidden = true; root.querySelector("#obHist").hidden = false; renderHist(); }
     else { root.querySelector("#obBoard").hidden = true; root.querySelector("#obSched").hidden = false; renderSched(); }
     if (view !== "hist") root.querySelector("#obHist").hidden = true;
@@ -435,7 +525,7 @@
   }
   function shell() {
     root.innerHTML = `<div class="ob ${C.readOnly ? "ro" : ""}"><div class="ob-top" id="obTop"></div>
-      <div id="obBoard"><div class="ob-grid"><div><div class="ob-fchips" id="obFl" style="margin-bottom:8px"></div><div id="obLg" style="margin:-2px 0 8px"></div><div class="ob-stage"><div class="ob-box"><div class="ob-plan"></div></div></div></div>
+      <div id="obBoard"><div class="ob-grid"><div><div class="ob-fchips" id="obFl" style="margin-bottom:8px"></div><div id="obLg" style="margin:-2px 0 8px"></div><div id="obDeco" hidden></div><div class="ob-stage"><div class="ob-box"><div class="ob-plan"></div></div></div></div>
         <div class="ob-side">
           <div class="ob-kpis" id="obK"></div>
           <div id="obFirst"></div>
@@ -447,13 +537,14 @@
           <div class="ob-card" id="obWork"></div>
           <div class="ob-card" id="obAtt"></div>
           <div class="ob-card" id="obDone"></div>
+          <div class="ob-card" id="obQ"></div>
         </div></div></div>
       <div id="obSched" hidden></div><div id="obHist" hidden></div><div id="obSet"></div></div>`;
     plan = root.querySelector(".ob-plan"); geoSig = "";
   }
   function renderTop() {
     const n = data.pending_req || 0;
-    root.querySelector("#obTop").innerHTML = `<button class="ob-vt ${view === "board" ? "on" : ""}" data-v="board">🗺️ ${t("vBoard")}</button><button class="ob-vt ${view === "sched" ? "on" : ""}" data-v="sched">📅 ${t("vSched")}${n ? `<span class="n">${n}</span>` : ""}</button>${owner() ? `<button class="ob-vt ${view === "hist" ? "on" : ""}" data-v="hist">📋 ${t("vHist")}</button>` : ""}<span class="ob-sp"></span>${openBtn()}${owner() ? `<button class="ob-vt" data-a="set">${t("vSet")}</button>` : ""}<button class="ob-vt" data-a="reload" aria-label="refresh">${t("refresh")}</button>`;
+    root.querySelector("#obTop").innerHTML = `<button class="ob-vt ${view === "board" ? "on" : ""}" data-v="board">🗺️ ${t("vBoard")}</button><button class="ob-vt ${view === "sched" ? "on" : ""}" data-v="sched">📅 ${t("vSched")}${n ? `<span class="n">${n}</span>` : ""}</button>${owner() ? `<button class="ob-vt ${view === "hist" ? "on" : ""}" data-v="hist">📋 ${t("vHist")}</button>` : ""}<span class="ob-sp"></span>${view === "board" && !C.readOnly && !deco ? `<button class="ob-vt" data-a="deco">${t("decoBtn")}</button>` : ""}${openBtn()}${owner() ? `<button class="ob-vt" data-a="set">${t("vSet")}</button>` : ""}<button class="ob-vt" data-a="reload" aria-label="refresh">${t("refresh")}</button>`;
   }
   function openBtn() {
     const ss = data.shop_state; if (!ss) return "";
@@ -537,6 +628,7 @@
       const off = owner() && !s.in_at ? `<button class="ob-btn l" data-a="${s.code === "O" ? "on" : "off"}" data-id="${s.id}">${t(s.code === "O" ? "dayOn" : "dayOff")}</button>` : "";
       return `<div class="ob-row"><span class="ob-av" style="${avStyle(s, i)}"></span><div class="g"><b>${esc(s.name)} <span class="ob-pill ${PILL[st]}">${DOT[st]} ${t("s_" + st)}</span></b><small>${t(s.role === "rcp" ? "roleRcp" : "roleTp")}${s.reviews ? ` · ⭐${s.stars} (${s.reviews})` : ""}${s.role === "tp" ? ` · ${s.done_today} · ${vnd(s.rev_today)}` : ""}</small><small>${info}</small></div>${off}${btn}</div>`;
     }).join("");
+    renderQuests();
     root.querySelector("#obDone").innerHTML = `<h3><span>${t("doneT")}</span><small>${done.length}</small></h3>` + (done.length ? done.map(x => `<div class="ob-row"><div class="g"><b>[${tm(x.done_at)}] ${names(x)} · ${esc(t("room", { n: (x.station || "").split("-")[0] }))}</b><small>${esc(x.guest_name || "")}${x.ud ? '<span class="ob-ud">UD</span>' : ""} · ${esc(x.course_name || "")}</small></div><b style="font-size:13px">${vnd(sumPaid(x))}</b></div>`).join("") : `<p class="ob-empty">${t("noDone")}</p>`);
   }
   const legend = () => `<div class="ob-legend">${[["🟢", "lgIdle"], ["🔴", "lgWork"], ["🟡", "lgMove"], ["⚪", "lgOff"], ["🌙", "lgDay"]].map(([d, k]) => `<span>${d} ${t(k)}</span>`).join("")}</div>`;
@@ -787,11 +879,16 @@
       else if (k === "prev" || k === "next") { const sg = k === "prev" ? -1 : 1; if (hp.mode === "day") hp.d = addD(hp.d, sg); else if (hp.mode === "week") hp.d = addD(hp.d, 7 * sg); else { const d = new Date(hp.d + "T00:00:00Z"); d.setUTCDate(1); d.setUTCMonth(d.getUTCMonth() + sg); hp.d = d.toISOString().slice(0, 10); } }
       else if (k === "csv") { csvHist(); return; }
       loadHist(); return; }
+    const dk = e.target.closest("[data-dk]"); if (dk && deco) { if (deco.items.length >= 40) { C.toast(t("decoMax")); return; } const r = plan.getBoundingClientRect(), sc = r.width / G.PW, vy = (Math.min(window.innerHeight, r.bottom) + Math.max(0, r.top)) / 2;
+      const py = (vy - r.top) / sc, sl = (G.slabs || []).find(q => py >= q.y && py <= q.y + q.h) || slabOf(1);
+      deco.items.push({ k: dk.dataset.dk, fl: sl.fl, rx: 0.25 + Math.random() * 0.5, ry: sl.fl === 1 ? 0.2 + Math.random() * 0.15 : 0.82 + Math.random() * 0.1 }); renderItems(); return; }
+    const dx = e.target.closest("[data-dx]"); if (dx) { decoEnd(dx.dataset.dx === "save"); return; }
     if (pick && !e.target.closest(".ob-pop") && !e.target.closest('[data-a="cell"]')) { pick = null; renderPick(); }
     const b = e.target.closest("[data-a]"); if (!b) return;
     const a = b.dataset.a, id = b.dataset.id;
     if (C.readOnly && !["reload", "pkclose", "hpclose"].includes(a)) { C.toast(t("roNote")); return; }
     if (a === "set") { openSet(); return; }
+    if (a === "deco") { decoStart(); return; }
     if (a === "shopopen" || a === "shopclose") {
       const r = await call("shop_open", { action: a === "shopopen" ? "open" : "close" });
       if (r && a === "shopclose") { const still = r.staff.filter(x => x.in_at && !x.out_at).length; C.toast(still ? t("closedStill", { n: still }) : t("closedOk")); }
@@ -863,13 +960,15 @@
       window.addEventListener("resize", onResize); window.addEventListener("keydown", onKey);
       if (data && data.shop && data.shop.id === C.shopId) render(); else { data = null; root.innerHTML = `<p class="ob-empty">…</p>`; }
       load().then(() => { if (view === "sched" && !sched) loadSched(); if (view === "hist") loadHist(); });
-      pollT = setInterval(() => { if (!document.hidden && !busy && !open.assign && !open.finish && !setOpen && !pick) load(); }, 10000);
-      tickT = setInterval(tick, 1000);
+      pollT = setInterval(() => { if (!document.hidden && !busy && !open.assign && !open.finish && !setOpen && !pick && !deco) load(); }, 10000);
+      tickT = setInterval(tick, 1000); emoT = setInterval(emote, 5000);
+      root.addEventListener("pointerdown", decoDown); root.addEventListener("pointermove", decoMove); root.addEventListener("pointerup", decoUp); root.addEventListener("pointercancel", decoUp); root.addEventListener("dblclick", decoDbl);
       last = 0; raf = requestAnimationFrame(loop);
     },
     unmount() {
       if (!root) return;
-      clearInterval(pollT); clearInterval(tickT); cancelAnimationFrame(raf); window.removeEventListener("resize", onResize); window.removeEventListener("keydown", onKey); pick = null;
+      clearInterval(pollT); clearInterval(tickT); clearInterval(emoT); deco = null; drag = null; pets = [];
+      root.removeEventListener("pointerdown", decoDown); root.removeEventListener("pointermove", decoMove); root.removeEventListener("pointerup", decoUp); root.removeEventListener("pointercancel", decoUp); root.removeEventListener("dblclick", decoDbl); cancelAnimationFrame(raf); window.removeEventListener("resize", onResize); window.removeEventListener("keydown", onKey); pick = null;
       root.removeEventListener("click", onClick); root.removeEventListener("change", onChange); root.removeEventListener("input", onInput);
       W.forEach(w => w.el.remove()); W.clear(); GW.forEach(w => w.el.remove()); GW.clear();
       root = null; plan = null; setOpen = false; open = { assign: null, finish: null, tps: [] };
