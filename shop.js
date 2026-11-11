@@ -304,10 +304,35 @@ ${f.text}
   const first = new Date(); first.setHours(0, 0, 0, 0); first.setDate(first.getDate() + 1);   // 내일부터
   const last = new Date(first); last.setDate(last.getDate() + 90);                            // 90일까지
   let view = new Date(first.getFullYear(), first.getMonth(), 1);
-  const dayOff = ds => (shop.closed || []).includes(new Date(ds + "T00:00:00").getDay());
+  // 사장님 페이지에서 정한 영업시간·휴무·막은 시간·남은 자리 (없으면 업체 정보의 open/close/closed 그대로)
+  let AV = null;
+  const avKey = (ds, t) => ds + "|" + t;
+  const avWeek = ds => AV && AV.managed && AV.week ? AV.week[(new Date(ds + "T00:00:00").getDay() + 6) % 7] : null;
+  const avClosed = (ds, t) => !!AV && (AV.closures || []).some(c => c.day === ds && (t == null ? c.slot == null : c.slot === t));
+  if (typeof LIVE !== "undefined" && LIVE.on && shop.id) LIVE.rpc("shop_availability", { shop: shop.id, d1: ymd(first), d2: ymd(last) }).then(r => { AV = r; if (!$("bkPanel").hidden) { drawCal(); drawSlots(); } }).catch(() => {});
+  const dayOff = ds => { const w = avWeek(ds); return (w ? !!w.closed : (shop.closed || []).includes(new Date(ds + "T00:00:00").getDay())) || avClosed(ds, null); };
   const fmtTime = t => { const m = toMin(t), h = Math.floor(m / 60), mm = String(m % 60).padStart(2, "0"); return lang === "ko" ? `${h < 12 ? "오전" : "오후"} ${h % 12 || 12}:${mm}` : lang === "vi" ? `${h}:${mm}` : `${h % 12 || 12}:${mm} ${h < 12 ? "AM" : "PM"}`; };
   const fmtDate = ds => { const x = new Date(ds + "T00:00:00"), w = ui("days")[x.getDay()]; return lang === "ko" ? `${x.getMonth() + 1}.${x.getDate()}(${w})` : lang === "vi" ? `${w}, ${x.getDate()}/${x.getMonth() + 1}` : `${w}, ${x.toLocaleString("en-US", { month: "short" })} ${x.getDate()}`; };
-  function slotsFor() { const dur = shop.menu[fMenu.value].min || 60, out = []; for (let t = toMin(shop.open); t + dur <= toMin(shop.close); t += 30) out.push(toStr(t)); return out; }
+  function slotsFor() {
+    const dur = shop.menu[fMenu.value].min || 60, out = [], ds = fDate.value, w = ds ? avWeek(ds) : null;
+    const open = w ? w.open : shop.open, close = w ? w.close : shop.close;
+    if (!open || !close || (ds && dayOff(ds))) return out;
+    const ppl = +($("fPeople") ? $("fPeople").value : 1) || 1, cap = AV ? +AV.capacity || 4 : 99;
+    const nowVN = Date.now() + 7 * 3600e3, cut = AV ? (+AV.cutoff_min || 0) * 60e3 : 0;
+    for (let t = toMin(open); t + dur <= toMin(close); t += 30) {
+      if (ds && AV) {
+        if (Date.parse(ds + "T" + toStr(t) + ":00Z") < nowVN + cut) continue;                 // 예약 마감 시간 전
+        let ok = true;
+        for (let k = t; k < t + Math.max(dur, 30); k += 30) {                                  // 시술 시간 동안 막힌 칸·자리 확인
+          const key = avKey(ds, toStr(k));
+          if (avClosed(ds, toStr(k)) || ((AV.left || {})[key] != null ? AV.left[key] : cap) < ppl) { ok = false; break; }
+        }
+        if (!ok) continue;
+      }
+      out.push(toStr(t));
+    }
+    return out;
+  }
   function drawSum() {
     $("bkSumT").textContent = fDate.value && fTime.value ? `${fmtDate(fDate.value)} ${fmtTime(fTime.value)}` : fDate.value ? `${fmtDate(fDate.value)} · ${ui("pickTime")}` : ui("pickDT");
     $("bkSum").classList.toggle("set", !!(fDate.value && fTime.value));
@@ -337,7 +362,8 @@ ${f.text}
   $("bkSum").onclick = () => { const p = $("bkPanel"); p.hidden = !p.hidden; $("bkSum").classList.toggle("open", !p.hidden); if (!p.hidden) { drawCal(); drawSlots(); } };
   $("calPrev").onclick = () => { view = new Date(view.getFullYear(), view.getMonth() - 1, 1); drawCal(); };
   $("calNext").onclick = () => { view = new Date(view.getFullYear(), view.getMonth() + 1, 1); drawCal(); };
-  const setPpl = n => { n = Math.max(1, Math.min(10, n)); $("fPeople").value = n; $("pplN").textContent = n; $("pplM").disabled = n <= 1; $("pplP").disabled = n >= 10; };
+  const setPpl = n => { n = Math.max(1, Math.min(10, n)); $("fPeople").value = n; $("pplN").textContent = n; $("pplM").disabled = n <= 1; $("pplP").disabled = n >= 10;
+    if (AV && fDate.value) { if (fTime.value && !slotsFor().includes(fTime.value)) { fTime.value = ""; drawSum(); } if (!$("bkPanel").hidden) drawSlots(); } };
   $("pplM").onclick = () => setPpl(+$("fPeople").value - 1); $("pplP").onclick = () => setPpl(+$("fPeople").value + 1); setPpl(1);
   fMenu.onchange = () => { if (fTime.value && !slotsFor().includes(fTime.value)) fTime.value = ""; drawSlots(); drawSum(); };
   drawSum();
