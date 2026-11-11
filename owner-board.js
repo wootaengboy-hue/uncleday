@@ -34,7 +34,7 @@
     hrsN: ["{n} giờ", "{n}시간", "{n} h"], wkTot: ["Tuần {n}h", "주 {n}시간", "{n}h / wk"], pickT: ["{a} · {b}", "{a} · {b}", "{a} · {b}"], pickC: ["Tự đặt giờ", "시간 직접 정하기", "Set hours"], pickSave: ["Lưu giờ", "이 시간으로", "Save"], nextDay: ["(hôm sau)", "(다음날)", "(+1)"], badHrs: ["Giờ kết thúc phải sau giờ bắt đầu.", "끝나는 시간이 시작 시간보다 늦어야 해요.", "End must be after start."],
     bedW: ["Giường", "베드", "Bed"], chairW: ["Ghế", "체어", "Chair"], anyW: ["Giường·Ghế", "베드·체어", "Bed·Chair"],
     eq_rf: ["Máy RF", "고주파", "RF"], eq_led: ["Đèn LED", "LED", "LED"], eq_hydra: ["Hydra", "아쿠아필", "Hydra"], eq_steam: ["Xông hơi", "스티머", "Steamer"],
-    wk: ["Tuần {n}", "{n} 주", "Week of {n}"], minL: ["Tối thiểu sáng {a} · chiều {b}", "최소 인원 오전 {a} · 오후 {b}", "Minimum AM {a} · PM {b}"], cov: ["S {a} · C {b}", "오전 {a} · 오후 {b}", "AM {a} · PM {b}"],
+    thisWk: ["Tuần này", "이번 주", "This week"], minL: ["Tối thiểu sáng {a} · chiều {b}", "최소 인원 오전 {a} · 오후 {b}", "Minimum AM {a} · PM {b}"], cov: ["S {a} · C {b}", "오전 {a} · 오후 {b}", "AM {a} · PM {b}"],
     cellHint: ["Bấm ô để chọn ca hoặc tự đặt giờ (vd: làm 4 tiếng)", "칸을 누르면 오전 · 오후 · 종일 · 휴무를 고르거나 시간을 직접 정할 수 있어요 (4시간 근무 등)", "Tap a cell to pick a shift or set custom hours (e.g. 4 hours)"],
     reqT: ["Yêu cầu của nhân viên", "직원 요청", "Staff requests"], noReq: ["Chưa có yêu cầu.", "요청이 없어요.", "No requests."], ok: ["Duyệt", "승인", "Approve"], no: ["Từ chối", "거절", "Decline"],
     r_off: ["Xin nghỉ", "휴무 신청", "Day off"], r_shift: ["Đổi ca → {n}", "근무 변경 → {n}", "Change → {n}"], r_swap: ["Đổi ca với {n}", "{n}와 교대", "Swap with {n}"], must: ["Bắt buộc", "꼭 휴무", "Must"],
@@ -69,6 +69,13 @@
   const hrsTxt = h => h ? fmt(h[0]) + "–" + fmt(h[1]) : "";
   const durH = h => h ? Math.round((h[1] - h[0]) / 6) / 10 : 0;
   const TIMESC = Array.from({ length: 43 }, (_, i) => 360 + i * 30);
+  // 날짜 표기: 한국어 11/9 (월) · 11월 9일 (월), 베트남어 T2, 9/11, 영어 Mon, Nov 9
+  const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const dParts = ds => { const d = new Date(ds + "T00:00:00Z"); return { m: d.getUTCMonth() + 1, d: d.getUTCDate(), w: T.wd[li()][d.getUTCDay()] }; };
+  const dShort = ds => { const p = dParts(ds); return lang === "ko" ? `${p.m}/${p.d} (${p.w})` : lang === "vi" ? `${p.w}, ${p.d}/${p.m}` : `${p.w}, ${MON[p.m - 1]} ${p.d}`; };
+  const dLong = ds => { const p = dParts(ds); return lang === "ko" ? `${p.m}월 ${p.d}일 (${p.w})` : dShort(ds); };
+  const dRange = (a, b) => { const p = dParts(a), q = dParts(b), same = p.m === q.m;
+    return lang === "ko" ? `${p.m}월 ${p.d}일 ~ ${same ? "" : q.m + "월 "}${q.d}일` : lang === "vi" ? `${p.d}/${p.m} – ${q.d}/${q.m}` : `${MON[p.m - 1]} ${p.d} – ${same ? "" : MON[q.m - 1] + " "}${q.d}`; };
   const tm = iso => { if (!iso) return ""; const d = new Date(Date.parse(iso) + 7 * 3600e3); return String(d.getUTCHours()).padStart(2, "0") + ":" + String(d.getUTCMinutes()).padStart(2, "0"); };
 
   /* ---------- 도트 캐릭터 ---------- */
@@ -498,12 +505,12 @@
     const el = root.querySelector("#obSched");
     if (!sched) { el.innerHTML = `<p class="ob-empty">…</p>`; return; }
     const days = Array.from({ length: 7 }, (_, i) => addD(weekFrom, i)), td = data.today, L = sched.layout || {};
-    const lab = ds => { const d = new Date(ds + "T00:00:00Z"); return `${T.wd[li()][d.getUTCDay()]} ${d.getUTCDate()}/${d.getUTCMonth() + 1}`; };
+    const lab = dShort, isThis = days.includes(td);
     const SH = L.shifts || {}, mid = ((SH.B || [780])[0] + (SH.A || [0, 1140])[1]) / 2;
     const hOf = (s, i) => (s.hours || [])[i] || (s.codes[i] === "O" ? null : SH[s.codes[i]]);
     const cov = i => { let a = 0, p = 0; sched.staff.forEach(s => { if (s.role !== "tp") return; const c = s.codes[i], h = hOf(s, i);
       if (c === "C" && h) { if (h[0] < mid) a++; if (h[1] > mid) p++; return; } if (c === "A" || c === "F") a++; if (c === "B" || c === "F") p++; }); return { a, p }; };
-    let h = `<div class="ob-card"><div class="ob-top"><button class="ob-vt" data-a="wk-">‹</button><b>${t("wk", { n: lab(weekFrom) })}</b><button class="ob-vt" data-a="wk+">›</button><span class="ob-sp"></span><small class="ob-note">${t("minL", { a: L.min_am, b: L.min_pm })}</small></div>${owner() ? `<p class="ob-note">${t("cellHint")}</p>` : ""}</div>`;
+    let h = `<div class="ob-card"><div class="ob-top"><button class="ob-vt" data-a="wk-">‹</button><b>${dRange(days[0], days[6])}${isThis ? ` <span class="ob-pill ob-p-idle">${t("thisWk")}</span>` : ""}</b><button class="ob-vt" data-a="wk+">›</button><span class="ob-sp"></span><small class="ob-note">${t("minL", { a: L.min_am, b: L.min_pm })}</small></div>${owner() ? `<p class="ob-note">${t("cellHint")}</p>` : ""}</div>`;
     h += `<div class="ob-tw"><table class="ob-sg"><thead><tr><th></th>${days.map(ds => `<th class="${ds === td ? "td" : ""}">${lab(ds)}</th>`).join("")}</tr></thead><tbody>`;
     sched.staff.forEach((s, si) => {
       const tot = s.codes.reduce((a, c, i) => a + durH(hOf(s, i)), 0);
@@ -524,7 +531,7 @@
     if (!pick) { el.innerHTML = ""; return; }
     const s = sched.staff.find(x => x.id === pick.id), L = sched.layout || {}, SH = L.shifts || {}, d = new Date(pick.d + "T00:00:00Z");
     const ok = pick.e > pick.s;
-    el.innerHTML = `<div class="ob-pop" role="dialog" aria-modal="true"><div class="ob-ph"><b>${t("pickT", { a: esc(s ? s.name : ""), b: T.wd[li()][d.getUTCDay()] + " " + d.getUTCDate() + "/" + (d.getUTCMonth() + 1) })}</b><button class="ob-x" data-a="pkclose" aria-label="${t("close")}">×</button></div>
+    el.innerHTML = `<div class="ob-pop" role="dialog" aria-modal="true"><div class="ob-ph"><b>${t("pickT", { a: esc(s ? s.name : ""), b: dLong(pick.d) })}</b><button class="ob-x" data-a="pkclose" aria-label="${t("close")}">×</button></div>
       <div class="ob-pg">${["A", "B", "F", "O", "null"].map(c => `<button class="ob-cell ob-k-${c === "null" ? "N" : c} ${String(pick.c) === c ? "cur" : ""}" data-a="pk" data-c="${c}">${t("sh_" + c)}<small>${c === "O" ? "🌙" : c === "null" ? (s ? (s.def_code === "C" && s.def_start != null ? hrsTxt([s.def_start, s.def_end]) : t("sh_" + s.def_code)) : "") : SH[c] ? hrsTxt(SH[c]) : ""}</small></button>`).join("")}</div>
       <div class="ob-pc"><b>${t("pickC")}</b><div class="ob-srw"><select class="ob-in" id="obPkS">${opt(TIMESC.map(m => [m, fmtX(m)]), pick.s)}</select>–<select class="ob-in" id="obPkE">${opt(TIMESC.map(m => [m, fmtX(m)]), pick.e)}</select><span class="ob-pd ${ok ? "" : "bad"}">${ok ? t("hrsN", { n: durH([pick.s, pick.e]) }) : "⚠️"}</span></div>
         <button class="ob-btn full" data-a="pkx" ${ok ? "" : "disabled"}>${t("pickSave")}</button></div></div>`;
