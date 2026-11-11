@@ -102,6 +102,7 @@
     tProposed: ["Đã gửi giờ khác cho Uncle Day.", "다른 시간을 엉클데이에 보냈어요.", "Other times sent to Uncle Day."],
     tRejected: ["Đã báo không nhận.", "불가로 답했어요.", "Declined."],
     tVisited: ["Đã lưu: khách đã đến.", "방문 완료로 저장했어요.", "Saved as visited."],
+    auditT: ["Uncle Day đã chỉnh giúp", "엉클데이 관리자가 대신 수정했어요", "Changed by Uncle Day admin"], auditS: ["Ghi lại những gì quản trị Uncle Day đã sửa giúp cửa hàng trong 30 ngày. Có gì sai hãy nhắn Uncle Day.", "최근 30일 동안 엉클데이 관리자가 사장님 대신 고친 내용이에요. 잘못된 게 있으면 엉클데이에 알려 주세요.", "What Uncle Day changed for your shop in the last 30 days. Tell us if anything is wrong."], auditMore: ["Xem tất cả ({n})", "전체 보기 ({n})", "See all ({n})"], auditLess: ["Thu gọn", "접기", "Show less"],
     tpOpt: ["KTV phụ trách (không bắt buộc)", "담당 테라피스트 (선택)", "Therapist (optional)"], tpOptHint: ["Không nhớ thì để trống. Có thể thêm sau ở Bảng phòng → Lịch sử.", "모르면 비워 두세요. 나중에 현황판 → 기록에서 넣을 수 있어요.", "Leave empty if unsure. You can add it later in Board → History."],
     tpSave: ["Lưu KTV phụ trách", "담당 저장", "Save therapist"], tpSaved: ["Đã lưu KTV phụ trách.", "담당을 저장했어요.", "Therapist saved."], tpNone: ["Chưa có KTV phụ trách.", "아직 담당이 기록되지 않았어요.", "No therapist recorded yet."], tpMax: ["Tối đa 4 người.", "4명까지 고를 수 있어요.", "Up to 4."],
     tNoshow: ["Đã ghi nhận: khách không đến.", "노쇼로 기록했어요.", "Recorded as a no-show."],
@@ -150,7 +151,7 @@
   // ---- 상태 ----
   let sb = null, me = null, shopId = null, rows = [], sched = null, hoursDraft = null;
   let tab = "home", bTab = "new", detail = null, proposing = false, picks = [], pDay = null, schedDay = null, toastMsg = "", busy = false;
-  let knownReq = null, pollTimer = null, boardPending = 0, boardView = null, boardSum = null;
+  let knownReq = null, pollTimer = null, boardPending = 0, boardView = null, boardSum = null, audit = null, auditAll = false;
   const store = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} };
   const read = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
 
@@ -286,8 +287,17 @@
       <div class="stats"><div class="stat"><b>${mine.length}</b><span>${t("statVisits")}</span></div>
         <div class="stat"><b>${paid >= 1e6 ? (Math.round(paid / 1e5) / 10).toString().replace(".", ",") + "tr₫" : vnd(paid)}</b><span>${t("statPaid")}</span></div>
         <div class="stat"><b>${avg == null ? "-" : avg + " " + t("min")}</b><span>${t("statReply")}</span></div></div>
-      ${shopTodayHtml()}
+      ${shopTodayHtml()}${auditHtml()}
       </div></div>`;
+  }
+  // 엉클데이 관리자가 대신 고친 기록 (최근 30일)
+  function auditHtml() {
+    if (!Array.isArray(audit) || !audit.length) return "";
+    const list = auditAll ? audit : audit.slice(0, 4);
+    const when = iso => new Date(iso).toLocaleString(lang === "vi" ? "vi-VN" : lang === "ko" ? "ko-KR" : "en-GB", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Ho_Chi_Minh" });
+    return `<div class="card audit"><b>🛠️ ${t("auditT")}</b><small class="muted">${t("auditS")}</small>
+      <ul>${list.map(a => `<li><span>${esc(when(a.at))}</span>${esc(a.summary || "")}</li>`).join("")}</ul>
+      ${audit.length > 4 ? `<button class="btn line" data-act="auditmore" style="min-height:36px">${auditAll ? t("auditLess") : t("auditMore", { n: audit.length })}</button>` : ""}</div>`;
   }
   function shopTodayHtml() {
     if (!window.OwnerBoard) return "";
@@ -437,6 +447,7 @@
     if (a === "inst") { toast(/iPhone|iPad/.test(navigator.userAgent) ? t("installIos") : t("installAndroid")); return; }
     if (a === "instx") { store("ud-owner-inst", "x"); draw(); return; }
     if (a === "refresh") { await load(); return; }
+    if (a === "auditmore") { auditAll = !auditAll; draw(); return; }
     if (a === "toboard") { tab = "board"; draw(); window.scrollTo(0, 0); return; }
     if (a === "rota") { tab = "board"; boardView = "sched"; draw(); window.scrollTo(0, 0); return; }
     if (a === "pw") { drawNewPw(); return; }
@@ -586,6 +597,7 @@
     } catch (e) { if (!quiet) toast(errMsg(e)); }
     if (tab === "schedule" && !sched) await loadSched();
     if (window.OwnerBoard && tab === "home") { try { boardSum = await rpc("board_get", { shop: shopId }); } catch (e) { boardSum = null; } }
+    if (tab === "home") { try { audit = await rpc("board_audit_list", { shop: shopId }); } catch (e) { audit = null; } }
     // 입력 중이면 화면을 다시 그리지 않아요
     const ae = document.activeElement; if (quiet && ae && /INPUT|TEXTAREA|SELECT/.test(ae.tagName)) return;
     if (quiet && detail) return;

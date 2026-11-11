@@ -44,7 +44,7 @@ function uniShops() {
       return `<div class="uni-card"><div class="uni-h"><b>${esc(s.name)}</b><span class="uni-chip ${st[1]}">${st[0]}${s.state && s.state.open ? ` · ${esc(s.state.open)}–${esc(s.state.close)}` : ""}</span></div>
         <div class="uni-nums"><span><b>${s.in_now}/${s.staff}</b>출근</span><span><b style="color:#C8372D">${s.working}</b>시술 중</span><span><b>${s.waiting}</b>대기</span><span><b>${s.done_today}</b>완료</span><span><b>${uniVnd(s.rev_today)}</b>오늘 매출</span></div>
         <div class="uni-sub">📱 직원 화면 ${s.app}명 · 후기 30일 ${s.rv_30}건${s.rv_avg ? ` · ★${s.rv_avg}` : ""}${s.pending_req ? ` · <b style="color:#9a5208">요청 대기 ${s.pending_req}</b>` : ""}${s.last_used ? ` · 마지막 사용 ${uniDate(s.last_used)}` : ""}</div>
-        <button class="btn sm" data-uboard="${esc(s.id)}" data-uname="${esc(s.name)}">🗺️ 현황판 보기 (읽기 전용)</button></div>`; }).join("")}</div>`;
+        <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm" data-uboard="${esc(s.id)}" data-uname="${esc(s.name)}">🗺️ 현황판 보기 (읽기 전용)</button><button class="btn sm" data-uedit="${esc(s.id)}" data-uname="${esc(s.name)}">✏️ 대신 수정</button><button class="btn sm" data-ustaff="${esc(s.id)}" data-uname="${esc(s.name)}">👩 직원 · PIN</button></div></div>`; }).join("")}</div>`;
 }
 
 function uniDb() {
@@ -83,6 +83,8 @@ function uniBind(el) {
   el.querySelectorAll("[data-ubst]").forEach(b => b.onclick = () => { UNI.bst = b.dataset.ubst; UNI.bonus = null; drawUniverse(); });
   el.querySelectorAll("[data-usel]").forEach(b => b.onchange = () => { b.checked ? UNI.sel.add(b.dataset.usel) : UNI.sel.delete(b.dataset.usel); const x = el.querySelector('[data-uact="approve"]'); if (x) x.textContent = `선택 승인 (${UNI.sel.size})`; });
   el.querySelectorAll("[data-uboard]").forEach(b => b.onclick = () => uniOpenBoard(b.dataset.uboard, b.dataset.uname));
+  el.querySelectorAll("[data-uedit]").forEach(b => b.onclick = () => uniOpenBoard(b.dataset.uedit, b.dataset.uname, true));
+  el.querySelectorAll("[data-ustaff]").forEach(b => b.onclick = () => portalStaff(b.dataset.ustaff, b.dataset.uname));
   el.querySelectorAll("[data-uhide]").forEach(b => b.onclick = async () => { const { error } = await sb.rpc("admin_staff_review_hide", { rid: b.dataset.uhide, hide: b.dataset.h === "1" }); if (error) return toast(error.message); uniLoad(); });
   el.querySelectorAll("[data-upaid]").forEach(b => b.onclick = async () => {
     const ids = JSON.parse(b.dataset.upaid); if (!confirm(`${ids.length}건을 '지급 완료'로 바꿀까요? 실제로 돈을 보낸 뒤에 눌러 주세요.`)) return;
@@ -101,17 +103,18 @@ function uniBind(el) {
 }
 
 // 현황판 읽기 전용 (사장님 페이지와 같은 화면)
-function uniOpenBoard(shopId, name) {
+function uniOpenBoard(shopId, name, edit) {
   if (!window.OwnerBoard) return toast("현황판 파일을 불러오지 못했어요");
+  if (edit && !confirm(`${name} 현황판을 사장님 대신 수정할까요?\n\n고친 내용(매장 설정 · 직원 · 근무표 · 손님 · 시술)은 자동으로 기록되고, 사장님 페이지 '오늘' 화면에 "엉클데이 관리자가 대신 수정했어요"로 보여요.`)) return;
   const ov = document.createElement("div"); ov.className = "uni-ov";
-  ov.innerHTML = `<div class="uni-ov-in uni-board"><div class="uni-ov-h"><b>🗺️ ${esc(name)} · 읽기 전용</b><button class="btn sm" data-x>닫기</button></div><div class="uni-ov-b" id="uniBoard"></div></div>`;
+  ov.innerHTML = `<div class="uni-ov-in uni-board"><div class="uni-ov-h ${edit ? "edit" : ""}"><b>${edit ? `✏️ ${esc(name)} · 대신 수정 중 <small>고친 내용은 사장님 화면에 기록돼요</small>` : `🗺️ ${esc(name)} · 읽기 전용`}</b><button class="btn sm" data-x>닫기</button></div><div class="uni-ov-b" id="uniBoard"></div></div>`;
   document.body.appendChild(ov); document.body.style.overflow = "hidden";
-  const close = () => { try { window.OwnerBoard.unmount(); } catch (e) {} ov.remove(); document.body.style.overflow = ""; document.removeEventListener("keydown", onKey); };
+  const close = () => { try { window.OwnerBoard.unmount(); } catch (e) {} ov.remove(); document.body.style.overflow = ""; document.removeEventListener("keydown", onKey); if (edit && typeof PORTAL !== "undefined") { PORTAL.shops = null; if (TAB === "home") drawPortal(); } };
   const onKey = e => { if (e.key === "Escape") close(); };
   document.addEventListener("keydown", onKey);
   ov.querySelector("[data-x]").onclick = close;
   window.OwnerBoard.mount(ov.querySelector("#uniBoard"), {
-    view: "board", shopId, lang: "ko", isOwner: false, readOnly: true,
+    view: "board", shopId, lang: "ko", isOwner: !!edit, readOnly: !edit,
     rpc: async (fn, args) => { const { data, error } = await sb.rpc(fn, args || {}); if (error) throw error; return data; },
     toast: m => toast(m), errMsg: e => (e && e.message) || "오류", onPending: () => {}
   });

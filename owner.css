@@ -206,3 +206,7 @@ textarea.inp { min-height: 64px; resize: vertical; }
   .cols.sch .days .day { flex: 1 0 52px; }
 }
 @media (min-width: 1800px) { .cols.sch .slots { grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); } .cols.sch .sl { min-height: 54px; font-size: 14px; } }
+/* 엉클데이 관리자 대신 수정 기록 */
+.card.audit { border: 1.5px solid #E9D9A6; background: #FFFBEF; display: grid; gap: 6px; margin-top: 12px; }
+.card.audit ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 14px; }
+.card.audit li { display: flex; gap: 8px; } .card.audit li span { color: #8A6D1F; white-space: nowrap; font-variant-numeric: tabular-nums; }

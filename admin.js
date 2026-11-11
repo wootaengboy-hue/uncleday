@@ -109,13 +109,13 @@ const TODO = [
 ];
 
 /* ===== 탭 ===== */
-let TAB = "dash";
+let TAB = "home";
 function showTab(t) {
   TAB = t;
   document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
   document.querySelectorAll("[data-pane]").forEach(p => p.hidden = p.dataset.pane !== t);
   if (location.hash.slice(1) !== t) history.replaceState(null, "", "#" + t);
-  ({ dash: drawDash, work: drawWork, bk: drawBookings, chat: drawChat, crm: drawCrm, settle: drawSettle, shops: drawList, rv: drawReviews, uni: drawUniverse, acc: drawAccount })[t]();
+  ({ home: drawPortal, dash: drawDash, work: drawWork, bk: drawBookings, chat: drawChat, crm: drawCrm, settle: drawSettle, shops: drawList, rv: drawReviews, uni: drawUniverse, acc: drawAccount })[t]();
   drawCounts();
 }
 function drawCounts() {
@@ -127,6 +127,7 @@ function drawCounts() {
   const w = workTodos().reduce((t, x) => t + x[3], 0); $("cntWork").textContent = w || "";
   const c = typeof chatCount === "function" ? chatCount() : 0;
   if (c && !n) document.title = `(💬${c}) 엉클데이 관리자`;
+  if (TAB === "home" && typeof drawPortal === "function" && !document.querySelector(".uni-ov")) { const sig = [n, r, w, c, BOOKINGS.length].join(","); if (sig !== drawCounts._sig) { drawCounts._sig = sig; drawPortal(true); } }
 }
 window.onShopsChanged = () => { if (TAB !== "shops") showTab(TAB); };
 
@@ -1254,7 +1255,7 @@ async function afterLogin(session) {
   initShops();
   document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => showTab(b.dataset.tab));
   const h = location.hash.slice(1);
-  showTab(["dash", "work", "bk", "settle", "shops", "rv", "uni", "acc"].includes(h) ? h : "dash");
+  showTab(["home", "dash", "work", "bk", "chat", "crm", "settle", "shops", "rv", "uni", "acc"].includes(h) ? h : "home");
   offerMigration();
   checkImports();
   initNotis();

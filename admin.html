@@ -6,7 +6,7 @@
 <title>엉클데이 관리자</title>
 <meta name="robots" content="noindex,nofollow">
 <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32.png">
-<link rel="stylesheet" href="owner-board.css?v=20261112t">
+<link rel="stylesheet" href="owner-board.css?v=20261112u">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Noto+Sans+KR:wght@400;500;700;800&display=swap">
 <style>
 :root{--main:#116241;--main-d:#0c4a31;--bg:#FFF8E8;--card:#fff;--text:#0E2843;--sub:#5f6b78;--line:#EEE2CB;--warn:#e67e22;--warn-bg:#fff4e5;--ok:#2a9d8f;--ok-bg:#e6f6f3;--danger:#d64545;
@@ -552,6 +552,35 @@ mark.cmark{background:#fff3b0;border-bottom:2px solid #f0b429;border-radius:2px;
 .uni-ov-b{flex:1;overflow:auto;padding:12px}
 .uni-board{--bg:#F5F2EA;--card:#FFFFFF;--line:#E8E1D3;--line2:#F0EADF;--ink:#0E2843;--sub:#586474;--green:#116241;--green-t:#E5F0EA;--orange-t:#FFE7D3;--orange-ink:#A63D00;--red:#B42318;--red-t:#FDECEC;--navy-t:#EAF0F7;font-family:"Be Vietnam Pro","Noto Sans KR",sans-serif;color:var(--ink);font-size:15px}
 @media (max-width:640px){.uni-nums{grid-template-columns:repeat(3,minmax(0,1fr))}.uni-ov{padding:0}.uni-ov-in{border-radius:0}.uni-rv{flex-wrap:wrap}.uni-rv .a{flex-direction:row;align-items:center;width:100%;justify-content:flex-end}}
+/* 🏠 포털 */
+.pt-hero{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;background:linear-gradient(135deg,#0e2843,#24508f);color:#fff;border-radius:18px;padding:18px 20px;margin-top:8px}
+.pt-hero .btn{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.45)}
+.pt-hero h2{margin:0 0 4px;font-size:22px}.pt-hero p{margin:0;opacity:.85}
+.pt-sec{margin-top:18px}.pt-sec h3{font-size:17px;margin:0 0 10px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.pt-todos{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
+.pt-todo{display:flex;align-items:center;gap:10px;background:#fff;border:1.5px solid #f3c8c3;border-radius:14px;padding:12px 14px;text-align:left;cursor:pointer;font:inherit;color:inherit}
+.pt-todo .ic{font-size:20px}.pt-todo .l{flex:1;font-size:14px}.pt-todo b{font-size:20px;color:#b42318}
+.pt-todo.zero{border-color:#eee;opacity:.6;cursor:default}.pt-todo.zero b{color:#8a94a0}
+.pt-spaces{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.pt-space{background:#fff;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:5px}
+.pt-space .h{display:flex;gap:8px;align-items:center;font-size:16px}.pt-space .ic{font-size:24px}.pt-space small{color:#586474;line-height:1.45}.pt-space small b{color:#0e2843;margin-right:4px}
+.pt-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.pt-msgs{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;background:#fff;border-radius:14px;padding:10px 14px;margin-top:10px}
+.pt-msg{display:flex;gap:6px;align-items:center}
+.pt-shops{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:10px}
+.pt-shop{background:#fff;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.pt-shop .h{display:flex;justify-content:space-between;gap:8px;align-items:center}.pt-shop .h b{font-size:16px}
+.pt-shop .nums{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:13px;color:#586474}.pt-shop .nums b{color:#0e2843}.pt-shop .warn{color:#9a5208}
+.pt-start{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#fff;border-radius:14px;padding:10px 14px;margin-top:10px}
+.pt-start select{border:1px solid var(--line);border-radius:10px;padding:7px 10px;font:inherit;max-width:100%}
+.pt-audit{background:#fff;border-radius:14px;padding:6px 14px;display:grid}.pt-audit div{padding:7px 0;border-top:1px solid #f0f0f0;font-size:14px}.pt-audit div:first-child{border-top:0}
+.pt-audit span{color:#8a6d1f;margin-right:8px;font-variant-numeric:tabular-nums}.pt-audit small{color:#8a94a0}
+.pt-guide{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.pt-guide>div{background:#fff;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;align-items:flex-start}.pt-guide small{color:#586474;line-height:1.5}
+.uni-ov-h.edit{background:#fff4e5}.uni-ov-h small{font-weight:500;color:#9a5208;margin-left:6px}
+.pt-pin{max-width:620px;margin:auto;max-height:90vh}.pt-st{display:flex;justify-content:space-between;gap:10px;align-items:center;background:#fff;border-radius:12px;padding:10px 12px;margin-top:8px}
+.pt-st small{color:#586474}.pt-pinshow{margin-top:6px;background:#fff8e6;border:1.5px solid #f5b84c;border-radius:10px;padding:6px 10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.pt-pinshow b{font-size:20px;letter-spacing:3px}
+@media (max-width:640px){.pt-shops{grid-template-columns:1fr}.pt-st{flex-wrap:wrap}}
 </style>
 </head>
 <body>
@@ -563,7 +592,8 @@ mark.cmark{background:#fff3b0;border-bottom:2px solid #f0b429;border-radius:2px;
   <a class="btn" href="./" target="_blank" rel="noopener">사이트 보기</a>
 </div>
 <nav class="tabs" id="tabs" hidden>
-  <button data-tab="dash" class="on">📊 대시보드</button>
+  <button data-tab="home" class="on">🏠 포털</button>
+  <button data-tab="dash">📊 대시보드</button>
   <button data-tab="work">📝 낙서장<span class="cnt" id="cntWork"></span></button>
   <button data-tab="bk">📅 예약<span class="cnt" id="cntBk"></span></button>
   <button data-tab="chat">💬 채팅<span class="cnt" id="cntChat"></span></button>
@@ -580,7 +610,8 @@ mark.cmark{background:#fff3b0;border-bottom:2px solid #f0b429;border-radius:2px;
 <main class="wrap" id="app" hidden>
   <div id="notices"></div>
 
-  <section id="tab-dash" data-pane="dash"></section>
+  <section id="tab-home" data-pane="home"></section>
+  <section id="tab-dash" data-pane="dash" hidden></section>
   <section id="tab-work" data-pane="work" hidden></section>
   <section id="tab-bk" data-pane="bk" hidden></section>
   <section id="tab-chat" data-pane="chat" hidden></section>
@@ -634,15 +665,16 @@ mark.cmark{background:#fff3b0;border-bottom:2px solid #f0b429;border-radius:2px;
 <script src="admin-notes.js?v=20261111b"></script>
 <script src="admin-shops.js?v=20261111b"></script>
 <script src="admin-editor.js?v=20261111b"></script>
-<script src="admin-guide.js?v=20261111b"></script>
+<script src="admin-guide.js?v=20261112a"></script>
 <script src="admin-work.js?v=20261111b"></script>
 <script src="admin-crm.js?v=20261111b"></script>
 <script src="admin-chat.js?v=20261111b"></script>
 <script src="admin-contract-default.js?v=20261111b"></script>
 <script src="admin-contract.js?v=20261111b"></script>
 <script src="admin-owner.js?v=20261111b"></script>
-<script src="owner-board.js?v=20261112t"></script>
-<script src="admin-universe.js?v=20261112a"></script>
-<script src="admin.js?v=20261112a"></script>
+<script src="owner-board.js?v=20261112u"></script>
+<script src="admin-universe.js?v=20261112b"></script>
+<script src="admin-portal.js?v=20261112b"></script>
+<script src="admin.js?v=20261112b"></script>
 </body>
 </html>
