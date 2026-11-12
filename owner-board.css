@@ -274,3 +274,8 @@
 .ob-w.guard .ob-spr.flip { transform: scale(-1.12, 1.08); }
 .ob-tag.g { background: #1E2228; color: #fff; border-color: #1E2228; font-weight: 700; }
 .ob-emo.say { font-size: 12px; font-weight: 700; white-space: nowrap; padding: 3px 8px; left: auto; right: 16px; bottom: 40px; }
+/* 넓은 화면: 오른쪽 버튼 줄은 현황판 칸 맨 위 (칸과 같이 커지고 줄어요) */
+.ob-act { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; align-items: center; position: sticky; top: 0; z-index: 3; background: var(--bg, #F5F2EA); padding-bottom: 2px; }
+.ob-act[hidden] { display: none; }
+.ob-side.two > .ob-act { grid-column: 1 / -1; }
+.ob-act > * { flex: 1 1 auto; justify-content: center; }

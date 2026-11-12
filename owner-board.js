@@ -649,7 +649,7 @@
   function shell() {
     root.innerHTML = `<div class="ob ${C.readOnly ? "ro" : ""}"><div class="ob-top" id="obTop"></div>
       <div id="obBoard"><div class="ob-grid"><div><div class="ob-fchips" id="obFl" style="margin-bottom:8px"></div><div id="obLg" style="margin:-2px 0 8px"></div><div id="obDeco" hidden></div><div class="ob-stage"><div class="ob-box"><div class="ob-plan"></div></div></div></div>
-        <div class="ob-side">
+        <div class="ob-side"><div class="ob-act" id="obAct" hidden></div>
           <div class="ob-kpis" id="obK"></div>
           <div id="obFirst"></div>
           <div class="ob-card" id="obExp" hidden></div>
@@ -665,9 +665,13 @@
       <div id="obSched" hidden></div><div id="obHist" hidden></div><div id="obSet"></div></div>`;
     plan = root.querySelector(".ob-plan"); geoSig = "";
   }
+  // 넓은 화면의 현황판: 오른쪽 버튼들(꾸미기 · 영업 · 레벨 · 설정 · ↻)은 오른쪽 현황판 칸 위에 붙어서 같이 커지고 줄어요
   function renderTop() {
-    const n = data.pending_req || 0;
-    root.querySelector("#obTop").innerHTML = `<button class="ob-vt ${view === "board" ? "on" : ""}" data-v="board">🗺️ ${t("vBoard")}</button><button class="ob-vt ${view === "sched" ? "on" : ""}" data-v="sched">📅 ${t("vSched")}${n ? `<span class="n">${n}</span>` : ""}</button>${owner() ? `<button class="ob-vt ${view === "hist" ? "on" : ""}" data-v="hist">📋 ${t("vHist")}</button>` : ""}<span class="ob-sp"></span>${view === "board" && !C.readOnly && !deco ? `<button class="ob-vt" data-a="deco">${t("decoBtn")}</button>` : ""}${openBtn()}${game && game.level && view === "board" ? `<span class="ob-hud" title="XP ${game.xp}">Lv${game.level.lv} ${esc(T.lvT[li()][game.level.lv - 1] || "")} · 🪙${game.coins}</span>` : ""}${owner() ? `<button class="ob-vt" data-a="set">${t("vSet")}</button>` : ""}<button class="ob-vt" data-a="reload" aria-label="refresh">${t("refresh")}</button>`;
+    const n = data.pending_req || 0, inSide = view === "board" && window.innerWidth >= 1200;
+    const tabs = `<button class="ob-vt ${view === "board" ? "on" : ""}" data-v="board">🗺️ ${t("vBoard")}</button><button class="ob-vt ${view === "sched" ? "on" : ""}" data-v="sched">📅 ${t("vSched")}${n ? `<span class="n">${n}</span>` : ""}</button>${owner() ? `<button class="ob-vt ${view === "hist" ? "on" : ""}" data-v="hist">📋 ${t("vHist")}</button>` : ""}`;
+    const acts = `${view === "board" && !C.readOnly && !deco ? `<button class="ob-vt" data-a="deco">${t("decoBtn")}</button>` : ""}${openBtn()}${game && game.level && view === "board" ? `<span class="ob-hud" title="XP ${game.xp}">Lv${game.level.lv} ${esc(T.lvT[li()][game.level.lv - 1] || "")} · 🪙${game.coins}</span>` : ""}${owner() ? `<button class="ob-vt" data-a="set">${t("vSet")}</button>` : ""}<button class="ob-vt" data-a="reload" aria-label="refresh">${t("refresh")}</button>`;
+    root.querySelector("#obTop").innerHTML = tabs + (inSide ? "" : `<span class="ob-sp"></span>${acts}`);
+    const ac = root.querySelector("#obAct"); if (ac) { ac.hidden = !inSide; ac.innerHTML = inSide ? acts : ""; }
   }
   function openBtn() {
     const ss = data.shop_state; if (!ss) return "";
@@ -710,7 +714,7 @@
       side.style.zoom = z; side.classList.toggle("two", sw / z >= 720);
       side.style.maxHeight = Math.round(D.availH / z) + "px";
       // 위쪽 버튼 · 층 칩 · 상태 설명도 오른쪽 현황판 크기에 맞춰 키워요
-      const tz = Math.max(1, Math.min(1.45, z * 0.95));
+      const tz = z;
       ["#obTop", "#obFl", "#obLg", "#obDeco"].forEach(q => { const el = root.querySelector(q); if (el) el.style.zoom = tz; });
     } else {
       grid.style.gridTemplateColumns = ""; side.style.zoom = ""; side.classList.remove("two"); side.style.maxHeight = "";
@@ -1093,7 +1097,7 @@
   function onInput(e) { if (e.target.tagName === "INPUT" && e.target.dataset.sf) setField(e.target); }
 
   let rz = 0;
-  function onResize() { clearTimeout(rz); rz = setTimeout(() => { if (!data || view !== "board") return; const sig = JSON.stringify(data.layout.floors) + data.layout.kind + lang + (window.innerWidth >= 1200); if (sig !== geoSig) render(); else fit(); }, 150); }
+  function onResize() { clearTimeout(rz); rz = setTimeout(() => { if (data) renderTop(); if (!data || view !== "board") return; const sig = JSON.stringify(data.layout.floors) + data.layout.kind + lang + (window.innerWidth >= 1200); if (sig !== geoSig) render(); else fit(); }, 150); }
 
   window.OwnerBoard = {
     avatar(look, i) { return sheet(lookOf(look || {}, i || 0)); },
