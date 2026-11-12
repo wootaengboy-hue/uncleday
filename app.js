@@ -127,6 +127,8 @@ function drawShops() {
     </div></a>`;
   };
   const grid = arr => `<div class="shop-grid">${arr.map(card).join("")}</div>`;
+  // 도시를 골랐고 그 도시 안내 글이 있으면 목록 위에 띠 하나
+  const gb = $("cityGuide"); if (gb) gb.innerHTML = state.city !== "all" ? guideBar(state.city) : "";
   if (!list.length) { $("shopGrid").innerHTML = `<p class="empty">${state.q ? ui("empty") : ui("comingSoon")}</p>`; return; }
   // 카테고리를 고르지 않았으면 카테고리별로 묶어서 보여줘요
   if (state.from) {

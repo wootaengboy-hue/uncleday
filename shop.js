@@ -137,6 +137,7 @@ if (!shop) {
     </div>
     <p class="go-row">${shop.map ? `<a class="map-link" href="${shop.map}" target="_blank">🗺️ ${ui("map")}</a>` : ""}<button type="button" class="ride-btn" id="rideBtn">🚕 ${ui("rideBtn")}</button></p>
     <div id="gBox"></div>
+    ${guideBar(shop.city, "in-shop")}
 
     <h2>${ui("about")}</h2><p>${tx(shop.desc)}</p>
     ${shop.recommend && tx(shop.recommend) ? `<p class="reco">👍 <b>${ui("recoFor")}</b> ${tx(shop.recommend)}</p>` : ""}

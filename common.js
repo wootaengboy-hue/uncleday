@@ -12,6 +12,13 @@ let lang = (() => {
 document.documentElement.lang = lang;
 
 // 언어별 글자 꺼내기 (없으면 영어 → 한국어)
+// 도시별 안내 글 (c/<도시>/guide/). 새 가이드를 만들면 여기에 한 줄 추가해요 (tools/guides.py 와 같이)
+const CITY_GUIDES = {
+  danang: { ko: "다낭 마사지 가이드", en: "Da Nang massage guide", vi: "Cẩm nang massage Đà Nẵng" },
+};
+const guideBar = (city, cls) => { const g = CITY_GUIDES[city]; if (!g) return "";
+  const sub = { ko: "가격 · 팁 · 고르는 법 · 공항 가기 전 꿀팁", en: "prices, tips, how to choose (in Korean)", vi: "giá, tiền tip, cách chọn (tiếng Hàn)" };
+  return `<a class="guide-bar ${cls || ""}" href="/c/${city}/guide/"><span class="gb-ic">📘</span><span><b>${tx(g)}</b><small>${tx(sub)}</small></span><span class="gb-go">›</span></a>`; };
 const tx = v => (v && typeof v === "object" && !Array.isArray(v)) ? (v[lang] || v.en || v.ko || "") : (v ?? "");
 const ui = (k, vars = {}) => {
   let s = (UI[lang] && UI[lang][k]) ?? UI.en[k] ?? UI.ko[k] ?? k;
