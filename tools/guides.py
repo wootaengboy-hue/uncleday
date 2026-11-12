@@ -141,3 +141,79 @@ GUIDES = {
         ],
     },
 }
+
+# ---- 영어판 (en/c/<도시>/guide/) : 한국어판과 같은 순서로 이름 · 설명만 영어로 (찾는 패턴은 한국어판 것을 그대로 써요) ----
+SOURCES_EN = {
+    "tripstore": "Tripstore blog, “Da Nang spa prices & booking tips” (Korean, Apr 2026)",
+    "tripcom": "Trip.com, “How to choose a massage in Nha Trang” (Korean, Aug 2026)",
+    "tripstore_hcm": "Tripstore blog, “Ho Chi Minh City spa guide” (Korean, Oct 2026)",
+    "vntourism": "Vietnam Tourism, “Tipping in Vietnam 2026”",
+}
+_TIP_HOW = ("How do I give the tip?", "Hand it directly to your therapist rather than leaving it at the front desk, where it may not reach them.")
+_TIP_INC = ("Is the tip sometimes included?", "Yes. Some spas include the tip in the price, so check the menu or receipt for “tip included / no tip” before paying so you don’t tip twice. When you book through Uncle Day we tell you in advance.")
+_K = {"aroma": ("Aroma oil", "A gentle full-body oil massage — the safest choice for a first visit."),
+      "stone": ("Hot stone", "Warm stones loosen tight muscles; great after a day in air-conditioning or at the beach."),
+      "thai": ("Thai / dry", "No oil, done fully clothed with stretching and firm pressure."),
+      "foot": ("Foot massage", "A short treat after a long day of walking.")}
+GUIDES_EN = {
+    "danang": {
+        "title": "Da Nang Massage & Spa Guide 2026 — Prices, Tipping, How to Choose, How to Book",
+        "intro": "Da Nang is one of Vietnam’s busiest beach cities for international travelers, with spas everywhere from the Han Market area to My Khe Beach. "
+                 "This guide combines the shops listed on Uncle Day with outside sources to cover prices, tipping, how to choose and how to book.",
+        "price_note": "Outside sources put a 90-minute full-body massage at roughly KRW 15,000–25,000 at local spas and KRW 30,000–50,000 at Korean-partnered spas.",
+        "tip": [("How much should I tip?", "Around 50,000 VND for 60 minutes and 70,000–100,000 VND for 90 minutes is common; Vietnam Tourism suggests 50,000–100,000 VND for spa therapists in the city."),
+                _TIP_HOW, _TIP_INC],
+        "kinds": [_K["aroma"], _K["stone"], _K["thai"], ("Four-hands", "Two therapists at once — an intense treatment in a short time."), _K["foot"],
+                  ("Kids", "Shops with a children’s menu — handy for family trips."), ("Pregnancy", "Shops with a prenatal menu; mention how far along you are when booking.")],
+        "areas": [("City centre (Han Market, Dragon Bridge, Lotte Mart)", "Easy to combine with shopping and meals."),
+                  ("My Khe Beach side", "Short trip if you are staying at a beach hotel.")],
+        "when": "Many flights leave Da Nang late at night, so a massage after hotel check-out is a popular last stop. Choose a spa with luggage storage, showers or an airport drop-off. "
+                "Outside sources note that most Korean-partnered spas store luggage for free and many offer free pickup/drop-off in the city for 2+ guests booking 90 minutes.",
+        "faq_extra": [("Can I walk in without a booking?", "Sometimes, but evenings and weekends fill up. Booking a day ahead is safest, and arrive 10 minutes early — late arrivals may get a shorter session.")],
+    },
+    "nhatrang": {
+        "title": "Nha Trang Massage & Spa Guide 2026 — Prices, Tipping, How to Choose, How to Book",
+        "intro": "Nha Trang is a beach resort city where a massage is part of almost every trip. Massage shops cluster downtown, with resort spas and nail salons nearby. "
+                 "This guide combines the shops listed on Uncle Day with outside sources to cover prices, tipping, how to choose and how to book.",
+        "price_note": "Outside sources list 60 minutes at 150,000–300,000 VND for a foot massage, 200,000–400,000 VND for aroma, 200,000–450,000 VND for hot stone, 250,000–600,000 VND for a 90-minute full body, and 800,000 VND+ at upscale hotel spas.",
+        "tip": [("How much should I tip?", "Tipping is not mandatory in Vietnam. One guide suggests 20,000–50,000 VND if you were happy; Vietnam Tourism suggests 50,000–100,000 VND for spa therapists in the city."),
+                _TIP_HOW, _TIP_INC],
+        "kinds": [_K["aroma"], _K["stone"], _K["thai"], ("Herbal ball", "Warm herbal compresses pressed into sore shoulders and back."), _K["foot"],
+                  ("Kids", "Shops with a children’s menu — handy for family trips."), ("Pregnancy", "Shops with a prenatal menu; mention how far along you are when booking.")],
+        "areas": [("Downtown (Tran Phu beach road & backpacker area)", "Most shops are here, close to restaurants and shopping."),
+                  ("Vinpearl island & resorts", "Convenient if you are staying on the island."),
+                  ("Cam Ranh (near the airport)", "Handy on departure day; some offer pickup and drop-off.")],
+        "when": "Cam Ranh airport is more than 30 km from downtown and many flights leave at night. A common plan is to store luggage after check-out, have a massage and shower, then head to the airport. Evenings from 7–10 pm get busy, so book 2–3 days ahead.",
+        "faq_extra": [("Can I get a massage right after eating?", "Wait at least an hour after a meal and avoid massages after drinking. Tell your therapist your preferred pressure before starting."),
+                      ("Can I walk in without a booking?", "Some downtown shops take walk-ins, but 7–10 pm is busy. Book ahead for your preferred time.")],
+    },
+    "hcm": {
+        "title": "Ho Chi Minh City Massage & Spa Guide 2026 — Tipping, How to Choose, Clinics",
+        "intro": "Ho Chi Minh City is Vietnam’s largest city, with long-running spas in District 1, quick stops near the airport and plenty of cosmetic and dermatology clinics. "
+                 "This guide combines the shops listed on Uncle Day with outside sources to cover tipping, how to choose, how to book and clinic consultations.",
+        "price_note": "",
+        "tip": [("How much should I tip?", "Tipping is not mandatory, but 50,000–100,000 VND is typical for spa therapists in the city."),
+                _TIP_HOW, ("Is the tip sometimes included?", "Yes. Check the receipt or counter notice before paying; if it isn’t included, hand it to your therapist after the treatment.")],
+        "kinds": [_K["aroma"], _K["stone"], _K["thai"], _K["foot"], ("Sauna & jacuzzi", "Warm up before your massage at shops with a sauna."),
+                  ("Head spa", "Scalp massage plus hair wash — great for freshening up before a flight.")],
+        "areas": [("District 1 (Ben Thanh, Dong Khoi, Notre-Dame)", "Easy to combine with sightseeing and shopping."),
+                  ("Tan Binh (near the airport)", "A good last stop before your flight."),
+                  ("Thao Dien (District 2)", "A quieter expat neighbourhood with cafés and clinics.")],
+        "when": "Many flights leave at night and Tan Son Nhat airport is fairly close to the city. Luggage storage and showers vary by shop, so check when booking. Popular spas can be full on the day, so book at least a day ahead.",
+        "clinic": "Ho Chi Minh City also has many cosmetic surgery and dermatology clinics. Treatments start with a consultation; Uncle Day can arrange the consultation and help with scheduling and costs. Some clinics offer a free first consultation or airport pickup. Always discuss surgery thoroughly with the doctor before deciding.",
+        "faq_extra": [("What if I’m late?", "Arrive 10 minutes early. First-timers fill in a short form, and valuables go in a locker. If you want a shower, mention it when booking.")],
+    },
+    "hanoi": {
+        "title": "Hanoi Massage & Spa Guide 2026 — Tipping, How to Choose, How to Book",
+        "intro": "Hanoi is best explored on foot around the Old Quarter, where many massage shops make an easy stop between sights. "
+                 "This guide combines the shops listed on Uncle Day with outside sources to cover tipping, how to choose, neighbourhoods and how to book.",
+        "price_note": "",
+        "tip": [("How much should I tip?", "Tipping is not mandatory, but 50,000–100,000 VND is typical for spa therapists in the city."), _TIP_HOW, _TIP_INC],
+        "kinds": [_K["aroma"], _K["stone"], _K["thai"], _K["foot"], ("Vietnamese traditional", "Acupressure mixed with oil — worth trying once in Hanoi."),
+                  ("Four-hands & bamboo", "Two therapists at once, or rolling bamboo sticks."), ("Sauna & steam", "Hanoi winters (Dec–Feb) are chilly, so a sauna or steam beforehand is a treat.")],
+        "areas": [("Old Quarter (Hoan Kiem Lake)", "The biggest cluster of shops, ideal between walking tours."),
+                  ("West Lake (Tay Ho)", "Quieter than the Old Quarter, near lakeside cafés.")],
+        "when": "Noi Bai airport is a fair distance from the city, so many travelers check out, get a massage in the Old Quarter, then head to the airport. Luggage storage and showers vary by shop, so check when booking.",
+        "faq_extra": [("Can I walk in without a booking?", "Some Old Quarter shops take walk-ins, but evenings get busy. Book ahead for your preferred time.")],
+    },
+}

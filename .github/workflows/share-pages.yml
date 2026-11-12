@@ -4,7 +4,7 @@ name: share-previews
 on:
   push:
     branches: [main]
-    paths-ignore: ["s/**", "og/**", "c/**", "sitemap.xml", "llms.txt"]
+    paths-ignore: ["s/**", "og/**", "c/**", "en/**", "sitemap.xml", "llms.txt"]
   schedule:
     - cron: "17 */3 * * *"
   workflow_dispatch:
@@ -33,7 +33,7 @@ jobs:
           python3 tools/share-build.py "$RUNNER_TEMP/share.json"
       - name: 바뀐 것만 올리기
         run: |
-          git add -A s og c sitemap.xml llms.txt
+          git add -A s og c en sitemap.xml llms.txt
           if git diff --cached --quiet; then echo "바뀐 것 없음"; exit 0; fi
           git config user.name "uncleday-bot"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -q -m "공유 미리보기 자동 갱신"

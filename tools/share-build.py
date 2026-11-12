@@ -230,7 +230,7 @@ GROUPS = [("spabody", "마사지 · 스파", "Massage & spa"), ("beauty", "피�
 def grp(shop): c = cats.get(shop.get("cat"), {}); return c.get("id") or "beauty"
 HUB_CSS = """body{margin:0;font-family:'Noto Sans KR','Pretendard Variable',-apple-system,'Segoe UI',sans-serif;background:#f6f7f9;color:#222;line-height:1.65}
 .hd{background:#fff;box-shadow:0 1px 4px #0001;position:sticky;top:0}.hd .in,.wrap{max-width:1000px;margin:0 auto;padding:0 16px}.hd .in{display:flex;gap:12px;align-items:center;height:58px}
-.hd a{color:#2ac1bc;font-weight:800;font-size:20px;text-decoration:none}.hd nav{margin-left:auto;display:flex;gap:6px;overflow-x:auto}.hd nav a{font-size:13.5px;font-weight:700;color:#222;border:1px solid #ddd;border-radius:999px;padding:4px 12px;white-space:nowrap}
+.hd a{color:#2ac1bc;font-weight:800;font-size:20px;text-decoration:none}.hd .in>a{white-space:nowrap;flex:none}.hd nav{scrollbar-width:none}.hd nav{margin-left:auto;display:flex;gap:6px;overflow-x:auto}.hd nav a{font-size:13.5px;font-weight:700;color:#222;border:1px solid #ddd;border-radius:999px;padding:4px 12px;white-space:nowrap}
 .hd nav a.on{background:#2ac1bc;border-color:#2ac1bc;color:#fff}h1{font-size:26px;letter-spacing:-.03em;margin:26px 0 8px}h2{font-size:20px;margin:30px 0 10px}.lead{font-size:16px}.en{color:#667;font-size:14px}.date{color:#889;font-size:13px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:12px}.card{background:#fff;border-radius:16px;padding:14px 16px;text-decoration:none;color:#222;display:block;border:1px solid #eee}.card:hover{border-color:#2ac1bc}
 .card b{font-size:16.5px}.card small{display:block;color:#667;font-size:12.5px;margin:2px 0 6px}.card p{margin:0;font-size:13.5px;color:#333}.cta{display:inline-block;background:#2ac1bc;color:#fff;border-radius:999px;padding:10px 18px;font-weight:700;text-decoration:none;margin:8px 0}
@@ -269,11 +269,12 @@ def hub_page(cid, shops_c):
     return f"""<!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{esc(title)}</title><meta name="description" content="{esc(desc)}"><link rel="canonical" href="{url}">
+<link rel="alternate" hreflang="ko" href="{url}"><link rel="alternate" hreflang="en" href="{SITE}/en/c/{cid}/"><link rel="alternate" hreflang="x-default" href="{url}">
 <meta property="og:type" content="website"><meta property="og:site_name" content="엉클데이 Uncle Day"><meta property="og:title" content="{esc(title)}"><meta property="og:description" content="{esc(desc)}"><meta property="og:url" content="{url}"><meta property="og:image" content="{SITE}/images/og-image.jpg">
 <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800&display=swap">
 <style>{HUB_CSS}</style>
 {"".join(f'<script type="application/ld+json">{js(o)}</script>' for o in lds)}
-</head><body><header class="hd"><div class="in"><a href="/">엉클데이</a><nav>{nav}</nav></div></header>
+</head><body><header class="hd"><div class="in"><a href="/">엉클데이</a><nav>{nav}<a href="/en/c/{cid}/" lang="en">EN</a></nav></div></header>
 <main class="wrap"><h1>{esc(cko)} 마사지 · 스파 · 뷰티 한국어 예약</h1>
 <p class="lead"><b>{esc(lead)}</b></p><p class="en" lang="en">{esc(lead_en)}</p><p class="date">정보 확인: {upd} · 엉클데이(uncleday.com)</p>
 <a class="cta" href="/?city={cid}">엉클데이에서 {esc(cko)} 업체 보기 · 예약하기</a>{f' <a class="cta" style="background:#0e2843" href="/c/{cid}/guide/">📘 {esc(cko)} 마사지 가이드 (가격 · 팁 · 고르는 법)</a>' if cid in GUIDES else ''}
@@ -283,7 +284,7 @@ def hub_page(cid, shops_c):
 """
 # ---- 도시별 안내 글 c/<도시>/guide/ : 사람이 쓴 설명(tools/guides.py) + 업체 데이터에서 자동으로 뽑은 숫자 · 목록 ----
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from guides import GUIDES, SOURCES
+from guides import GUIDES, SOURCES, GUIDES_EN, SOURCES_EN
 def blob(x): return " ".join([tx(t) for t in (x.get("tags") or [])] + [tx(m.get("name")) for m in (x.get("menu") or [])] + [tx(x.get("desc")), tx(x.get("address")), lang(x.get("address"), "vi")])
 def has(x, pat): return re.search(pat, blob(x)) is not None
 def late(x): c = x.get("close") or ""; return c >= "23:00" or c.startswith("24") or (c and c < "05:00")
@@ -348,14 +349,125 @@ h3{font-size:16px;margin:16px 0 4px}.muted{color:#778;font-size:13px}.kinds dd s
     return f"""<!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{esc(title)} | 엉클데이</title><meta name="description" content="{esc(desc[:155])}"><link rel="canonical" href="{url}">
+<link rel="alternate" hreflang="ko" href="{url}"><link rel="alternate" hreflang="en" href="{SITE}/en/c/{cid}/guide/"><link rel="alternate" hreflang="x-default" href="{url}">
 <meta property="og:type" content="article"><meta property="og:site_name" content="엉클데이 Uncle Day"><meta property="og:title" content="{esc(title)}"><meta property="og:description" content="{esc(desc[:155])}"><meta property="og:url" content="{url}"><meta property="og:image" content="{SITE}/images/og-image.jpg">
 <meta property="article:modified_time" content="{upd}"><link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800&display=swap">
 <style>{css}</style>
 {"".join(f'<script type="application/ld+json">{js(o)}</script>' for o in lds)}
-</head><body><header class="hd"><div class="in"><a href="/">엉클데이</a><nav>{nav}</nav></div></header>
+</head><body><header class="hd"><div class="in"><a href="/">엉클데이</a><nav>{nav}<a href="/en/c/{cid}/guide/" lang="en">EN</a></nav></div></header>
 <main class="wrap"><h1>{esc(title)}</h1><p class="date">업데이트: {upd} · 엉클데이(uncleday.com)</p><p class="toc">{toc}</p>
 {body}</main><footer class="wrap">엉클데이 Uncle Day — 베트남 마사지 · 스파 · 뷰티 한국어 예약 · <a href="/">홈</a> · <a href="/c/{cid}/">{esc(cko)} 업체</a></footer></body></html>
 """
+
+# ---- 영어판: en/c/<도시>/ · en/c/<도시>/guide/ (외국인 여행객용) ----
+def ename(x): return lang(x.get("name"), "en") or tx(x.get("name"))
+def ecity(cid): return CITY_EN.get(cid, lang(cities.get(cid, {}).get("name"), "en"))
+SUB_EN2 = {"massage": "Massage", "spa": "Spa & body care", "skin": "Skin care", "derma": "Dermatology", "surgery": "Cosmetic surgery", "nail": "Nails & lashes", "hair": "Hair", "body": "Body care", "dental": "Dental", "package": "Package"}
+def vnd(n): return f"{n:,} VND"
+def en_facts(x):
+    pr = mprices(x) or prices(x); tags = [lang(t, "en") for t in (x.get("tags") or []) if lang(t, "en")]
+    s_ = f"{ename(x)} is a {SUB_EN.get(x.get('cat'), 'beauty business')} in {ecity(x.get('city'))}."
+    if pr: s_ += f" Prices from {vnd(pr[0])} (reference price checked by Uncle Day)."
+    if tags: s_ += f" Highlights: {', '.join(tags[:3])}."
+    if "en" in (x.get("staffLangs") or []): s_ += " English-speaking staff."
+    return s_ + " Book through Uncle Day at the shop’s own price — no extra fee."
+EN_CSS_FONT = '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800&display=swap">'
+def en_shell(title, desc, url, ko_url, cid, lds, body, kind="website", upd=BUILT):
+    js = lambda o: json.dumps(o, ensure_ascii=False).replace("</", "<\\/")
+    nav = "".join(f'<a href="/en/c/{k}/" class="{"on" if k == cid else ""}">{esc(ecity(k))}</a>' for k in hubs)
+    css = HUB_CSS + """.box{background:#fff;border-radius:16px;padding:14px 18px;border:1px solid #e6f4f3}.box ul{padding-left:18px;margin:6px 0 0}.box li{margin:3px 0;font-size:14.5px}
+.tb{border-collapse:collapse;width:100%;max-width:560px;background:#fff;border-radius:12px;overflow:hidden}.tb th,.tb td{padding:9px 12px;border-bottom:1px solid #eee;text-align:left;font-size:14.5px}.tb th{background:#f0fbfb}
+h3{font-size:16px;margin:16px 0 4px}.muted{color:#778;font-size:13px}.kinds dd small{color:#556}main a{color:#13908b}.src{font-size:13.5px}sup a{text-decoration:none}.toc{font-size:13.5px;color:#556}.toc a{margin-right:10px}"""
+    return f"""<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{esc(title)}</title><meta name="description" content="{esc(desc[:155])}"><link rel="canonical" href="{url}">
+<link rel="alternate" hreflang="en" href="{url}"><link rel="alternate" hreflang="ko" href="{ko_url}"><link rel="alternate" hreflang="x-default" href="{ko_url}">
+<meta property="og:type" content="{kind}"><meta property="og:site_name" content="Uncle Day"><meta property="og:title" content="{esc(title)}"><meta property="og:description" content="{esc(desc[:155])}"><meta property="og:url" content="{url}"><meta property="og:image" content="{SITE}/images/og-image.jpg"><meta property="og:locale" content="en_US">
+{f'<meta property="article:modified_time" content="{upd}">' if kind == "article" else ""}<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png">{EN_CSS_FONT}
+<style>{css}</style>
+{"".join(f'<script type="application/ld+json">{js(o)}</script>' for o in lds)}
+</head><body><header class="hd"><div class="in"><a href="/">Uncle Day</a><nav>{nav}<a href="{ko_url.replace(SITE, '')}" lang="ko">한국어</a></nav></div></header>
+<main class="wrap">{body}</main>
+<footer class="wrap">Uncle Day — book trusted massage, spa and beauty shops in Vietnam · <a href="/">Home</a></footer></body></html>
+"""
+def en_hub_page(cid, shops_c):
+    url = f"{SITE}/en/c/{cid}/"; cen = ecity(cid)
+    by = {g: [x for x in shops_c if grp(x) == g] for g, _, _ in GROUPS}
+    allp = [p for x in shops_c for p in mprices(x) if grp(x) == "spabody"]
+    upd = max([checked(x) for x in shops_c] or [BUILT])
+    lead = f"Uncle Day lists {len(shops_c)} shops in {cen}, Vietnam ({', '.join(f'{len(by[g])} {le.lower()}' for g, _, le in GROUPS if by[g])}). Every shop is bookable online at the shop’s own price — no extra fee, and only real visitors can leave reviews."
+    if allp: lead += f" Massage and spa reference prices start from {vnd(min(allp))}."
+    faq = [(f"Where can I book a massage in {cen}?", f"Uncle Day lists {len(by['spabody'])} massage and spa shops in {cen}. Send a booking request on the shop page; Uncle Day confirms with the shop and sends you the details."),
+           ("Is it more expensive to book through Uncle Day?", "No. You pay the shop’s own price directly at the shop after your treatment. Uncle Day charges guests nothing."),
+           ("Are the reviews real?", "Only guests who actually booked and visited can leave a review on Uncle Day.")]
+    if allp: faq.insert(1, (f"How much is a massage in {cen}?", f"Reference prices checked by Uncle Day for {cen} massage and spa shops range from {vnd(min(allp))} to {vnd(max(allp))}, depending on the menu and duration."))
+    sec, items = "", []
+    for g, _, le in GROUPS:
+        if not by[g]: continue
+        sec += f'<h2>{esc(cen)} {esc(le.lower())}</h2><div class="grid">'
+        for x in by[g]:
+            u = f"/s/{x['id']}/"; pr = mprices(x) or prices(x)
+            sec += f'<a class="card" href="{u}"><b>{esc(ename(x))}</b><small>{esc(SUB_EN2.get(x.get("cat"), ""))}{" · from " + vnd(pr[0]) if pr else ""}</small><p>{esc(en_facts(x))}</p></a>'
+            items.append({"@type": "ListItem", "position": len(items) + 1, "url": SITE + u, "name": ename(x)})
+        sec += "</div>"
+    title = f"{cen} Massage, Spa & Beauty — {len(shops_c)} Trusted Shops | Uncle Day"
+    lds = [{"@context": "https://schema.org", "@type": "CollectionPage", "name": title, "url": url, "inLanguage": "en", "dateModified": upd, "description": lead, "mainEntity": {"@type": "ItemList", "numberOfItems": len(items), "itemListElement": items}},
+           {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in faq]}]
+    body = f"""<h1>{esc(cen)} massage, spa &amp; beauty</h1><p class="lead"><b>{esc(lead)}</b></p><p class="date">Last checked: {upd} · Uncle Day (uncleday.com)</p>
+<a class="cta" href="/?city={cid}">See {esc(cen)} shops on Uncle Day</a>{f' <a class="cta" style="background:#0e2843" href="/en/c/{cid}/guide/">📘 {esc(cen)} massage guide (prices, tipping, how to choose)</a>' if cid in GUIDES_EN else ''}
+{sec}<h2>FAQ</h2><dl>{"".join(f"<dt>{esc(q)}</dt><dd>{esc(a)}</dd>" for q, a in faq)}</dl>"""
+    return en_shell(title, lead, url, f"{SITE}/c/{cid}/", cid, lds, body, upd=upd)
+def en_guide_page(cid, shops_c):
+    G = GUIDES[cid]; E = GUIDES_EN[cid]; cen = ecity(cid); url = f"{SITE}/en/c/{cid}/guide/"
+    sp = [x for x in shops_c if grp(x) == "spabody"]
+    link = lambda x: f'<a href="/s/{x["id"]}/">{esc(ename(x))}</a>'
+    lst = lambda xs: ", ".join(link(x) for x in xs) if xs else "none yet"
+    used = []
+    def S(keys):
+        for k in keys:
+            if k not in used: used.append(k)
+        return " ".join(f'<sup><a href="#src-{k}">[{used.index(k) + 1}]</a></sup>' for k in keys)
+    en_staff = [x for x in sp if "en" in (x.get("staffLangs") or [])]
+    feats = [("🗣️ English-speaking staff", en_staff), ("🧳 Luggage storage", [x for x in sp if has(x, "짐 보관")]), ("🚐 Pickup / drop-off", [x for x in sp if has(x, "픽업|샌딩")]),
+             ("🚿 Shower", [x for x in sp if has(x, "샤워")]), ("🌙 Open past 11 pm", [x for x in sp if late(x)])]
+    rows = {}
+    for x in sp:
+        for m in x.get("menu") or []:
+            if is_massage(m) and isinstance(m.get("price"), (int, float)) and m["price"] > 0 and m.get("min"):
+                rows.setdefault(60 if m["min"] <= 60 else 90 if m["min"] <= 90 else 120, []).append((int(m["price"]), x))
+    rng = lambda v: vnd(min(p for p, _ in v)) + (" – " + vnd(max(p for p, _ in v)) if max(p for p, _ in v) > min(p for p, _ in v) else "")
+    ptab = "".join(f'<tr><td>{"120 min+" if k == 120 else str(k) + " min"}</td><td>{rng(v)}</td><td>{len({id(x) for _, x in v})}</td></tr>' for k, v in sorted(rows.items()))
+    summary = f"Uncle Day lists {len(sp)} massage and spa shops in {cen}."
+    if rows: k0 = 60 if 60 in rows else min(rows); summary += f" Reference prices checked by Uncle Day start from {vnd(min(p for p, _ in rows[k0]))} for {'120+' if k0 == 120 else k0} minutes."
+    tips = [(q, a, keys) for (q, a), (_, _, keys) in zip(E["tip"], G["tip"])]
+    faq = [(q, a) for q, a, _ in tips] + E.get("faq_extra", []) + [("Is it more expensive to book through Uncle Day?", "No. You pay the shop’s own price directly at the shop. Uncle Day charges guests nothing.")]
+    kinds = [(n, d_, pat) for (n, d_), (_, pat, _) in zip(E["kinds"], G["kinds"])]
+    areas = [(n, d_, pat) for (n, d_), (_, pat, _) in zip(E["areas"], G["areas"])]
+    body = f"""<h1>{esc(E['title'])}</h1><p class="date">Updated: {max([G['checked']] + [checked(x) for x in sp])} · Uncle Day (uncleday.com)</p>
+<p class="toc">{" ".join(f'<a href="#{i}">{n}</a>' for i, n in [("price", "Prices"), ("tip", "Tipping"), ("kinds", "Types"), ("area", "Areas"), ("when", "Before your flight")] + ([("clinic", "Clinics")] if E.get("clinic") else []) + [("book", "Booking"), ("faq", "FAQ")])}</p>
+<p class="lead">{esc(E['intro'])}</p>
+<div class="box"><b>At a glance</b><p>{esc(summary)}</p><ul>{"".join(f"<li><b>{l}</b> {len(v)} — {lst(v)}</li>" for l, v in feats)}</ul></div>
+<h2 id="price">How much does a massage cost?</h2>
+{f'<table class="tb"><thead><tr><th>Duration</th><th>Uncle Day reference price</th><th>Shops</th></tr></thead><tbody>{ptab}</tbody></table>' if ptab else ''}
+{f"<p>{esc(E['price_note'])} {S([G['price_src']])}</p>" if E.get('price_note') and G.get('price_src') else ''}{'' if rows else '<p>Uncle Day has only a few checked prices here so far — ask on the shop page and we’ll quote the menu.</p>'}<p class="muted">Prices vary by menu, duration and season. Check the shop page for the latest prices.</p>
+<h2 id="tip">How much should I tip?</h2>{"".join(f"<h3>{esc(q)}</h3><p>{esc(a)} {S(k)}</p>" for q, a, k in tips)}
+<h2 id="kinds">Which massage should I choose?</h2><dl class="kinds">{"".join(f"<dt>{esc(n)}</dt><dd>{esc(d_)}<br><small>Available at: {lst([x for x in sp if has(x, pat)])}</small></dd>" for n, d_, pat in kinds)}</dl>
+<h2 id="area">Which area?</h2><dl class="kinds">{"".join(f"<dt>{esc(n)}</dt><dd>{esc(d_)}<br><small>{lst([x for x in sp if has(x, pat)])}</small></dd>" for n, d_, pat in areas)}</dl>
+<h2 id="when">Last stop before your flight</h2><p>{esc(E['when'])} {S([G['when_src']]) if G.get('when_src') else ''}</p>
+<p>Uncle Day shops with luggage storage, showers or drop-off: {lst([x for x in sp if has(x, "짐 보관|샤워|샌딩")])}</p>
+{f'<h2 id="clinic">Cosmetic and dermatology clinics</h2><p>{esc(E["clinic"])}</p><p>Clinics on Uncle Day in {esc(cen)}: {lst([x for x in shops_c if grp(x) != "spabody"])}</p>' if E.get("clinic") else ''}
+<h2 id="book">How to book with Uncle Day</h2><ol><li>Pick a time, party size and menu on the shop page and send a booking request, or ask us in the site chat.</li>
+<li>Uncle Day confirms with the shop and sends you the address and directions.</li><li>Visit on time and pay the shop’s own price at the shop after your treatment — no extra fee to Uncle Day.</li><li>After your visit you can review your therapist. Only real visitors can review.</li></ol>
+<p><a class="cta" href="/en/c/{cid}/">See all {len(shops_c)} shops in {esc(cen)}</a></p>
+<h2 id="faq">FAQ</h2><dl>{"".join(f"<dt>{esc(q)}</dt><dd>{esc(a)}</dd>" for q, a in faq)}</dl>
+<h2 id="src">Sources</h2><ol class="src">{"".join(f'<li id="src-{k}"><a href="{SOURCES[k][1]}" rel="nofollow noopener" target="_blank">{esc(SOURCES_EN.get(k, SOURCES[k][0]))}</a></li>' for k in used)}</ol>
+<p class="muted">Shop details are checked by Uncle Day. Figures from outside sources reflect each source’s publication date.</p>"""
+    upd = max([G["checked"]] + [checked(x) for x in sp])
+    lds = [{"@context": "https://schema.org", "@type": "Article", "headline": E["title"], "inLanguage": "en", "url": url, "dateModified": upd, "datePublished": G["checked"],
+            "author": {"@type": "Organization", "name": "Uncle Day", "url": SITE + "/"}, "publisher": {"@type": "Organization", "name": "Uncle Day", "logo": {"@type": "ImageObject", "url": SITE + "/images/logo-og.png"}},
+            "image": SITE + "/images/og-image.jpg", "description": summary, "citation": [SOURCES[k][1] for k in used]},
+           {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in faq]}]
+    return en_shell(E["title"] + " | Uncle Day", summary + " Prices, tipping, how to choose and how to book.", url, f"{SITE}/c/{cid}/guide/", cid, lds, body, "article", upd)
 
 hubs = [c["id"] for c in d["cities"] if any(x.get("city") == c["id"] for x in live)]
 os.makedirs("c", exist_ok=True)
@@ -368,6 +480,14 @@ for cid in hubs:
     elif os.path.isdir(f"c/{cid}/guide"): shutil.rmtree(f"c/{cid}/guide", ignore_errors=True)
 for f in os.listdir("c"):
     if f not in hubs: shutil.rmtree(f"c/{f}", ignore_errors=True)
+os.makedirs("en/c", exist_ok=True)
+for cid in hubs:
+    sc = [x for x in live if x.get("city") == cid]
+    os.makedirs(f"en/c/{cid}", exist_ok=True); open(f"en/c/{cid}/index.html", "w").write(en_hub_page(cid, sc))
+    if cid in GUIDES_EN and cid in GUIDES:
+        os.makedirs(f"en/c/{cid}/guide", exist_ok=True); open(f"en/c/{cid}/guide/index.html", "w").write(en_guide_page(cid, sc))
+for f in os.listdir("en/c"):
+    if f not in hubs: shutil.rmtree(f"en/c/{f}", ignore_errors=True)
 
 # ---- llms.txt : AI에게 "엉클데이는 이런 곳이고 정보는 여기 있어요" 알려 주는 안내문 (llmstxt.org 형식) ----
 L = ["# 엉클데이 Uncle Day", "",
@@ -387,6 +507,9 @@ for cid in hubs:
     for x in [y for y in live if y.get("city") == cid]:
         sk, _, _ = facts(x); L.append(f"- [{tx(x.get('name'))}]({SITE}/s/{x['id']}/): {sk}")
 L += ["", "## 안내", f"- [엉클데이 홈]({SITE}/): 업체 검색 · 예약", f"- [예약 확인]({SITE}/booking.html): 로그인 없이 예약번호로 확인"]
+L += ["", "## English", "Uncle Day also has English city pages and massage guides for international travelers:"]
+for cid in hubs:
+    L.append(f"- [{ecity(cid)}: shops]({SITE}/en/c/{cid}/)" + (f" · [{GUIDES_EN[cid]['title']}]({SITE}/en/c/{cid}/guide/)" if cid in GUIDES_EN else ""))
 open("llms.txt", "w").write("\n".join(L) + "\n")
 
 # 사이트맵: 검색엔진에 '이 페이지들이 있어요' + 언제 바뀌었는지(lastmod) 알려 주기
@@ -394,7 +517,11 @@ mod = {f"{SITE}/s/{x['id']}/": checked(x) for x in live}
 for cid in hubs: mod[f"{SITE}/c/{cid}/"] = max(checked(x) for x in live if x.get("city") == cid)
 for cid in hubs:
     if cid in GUIDES: mod[f"{SITE}/c/{cid}/guide/"] = max([GUIDES[cid]["checked"]] + [checked(x) for x in live if x.get("city") == cid])
-urls = [f"{SITE}/"] + [f"{SITE}/c/{c}/" for c in hubs] + [f"{SITE}/c/{c}/guide/" for c in hubs if c in GUIDES] + [f"{SITE}/s/{x}/" for x in sorted(keep_s)]
+for cid in hubs:
+    mod[f"{SITE}/en/c/{cid}/"] = mod[f"{SITE}/c/{cid}/"]
+    if cid in GUIDES_EN: mod[f"{SITE}/en/c/{cid}/guide/"] = mod.get(f"{SITE}/c/{cid}/guide/", BUILT)
+urls = [f"{SITE}/"] + [f"{SITE}/c/{c}/" for c in hubs] + [f"{SITE}/c/{c}/guide/" for c in hubs if c in GUIDES] \
+     + [f"{SITE}/en/c/{c}/" for c in hubs] + [f"{SITE}/en/c/{c}/guide/" for c in hubs if c in GUIDES_EN] + [f"{SITE}/s/{x}/" for x in sorted(keep_s)]
 open("sitemap.xml", "w").write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
     + "".join(f"  <url><loc>{u}</loc><lastmod>{mod.get(u, BUILT)}</lastmod>{'<priority>1.0</priority>' if u == SITE + '/' else '<priority>0.8</priority>' if '/c/' in u else ''}</url>\n" for u in urls) + "</urlset>\n")
 print(len(keep_s), "곳 업체 페이지 ·", len(hubs), "개 도시 페이지 · llms.txt · 사이트맵 완료")

@@ -20,8 +20,8 @@ const CITY_GUIDES = {
   hanoi: { ko: "하노이 마사지 가이드", en: "Hanoi massage guide", vi: "Cẩm nang massage Hà Nội" },
 };
 const guideBar = (city, cls) => { const g = CITY_GUIDES[city]; if (!g) return "";
-  const sub = { ko: "가격 · 팁 · 고르는 법 · 공항 가기 전 꿀팁", en: "prices, tips, how to choose (in Korean)", vi: "giá, tiền tip, cách chọn (tiếng Hàn)" };
-  return `<a class="guide-bar ${cls || ""}" href="/c/${city}/guide/"><span class="gb-ic">📘</span><span><b>${tx(g)}</b><small>${tx(sub)}</small></span><span class="gb-go">›</span></a>`; };
+  const sub = { ko: "가격 · 팁 · 고르는 법 · 공항 가기 전 꿀팁", en: "prices, tipping, how to choose", vi: "giá, tiền tip, cách chọn (tiếng Anh)" };
+  return `<a class="guide-bar ${cls || ""}" href="${lang === "ko" ? "" : "/en"}/c/${city}/guide/"><span class="gb-ic">📘</span><span><b>${tx(g)}</b><small>${tx(sub)}</small></span><span class="gb-go">›</span></a>`; };
 const tx = v => (v && typeof v === "object" && !Array.isArray(v)) ? (v[lang] || v.en || v.ko || "") : (v ?? "");
 const ui = (k, vars = {}) => {
   let s = (UI[lang] && UI[lang][k]) ?? UI.en[k] ?? UI.ko[k] ?? k;
