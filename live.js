@@ -63,8 +63,9 @@ const LIVE = (() => {
     const ua = navigator.userAgent;
     const dev = /iPad|Tablet/i.test(ua) || (/Android/i.test(ua) && !/Mobile/i.test(ua)) ? "tablet" : /Mobi|iPhone|Android/i.test(ua) ? "mobile" : "pc";
     const lang = ((navigator.language || "").slice(0, 2) || "unknown").toLowerCase();
-    let tz = "unknown"; try { const z = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; tz = z === "Asia/Seoul" ? "kr" : /Ho_Chi_Minh|Saigon|Bangkok/.test(z) ? "vn" : z ? "etc" : "unknown"; } catch (e) {}
-    try { fetch(`${SUPA.url}/rest/v1/rpc/track_src`, { method: "POST", keepalive: true, headers: { ...headers, "Content-Type": "application/json" }, body: JSON.stringify({ src: SRC, dev, lang, tz }) }).catch(() => {}); } catch (e) {}
+    let tz = "unknown", zone = null; try { const z = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; zone = z || null; tz = z === "Asia/Seoul" ? "kr" : /Ho_Chi_Minh|Saigon|Bangkok/.test(z) ? "vn" : z ? "etc" : "unknown"; } catch (e) {}
+    // 시간대 이름(예: Asia/Tokyo)은 나라를 세는 데만 써요. IP · 개인 정보는 보내지 않아요.
+    try { fetch(`${SUPA.url}/rest/v1/rpc/track_src`, { method: "POST", keepalive: true, headers: { ...headers, "Content-Type": "application/json" }, body: JSON.stringify({ src: SRC, dev, lang, tz, zone }) }).catch(() => {}); } catch (e) {}
   }
   const SRC = srcOf();
   // 주소창에 붙은 공유 꼬리표(?via=share&ref=…)는 지워요

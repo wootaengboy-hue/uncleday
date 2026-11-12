@@ -77,12 +77,24 @@ const DIM_NAMES = {
   tz: { kr: "🇰🇷 한국", vn: "🇻🇳 베트남·동남아", etc: "🌏 그 밖의 나라", unknown: "❔ 알 수 없음" }
 };
 const dimName = (d, v) => (DIM_NAMES[d] || {})[v] || (v.startsWith("utm:") ? "🏷️ 광고 링크: " + v.slice(4) : v);
+// 시간대 이름 → 나라 (휴대폰·PC 시계 기준, IP 아님)
+const ZONE_CC = { "Asia/Seoul": "🇰🇷 한국", "Asia/Ho_Chi_Minh": "🇻🇳 베트남", "Asia/Saigon": "🇻🇳 베트남", "Asia/Bangkok": "🇹🇭 태국·베트남 북부·라오스·캄보디아(같은 시간대)",
+  "Asia/Tokyo": "🇯🇵 일본", "Asia/Shanghai": "🇨🇳 중국", "Asia/Hong_Kong": "🇭🇰 홍콩", "Asia/Taipei": "🇹🇼 대만", "Asia/Singapore": "🇸🇬 싱가포르", "Asia/Kuala_Lumpur": "🇲🇾 말레이시아",
+  "Asia/Manila": "🇵🇭 필리핀", "Asia/Jakarta": "🇮🇩 인도네시아(자카르타)", "Asia/Makassar": "🇮🇩 인도네시아(발리 등)", "Asia/Phnom_Penh": "🇰🇭 캄보디아", "Asia/Vientiane": "🇱🇦 라오스", "Asia/Yangon": "🇲🇲 미얀마",
+  "Asia/Kolkata": "🇮🇳 인도", "Asia/Calcutta": "🇮🇳 인도", "Asia/Dubai": "🇦🇪 아랍에미리트", "Asia/Tashkent": "🇺🇿 우즈베키스탄", "Asia/Almaty": "🇰🇿 카자흐스탄", "Asia/Ulaanbaatar": "🇲🇳 몽골", "Asia/Pyongyang": "🇰🇵 북한",
+  "Australia/Sydney": "🇦🇺 호주(시드니)", "Australia/Melbourne": "🇦🇺 호주(멜버른)", "Australia/Brisbane": "🇦🇺 호주(브리즈번)", "Australia/Perth": "🇦🇺 호주(퍼스)", "Pacific/Auckland": "🇳🇿 뉴질랜드", "Pacific/Guam": "🇬🇺 괌",
+  "America/New_York": "🇺🇸 미국 동부", "America/Chicago": "🇺🇸 미국 중부", "America/Denver": "🇺🇸 미국 산악", "America/Los_Angeles": "🇺🇸 미국 서부", "America/Anchorage": "🇺🇸 알래스카", "Pacific/Honolulu": "🇺🇸 하와이",
+  "America/Toronto": "🇨🇦 캐나다 동부", "America/Vancouver": "🇨🇦 캐나다 서부", "America/Mexico_City": "🇲🇽 멕시코", "America/Sao_Paulo": "🇧🇷 브라질",
+  "Europe/London": "🇬🇧 영국", "Europe/Paris": "🇫🇷 프랑스", "Europe/Berlin": "🇩🇪 독일", "Europe/Madrid": "🇪🇸 스페인", "Europe/Rome": "🇮🇹 이탈리아", "Europe/Amsterdam": "🇳🇱 네덜란드",
+  "Europe/Moscow": "🇷🇺 러시아(모스크바)", "Europe/Istanbul": "🇹🇷 튀르키예", "Europe/Kyiv": "🇺🇦 우크라이나", "Europe/Warsaw": "🇵🇱 폴란드", "Europe/Prague": "🇨🇿 체코", "Europe/Zurich": "🇨🇭 스위스", "Europe/Stockholm": "🇸🇪 스웨덴",
+  "Africa/Cairo": "🇪🇬 이집트", "Africa/Johannesburg": "🇿🇦 남아공", "Etc/UTC": "🌐 UTC(시계 설정 없음)", "UTC": "🌐 UTC(시계 설정 없음)" };
+const zoneName = z => ZONE_CC[z] ? `${ZONE_CC[z]} · ${z}` : z === "unknown" ? "❔ 알 수 없음" : `🌏 ${z}`;
 function dimCard(m, d, title, hint) {
   const sum = {}; (DIMS[m] || []).filter(r => r.dim === d).forEach(r => sum[r.val] = (sum[r.val] || 0) + r.n);
   const rows = Object.entries(sum).sort((a, b) => b[1] - a[1]); const tot = rows.reduce((t, r) => t + r[1], 0);
   return `<div class="dim-card"><h3>${title}</h3>${hint ? `<p class="hint">${hint}</p>` : ""}${rows.length ? rows.map(([v, n]) => {
     const p = Math.round(n / tot * 100);
-    return `<div class="dim-row"><span class="dim-l">${esc(dimName(d, v))}</span><span class="dim-bar"><i style="width:${Math.max(2, p)}%"></i></span><span class="dim-n">${n.toLocaleString()}<small>${p}%</small></span></div>`;
+    return `<div class="dim-row"><span class="dim-l">${esc(d === "zone" ? zoneName(v) : dimName(d, v))}</span><span class="dim-bar"><i style="width:${Math.max(2, p)}%"></i></span><span class="dim-n">${n.toLocaleString()}<small>${p}%</small></span></div>`;
   }).join("") : `<p class="empty">아직 기록이 없어요</p>`}</div>`;
 }
 function dailyChart(m) {
@@ -202,6 +214,7 @@ function drawDash() {
       ${dailyChart(dashMonth)}
       ${dimCard(dashMonth, "src", "어디서 들어왔나요", "링크를 누른 곳이에요. '직접 방문'은 주소를 직접 쳤거나 즐겨찾기·일부 앱에서 열린 경우예요.")}
       ${dimCard(dashMonth, "tz", "지금 어디에 있나요", "휴대폰·PC의 시간대로 봐요. 여행 준비 중(한국)인지, 이미 현지(베트남)인지 알 수 있어요.")}
+      ${dimCard(dashMonth, "zone", "나라 · 시간대 자세히", "'그 밖의 나라'를 나라별로 나눠 봐요. 휴대폰·PC 시계의 시간대 기준이라 VPN과 상관없고, IP나 개인 정보는 저장하지 않아요. 11월 12일 이후 방문부터 쌓여요.")}
       ${dimCard(dashMonth, "dev", "어떤 기기로 봤나요")}
       ${dimCard(dashMonth, "lang", "어떤 언어를 쓰나요", "휴대폰·브라우저 기본 언어예요.")}
     </div>` : `<p class="hint">불러오는 중…</p>`}
