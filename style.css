@@ -687,3 +687,11 @@ footer .foot-priv { display: inline-block; margin: 2px 12px 0 0; color: #fff; te
 .tp-chip.on::before { content: "✓ "; }
 .tp-stars button { font-size: 28px; background: none; border: 0; color: #d8d2c4; cursor: pointer; padding: 0 2px; }
 .tp-stars button.on { color: #f5b84c; }
+
+/* 엉클데이 소개 (검색엔진용 글이지만 손님에게도 보여요) */
+.about-ud { background: #fff; border-radius: 16px; padding: 18px 20px; margin-top: 28px; line-height: 1.65; }
+.about-ud h1 { font-size: 19px; margin: 0 0 8px; } .about-ud h1 small { font-size: 14px; color: var(--muted, #6b7280); font-weight: 600; }
+.about-ud p { margin: 0 0 8px; font-size: 14.5px; } .about-ud .about-links { margin: 0 0 8px; padding-left: 18px; font-size: 14px; color: #4b5563; }
+.about-ud .about-en { font-size: 13px; color: #6b7280; margin: 0; }
+html:not([lang="ko"]) .about-ud > :not(.about-en) { display: none; }
+html:not([lang="ko"]) .about-ud .about-en { font-size: 14px; color: inherit; }
