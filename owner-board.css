@@ -269,3 +269,8 @@
 .ob-itbar { position: absolute; transform: translate(-50%, 0); display: flex; gap: 4px; background: #fff; border: 1.5px solid var(--green); border-radius: 10px; padding: 4px; z-index: 5002; white-space: nowrap; box-shadow: 0 6px 16px rgba(14,40,67,.16); }
 .ob-itbar button { border: 1px solid var(--line); background: #F7F5F0; border-radius: 8px; padding: 4px 8px; font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
 .ob-item.edit { z-index: 4000; }
+/* 😎 입구 가드 */
+.ob-w.guard .ob-spr { pointer-events: auto; cursor: pointer; transform-origin: 50% 100%; transform: scale(1.12, 1.08); }
+.ob-w.guard .ob-spr.flip { transform: scale(-1.12, 1.08); }
+.ob-tag.g { background: #1E2228; color: #fff; border-color: #1E2228; font-weight: 700; }
+.ob-emo.say { font-size: 12px; font-weight: 700; white-space: nowrap; padding: 3px 8px; left: auto; right: 16px; bottom: 40px; }

@@ -23,6 +23,7 @@
     lvT: [["Mầm non", "Tiệm khu phố", "Có khách quen", "Được truyền tai", "Điểm hẹn khu phố", "Spa được yêu thích", "Nổi tiếng khu vực", "Uncle Day đề cử", "Uncle Day chứng nhận", "Huyền thoại"], ["새싹 매장", "동네 가게", "단골 생긴 집", "입소문 난 곳", "동네 명소", "인기 스파", "지역 대표", "엉클 추천", "엉클 인증", "전설의 스파"], ["Sprout", "Local shop", "Has regulars", "Word of mouth", "Local spot", "Popular spa", "Area favorite", "Uncle Day pick", "Uncle Day certified", "Legend"]],
     lvUp: ["🎉 Lên cấp! Lv{n} {t}", "🎉 레벨 업! Lv{n} {t}", "🎉 Level up! Lv{n} {t}"], watered: ["💧 +3XP", "💧 물 줬어요 +3XP", "💧 +3XP"], harvested: ["🌸 +10🪙 +8XP", "🌸 수확! +10🪙 +8XP", "🌸 +10🪙 +8XP"], petted: ["❤️ +2XP", "❤️ 좋아해요 +2XP", "❤️ +2XP"],
     snack: ["🍵 Ăn vặt (5🪙)", "🍵 간식 (5🪙)", "🍵 Snack (5🪙)"], praise: ["👏 Khen", "👏 칭찬", "👏 Praise"], snacked: ["🍵 +2XP", "🍵 간식 줬어요 +2XP", "🍵 +2XP"], praised: ["👏 +1XP", "👏 칭찬했어요 +1XP", "👏 +1XP"],
+    guard: ["Bảo vệ", "가드", "Guard"],
     dk_sofa: ["Sofa", "소파", "Sofa"], rotate: ["↻ Xoay", "↻ 돌리기", "↻ Rotate"], mirror: ["↔ Lật", "↔ 뒤집기", "↔ Flip"], remove: ["🗑 Xoá", "🗑 지우기", "🗑 Remove"],
     decoSave: ["Lưu trang trí", "꾸미기 저장", "Save"], decoCancel: ["Huỷ", "취소", "Cancel"], decoSaved: ["Đã lưu trang trí.", "꾸민 모습을 저장했어요.", "Decor saved."], decoMax: ["Tối đa 40 món.", "40개까지 놓을 수 있어요.", "Up to 40 items."],
     dk_plant: ["Chậu cây", "화분", "Plant"], dk_palm: ["Cây cọ", "야자수", "Palm"], dk_flower: ["Hoa", "꽃", "Flowers"], dk_fish: ["Bể cá", "어항", "Aquarium"], dk_lantern: ["Đèn lồng", "등불", "Lantern"], dk_candle: ["Nến thơm", "아로마 캔들", "Candle"], dk_cat: ["Mèo", "고양이", "Cat"], dk_dog: ["Chó", "강아지", "Dog"],
@@ -133,12 +134,17 @@
     const key = JSON.stringify(o); if (sCache[key]) return sCache[key];
     const CW = 14, CH = 19, R = 17, cv = document.createElement("canvas"); cv.width = CW * 3; cv.height = CH * 3;
     const ctx = cv.getContext("2d"), img = ctx.createImageData(cv.width, cv.height), d = img.data, W = cv.width;
-    const pal = { h: hex(o.hairC), s: hex("#F1C7A0"), e: hex("#2A1E1A"), m: hex("#D9826E"), c: hex(o.topC), d: hex(shade(o.topC, 0.72)), p: hex(o.botC), f: hex("#2B2622") }, OUT = hex("#2A2220");
+    const pal = { h: hex(o.hairC), s: hex(o.skin || "#F1C7A0"), e: hex("#2A1E1A"), m: hex("#D9826E"), c: hex(o.topC), d: hex(shade(o.topC, 0.72)), p: hex(o.botC), f: hex("#2B2622"), g: hex("#0D0F12"), w: hex("#F4F4F4"), t: hex("#26292E"), l: hex("#7FA8C9") }, OUT = hex("#2A2220");
     const hs = HAIR[o.hair] || HAIR.short;
     ["down", "up", "side"].forEach((dir, row) => {
       for (let col = 0; col < 3; col++) {
         const body = BODY[dir].slice(), ov = hs.rows[dir] || {}; for (const k in ov) body[k] = ov[k];
         if (o.top !== "uniform") body[10] = body[10].replace(/d/g, "c");
+        if (o.guard) {
+          if (dir === "down") { body[3] = ".hssssssssh."; body[4] = ".hgglggglgh."; body[6] = "...ssssss..."; body[7] = ".cccwwwwccc."; body[8] = "ccccwttwcccc"; body[9] = "scccctttcccs"; body[10] = ".ddddttdddd."; }
+          else if (dir === "side") { body[4] = ".hhhhsgggl.."; body[6] = "..hhhsssss.."; body[7] = "..cccccww..."; body[8] = "..ccccccct.."; body[9] = "..ccsccccc.."; }
+          else { body[7] = ".cccccccccc."; body[8] = "cccccccccccc"; body[9] = "sccccccccccs"; body[10] = ".dddddddddd."; }
+        }
         const legs = LEGS[dir][col].slice();
         if (o.bottom === "skirt") { legs[0] = dir === "side" ? "..pppppppp.." : ".pppppppppp."; for (let i = 1; i < 3; i++) legs[i] = legs[i].replace(/p/g, "s"); }
         if (o.top === "aodai") { body[11] = body[11].replace(/p/g, "c"); legs[0] = dir === "side" ? "..cccccccc.." : ".cccccccccc."; }
@@ -310,6 +316,7 @@
     f1.ent = { x: DX, y: y + 372 };
     f1.zl = { x0: 12, x1: 12 + lw, y0: y + 86, y1: y + 340 }; f1.zc = { x0: CX0, x1: CX0 + cwid, y0: y + 86, y1: y + 340 };
     f1.baseSlots = f1.slots.slice(); f1.baseSeats = f1.seats.slice();
+    guard = null; setTimeout(placeGuard, 0);
     W.forEach(w => w.el.remove()); W.clear(); GW.forEach(w => w.el.remove()); GW.clear(); pendOcc.clear();
     renderItems();
   }
@@ -379,6 +386,28 @@
     const el = document.createElement("div"); el.className = "ob-care"; el.style.left = care.at.x + "px"; el.style.top = care.at.y + "px";
     el.innerHTML = `<b>${esc(care.name)}</b><button data-care="snack">${t("snack")}</button><button data-care="praise">${t("praise")}</button>`; plan.appendChild(el);
   }
+  /* 😎 입구 가드: 직원이 아니라 재미 요소예요 (선글라스 · 검은 정장) */
+  const GUARD_LOOK = { hair: "short", hairC: "#15171A", top: "uniform", topC: "#1E2228", bottom: "pants", botC: "#1E2228", skin: "#E3B48C", guard: true };
+  const GUARD_SAY = [["Xin chào quý khách 😎", "어서 오세요 😎", "Welcome 😎"], ["Hôm nay yên bình.", "오늘도 평화롭습니다.", "All quiet today."], ["Khách VIP đến rồi!", "VIP 손님 입장!", "VIP guest arriving!"], ["Cẩn thận bậc thềm.", "계단 조심하세요.", "Mind the step."], ["Tôi đang làm nhiệm vụ.", "근무 중입니다.", "On duty."], ["Massage hôm nay rất tuyệt.", "오늘 마사지 최고래요.", "Great massages today."]];
+  let guard = null;
+  function placeGuard() {
+    if (!plan || !G.f1) return;
+    if (guard) guard.el.remove();
+    const el = document.createElement("div"); el.className = "ob-w guard"; el.innerHTML = '<div class="ob-spr"></div><div class="ob-tag g">😎 ' + esc(t("guard")) + '</div>'; plan.appendChild(el);
+    const spr = el.firstChild; spr.style.backgroundImage = `url(${sheet(GUARD_LOOK)})`;
+    guard = { el, spr, tag: el.lastChild, x: G.DX - 48, y: G.f1.ent.y - 34, dir: "down", flip: false, moving: false, work: false, look: 0 };
+    drawW(guard);
+  }
+  function guardSay(txt) {
+    if (!guard) return; guard.el.querySelectorAll(".ob-emo").forEach(e => e.remove());
+    const b = document.createElement("div"); b.className = "ob-emo say"; b.textContent = txt; guard.el.appendChild(b); setTimeout(() => b.remove(), 2600);
+  }
+  function guardIdle() {
+    if (!guard) return;
+    const r = Math.random();
+    if (r < 0.35) { guard.dir = "side"; guard.flip = Math.random() < 0.5; } else if (r < 0.8) { guard.dir = "down"; guard.flip = false; } else guardSay("😎");
+    drawW(guard);
+  }
   function floatAt(x, y, txt) { if (!plan) return; const f = document.createElement("div"); f.className = "ob-float"; f.textContent = txt; f.style.left = x + "px"; f.style.top = y + "px"; plan.appendChild(f); setTimeout(() => f.remove(), 1600); }
   async function gameAct(act, arg, at, okTxt) {
     if (busy || C.readOnly) return; busy = true;
@@ -440,7 +469,7 @@
   const EMO = ["☕", "💬", "📱", "🎵", "😊", "💪", "🍜", "😴"];
   function emote() {
     if (!data || view !== "board" || document.hidden) return;
-    updatePots();
+    updatePots(); guardIdle();
     const idle = data.staff.filter(s => ["idle", "desk"].includes(stOf(s))).map(s => W.get(s.id)).filter(w => w && !w.moving && !w.el.hidden);
     if (!idle.length) return;
     const w = idle[Math.floor(Math.random() * idle.length)], b = document.createElement("div");
@@ -568,11 +597,11 @@
     W.forEach((w, id) => { if (!seen.has(id)) { w.el.remove(); W.delete(id); } });
     // 손님
     const waiting = data.guests.filter(g => g.status === "waiting");
-    const gSeen = new Set();
+    const gSeen = new Set(), greetOk = GW.size > 0 || !!syncPlan._once; syncPlan._once = true;
     waiting.forEach((g, i) => {
       gSeen.add(g.id);
       let w = GW.get(g.id);
-      if (!w) { w = mkW(lookOf({ hair: ["short", "long", "bun", "pony"][i % 4], hc: (i + 2) % 5, top: "tee", tc: [7, 1, 2, 3][i % 4], bottom: "pants", bc: (i + 1) % 6 }, i), true); GW.set(g.id, w); w.tag.innerHTML = `<span>${esc(g.name)}</span>${g.source === "ud" ? '<span class="ob-ud">UD</span>' : ""}`; }
+      if (!w) { w = mkW(lookOf({ hair: ["short", "long", "bun", "pony"][i % 4], hc: (i + 2) % 5, top: "tee", tc: [7, 1, 2, 3][i % 4], bottom: "pants", bc: (i + 1) % 6 }, i), true); GW.set(g.id, w); if (guard && greetOk) setTimeout(() => guardSay(GUARD_SAY[0][li()]), 300); w.tag.innerHTML = `<span>${esc(g.name)}</span>${g.source === "ud" ? '<span class="ob-ud">UD</span>' : ""}`; }
       const seat = G.f1.seats[i % G.f1.seats.length];
       w.el.classList.toggle("hi", i % 2 === 1);
       if (!w.loc) goTo(w, { k: "seat", p: seat }, () => { w.dir = "up"; }); else goTo(w, { k: "seat", p: seat }, () => { w.dir = "up"; });
@@ -980,6 +1009,7 @@
       const py = (vy - r.top) / sc, sl = (G.slabs || []).find(q => py >= q.y && py <= q.y + q.h) || slabOf(1);
       deco.items.push({ id: rid(), k: dk.dataset.dk, fl: sl.fl, rx: 0.25 + Math.random() * 0.5, ry: sl.fl === 1 ? 0.2 + Math.random() * 0.15 : 0.82 + Math.random() * 0.1 }); renderItems(); return; }
     const dx = e.target.closest("[data-dx]"); if (dx) { decoEnd(dx.dataset.dx === "save"); return; }
+    if (e.target.closest(".ob-w.guard")) { const L = GUARD_SAY[Math.floor(Math.random() * GUARD_SAY.length)]; guardSay(L[li()]); guard.dir = "down"; guard.flip = false; drawW(guard); return; }
     if (!deco && !C.readOnly && game) {
       const cl = e.target.closest("[data-claim]"); if (cl) { gameAct("claim", cl.dataset.claim); return; }
       const cb = e.target.closest("[data-care]"); if (cb && care) { const c0 = care; care = null; renderCare(); gameAct(cb.dataset.care, c0.sid, c0.at, t(cb.dataset.care === "snack" ? "snacked" : "praised")); return; }
