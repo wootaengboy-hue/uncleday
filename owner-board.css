@@ -259,3 +259,13 @@
 .ob-lv i { height: 8px; border-radius: 999px; background: linear-gradient(90deg, #F5B84C var(--p), #EEE9DD var(--p)); }
 .ob-lv small { color: var(--sub); font-variant-numeric: tabular-nums; }
 .ob-q .ob-btn { min-height: 30px; padding: 0 10px; font-size: 12.5px; }
+/* 소파 (꾸미기) · 돌리기 · 뒤집기 */
+.ob-item.sofa { filter: drop-shadow(0 3px 0 rgba(58,46,37,.15)); z-index: 1; }
+.ob-item.sofa .sf { display: block; width: 120px; height: 36px; background: #D9C3A2; border: 3px solid #C4A97F; border-radius: 12px; box-sizing: border-box; }
+.ob-item.sofa .sf.r0 { border-top-width: 10px; } .ob-item.sofa .sf.r180 { border-bottom-width: 10px; }
+.ob-item.sofa .sf.r90, .ob-item.sofa .sf.r270 { width: 36px; height: 120px; }
+.ob-item.sofa .sf.r90 { border-left-width: 10px; } .ob-item.sofa .sf.r270 { border-right-width: 10px; }
+.ob-item.sel { outline: 2.5px solid var(--green) !important; }
+.ob-itbar { position: absolute; transform: translate(-50%, 0); display: flex; gap: 4px; background: #fff; border: 1.5px solid var(--green); border-radius: 10px; padding: 4px; z-index: 5002; white-space: nowrap; box-shadow: 0 6px 16px rgba(14,40,67,.16); }
+.ob-itbar button { border: 1px solid var(--line); background: #F7F5F0; border-radius: 8px; padding: 4px 8px; font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+.ob-item.edit { z-index: 4000; }

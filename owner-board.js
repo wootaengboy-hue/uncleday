@@ -15,7 +15,7 @@
     hLateN: ["Trễ {n} lần · {m}′", "지각 {n}번 · {m}분", "Late {n}× · {m}′"], hLate: ["Trễ {m}′", "지각 {m}분", "Late {m}′"], hCsv: ["⬇ Tải Excel (CSV)", "⬇ 엑셀로 받기", "⬇ Excel (CSV)"], hOwner: ["Chỉ chủ cửa hàng mới xem được lịch sử.", "기록은 사장님 계정만 볼 수 있어요.", "Only the owner can see history."],
     hNoStaff: ["Chưa ghi KTV", "담당 미기록", "No therapist"], hSetTp: ["Thêm KTV", "담당 넣기", "Add therapist"], hEditTp: ["Đổi", "바꾸기", "Edit"], hSaveTp: ["Lưu", "저장", "Save"], hTpSaved: ["Đã lưu KTV phụ trách.", "담당을 저장했어요.", "Therapist saved."], hByReview: ["khách xác nhận qua đánh giá", "손님 후기로 확인", "confirmed by guest review"], hRv: ["Đánh giá KTV", "💌 테라피스트 후기", "💌 Therapist reviews"], hRvNone: ["Chưa có đánh giá.", "아직 받은 후기가 없어요.", "No reviews yet."], hRvHint: ["Khách đặt qua Uncle Day có thể viết đánh giá cho KTV sau khi đến. Mỗi đánh giá được xác nhận, Uncle Day thưởng cho KTV.", "엉클데이 예약 손님은 방문 뒤 담당 테라피스트에게 후기를 쓸 수 있어요. 확인된 후기 한 건마다 엉클데이가 테라피스트에게 보너스를 줘요.", "Uncle Day guests can review their therapist after the visit. Uncle Day pays the therapist a bonus per verified review."],
     hByShop: ["nhập tay", "직접 입력", "entered by shop"],
-    decoBtn: ["🪴 Trang trí", "🪴 꾸미기", "🪴 Decorate"], decoHint: ["Kéo để di chuyển · bấm đúp để xoá · tối đa 40 món", "끌어서 옮기고, 두 번 누르면 지워요 · 최대 40개", "Drag to move · double-tap to remove · up to 40"],
+    decoBtn: ["🪴 Trang trí", "🪴 꾸미기", "🪴 Decorate"], decoHint: ["Kéo để di chuyển · bấm 1 lần để xoay/lật/xoá · sofa ở phòng chờ/quầy thêm 3 chỗ ngồi · tối đa 40 món", "끌어서 옮기고, 한 번 누르면 돌리기 · 뒤집기 · 지우기 · 대기실·카운터에 놓은 소파는 자리 +3 · 최대 40개", "Drag to move · tap once to rotate/flip/remove · a sofa in the lounge/counter adds 3 seats · up to 40"],
     gq_done: ["Xong {n} lượt làm", "시술 {n}건 끝내기", "Finish {n} sessions"], gq_water: ["Tưới cây {n} lần", "화분에 물 {n}번 주기", "Water plants {n} times"], gq_care: ["Chăm KTV {n} lần (ăn vặt · khen)", "테라피스트 챙기기 {n}번 (간식 · 칭찬)", "Care for staff {n} times (snack · praise)"],
     gq_ud: ["Đón {n} khách Uncle Day", "엉클데이 손님 {n}팀 모시기", "Serve {n} Uncle Day guests"], gq_ontime: ["Hôm nay không ai đi trễ", "오늘 지각 0명", "Nobody late today"],
     claim: ["Nhận", "받기", "Claim"], claimed: ["Đã nhận ✓", "받음 ✓", "Claimed ✓"], gHint: ["🪴 Bấm chậu cây để tưới, cây nở hoa (✨) thì bấm để thu hoạch · bấm nhân viên đang nghỉ để cho ăn vặt/khen · vuốt ve thú cưng", "🪴 화분을 누르면 물을 줘요. 꽃이 피면(✨) 눌러서 수확해요 · 쉬는 직원을 누르면 간식·칭찬 · 펫을 쓰다듬어 보세요", "🪴 Tap a plant to water it, tap again when it blooms (✨) to harvest · tap a resting staff for a snack/praise · pet the animals"],
@@ -23,6 +23,7 @@
     lvT: [["Mầm non", "Tiệm khu phố", "Có khách quen", "Được truyền tai", "Điểm hẹn khu phố", "Spa được yêu thích", "Nổi tiếng khu vực", "Uncle Day đề cử", "Uncle Day chứng nhận", "Huyền thoại"], ["새싹 매장", "동네 가게", "단골 생긴 집", "입소문 난 곳", "동네 명소", "인기 스파", "지역 대표", "엉클 추천", "엉클 인증", "전설의 스파"], ["Sprout", "Local shop", "Has regulars", "Word of mouth", "Local spot", "Popular spa", "Area favorite", "Uncle Day pick", "Uncle Day certified", "Legend"]],
     lvUp: ["🎉 Lên cấp! Lv{n} {t}", "🎉 레벨 업! Lv{n} {t}", "🎉 Level up! Lv{n} {t}"], watered: ["💧 +3XP", "💧 물 줬어요 +3XP", "💧 +3XP"], harvested: ["🌸 +10🪙 +8XP", "🌸 수확! +10🪙 +8XP", "🌸 +10🪙 +8XP"], petted: ["❤️ +2XP", "❤️ 좋아해요 +2XP", "❤️ +2XP"],
     snack: ["🍵 Ăn vặt (5🪙)", "🍵 간식 (5🪙)", "🍵 Snack (5🪙)"], praise: ["👏 Khen", "👏 칭찬", "👏 Praise"], snacked: ["🍵 +2XP", "🍵 간식 줬어요 +2XP", "🍵 +2XP"], praised: ["👏 +1XP", "👏 칭찬했어요 +1XP", "👏 +1XP"],
+    dk_sofa: ["Sofa", "소파", "Sofa"], rotate: ["↻ Xoay", "↻ 돌리기", "↻ Rotate"], mirror: ["↔ Lật", "↔ 뒤집기", "↔ Flip"], remove: ["🗑 Xoá", "🗑 지우기", "🗑 Remove"],
     decoSave: ["Lưu trang trí", "꾸미기 저장", "Save"], decoCancel: ["Huỷ", "취소", "Cancel"], decoSaved: ["Đã lưu trang trí.", "꾸민 모습을 저장했어요.", "Decor saved."], decoMax: ["Tối đa 40 món.", "40개까지 놓을 수 있어요.", "Up to 40 items."],
     dk_plant: ["Chậu cây", "화분", "Plant"], dk_palm: ["Cây cọ", "야자수", "Palm"], dk_flower: ["Hoa", "꽃", "Flowers"], dk_fish: ["Bể cá", "어항", "Aquarium"], dk_lantern: ["Đèn lồng", "등불", "Lantern"], dk_candle: ["Nến thơm", "아로마 캔들", "Candle"], dk_cat: ["Mèo", "고양이", "Cat"], dk_dog: ["Chó", "강아지", "Dog"],
     qT: ["🎯 Nhiệm vụ hôm nay", "🎯 오늘의 퀘스트", "🎯 Today's quests"], q1: ["Phục vụ {n} lượt khách", "손님 {n}팀 모시기", "Serve {n} guests"], q2: ["Không ai đi trễ", "지각 0명", "Nobody late"], q3: ["Không để khách chờ", "기다리는 손님 0명", "No one waiting"], q4: ["Mọi người đã chấm công", "근무자 모두 출근", "Everyone clocked in"],
@@ -307,12 +308,14 @@
     f1.desk = { x: CX0 + 24 + Math.round(dw / 2), y: y + 230 };
     f1.dspots = [0.28, 0.72, 0.5].map(k => ({ x: CX0 + 27 + Math.round(dw * k), y: y + 164 }));
     f1.ent = { x: DX, y: y + 372 };
+    f1.zl = { x0: 12, x1: 12 + lw, y0: y + 86, y1: y + 340 }; f1.zc = { x0: CX0, x1: CX0 + cwid, y0: y + 86, y1: y + 340 };
+    f1.baseSlots = f1.slots.slice(); f1.baseSeats = f1.seats.slice();
     W.forEach(w => w.el.remove()); W.clear(); GW.forEach(w => w.el.remove()); GW.clear(); pendOcc.clear();
     renderItems();
   }
 
   /* ---------- 6단계: 꾸미기 · 펫 · 대기 중 몸짓 · 오늘의 퀘스트 ---------- */
-  const DECO = { plant: "🪴", palm: "🌴", flower: "💐", fish: "🐠", lantern: "🏮", candle: "🕯️", cat: "🐈", dog: "🐕" };
+  const DECO = { sofa: "🛋️", plant: "🪴", palm: "🌴", flower: "💐", fish: "🐠", lantern: "🏮", candle: "🕯️", cat: "🐈", dog: "🐕" };
   const PETS = ["cat", "dog"];
   let deco = null, pets = [], drag = null, itemSig = "", game = null, care = null;
   const rid = () => Math.random().toString(36).slice(2, 9);
@@ -321,16 +324,34 @@
   function slabOf(fl) { return (G.slabs || []).find(s => s.fl === fl) || (G.slabs || [])[(G.slabs || []).length - 1]; }
   function renderItems() {
     if (!plan || !G.slabs) return;
-    plan.querySelectorAll(".ob-item").forEach(e => e.remove()); pets = [];
+    plan.querySelectorAll(".ob-item, .ob-itbar").forEach(e => e.remove()); pets = [];
+    if (G.f1 && G.f1.baseSlots) { G.f1.slots = G.f1.baseSlots.slice(); G.f1.seats = G.f1.baseSeats.slice(); }
     itemsNow().forEach((it, i) => {
       const sl = slabOf(it.fl); if (!sl) return;
       const x = sl.x + Math.max(0.02, Math.min(0.98, +it.rx || 0.5)) * sl.w, y = sl.y + Math.max(0.1, Math.min(0.98, +it.ry || 0.5)) * sl.h;
       const el = document.createElement("div"); el.className = "ob-item" + (PETS.includes(it.k) ? " pet" : "") + (POTS.includes(it.k) ? " pot" : "") + (deco ? " edit" : "") + (!deco && !C.readOnly && it.id && game && (POTS.includes(it.k) || PETS.includes(it.k)) ? " play" : "");
-      el.dataset.i = i; if (it.id) el.dataset.gi = it.id; el.innerHTML = `<span class="e">${DECO[it.k]}</span><span class="st"></span>`; el.title = t("dk_" + it.k); el.style.left = x + "px"; el.style.top = y + "px";
+      el.dataset.i = i; if (it.id) el.dataset.gi = it.id;
+      const r = ((+it.r || 0) % 360 + 360) % 360, vert = r === 90 || r === 270;
+      if (it.k === "sofa") {
+        el.classList.add("sofa"); el.innerHTML = `<span class="sf r${r}"></span>`;
+        // 대기실 · 카운터에 놓은 소파는 앉을 자리 3개 (대기실 = 직원, 카운터 = 손님)
+        const f = G.f1, cy = y - (vert ? 60 : 18);
+        if (f && f.zl && it.fl === 1) {
+          const spots = vert ? [-40, 0, 40].map(o => ({ x: Math.round(x), y: Math.round(cy + o + 10) })) : [-40, 0, 40].map(o => ({ x: Math.round(x + o), y: Math.round(cy + 10) }));
+          const inZ = z => x >= z.x0 && x <= z.x1 && y >= z.y0 && y <= z.y1 + 6;
+          if (inZ(f.zl)) f.slots = spots.concat(f.slots); else if (inZ(f.zc)) f.seats = spots.concat(f.seats);
+        }
+      } else el.innerHTML = `<span class="e" style="${it.m ? "transform:scaleX(-1)" : ""}">${DECO[it.k]}</span><span class="st"></span>`;
+      if (deco && deco.sel === i) el.classList.add("sel"); el.title = t("dk_" + it.k); el.style.left = x + "px"; el.style.top = y + "px";
       plan.appendChild(el);
       if (PETS.includes(it.k) && !deco) pets.push({ el, x, y, hx: x, sl, vx: Math.random() < 0.5 ? -1 : 1, rest: Math.random() * 3 });
     });
     updatePots();
+    if (deco && deco.sel != null && deco.items[deco.sel]) {
+      const el = plan.querySelector(`.ob-item[data-i="${deco.sel}"]`), it = deco.items[deco.sel];
+      if (el) { const bar = document.createElement("div"); bar.className = "ob-itbar"; bar.style.left = el.style.left; bar.style.top = (parseFloat(el.style.top) + 8) + "px";
+        bar.innerHTML = `<button data-it="${it.k === "sofa" ? "rot" : "mir"}">${t(it.k === "sofa" ? "rotate" : "mirror")}</button><button data-it="del">${t("remove")}</button>`; plan.appendChild(bar); }
+    }
   }
   // 화분 상태: 💧 목마름 · 🌱 자라는 중(●●○) · ✨ 수확
   function updatePots() {
@@ -386,28 +407,35 @@
   function decoStart() { deco = { items: JSON.parse(JSON.stringify(itemsNow())) }; decoBar(); renderItems(); renderTop(); }
   async function decoEnd(save) {
     if (save && deco) {
-      const items = deco.items.slice(0, 40).map(it => ({ id: it.id || rid(), k: it.k, fl: it.fl, rx: Math.round(it.rx * 1000) / 1000, ry: Math.round(it.ry * 1000) / 1000 }));
+      const items = deco.items.slice(0, 40).map(it => Object.assign({ id: it.id || rid(), k: it.k, fl: it.fl, rx: Math.round(it.rx * 1000) / 1000, ry: Math.round(it.ry * 1000) / 1000 }, it.r ? { r: it.r } : {}, it.m ? { m: true } : {}));
       if (busy) return; busy = true;
       try { await C.rpc("board_items_save", { shop: C.shopId, items }); data.layout.items = items; C.toast(t("decoSaved")); } catch (e) { C.toast(errTx(e)); busy = false; return; }
       busy = false;
     }
-    deco = null; decoBar(); renderItems(); renderTop();
+    deco = null; decoBar(); renderItems(); renderTop(); if (data) syncPlan();
   }
   function decoDown(e) {
     const el = e.target.closest(".ob-item.edit"); if (!el || !deco) return;
-    e.preventDefault(); drag = { i: +el.dataset.i, el, id: e.pointerId }; try { el.setPointerCapture(e.pointerId); } catch (er) {}
+    e.preventDefault(); drag = { i: +el.dataset.i, el, id: e.pointerId, sx: e.clientX, sy: e.clientY, moved: false }; try { el.setPointerCapture(e.pointerId); } catch (er) {}
     el.classList.add("drag");
   }
   function decoMove(e) {
     if (!drag || e.pointerId !== drag.id) return;
+    if (!drag.moved && Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) < 4) return;
+    if (!drag.moved) { drag.moved = true; if (deco.sel != null) { deco.sel = null; plan.querySelectorAll(".ob-itbar").forEach(x => x.remove()); } }
     const r = plan.getBoundingClientRect(), sc = r.width / G.PW, px = (e.clientX - r.left) / sc, py = (e.clientY - r.top) / sc;
     const sl = (G.slabs || []).reduce((b, s) => { const d = py < s.y ? s.y - py : py > s.y + s.h ? py - s.y - s.h : 0; return !b || d < b.d ? { s, d } : b; }, null).s;
     const it = deco.items[drag.i]; if (!it) return;
     it.fl = sl.fl; it.rx = Math.max(0.02, Math.min(0.98, (px - sl.x) / sl.w)); it.ry = Math.max(0.1, Math.min(0.98, (py - sl.y) / sl.h));
     drag.el.style.left = (sl.x + it.rx * sl.w) + "px"; drag.el.style.top = (sl.y + it.ry * sl.h) + "px";
   }
-  function decoUp(e) { if (!drag || e.pointerId !== drag.id) return; drag.el.classList.remove("drag"); drag = null; }
-  function decoDbl(e) { const el = e.target.closest(".ob-item.edit"); if (!el || !deco) return; deco.items.splice(+el.dataset.i, 1); renderItems(); }
+  function decoUp(e) {
+    if (!drag || e.pointerId !== drag.id) return; drag.el.classList.remove("drag");
+    const d = drag; drag = null;
+    if (!d.moved) { deco.sel = deco.sel === d.i ? null : d.i; }
+    renderItems();
+  }
+  function decoDbl(e) { const el = e.target.closest(".ob-item.edit"); if (!el || !deco) return; deco.items.splice(+el.dataset.i, 1); deco.sel = null; renderItems(); }
   // 대기 중인 직원이 가끔 하는 몸짓 (말풍선)
   const EMO = ["☕", "💬", "📱", "🎵", "😊", "💪", "🍜", "😴"];
   function emote() {
@@ -582,7 +610,7 @@
       root.querySelector("#obBoard").hidden = false; root.querySelector("#obSched").hidden = true; root.querySelector("#obHist").hidden = true;
       if (sig !== geoSig || !plan || !plan.isConnected) { geoSig = sig; plan = root.querySelector(".ob-plan"); buildPlan(root.querySelector(".ob-stage")); fit(); }
       syncPlan(); renderSide(); renderFloorChips();
-      const isg = JSON.stringify(data.layout.items || []); if (!deco && isg !== itemSig) { itemSig = isg; renderItems(); }
+      const isg = JSON.stringify(data.layout.items || []); if (!deco && isg !== itemSig) { itemSig = isg; renderItems(); syncPlan(); }
     } else if (view === "hist") { root.querySelector("#obBoard").hidden = true; root.querySelector("#obSched").hidden = true; root.querySelector("#obHist").hidden = false; renderHist(); }
     else { root.querySelector("#obBoard").hidden = true; root.querySelector("#obSched").hidden = false; renderSched(); }
     if (view !== "hist") root.querySelector("#obHist").hidden = true;
@@ -945,6 +973,9 @@
       else if (k === "prev" || k === "next") { const sg = k === "prev" ? -1 : 1; if (hp.mode === "day") hp.d = addD(hp.d, sg); else if (hp.mode === "week") hp.d = addD(hp.d, 7 * sg); else { const d = new Date(hp.d + "T00:00:00Z"); d.setUTCDate(1); d.setUTCMonth(d.getUTCMonth() + sg); hp.d = d.toISOString().slice(0, 10); } }
       else if (k === "csv") { csvHist(); return; }
       loadHist(); return; }
+    const ib = e.target.closest("[data-it]"); if (ib && deco && deco.sel != null) { const it = deco.items[deco.sel];
+      if (ib.dataset.it === "rot") it.r = ((+it.r || 0) + 90) % 360; else if (ib.dataset.it === "mir") it.m = !it.m; else { deco.items.splice(deco.sel, 1); deco.sel = null; }
+      renderItems(); return; }
     const dk = e.target.closest("[data-dk]"); if (dk && deco) { if (deco.items.length >= 40) { C.toast(t("decoMax")); return; } const r = plan.getBoundingClientRect(), sc = r.width / G.PW, vy = (Math.min(window.innerHeight, r.bottom) + Math.max(0, r.top)) / 2;
       const py = (vy - r.top) / sc, sl = (G.slabs || []).find(q => py >= q.y && py <= q.y + q.h) || slabOf(1);
       deco.items.push({ id: rid(), k: dk.dataset.dk, fl: sl.fl, rx: 0.25 + Math.random() * 0.5, ry: sl.fl === 1 ? 0.2 + Math.random() * 0.15 : 0.82 + Math.random() * 0.1 }); renderItems(); return; }
