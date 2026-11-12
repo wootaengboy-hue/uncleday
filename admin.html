@@ -561,6 +561,39 @@ mark.cmark{background:#fff3b0;border-bottom:2px solid #f0b429;border-radius:2px;
 .pt-todo{display:flex;align-items:center;gap:10px;background:#fff;border:1.5px solid #f3c8c3;border-radius:14px;padding:12px 14px;text-align:left;cursor:pointer;font:inherit;color:inherit}
 .pt-todo .ic{font-size:20px}.pt-todo .l{flex:1;font-size:14px}.pt-todo b{font-size:20px;color:#b42318}
 .pt-todo.zero{border-color:#eee;opacity:.6;cursor:default}.pt-todo.zero b{color:#8a94a0}
+/* 🎨 브랜드 자료실 */
+.br-base{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:10px;margin-bottom:10px}
+.br-box{background:#fff;border-radius:16px;padding:14px 16px}.br-box h4{margin:0 0 10px;font-size:15px}
+.br-logos{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
+.br-logo{display:flex;flex-direction:column;gap:2px;text-decoration:none;color:#0e2843;border:1px solid #eee6d6;border-radius:12px;padding:8px}
+.br-logo:hover{border-color:#2ac1bc}.br-logo b{font-size:12.5px;line-height:1.3}.br-logo small{font-size:11px;color:#586474}
+.br-ph{height:64px;border-radius:8px;display:grid;place-items:center;background:#f6f7f9;overflow:hidden}.br-ph.chk{background:repeating-conic-gradient(#eee 0 25%,#fff 0 50%) 0 0/14px 14px}
+.br-ph img{max-width:100%;max-height:64px;object-fit:contain}
+.br-colors{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.br-color{display:grid;grid-template-columns:34px 1fr;grid-template-rows:auto auto;column-gap:8px;align-items:center;text-align:left;border:1px solid #eee6d6;background:#fff;border-radius:10px;padding:6px 8px;cursor:pointer}
+.br-color i{grid-row:1/3;width:34px;height:34px;border-radius:8px;box-shadow:inset 0 0 0 1px #0001}.br-color b{font-size:13px;font-family:ui-monospace,Menlo,monospace}.br-color small{font-size:11px;color:#586474;line-height:1.3}
+.br-color:hover{border-color:#2ac1bc}
+.br-fonts{display:flex;flex-wrap:wrap;gap:6px}.br-font{border:1px solid #eee6d6;border-radius:10px;padding:6px 10px;text-decoration:none;color:#0e2843;display:flex;flex-direction:column}.br-font b{font-size:15px}.br-font small{font-size:11px;color:#586474}
+.br-lib{background:#fff;border-radius:16px;padding:14px 16px;border:2px dashed transparent;transition:border-color .15s,background .15s}
+.br-lib.drop{border-color:#2ac1bc;background:#f0fbfb}
+.br-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.br-cats{display:flex;flex-wrap:wrap;gap:5px}.br-cats button{border:1px solid #e3dccd;background:#fff;border-radius:999px;padding:5px 11px;font-size:13px;font-weight:600;cursor:pointer;min-height:34px}
+.br-cats button span{color:#8a94a3;font-weight:500;margin-left:2px}.br-cats button.on{background:#0e2843;border-color:#0e2843;color:#fff}.br-cats button.on span{color:#cfd8e3}
+.br-q{flex:0 1 240px;min-width:160px;border:1px solid #e3dccd;border-radius:10px;padding:7px 10px;font-size:13.5px}
+.br-up{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0;font-size:13px}.br-up select{border:1px solid #e3dccd;border-radius:8px;padding:5px 8px}
+.br-upbtn{cursor:pointer}
+.br-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+@media(max-width:600px){.br-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.br-th{height:100px}.br-th img{max-height:100px}.br-act .btn{min-width:30px;padding:4px 6px}.br-q{flex:1 1 100%}}
+@media(min-width:1800px){.br-grid{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}}
+.br-card{border:1px solid #eee6d6;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;background:#fff}
+.br-card.ed{padding:10px;gap:6px}.br-in{border:1px solid #e3dccd;border-radius:8px;padding:6px 8px;font-size:13px;width:100%;font-family:inherit}
+.br-th{height:130px;border:0;background:repeating-conic-gradient(#f1f1f1 0 25%,#fff 0 50%) 0 0/16px 16px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.br-th:not(.img){background:#f6f7f9}.br-th span{font-size:36px}.br-th small{font-size:11px;color:#586474;font-weight:700}
+.br-th img{max-width:100%;max-height:130px;object-fit:contain}
+.br-meta{padding:8px 10px 4px;display:flex;flex-direction:column;gap:1px;min-width:0}.br-meta b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.br-meta small{font-size:11.5px;color:#586474}.br-note{color:#0e2843!important;background:#fbf7ec;border-radius:6px;padding:2px 6px;margin-top:2px}.br-who{color:#9aa3ae!important}
+.br-act{display:flex;gap:4px;padding:6px 8px 8px;flex-wrap:wrap}.br-act .btn{padding:4px 8px;min-width:34px}
+.br-empty{color:#586474;font-size:13.5px;padding:24px 8px;text-align:center;background:#faf8f3;border-radius:12px}.br-warn{padding:10px 0}
 .pt-spaces{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
 .pt-space{background:#fff;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:5px}
 .pt-space .h{display:flex;gap:8px;align-items:center;font-size:16px}.pt-space .ic{font-size:24px}.pt-space small{color:#586474;line-height:1.45}.pt-space small b{color:#0e2843;margin-right:4px}
@@ -695,7 +728,8 @@ mark.cmark{background:#fff3b0;border-bottom:2px solid #f0b429;border-radius:2px;
 <script src="admin-owner.js?v=20261111b"></script>
 <script src="owner-board.js?v=20261113e"></script>
 <script src="admin-universe.js?v=20261112b"></script>
-<script src="admin-portal.js?v=20261112d"></script>
+<script src="admin-portal.js?v=20261112e"></script>
+<script src="admin-brand.js?v=20261112a"></script>
 <script src="admin.js?v=20261112e"></script>
 </body>
 </html>
