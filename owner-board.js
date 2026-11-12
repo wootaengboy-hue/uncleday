@@ -609,7 +609,12 @@
         let w = GW.get(key);
         if (!w) { w = mkW(lookOf({ hair: ["short", "long", "bun", "pony"][v % 4], hc: (v + 2) % 5, top: "tee", tc: [7, 1, 2, 3][v % 4], bottom: "pants", bc: (v + 1) % 6 }, v), true); GW.set(key, w);
           if (guard && greetOk && p === freeP(g)[0]) setTimeout(() => guardSay(GUARD_SAY[0][li()]), 300);
-          w.tag.innerHTML = `<span>${esc(p === 1 || N === 1 ? g.name : t("pN", { n: p }))}</span>${N > 1 ? `<span class="ob-pno">${p}/${N}</span>` : ""}${g.source === "ud" && p === 1 ? '<span class="ob-ud">UD</span>' : ""}`; }
+          if (N > 1) { w.el.classList.add("gw"); w.el.dataset.g = g.id; w.el.style.setProperty("--gc", gCol(g.id)); w.el.title = `${gLabel(g)} · ${t("pN", { n: p })}`; }
+          w.tag.innerHTML = N > 1 ? `<span class="nm">${esc(g.name)}</span><span class="ob-pno">${p}/${N}</span>${g.source === "ud" ? '<span class="ob-ud">UD</span>' : ""}`
+            : `<span>${esc(g.name)}</span>${g.source === "ud" ? '<span class="ob-ud">UD</span>' : ""}`; }
+        // 팀에서 맨 앞 한 명만 이름표 전체, 나머지는 색 번호만 (겹침 줄이기)
+        w.el.classList.toggle("gm", N > 1 && p !== freeP(g)[0]);
+        if (hlG) w.el.classList.toggle("gon", w.el.dataset.g === hlG);
         const seat = G.f1.seats[i % G.f1.seats.length];
         w.el.classList.toggle("hi", i % 2 === 1);
         goTo(w, { k: "seat", p: seat }, () => { w.dir = "up"; });
@@ -736,7 +741,26 @@
   // 단체 손님: 팀 이름 · 사람 번호 · 아직 배정 안 된 번호
   const gLabel = g => (g.people || 1) > 1 ? t("grpOf", { a: g.name, n: g.people - 1 }) : g.name;
   const freeP = g => { const tk = g.taken || []; const r = []; for (let p = 1; p <= Math.max(1, g.people || 1); p++) if (!tk.includes(p)) r.push(p); return r; };
-  const pTag = x => (x.people || 1) > 1 ? ` <span class="ob-pno">${x.pno || 1}/${x.people}</span>` : "";
+  // 팀마다 색 하나 (같은 팀은 같은 색 바닥 링 · 번호 배지)
+  const GCOL = ["#E5484D", "#3E63DD", "#30A46C", "#F76B15", "#8E4EC6", "#0E9DA8", "#D6409F", "#8D6E48"];
+  const GMAP = new Map();
+  const gCol = id => {
+    if (!GMAP.has(id)) {
+      const live = new Set(((data && data.guests) || []).map(g => g.id));
+      const used = new Set([...GMAP].filter(([k]) => live.has(k)).map(([, c]) => c));
+      GMAP.set(id, GCOL.find(c => !used.has(c)) || GCOL[GMAP.size % GCOL.length]);
+    }
+    return GMAP.get(id);
+  };
+  const pTag = x => (x.people || 1) > 1 ? ` <span class="ob-pno" style="background:${gCol(x.guest_id)}">${x.pno || 1}/${x.people}</span>` : "";
+  // 팀 강조: 마우스를 올리거나 탭하면 같은 팀만 또렷하게
+  let hlG = null, hlPin = null;
+  function hlGroup(id) {
+    hlG = id || null; if (!plan) return;
+    plan.classList.toggle("gh", !!hlG);
+    GW.forEach(w => w.el.classList.toggle("gon", !!hlG && w.el.dataset.g === hlG));
+    if (root) root.querySelectorAll("#obWait [data-g]").forEach(el => el.classList.toggle("gon", !!hlG && el.dataset.g === hlG));
+  }
   function renderSide() {
     const work = data.sessions.filter(x => x.status === "working" && isLead(x)), done = data.sessions.filter(x => x.status === "done" && isLead(x));
     const names = x => mates(x).map(y => esc(y.staff_name)).join(", "), sumPaid = x => mates(x).reduce((a, y) => a + (+y.paid || 0), 0), sumPrice = x => mates(x).reduce((a, y) => a + (+y.price || 0), 0);
@@ -757,7 +781,7 @@
             return `<span class="ob-gp ${wk ? "work" : "done"}"><b>${p}</b>${ss.map(x => esc(x.staff_name)).join("·")}${st ? " · " + esc(t("room", { n: st.room.n })) : ""}${wk ? "" : " ✓"}</span>`; }
           return `<button type="button" class="ob-gp wait ${open.assign === g.id && nx === p ? "on" : ""}" data-a="assignp" data-id="${g.id}" data-p="${p}"><b>${p}</b>${t("pWait")}</button>`;
         }).join("")}</div>` : "";
-      let h = `<div class="ob-row${multi ? " ob-grp" : ""}"><div class="g"><b>${esc(gLabel(g))}${g.source === "ud" ? '<span class="ob-ud">UD</span>' : ""}</b><small>${esc(cName(g.course))} · ${g.course.min}′ · ${t("tpN", { n: N })}${multi ? ` · ${t("asgN", { a: N - fp.length, b: N })}` : ""}</small>${pp}</div><button class="ob-btn" data-a="assign" data-id="${g.id}">${multi ? t("assignP", { n: nx }) : t("assign")}</button><button class="ob-btn l" data-a="leave" data-id="${g.id}">${t(fp.length < N ? "leaveRest" : "leave")}</button></div>`;
+      let h = `<div class="ob-row${multi ? " ob-grp" : ""}"${multi ? ` data-g="${g.id}" style="--gc:${gCol(g.id)}"` : ""}><div class="g"><b>${multi ? '<i class="ob-gdot"></i>' : ""}${esc(gLabel(g))}${g.source === "ud" ? '<span class="ob-ud">UD</span>' : ""}</b><small>${esc(cName(g.course))} · ${g.course.min}′ · ${t("tpN", { n: N })}${multi ? ` · ${t("asgN", { a: N - fp.length, b: N })}` : ""}</small>${pp}</div><button class="ob-btn" data-a="assign" data-id="${g.id}">${multi ? t("assignP", { n: nx }) : t("assign")}</button><button class="ob-btn l" data-a="leave" data-id="${g.id}">${t(fp.length < N ? "leaveRest" : "leave")}</button></div>`;
       if (open.assign === g.id) {
         const fr = stationsFree(g.course);
         h += `<div class="ob-sheet">${multi ? `<div class="ob-note"><b>${t("pN", { n: nx })}</b> · ${esc(gLabel(g))}</div>` : ""}${idle.length ? `<div class="ob-note">${t("tpPick")} · <b>${t("tpN", { n: open.tps.length })}</b></div><div class="ob-tps">${idle.map(s => `<button type="button" class="ob-chip ${open.tps.includes(s.id) ? "on" : ""}" data-a="tpk" data-id="${s.id}" aria-pressed="${open.tps.includes(s.id)}">${open.tps.includes(s.id) ? "✓ " : ""}${esc(s.name)}</button>`).join("")}</div>` : `<p class="ob-note">${t("noTp")}</p>`}
@@ -781,6 +805,7 @@
       return `<div class="ob-row"><span class="ob-av" style="${avStyle(s, i)}"></span><div class="g"><b>${esc(s.name)} <span class="ob-pill ${PILL[st]}">${DOT[st]} ${t("s_" + st)}</span></b><small>${t(s.role === "rcp" ? "roleRcp" : "roleTp")}${s.reviews ? ` · ⭐${s.stars} (${s.reviews})` : ""}${s.role === "tp" ? ` · ${s.done_today} · ${vnd(s.rev_today)}` : ""}</small><small>${info}</small></div>${off}${btn}</div>`;
     }).join("");
     renderQuests();
+    if (hlG) hlGroup(hlG);
     root.querySelector("#obDone").innerHTML = `<h3><span>${t("doneT")}</span><small>${done.length}</small></h3>` + (done.length ? done.map(x => `<div class="ob-row"><div class="g"><b>[${tm(x.done_at)}] ${names(x)} · ${esc(t("room", { n: (x.station || "").split("-")[0] }))}</b><small>${esc(x.guest_name || "")}${pTag(x)}${x.ud ? '<span class="ob-ud">UD</span>' : ""} · ${esc(x.course_name || "")}</small></div><b style="font-size:13px">${vnd(sumPaid(x))}</b></div>`).join("") : `<p class="ob-empty">${t("noDone")}</p>`);
   }
   const legend = () => `<div class="ob-legend">${[["🟢", "lgIdle"], ["🔴", "lgWork"], ["🟡", "lgMove"], ["⚪", "lgOff"], ["🌙", "lgDay"]].map(([d, k]) => `<span>${d} ${t(k)}</span>`).join("")}</div>`;
@@ -1023,7 +1048,15 @@
   }
 
   /* ---------- 버튼 ---------- */
+  function onOver(e) {
+    const el = e.target.closest && e.target.closest(".ob-w.gw, #obWait [data-g]");
+    const id = el ? el.dataset.g : null;
+    if ((id || hlPin) !== hlG) hlGroup(id || hlPin);
+  }
   async function onClick(e) {
+    const gw = e.target.closest(".ob-w.gw");
+    if (gw) { hlPin = hlPin === gw.dataset.g ? null : gw.dataset.g; hlGroup(hlPin); return; }
+    if (hlPin && e.target.closest(".ob-plan")) { hlPin = null; hlGroup(null); }
     const sb = e.target.closest("[data-sa]"); if (sb) { if (sb.dataset.sa === "ovx" && e.target !== sb) return; e.preventDefault(); return setAct(sb); }
     const vb = e.target.closest("[data-v]"); if (vb) { view = vb.dataset.v; if (view === "sched") { sched = null; loadSched(); } if (view === "hist") { hist = null; loadHist(); } render(); return; }
     const hb = e.target.closest("[data-h]"); if (hb) { const k = hb.dataset.h;
@@ -1126,7 +1159,7 @@
     mount(el, ctx) {
       this.unmount();
       C = ctx; root = el; lang = LANGS.includes(ctx.lang) ? ctx.lang : "vi"; if (ctx.view) { view = ctx.view; sched = null; } plan = null; geoSig = ""; W.clear(); GW.clear(); prevSess = new Map();
-      root.addEventListener("click", onClick); root.addEventListener("change", onChange); root.addEventListener("input", onInput);
+      root.addEventListener("click", onClick); root.addEventListener("mouseover", onOver); root.addEventListener("change", onChange); root.addEventListener("input", onInput);
       window.addEventListener("resize", onResize); window.addEventListener("keydown", onKey);
       if (data && data.shop && data.shop.id === C.shopId) render(); else { data = null; root.innerHTML = `<p class="ob-empty">…</p>`; }
       load().then(() => { if (view === "sched" && !sched) loadSched(); if (view === "hist") loadHist(); });
@@ -1141,7 +1174,7 @@
       root.removeEventListener("pointerdown", decoDown); root.removeEventListener("pointermove", decoMove); root.removeEventListener("pointerup", decoUp); root.removeEventListener("pointercancel", decoUp); root.removeEventListener("dblclick", decoDbl); cancelAnimationFrame(raf); window.removeEventListener("resize", onResize); window.removeEventListener("keydown", onKey); pick = null;
       root.removeEventListener("click", onClick); root.removeEventListener("change", onChange); root.removeEventListener("input", onInput);
       W.forEach(w => w.el.remove()); W.clear(); GW.forEach(w => w.el.remove()); GW.clear();
-      root = null; plan = null; setOpen = false; open = { assign: null, finish: null, tps: [], pno: null };
+      root = null; plan = null; setOpen = false; open = { assign: null, finish: null, tps: [], pno: null }; hlG = null; hlPin = null;
     }
   };
 })();

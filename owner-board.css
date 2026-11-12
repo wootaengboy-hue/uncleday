@@ -293,3 +293,19 @@
 .ob-gp.done b { background: #2f9e57; color: #fff; }
 .ob-wk .ob-pno, .ob-tag .ob-pno { font-size: 9px; }
 .ob-row .g .ob-gp b { display: inline-grid; font-size: 11px; }
+/* 단체 손님 구분: 팀 색 바닥 링 · 색 번호 · 마우스 올리면 같은 팀만 또렷하게 */
+.ob-w.gw::before { background: color-mix(in srgb, var(--gc) 45%, transparent); box-shadow: 0 0 0 2px var(--gc); }
+.ob-w.gw .ob-spr, .ob-w.gw .ob-tag { pointer-events: auto; cursor: pointer; }
+.ob-w.gw .ob-tag { border-color: var(--gc); }
+.ob-w.gw .ob-tag .ob-pno { background: var(--gc); }
+.ob-w.gw.gm .ob-tag { padding: 0; border: 0; background: transparent; }
+.ob-w.gw.gm .ob-tag .nm, .ob-w.gw.gm .ob-tag .ob-ud { display: none; }
+.ob-w.gw.gm .ob-tag .ob-pno { margin: 0; font-size: 10px; padding: 1px 6px; box-shadow: 0 0 0 1.5px #fff; }
+.ob-plan.gh .ob-w.cu:not(.gon) { opacity: .28; transition: opacity .15s; }
+.ob-w.gon { z-index: 3000 !important; }
+.ob-w.gon.gm .ob-tag { padding: 0 6px; border: 1.5px solid var(--gc); background: #fff; }
+.ob-w.gon.gm .ob-tag .nm { display: inline; }
+.ob-w.gon::before { box-shadow: 0 0 0 3px var(--gc), 0 0 10px var(--gc); }
+.ob-gdot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--gc); margin-right: 6px; vertical-align: 0; }
+#obWait [data-g] .ob-gp.wait b { background: var(--gc); color: #fff; }
+#obWait .ob-row[data-g].gon { background: color-mix(in srgb, var(--gc) 9%, transparent); border-radius: 10px; }
