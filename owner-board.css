@@ -279,3 +279,17 @@
 .ob-act[hidden] { display: none; }
 .ob-side.two > .ob-act { grid-column: 1 / -1; }
 .ob-act > * { flex: 1 1 auto; justify-content: center; }
+/* 단체 손님: 사람별 배정 칩 */
+.ob-pno { font-size: 10px; font-weight: 700; background: var(--ink); color: #fff; border-radius: 999px; padding: 0 6px; margin-left: 4px; vertical-align: 1px; }
+.ob-pp { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.ob-gp { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 600; border-radius: 999px; padding: 2px 9px 2px 3px; min-height: 28px; border: 1.5px solid var(--line); background: #fff; color: var(--ink); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ob-gp b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--line); font-size: 11px; flex: none; }
+.ob-gp.wait { cursor: pointer; border-style: dashed; }
+.ob-gp.wait.on { border-style: solid; border-color: var(--ink); }
+.ob-gp.wait.on b { background: var(--ink); color: #fff; }
+.ob-gp.work { background: #fff1f1; border-color: #f2b8b8; }
+.ob-gp.work b { background: #e5484d; color: #fff; }
+.ob-gp.done { background: #eef8f0; border-color: #b9e0c2; }
+.ob-gp.done b { background: #2f9e57; color: #fff; }
+.ob-wk .ob-pno, .ob-tag .ob-pno { font-size: 9px; }
+.ob-row .g .ob-gp b { display: inline-grid; font-size: 11px; }
