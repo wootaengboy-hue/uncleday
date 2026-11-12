@@ -562,6 +562,20 @@ mark.cmark{background:#fff3b0;border-bottom:2px solid #f0b429;border-radius:2px;
 .pt-todo .ic{font-size:20px}.pt-todo .l{flex:1;font-size:14px}.pt-todo b{font-size:20px;color:#b42318}
 .pt-todo.zero{border-color:#eee;opacity:.6;cursor:default}.pt-todo.zero b{color:#8a94a0}
 /* 🎨 브랜드 자료실 */
+.seo-bar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+.seo-kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:10px}.seo-kpi div{background:#fff;border-radius:14px;padding:12px 14px}.seo-kpi small{display:block;color:#586474;font-size:12.5px}.seo-kpi b{font-size:24px;color:#0e2843}
+.seo-two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:10px}
+.seo-src{display:grid;grid-template-columns:100px 1fr 44px;gap:8px;align-items:center;font-size:13px;padding:3px 0}.seo-src i{height:12px;border-radius:6px;background:#c7ced8}.seo-src.se i{background:#2ac1bc}.seo-src.ai i{background:#6b2fa0}.seo-src b{text-align:right}
+.seo-days{display:flex;align-items:flex-end;gap:2px;height:110px}.seo-days i{flex:1;background:#2ac1bc;border-radius:3px 3px 0 0;min-width:2px}.seo-dl{display:flex;justify-content:space-between;font-size:11.5px;color:#8a94a3;margin-top:4px}
+.seo-leads{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,460px),1fr));gap:8px}
+.seo-lead{border:1px solid #e6e9ee;border-left:4px solid #2ac1bc;border-radius:12px;padding:10px 12px;display:grid;gap:6px}.seo-lead.owner{border-left-color:#0e2843}
+.seo-lead .h{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.seo-lead .h small{color:#8a94a3;margin-left:auto}
+.seo-lead .d{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:13.5px;align-items:center}.seo-lead .m{margin:0;background:#f6f7f9;border-radius:8px;padding:6px 8px;font-size:13.5px;white-space:pre-wrap}
+.seo-lead .f{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.seo-lead .f select,.seo-lead .f input{border:1px solid #e3dccd;border-radius:8px;padding:5px 8px;font:inherit;font-size:13px}.seo-lead .f select{width:auto;flex:0 0 auto}.seo-lead .f input{flex:1 1 180px}.seo-lead .f small{color:#8a94a3;font-size:11.5px}
+.seo-pages>div{display:grid;grid-template-columns:minmax(0,1fr) repeat(5,52px) 170px;gap:6px;align-items:center;padding:7px 0;border-bottom:1px solid #f0f0f0;font-size:13.5px}.seo-pages>div>span:nth-child(n+2):nth-child(-n+6){text-align:right}
+.seo-pages .th{font-size:12px;color:#8a94a3;font-weight:700}.seo-pages a{color:#0e2843;font-weight:700;text-decoration:none}.seo-pages small{display:block;color:#8a94a3;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.seo-pages>div>span:last-child{display:flex;gap:4px;justify-content:flex-end}
+@media(max-width:700px){.seo-pages>div{grid-template-columns:minmax(0,1fr) repeat(3,40px);row-gap:4px}.seo-pages>div>span:nth-child(5),.seo-pages>div>span:nth-child(6){display:none}.seo-pages>div>span:last-child{grid-column:1/-1;justify-content:flex-start}.seo-pages .th span:last-child{display:none}.seo-src{grid-template-columns:84px 1fr 36px}}
 .br-base{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:10px;margin-bottom:10px}
 .br-box{background:#fff;border-radius:16px;padding:14px 16px}.br-box h4{margin:0 0 10px;font-size:15px}
 .br-logos{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
@@ -728,7 +742,8 @@ mark.cmark{background:#fff3b0;border-bottom:2px solid #f0b429;border-radius:2px;
 <script src="admin-owner.js?v=20261111b"></script>
 <script src="owner-board.js?v=20261113e"></script>
 <script src="admin-universe.js?v=20261112b"></script>
-<script src="admin-portal.js?v=20261112e"></script>
+<script src="admin-portal.js?v=20261113a"></script>
+<script src="admin-seo.js?v=20261113a"></script>
 <script src="admin-brand.js?v=20261112a"></script>
 <script src="admin.js?v=20261112e"></script>
 </body>

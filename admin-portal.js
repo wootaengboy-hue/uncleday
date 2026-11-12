@@ -35,6 +35,7 @@ function portalTodos() {
     ["💬", "답 안 한 채팅", typeof chatCount === "function" ? chatCount() : 0, () => showTab("chat")],
     ["⭐", "게시를 기다리는 손님 후기", RVS.filter(x => x.status === "pending").length, () => showTab("rv")],
     ["💌", "승인할 테라피스트 보너스", +B.pending || 0, () => { UNI.seg = "bonus"; UNI.bst = "pending"; UNI.bonus = null; showTab("uni"); }],
+    ["📨", "검색 문의 · 입점 신청 (새 것)", typeof SEO !== "undefined" && SEO.leads ? SEO.leads.filter(x => x.status === "new").length : 0, () => { const t = document.getElementById("ptSeoSec"); if (t) t.scrollIntoView({ behavior: "smooth" }); }],
     ["🙋", "사장님 승인 기다리는 직원 요청 (매장 카드에서 보기)", shops.reduce((a, s) => a + (+s.pending_req || 0), 0), null],
   ];
   return [["📅 예약 · 손님", bk], ["🌌 매장 · 직원 · 후기", etc], ["📝 팀 일 (낙서장)", team]];
@@ -68,6 +69,7 @@ function drawPortal(skip) {
     <section class="pt-sec"><h3>🎬 운영 시뮬레이션 <span class="hint">입점 영업 · 직원 교육용 · 가짜 데이터라 아무것도 저장되지 않아요</span></h3>
       <div class="pt-spaces">${PORTAL_SIMS.map(s => `<div class="pt-space"><div class="h"><span class="ic">${s.ic}</span><b>${esc(s.nm)}</b></div><small>${esc(s.desc)}</small>
         <div class="pt-row">${[["vi", "🇻🇳 베트남어"], ["ko", "🇰🇷 한국어"]].map(([l, ln]) => `<a class="btn sm ${l === s.def ? "main" : ""}" href="/demo.html?role=${s.role}&lang=${l}" target="_blank" rel="noopener">${ln} ↗</a>`).join("")}<button class="btn sm" data-pcopy="https://www.uncleday.com/demo.html?role=${s.role}&lang=${s.def}">주소 복사</button></div></div>`).join("")}</div></section>
+    <section class="pt-sec" id="ptSeoSec"><h3>🔎 검색 유입 · 리드 <span class="hint">구글 · 네이버 · AI 에서 들어온 손님 수 · 미입점 가게 문의 · 영업용 조회수</span></h3><div id="ptSeo"></div></section>
     <section class="pt-sec"><h3>🎨 브랜드 자료실 (CI) <span class="hint">명함 · 홍보물 · 자료 만들 때 쓰는 로고 · 색 · 글꼴 · 원본 파일</span></h3><div id="ptBrand"></div></section>
     <section class="pt-sec"><h3>🏪 매장별 관리 <span class="hint">현황판 쓰는 매장 ${S.length}곳</span></h3>
       ${S.length ? `<div class="pt-shops">${S.map(s => `<div class="pt-shop"><div class="h"><b>${esc(s.name)}</b><span class="uni-chip ${(s.state || {}).is_open ? "ok" : ""}">${stTxt(s.state)}</span></div>
@@ -83,6 +85,7 @@ function drawPortal(skip) {
         ${portalFaq().map(it => `<div><b>${it.ic || "❓"} ${esc(it.t)}</b><small>${it.b}</small></div>`).join("")}</div>`}</section>`;
   portalBind(el);
   if (typeof brandDraw === "function") brandDraw();
+  if (typeof seoDraw === "function") seoDraw();
   if (PORTAL.guide && $("ptGuideBox")) drawGuide($("ptGuideBox"));
 }
 // 포털 요약에 보여 줄 질문: 📘 사용 안내의 '🌌 유니버스 · 포털' 묶음에서 가져와요 (따로 쓰지 않아요)

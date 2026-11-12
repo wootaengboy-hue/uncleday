@@ -19,6 +19,6 @@ eval(read("config.js") + read("data.js") + read("shops.js") + read("catimgs.js")
   } catch (e) { console.error("DB 읽기 실패, shops.js 사용:", e.message); }
   const common = read("common.js"); const m = common.match(/(?:const|var) PH_IMGS = (\{[^\n]*\});/);
   const ph = m ? eval("(" + m[1] + ")") : {};
-  fs.writeFileSync(process.argv[2] || "share.json", JSON.stringify({ src, shops, categories: CATEGORIES, cities: CITIES, catImgs: cat, phImgs: ph }));
+  fs.writeFileSync(process.argv[2] || "share.json", JSON.stringify({ src, supa: { url: SUPA.url, key: SUPA.key }, kakao: (typeof SITE !== "undefined" && SITE.kakao) || "", shops, categories: CATEGORIES, cities: CITIES, catImgs: cat, phImgs: ph }));
   console.log(src, shops.length, "곳");
 })();
