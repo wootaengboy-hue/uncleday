@@ -64,7 +64,7 @@ function seoDraw() {
         <div class="h"><span class="uni-chip ${x.kind === "owner" ? "" : "ok"}">${x.kind === "owner" ? "🏪 사장님 입점 신청" : "💬 손님 예약 문의"}</span><b>${esc(x.shop_name || seoName(x.path || ""))}</b><small>${dt(x.created_at)} · ${esc(SEO_SRC[x.src] || x.src || "")}</small></div>
         <div class="d"><span>👤 ${esc(x.name || "-")}</span><span>📞 <b>${esc(x.contact)}</b> <button class="btn sm" data-scopy="${esc(x.contact)}">복사</button></span>${x.visit_date ? `<span>📅 ${esc(x.visit_date)}</span>` : ""}${x.people ? `<span>👥 ${x.people}명</span>` : ""}${x.path ? `<a href="${esc(x.path)}" target="_blank" rel="noopener">페이지 ↗</a>` : ""}</div>
         ${x.msg ? `<p class="m">${esc(x.msg)}</p>` : ""}
-        <div class="f"><select data-slst="${x.id}">${SEO_ST.map(([k, l]) => `<option value="${k}" ${x.status === k ? "selected" : ""}>${l}</option>`).join("")}</select><input data-slnote="${x.id}" value="${esc(x.note || "")}" placeholder="메모 (예: 카톡 보냄, 3/12 예약 잡음)"><button class="btn sm" data-slsave="${x.id}">저장</button>${x.updated_by ? `<small>${esc(x.updated_by)}</small>` : ""}</div></div>`).join("")}</div>` : `<p class="hint">${SEO.lf === "open" ? "처리할 문의가 없어요." : "아직 들어온 문의가 없어요."}</p>`}
+        <div class="f"><select data-slst="${x.id}">${SEO_ST.map(([k, l]) => `<option value="${k}" ${x.status === k ? "selected" : ""}>${l}</option>`).join("")}</select><input data-slnote="${x.id}" value="${esc(x.note || "")}" placeholder="메모 (예: 카톡 보냄, 3/12 예약 잡음)"><button class="btn sm" data-slsave="${x.id}">저장</button>${x.kind === "owner" && x.status !== "won" ? `<button class="btn sm main" data-slcrm="${x.id}">🤝 영업 카드로</button>` : ""}${x.updated_by ? `<small>${esc(x.updated_by)}</small>` : ""}</div></div>`).join("")}</div>` : `<p class="hint">${SEO.lf === "open" ? "처리할 문의가 없어요." : "아직 들어온 문의가 없어요."}</p>`}
     </div>
     <div class="br-box" style="margin-top:10px"><h4>📈 페이지별 숫자 <span class="hint">미입점 가게는 조회수 높은 순 = 영업 1순위 · '영업 문구'를 사장님께 보여 주세요</span></h4>
       <div class="br-cats" style="margin-bottom:8px">${[["p", "🗺️ 미입점 가게 (영업용)"], ["ud", "엉클데이 페이지"], ["all", "전체"]].map(([k, l]) => `<button class="${SEO.pf === k ? "on" : ""}" data-spf="${k}">${l}</button>`).join("")}</div>
@@ -94,6 +94,19 @@ function seoDraw() {
     hide(ref, /^\/p\//.test(path) ? seoName(path).replace(" (사장님용 베트남어)", "") : "", document.getElementById("seoHideWhy").value.trim());
   });
   el.querySelectorAll("[data-sunhide]").forEach(b => b.onclick = async () => { const r = await sb.from("osm_hidden").delete().eq("ref", b.dataset.sunhide); if (r.error) { alert(r.error.message); return; } SEO.rep = null; seoDraw(); });
+  // 사장님 입점 신청 → 낙서장 '영업' 카드로 (그다음은 영업 카드의 '🏪 사이트에 업체 등록' → 사장님 계정까지 이어져요)
+  el.querySelectorAll("[data-slcrm]").forEach(b => b.onclick = async () => {
+    const x = SEO.leads.find(v => v.id === b.dataset.slcrm); if (!x) return;
+    b.disabled = true;
+    const memo = `<p>🔎 검색 페이지에서 입점 신청 · ${esc(new Date(x.created_at).toLocaleDateString("ko-KR"))}</p><p>페이지: <a href="https://www.uncleday.com${esc(x.path || "")}">${esc(x.path || "")}</a></p>${x.msg ? `<p>남긴 말: ${esc(x.msg)}</p>` : ""}`;
+    const r = await sb.from("leads").insert({ name: x.shop_name || x.name || "입점 신청", city: x.city || null, person: x.name || null, contact: x.contact, memo, stage: "contacted",
+      next_action: "잘로로 연락 · 방문 약속", next_date: seoDay(0), assignee: (typeof ME !== "undefined" && ME && ME.email) || null }).select().single();
+    if (r.error) { b.disabled = false; alert("영업 카드를 못 만들었어요: " + r.error.message); return; }
+    await sb.from("seo_leads").update({ status: "contacted", note: ((x.note ? x.note + " · " : "") + "영업 카드로 옮김").slice(0, 500) }).eq("id", x.id);
+    if (typeof toast === "function") toast("🤝 낙서장 '영업'에 카드를 만들었어요");
+    if (typeof loadWork === "function") { try { await loadWork(); } catch (e) {} }
+    if (typeof openLead === "function" && typeof leadById === "function" && leadById(r.data.id)) openLead(r.data.id); else { SEO.rep = null; seoDraw(); }
+  });
   el.querySelectorAll("[data-slsave]").forEach(b => b.onclick = async () => {
     const id = b.dataset.slsave, st = el.querySelector(`[data-slst="${id}"]`).value, note = el.querySelector(`[data-slnote="${id}"]`).value.trim();
     b.disabled = true; const r = await sb.from("seo_leads").update({ status: st, note }).eq("id", id).select().single(); b.disabled = false;

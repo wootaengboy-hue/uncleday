@@ -477,6 +477,17 @@ function openEditor(id, preset, opts = {}) {
     if (isNew) shops.unshift(s); else shops[shops.indexOf(orig)] = s;
     close(); drawList(); if (window.onShopsChanged) onShopsChanged(); if (opts.onSaved) opts.onSaved(s);
     if (!opts.onSaved) toast(!pub ? "저장했어요 ✅ (사이트에는 아직 숨김 — '사이트에 보이기'를 켜면 나와요)" : isNew ? "새 업체를 저장했어요 ✅ 사이트에 바로 반영돼요." : "저장했어요 ✅ 사이트에 바로 반영돼요.");
+
+    // 새 업체는 저장하자마자 다시 열어서 바로 '👤 사장님 페이지 계정'을 만들게 해요 (현장 입점 때 한 번에)
+    if (isNew) setTimeout(() => {
+      openEditor(s.id);
+      setTimeout(() => {
+        const o = $("ownBox"); if (o) o.scrollIntoView({ behavior: "smooth", block: "center" });
+        const ph = $("ownPhone"), c = (PRIV[s.id] || {}).contract || {};
+        if (ph && !ph.value && c.phone) ph.value = c.phone; if ($("ownName") && !$("ownName").value && c.person) $("ownName").value = c.person;
+      }, 700);
+      toast("저장했어요 ✅ 이어서 👤 사장님 페이지 계정을 만들어 주세요", 4500);
+    }, 400);
   };
   if (!isNew) {
     $("delBtn").onclick = () => {
