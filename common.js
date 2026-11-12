@@ -16,6 +16,8 @@ document.documentElement.lang = lang;
 const CITY_GUIDES = {
   danang: { ko: "다낭 마사지 가이드", en: "Da Nang massage guide", vi: "Cẩm nang massage Đà Nẵng" },
   nhatrang: { ko: "나트랑 마사지 가이드", en: "Nha Trang massage guide", vi: "Cẩm nang massage Nha Trang" },
+  hcm: { ko: "호치민 마사지 가이드", en: "Ho Chi Minh massage guide", vi: "Cẩm nang massage TP.HCM" },
+  hanoi: { ko: "하노이 마사지 가이드", en: "Hanoi massage guide", vi: "Cẩm nang massage Hà Nội" },
 };
 const guideBar = (city, cls) => { const g = CITY_GUIDES[city]; if (!g) return "";
   const sub = { ko: "가격 · 팁 · 고르는 법 · 공항 가기 전 꿀팁", en: "prices, tips, how to choose (in Korean)", vi: "giá, tiền tip, cách chọn (tiếng Hàn)" };

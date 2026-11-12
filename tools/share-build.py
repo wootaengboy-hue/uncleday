@@ -316,13 +316,14 @@ def guide_page(cid, shops_c):
 <div class="box"><b>한눈에 보기</b><p>{esc(summary)}</p><ul>{"".join(f"<li><b>{l}</b> {len(v)}곳 — {lst(v)}</li>" for l, v in feats)}</ul></div>
 <h2 id="price">가격은 얼마쯤이에요?</h2>
 {f'<table class="tb"><thead><tr><th>시간</th><th>엉클데이 확인 참고가</th><th>업체 수</th></tr></thead><tbody>{ptab}</tbody></table>' if ptab else ''}
-<p>{esc(G['price_note'])} {S([G['price_src']])}</p><p class="muted">가격은 메뉴 · 시간 · 시즌에 따라 달라요. 업체 페이지의 최신 가격이나 상담으로 확인해 주세요.</p>
+{f"<p>{esc(G['price_note'])} {S([G['price_src']])}</p>" if G.get('price_note') else ''}{'' if rows else '<p>아직 엉클데이가 확인한 가격이 적어요. 업체 페이지에서 상담으로 메뉴별 가격을 안내해 드려요.</p>'}<p class="muted">가격은 메뉴 · 시간 · 시즌에 따라 달라요. 업체 페이지의 최신 가격이나 상담으로 확인해 주세요.</p>
 <h2 id="tip">팁은 얼마나 줘요?</h2>{"".join(f"<h3>{esc(q)}</h3><p>{esc(a)} {S(k)}</p>" for q, a, k in G['tip'])}
 {f'<p>엉클데이 업체 중 팁 포함 · 노팁을 내건 곳: {lst([x for x in sp if has(x, "팁 포함|노팁")])}</p>' if any(has(x, "팁 포함|노팁") for x in sp) else ''}
 <h2 id="kinds">어떤 마사지를 고를까요?</h2><dl class="kinds">{"".join(f"<dt>{esc(n)}</dt><dd>{esc(d_)}<br><small>할 수 있는 곳: {lst([x for x in sp if has(x, pat)])}</small></dd>" for n, pat, d_ in G['kinds'])}</dl>
 <h2 id="area">어느 동네에서 받을까요?</h2><dl class="kinds">{"".join(f"<dt>{esc(n)}</dt><dd>{esc(d_)}<br><small>{lst([x for x in sp if has(x, pat)])}</small></dd>" for n, pat, d_ in G['areas'])}</dl>
-<h2 id="when">공항 가기 전 마지막 일정이라면</h2><p>{esc(G['when'])} {S([G['when_src']])}</p>
+<h2 id="when">공항 가기 전 마지막 일정이라면</h2><p>{esc(G['when'])} {S([G['when_src']]) if G.get('when_src') else ''}</p>
 <p>엉클데이 업체 중 짐 보관 · 샤워 · 샌딩 되는 곳: {lst([x for x in sp if has(x, "짐 보관|샤워|샌딩")])}</p>
+{f'<h2 id="clinic">성형 · 피부과도 한국어로 상담할 수 있어요</h2><p>{esc(G["clinic"])}</p><p>엉클데이에 등록된 {esc(cko)} 성형 · 피부 · 뷰티 업체: {lst([x for x in shops_c if grp(x) != "spabody"])}</p>' if G.get("clinic") else ''}
 <h2 id="book">엉클데이로 예약하는 방법</h2><ol><li>업체 페이지에서 시간 · 인원 · 코스를 골라 예약을 요청하거나, 사이트 채팅 · 카카오톡으로 한국어 상담을 해요.</li>
 <li>엉클데이가 매장에 확인한 뒤 예약을 확정하고, 주소와 찾아가는 법을 한국어로 보내 드려요.</li><li>시간에 맞춰 방문하고, 시술 후 매장에서 매장 가격 그대로 결제해요. 엉클데이에 따로 내는 돈은 없어요.</li>
 <li>다녀온 뒤 테라피스트 후기를 남길 수 있어요. 실제로 방문한 손님만 쓸 수 있어요.</li></ol>
@@ -342,7 +343,7 @@ def guide_page(cid, shops_c):
     css = HUB_CSS + """.box{background:#fff;border-radius:16px;padding:14px 18px;border:1px solid #e6f4f3}.box ul{padding-left:18px;margin:6px 0 0}.box li{margin:3px 0;font-size:14.5px}
 .tb{border-collapse:collapse;width:100%;max-width:560px;background:#fff;border-radius:12px;overflow:hidden}.tb th,.tb td{padding:9px 12px;border-bottom:1px solid #eee;text-align:left;font-size:14.5px}.tb th{background:#f0fbfb}
 h3{font-size:16px;margin:16px 0 4px}.muted{color:#778;font-size:13px}.kinds dd small{color:#556}main a{color:#13908b}.src{font-size:13.5px}sup a{text-decoration:none}.toc{font-size:13.5px;color:#556}.toc a{margin-right:10px}"""
-    toc = " ".join(f'<a href="#{i}">{n}</a>' for i, n in [("price", "가격"), ("tip", "팁"), ("kinds", "종류"), ("area", "동네"), ("when", "공항 가기 전"), ("book", "예약"), ("faq", "질문")])
+    toc = " ".join(f'<a href="#{i}">{n}</a>' for i, n in [("price", "가격"), ("tip", "팁"), ("kinds", "종류"), ("area", "동네"), ("when", "공항 가기 전")] + ([("clinic", "성형 · 피부과")] if G.get("clinic") else []) + [("book", "예약"), ("faq", "질문")])
     nav = "".join(f'<a href="/c/{k}/" class="{"on" if k == cid else ""}">{esc(tx(cities[k]["name"]))}</a>' for k in hubs)
     return f"""<!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
