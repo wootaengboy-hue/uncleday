@@ -99,6 +99,11 @@ def iye(w):  # 받침 있으면 '이에요', 없으면 '예요'
 def checked(shop): return (shop.get("_updated") or BUILT)[:10]
 def prices(shop): return sorted({int(m["price"]) for m in (shop.get("menu") or []) if isinstance(m.get("price"), (int, float)) and m["price"] > 0})
 def won(n): return f"{n:,}동"
+# 마사지 · 스파 가격만 (네일 · 페디 같은 다른 메뉴는 빼요)
+MASSAGE_RX = re.compile(r"마사지|스파|스크럽|사우나|찜질|패키지|massage|spa", re.I)
+NOT_MASSAGE_RX = re.compile(r"네일|페디|nail|pedi|왁싱", re.I)
+def is_massage(m): n = tx(m.get("name")); return bool(MASSAGE_RX.search(n)) and not NOT_MASSAGE_RX.search(n)
+def mprices(shop): return sorted({int(m["price"]) for m in (shop.get("menu") or []) if is_massage(m) and isinstance(m.get("price"), (int, float)) and m["price"] > 0})
 def facts(shop):
     """한 줄 요약 · 영어 요약 · 자주 묻는 질문 (모두 업체 데이터에서만)"""
     city = cities.get(shop.get("city"), {}); cko = tx(city.get("name")); cen = CITY_EN.get(shop.get("city"), lang(city.get("name"), "en"))
@@ -233,7 +238,7 @@ dl dt{font-weight:700;margin-top:12px}dl dd{margin:4px 0 0}footer{color:#889;fon
 def hub_page(cid, shops_c):
     city = cities.get(cid, {}); cko = tx(city.get("name")); cen = CITY_EN.get(cid, lang(city.get("name"), "en")); url = f"{SITE}/c/{cid}/"
     by = {g: [x for x in shops_c if grp(x) == g] for g, _, _ in GROUPS}
-    allp = [p for x in shops_c for p in prices(x) if grp(x) == "spabody"]
+    allp = [p for x in shops_c for p in mprices(x) if grp(x) == "spabody"]
     upd = max([checked(x) for x in shops_c] or [BUILT])
     nko = ", ".join(f"{l} {len(by[g])}곳" for g, l, _ in GROUPS if by[g])
     lead = f"엉클데이에 등록된 {cko}의 업체는 모두 {len(shops_c)}곳이에요 ({nko}). 모든 업체를 한국어로 상담하고, 추가 요금 없이 매장 가격 그대로 예약할 수 있어요."
@@ -287,9 +292,11 @@ def guide_page(cid, shops_c):
     sp = [x for x in shops_c if grp(x) == "spabody"]
     link = lambda x: f'<a href="/s/{x["id"]}/">{esc(tx(x.get("name")))}</a>'
     lst = lambda xs: ", ".join(link(x) for x in xs) if xs else "아직 없어요"
-    srcref = lambda keys: " ".join(f'<sup><a href="#src-{k}">[{list(SOURCES).index(k) + 1}]</a></sup>' for k in keys)
-    used = set()
-    def S(keys): used.update(keys); return srcref(keys)
+    used = []   # 글에 처음 나온 순서대로 [1] [2] … 번호를 붙여요
+    def S(keys):
+        for k in keys:
+            if k not in used: used.append(k)
+        return " ".join(f'<sup><a href="#src-{k}">[{used.index(k) + 1}]</a></sup>' for k in keys)
     ko = [x for x in sp if "ko" in (x.get("staffLangs") or []) or has(x, "한국어|한국인")]
     feats = [("🗣️ 한국어 응대", ko), ("🧳 짐 보관", [x for x in sp if has(x, "짐 보관")]), ("🚐 픽업 · 샌딩", [x for x in sp if has(x, "픽업|샌딩")]),
              ("🚿 샤워", [x for x in sp if has(x, "샤워")]), ("🌙 밤 11시 이후까지", [x for x in sp if late(x)])]
@@ -297,12 +304,12 @@ def guide_page(cid, shops_c):
     rows = {}
     for x in sp:
         for m in x.get("menu") or []:
-            if isinstance(m.get("price"), (int, float)) and m["price"] > 0 and m.get("min"):
+            if is_massage(m) and isinstance(m.get("price"), (int, float)) and m["price"] > 0 and m.get("min"):
                 k = 60 if m["min"] <= 60 else 90 if m["min"] <= 90 else 120
                 rows.setdefault(k, []).append((int(m["price"]), x))
     ptab = "".join(f'<tr><td>{"120분 이상" if k == 120 else str(k) + "분"}</td><td>{won(min(p for p, _ in v)) + (" ~ " + won(max(p for p, _ in v)) if max(p for p, _ in v) > min(p for p, _ in v) else "")}</td><td>{len({id(x) for _, x in v})}곳</td></tr>' for k, v in sorted(rows.items()))
     summary = f"엉클데이에 등록된 {cko} 마사지 · 스파는 {len(sp)}곳이고, 그중 {len(ko)}곳이 한국어로 응대해요."
-    if rows: summary += f" 엉클데이가 확인한 참고가는 60분 기준 {won(min(p for p, _ in rows.get(60, rows[min(rows)])))}부터예요."
+    if rows: k0 = 60 if 60 in rows else min(rows); summary += f" 엉클데이가 확인한 참고가는 {'120분 이상' if k0 == 120 else str(k0) + '분'} 기준 {won(min(p for p, _ in rows[k0]))}부터예요."
     faq = [(q, a) for q, a, _ in G["tip"]] + G.get("faq_extra", []) + [("엉클데이로 예약하면 더 비싼가요?", "아니요. 엉클데이를 통해도 매장 가격 그대로이고, 손님이 엉클데이에 따로 내는 돈은 없어요. 결제는 시술 후 매장에서 직접 해요.")]
     h2 = []
     body = f"""<p class="lead">{esc(G['intro'])}</p>
@@ -321,14 +328,14 @@ def guide_page(cid, shops_c):
 <li>다녀온 뒤 테라피스트 후기를 남길 수 있어요. 실제로 방문한 손님만 쓸 수 있어요.</li></ol>
 <p><a class="cta" href="/c/{cid}/">{esc(cko)} 업체 {len(shops_c)}곳 모두 보기</a></p>
 <h2 id="faq">자주 묻는 질문</h2><dl>{"".join(f"<dt>{esc(q)}</dt><dd>{esc(a)}</dd>" for q, a in faq)}</dl>
-<h2 id="src">출처</h2><ol class="src">{"".join(f'<li id="src-{k}"><a href="{SOURCES[k][1]}" rel="nofollow noopener" target="_blank">{esc(SOURCES[k][0])}</a></li>' for k in SOURCES)}</ol>
+<h2 id="src">출처</h2><ol class="src">{"".join(f'<li id="src-{k}"><a href="{SOURCES[k][1]}" rel="nofollow noopener" target="_blank">{esc(SOURCES[k][0])}</a></li>' for k in used)}</ol>
 <p class="muted">업체 정보는 엉클데이가 확인한 내용이에요. 바깥 자료의 숫자는 각 출처의 게시 시점 기준이에요.</p>"""
     title = G["title"]; desc = summary + " 가격 · 팁 · 고르는 법 · 예약 방법을 정리했어요."
     upd = max([G["checked"]] + [checked(x) for x in sp])
     js = lambda o: json.dumps(o, ensure_ascii=False).replace("</", "<\\/")
     lds = [{"@context": "https://schema.org", "@type": "Article", "headline": title, "inLanguage": "ko", "url": url, "dateModified": upd, "datePublished": G["checked"],
             "author": {"@type": "Organization", "name": "엉클데이 Uncle Day", "url": SITE + "/"}, "publisher": {"@type": "Organization", "name": "엉클데이 Uncle Day", "logo": {"@type": "ImageObject", "url": SITE + "/images/logo-og.png"}},
-            "image": SITE + "/images/og-image.jpg", "description": desc, "citation": [SOURCES[k][1] for k in SOURCES]},
+            "image": SITE + "/images/og-image.jpg", "description": desc, "citation": [SOURCES[k][1] for k in used]},
            {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in faq]},
            {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "엉클데이", "item": SITE + "/"},
              {"@type": "ListItem", "position": 2, "name": cko, "item": f"{SITE}/c/{cid}/"}, {"@type": "ListItem", "position": 3, "name": "가이드", "item": url}]}]

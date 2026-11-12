@@ -15,6 +15,7 @@ document.documentElement.lang = lang;
 // 도시별 안내 글 (c/<도시>/guide/). 새 가이드를 만들면 여기에 한 줄 추가해요 (tools/guides.py 와 같이)
 const CITY_GUIDES = {
   danang: { ko: "다낭 마사지 가이드", en: "Da Nang massage guide", vi: "Cẩm nang massage Đà Nẵng" },
+  nhatrang: { ko: "나트랑 마사지 가이드", en: "Nha Trang massage guide", vi: "Cẩm nang massage Nha Trang" },
 };
 const guideBar = (city, cls) => { const g = CITY_GUIDES[city]; if (!g) return "";
   const sub = { ko: "가격 · 팁 · 고르는 법 · 공항 가기 전 꿀팁", en: "prices, tips, how to choose (in Korean)", vi: "giá, tiền tip, cách chọn (tiếng Hàn)" };
