@@ -14,13 +14,18 @@ concurrency: { group: share-previews, cancel-in-progress: false }
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
       - name: 글꼴·Pillow 설치
         run: |
-          sudo apt-get update -qq && sudo apt-get install -y -qq fonts-noto-cjk fonts-noto-cjk-extra >/dev/null
+          # 우분투 서버가 잠깐 안 될 때가 있어서 3번까지 다시 해요
+          for i in 1 2 3; do
+            sudo apt-get update -qq && sudo apt-get install -y -qq fonts-noto-cjk fonts-noto-cjk-extra >/dev/null && break
+            echo "글꼴 설치 실패 ($i/3), 30초 뒤 다시"; sleep 30
+          done
           pip install -q pillow
       - name: 미리보기 만들기
         run: |
