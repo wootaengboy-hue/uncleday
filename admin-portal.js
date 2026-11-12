@@ -40,6 +40,13 @@ function portalTodos() {
   return [["📅 예약 · 손님", bk], ["🌌 매장 · 직원 · 후기", etc], ["📝 팀 일 (낙서장)", team]];
 }
 
+const PORTAL_SIMS = [
+  { role: "all", ic: "🎬", nm: "전체 흐름 (4개 입장)", def: "vi", desc: "손님 예약 → 엉클데이 확정 → 업체 현황판 → 테라피스트 → 후기 · 보너스 · 정산까지 19단계를 순서대로 보여 줘요." },
+  { role: "guest", ic: "🇰🇷", nm: "손님 입장", def: "ko", desc: "한국인 손님이 휴대폰으로 매장을 찾고 예약 → 카카오톡 확정 안내 → 테라피스트별 후기를 남기는 화면." },
+  { role: "ud", ic: "🧡", nm: "엉클데이 운영 입장", def: "ko", desc: "예약 접수 → 업체 자동 알림 → 예약 확정 → 후기 확인 · 테라피스트 보너스 지급 → 업체별 정산." },
+  { role: "owner", ic: "🏪", nm: "업체 사장님 입장", def: "vi", desc: "예약 수락 → 현황판 도착 · 배정 · 끝내기 → 워크인 → 근무표 요청 승인 → 정산. 입점 영업 때 보여 주기 좋아요." },
+  { role: "staff", ic: "💆", nm: "테라피스트 입장", def: "vi", desc: "휴대폰 출근 → 지금 시술 확인 → 후기 · 보너스 → 휴무 · 근무 변경 요청 → 경력 프로필(본인 동의)." },
+];
 function drawPortal(skip) {
   const el = $("tab-home"); if (!el) return;
   if (!skip && !PORTAL.loading) portalLoad();
@@ -58,6 +65,9 @@ function drawPortal(skip) {
         <small><b>누가</b> ${esc(s.who)}</small><small><b>로그인</b> ${esc(s.how)}</small><small><b>하는 일</b> ${esc(s.desc)}</small>
         <div class="pt-row"><a class="btn sm main" href="${s.url}" target="_blank" rel="noopener">열기 ↗</a><button class="btn sm" data-pcopy="${esc("https://www.uncleday.com" + (s.url === "/" ? "" : s.url))}">주소 복사</button></div></div>`).join("")}</div>
       <div class="pt-msgs"><b>📋 보낼 안내 문구</b>${[["owner", "사장님께"], ["staff", "직원에게"]].map(([k, l]) => `<div class="pt-msg"><span>${l}</span><button class="btn sm" data-pmsg="${k}" data-l="vi">베트남어 복사</button><button class="btn sm" data-pmsg="${k}" data-l="ko">한국어 복사</button></div>`).join("")}</div></section>
+    <section class="pt-sec"><h3>🎬 운영 시뮬레이션 <span class="hint">입점 영업 · 직원 교육용 · 가짜 데이터라 아무것도 저장되지 않아요</span></h3>
+      <div class="pt-spaces">${PORTAL_SIMS.map(s => `<div class="pt-space"><div class="h"><span class="ic">${s.ic}</span><b>${esc(s.nm)}</b></div><small>${esc(s.desc)}</small>
+        <div class="pt-row">${[["vi", "🇻🇳 베트남어"], ["ko", "🇰🇷 한국어"]].map(([l, ln]) => `<a class="btn sm ${l === s.def ? "main" : ""}" href="/demo.html?role=${s.role}&lang=${l}" target="_blank" rel="noopener">${ln} ↗</a>`).join("")}<button class="btn sm" data-pcopy="https://www.uncleday.com/demo.html?role=${s.role}&lang=${s.def}">주소 복사</button></div></div>`).join("")}</div></section>
     <section class="pt-sec"><h3>🏪 매장별 관리 <span class="hint">현황판 쓰는 매장 ${S.length}곳</span></h3>
       ${S.length ? `<div class="pt-shops">${S.map(s => `<div class="pt-shop"><div class="h"><b>${esc(s.name)}</b><span class="uni-chip ${(s.state || {}).is_open ? "ok" : ""}">${stTxt(s.state)}</span></div>
         <div class="nums"><span>출근 <b>${s.in_now}/${s.staff}</b></span><span>시술 중 <b>${s.working}</b></span><span>대기 <b>${s.waiting}</b></span><span>오늘 <b>${s.done_today}</b> · ${vnd(s.rev_today)}</span>${s.pending_req ? `<span class="warn">요청 대기 <b>${s.pending_req}</b></span>` : ""}<span>📱 ${s.app}명</span></div>

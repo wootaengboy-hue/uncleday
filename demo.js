@@ -14,10 +14,10 @@
 
   /* ---------- 글자 (베트남어 · 한국어 · 영어) ---------- */
   const T = {
-    title: ["Trang chủ cửa hàng · Bản dùng thử", "사장님 페이지 · 체험판", "Shop owner page · Demo"],
+    title: ["Mô phỏng vận hành Uncle Day", "엉클데이 운영 시뮬레이션", "Uncle Day simulation"],
     demoTag: ["DEMO", "체험판", "DEMO"],
     restart: ["↺ Làm lại", "↺ 처음부터", "↺ Restart"],
-    tCust: ["📱 Khách đặt", "📱 손님 화면", "📱 Guest view"], tBook: ["📩 Đặt lịch", "📩 예약", "📩 Bookings"], tBoard: ["🗺️ Bảng điều hành", "🗺️ 현황판", "🗺️ Live board"], tSettle: ["💰 Đối soát", "💰 정산", "💰 Settlement"], tSched: ["📅 Lịch làm", "📅 근무표", "📅 Rota"],
+    tCust: ["📱 Khách đặt", "📱 손님 화면", "📱 Guest view"], tBook: ["📩 Đặt lịch", "📩 예약", "📩 Bookings"], tBoard: ["🗺️ Bảng điều hành", "🗺️ 현황판", "🗺️ Live board"], tSettle: ["💰 Đối soát", "💰 정산", "💰 Settlement"], tSched: ["📅 Lịch làm", "📅 근무표", "📅 Rota"], tStaff: ["💆 KTV", "💆 테라피스트", "💆 Therapist"], tUd: ["🧡 Uncle Day", "🧡 엉클데이 운영", "🧡 Uncle Day ops"],
     prev: ["‹ Trước", "‹ 이전", "‹ Back"], next: ["Tiếp ›", "다음 ›", "Next ›"], done: ["Xong ✓", "끝 ✓", "Done ✓"],
     stepOf: ["Bước {a}/{b}", "{a}/{b} 단계", "Step {a}/{b}"],
     doThis: ["👉 Hãy thử:", "👉 해 보세요:", "👉 Try it:"],
@@ -29,7 +29,8 @@
     people: ["{n} người", "{n}명", "{n} people"], today: ["Hôm nay", "오늘", "Today"],
     priceT: ["Giá niêm yết", "매장 가격", "Shop price"],
     noContact: ["🔒 Số điện thoại, Kakao của khách do Uncle Day giữ. Cửa hàng không cần gọi khách — Uncle Day nhắc lịch và phiên dịch bằng tiếng Hàn.", "🔒 손님 전화번호 · 카카오톡은 엉클데이가 관리해요. 매장은 손님에게 연락할 필요가 없어요. 일정 안내와 한국어 통역은 엉클데이가 해요.", "🔒 Uncle Day keeps the guest's phone and Kakao. The shop never needs to call — Uncle Day sends reminders and translates in Korean."],
-    acceptToast: ["Đã nhận đặt lịch. Khách sẽ hiện ở Bảng điều hành hôm nay.", "예약을 수락했어요. 오늘 현황판에 손님이 나타나요.", "Accepted. The guest now appears on today's board."],
+    acceptToast: ["Đã nhận. Uncle Day sẽ xác nhận với khách, khách hiện ở Bảng điều hành hôm nay.", "수락했어요. 엉클데이가 손님에게 확정 안내를 하고, 오늘 현황판에 손님이 나타나요.", "Accepted. Uncle Day confirms with the guest; they appear on today's board."],
+    waitUd: ["Đã nhận · chờ Uncle Day xác nhận", "수락 · 엉클데이 확정 대기", "Accepted · Uncle Day confirming"],
     sMonth: ["Tháng này", "이번 달", "This month"],
     sUdRev: ["Doanh thu từ khách Uncle Day", "엉클데이 손님 매출", "Revenue from Uncle Day guests"],
     sFee: ["Hoa hồng Uncle Day (ví dụ {r}%)", "엉클데이 수수료 (예시 {r}%)", "Uncle Day commission (e.g. {r}%)"],
@@ -50,53 +51,85 @@
   const t = (k, v) => { let s = (T[k] || [k])[li()] || T[k][0]; if (v) for (const x in v) s = s.split("{" + x + "}").join(v[x]); return s; };
 
   /* ---------- 안내 단계 ---------- */
-  const STEPS = [
-    { tab: null, key: "intro",
-      h: ["Uncle Day hoạt động thế nào?", "엉클데이는 이렇게 운영돼요", "How Uncle Day works"],
-      p: ["Du khách Hàn Quốc tìm spa, massage trên uncleday.com và đặt lịch bằng tiếng Hàn. Uncle Day chuyển lịch cho cửa hàng. Cửa hàng chỉ cần đón khách.", "한국인 여행객이 uncleday.com에서 한국어로 매장을 찾고 예약해요. 엉클데이가 그 예약을 매장에 넘겨 드려요. 매장은 손님을 맞이하기만 하면 돼요.", "Korean travelers find spas on uncleday.com and book in Korean. Uncle Day passes the booking to the shop. The shop just welcomes the guest."],
-      flow: true },
-    { tab: "cust", key: "send",
-      h: ["① Khách Hàn đặt lịch trên điện thoại", "① 한국인 손님이 휴대폰으로 예약", "① A Korean guest books on their phone"],
-      p: ["Đây là màn hình khách nhìn thấy (tiếng Hàn). Khách xem trang cửa hàng, chọn dịch vụ, giờ, số người rồi gửi yêu cầu. Khách trả tiền tại cửa hàng theo đúng giá niêm yết.", "손님이 보는 화면이에요(한국어). 매장 페이지를 보고 코스 · 시간 · 인원을 골라 예약 요청을 보내요. 결제는 매장에서 매장 가격 그대로 해요.", "This is what the guest sees (in Korean). They view the shop page, pick service, time and party size, and send a request. They pay at the shop at the listed price."],
-      act: ["Bấm vào Spa Mẫu → chọn dịch vụ → Gửi yêu cầu", "Spa Mẫu → 코스 선택 → '예약 요청 보내기'를 눌러 보세요", "Tap Spa Mẫu → pick a service → Send request"] },
-    { tab: "book", key: "accept",
-      h: ["② Cửa hàng nhận thông báo → bấm Nhận", "② 매장에 알림 → 수락", "② The shop gets notified → Accept"],
-      p: ["Yêu cầu vừa gửi hiện ngay trên điện thoại của chủ cửa hàng. Xem giờ, số người, dịch vụ rồi bấm Nhận hoặc Từ chối.", "방금 보낸 요청이 사장님 휴대폰에 바로 떠요. 시간 · 인원 · 코스를 보고 수락이나 거절을 눌러요.", "The request appears on the owner's phone right away. Check time, people and service, then Accept or Decline."],
-      act: ["Bấm Nhận ở yêu cầu mới", "새 요청에서 '수락'을 눌러 보세요", "Press Accept on the new request"] },
-    { tab: "cust", key: "",
-      h: ["③ Khách nhận xác nhận bằng tiếng Hàn", "③ 손님에게 한국어로 확정 안내", "③ The guest gets a Korean confirmation"],
-      p: ["Uncle Day gửi tin xác nhận, địa chỉ, cách đi, và nhắc lịch trước giờ hẹn bằng tiếng Hàn. Cửa hàng không cần nhắn tin hay gọi điện cho khách.", "엉클데이가 확정 · 주소 · 찾아가는 법 · 방문 전 알림을 한국어로 보내요. 매장은 손님에게 따로 연락할 필요가 없어요.", "Uncle Day sends the confirmation, address, directions and a reminder in Korean. The shop never has to message the guest."] },
-    { tab: "board", key: "checkin",
-      h: ["④ Khách đến → bấm Đã đến", "④ 손님이 오면 → 도착", "④ Guest arrives → Arrived"],
-      p: ["Lịch đã nhận hiện ở 'Khách Uncle Day hôm nay' (nhãn UD). Khách đến thì bấm Đã đến: khách vào ghế chờ trên bản đồ cửa hàng.", "수락한 예약은 '오늘 올 엉클데이 손님'에 UD 표시로 보여요. 손님이 오면 '도착'을 눌러요. 지도에서 손님이 대기석에 앉아요.", "Accepted bookings show under 'Uncle Day guests today' with a UD tag. Press Arrived and the guest sits in the lobby."],
-      act: ["Bấm Đã đến cho khách vừa đặt", "방금 예약한 손님 옆 '도착'을 눌러 보세요", "Press Arrived for the guest who just booked"] },
-    { tab: "board", key: "assign",
-      h: ["⑤ Xếp giường và KTV cho từng người", "⑤ 한 명씩 베드와 테라피스트 배정", "⑤ Assign a bed and therapist to each person"],
-      p: ["Nhóm nhiều người được xếp riêng từng người. Chọn KTV (tối đa 4 người cho 1 khách) và giường rồi bấm Bắt đầu. Nhân viên trên bản đồ sẽ đi vào phòng.", "여러 명 팀은 한 명씩 따로 배정해요. 테라피스트(손님 1명에 최대 4명)와 베드를 고르고 시작을 눌러요. 지도에서 직원이 방으로 걸어가요.", "A group is assigned one by one. Pick therapists (up to 4 per guest) and a bed, then Start. Staff walk into the room on the map."],
-      act: ["Bấm Xếp → chọn KTV → Bắt đầu, làm cho từng khách", "배정 → 테라피스트 선택 → 시작, 한 분씩 해 보세요", "Assign → pick a therapist → Start, for each guest"] },
-    { tab: "board", key: "finish",
-      h: ["⑥ Xong → số tiền tự điền", "⑥ 끝나면 → 금액이 자동으로", "⑥ Finish → amount is pre-filled"],
-      p: ["Bấm Xong, số tiền theo giá dịch vụ đã điền sẵn. Khi cả nhóm xong, lịch Uncle Day tự chuyển sang 'Đã đến' — không cần gửi ảnh hóa đơn.", "'끝내기'를 누르면 코스 금액이 미리 채워져 있어요. 팀이 모두 끝나면 엉클데이 예약이 자동으로 '방문 완료'가 돼요. 영수증 사진을 따로 보낼 필요가 없어요.", "Press Finish; the price is pre-filled. When the whole group is done, the Uncle Day booking is marked visited automatically — no receipt photos needed."],
-      act: ["Bấm Xong → Xác nhận cho từng khách", "한 분씩 '끝내기' → 확인을 눌러 보세요", "Press Finish → Confirm for each guest"] },
-    { tab: "cust", key: "review",
-      h: ["⑦ Khách đánh giá từng KTV", "⑦ 손님이 테라피스트별 후기", "⑦ The guest reviews each therapist"],
-      p: ["Sau khi về, khách nhận lời mời đánh giá từng KTV đã làm cho mình. Đánh giá thật giúp cửa hàng được tìm thấy nhiều hơn, và mỗi đánh giá thật có thưởng như nhau cho KTV (không phụ thuộc số sao).", "방문 뒤 손님에게 담당 테라피스트 후기 요청이 가요. 진짜 후기가 쌓이면 매장이 더 잘 보이고, 진짜 후기 1건마다 테라피스트에게 같은 금액의 보너스가 있어요(별점과 상관없이).", "After the visit the guest is asked to review their therapist. Real reviews help the shop rank higher, and each verified review earns the therapist the same bonus (regardless of stars)."],
-      act: ["Chấm sao cho từng KTV → Gửi đánh giá", "테라피스트마다 별점을 고르고 '후기 보내기'를 눌러 보세요", "Rate each therapist → Send review"] },
-    { tab: "board", key: "walkin",
-      h: ["⑧ Khách vãng lai cũng quản lý được", "⑧ 워크인 손님도 같이 관리", "⑧ Walk-in guests too"],
-      p: ["Khách tự đến (không qua Uncle Day) nhập ở 'Tiếp nhận khách'. Dùng chung bảng, chung nhân viên — nhưng KHÔNG tính hoa hồng.", "엉클데이를 거치지 않고 직접 온 손님은 '손님 접수'에 넣어요. 같은 현황판 · 같은 직원으로 관리하지만 수수료는 없어요.", "Guests who walk in directly go in 'Add a guest'. Same board, same staff — but NO commission."],
-      act: ["Nhập tên bất kỳ → Tiếp nhận", "아무 이름이나 넣고 '접수'를 눌러 보세요", "Type any name → Add"] },
-    { tab: "sched", key: "sched",
-      h: ["⑨ Lịch làm việc & yêu cầu của KTV", "⑨ 근무표 · 테라피스트 요청", "⑨ Rota & therapist requests"],
-      p: ["KTV xin nghỉ, đổi ca, đổi với bạn ngay trên điện thoại của mình. Chủ cửa hàng chỉ cần Duyệt hoặc Từ chối — lịch tự cập nhật. Bấm vào ô bất kỳ để đổi ca hoặc đặt giờ riêng (ví dụ chỉ làm 4 tiếng). Dòng dưới cùng báo khi ca sáng/tối thiếu người.", "테라피스트가 자기 휴대폰으로 휴무 · 근무 변경 · 동료와 교대를 요청해요. 사장님은 승인이나 거절만 누르면 근무표가 자동으로 바뀌어요. 칸을 누르면 근무를 바꾸거나 시간을 직접 정할 수 있어요(예: 4시간만 근무). 맨 아래 줄은 오전 · 오후 인원이 모자라면 알려 줘요.", "Therapists request days off, shift changes or swaps from their own phone. The owner just approves or declines — the rota updates itself. Tap any cell to change a shift or set custom hours (e.g. 4 hours only). The bottom row warns when morning/evening is short-staffed."],
-      act: ["Kéo xuống 'Yêu cầu' → bấm Duyệt", "아래 '요청'에서 '승인'을 눌러 보세요", "Scroll to Requests → Approve"] },
-    { tab: "settle", key: "settle",
-      h: ["⑩ Đối soát rõ ràng", "⑩ 투명한 정산", "⑩ Clear settlement"],
-      p: ["Chỉ những lượt khách Uncle Day đã đến và thanh toán mới tính hoa hồng. Mọi con số tự cộng từ bảng điều hành.", "방문해서 결제한 엉클데이 손님만 수수료가 붙어요. 숫자는 현황판에서 자동으로 모여요.", "Only Uncle Day guests who visited and paid are charged. All numbers come from the board automatically."] },
-    { tab: null, key: "end",
-      h: ["Miễn phí đăng ký · chỉ trả khi có khách", "입점 무료 · 손님이 와야만 수수료", "Free to join · pay only when guests come"],
-      p: ["", "", ""], more: true },
+  // who: guest 손님 · ud 엉클데이 운영 · owner 업체 사장님 · staff 테라피스트 · all 공통
+  const P = (vi, ko, en) => [vi, ko, en];
+  const STEPS_ALL = [
+    { who: "all", tab: null, key: "intro", intro: true,
+      h: P("Uncle Day vận hành thế nào? · 4 góc nhìn", "엉클데이는 이렇게 돌아가요 · 4개의 입장", "How Uncle Day runs · 4 points of view"),
+      p: P("Khách Hàn đặt lịch → Uncle Day xác nhận và chăm sóc khách → cửa hàng đón khách → KTV làm dịch vụ và nhận đánh giá. Bấm Tiếp để xem từng bước, hoặc chọn một vai ở trên.", "한국인 손님이 예약 → 엉클데이가 확정 · 안내 → 매장이 손님을 맞이 → 테라피스트가 시술하고 후기를 받아요. '다음'으로 차례대로 보거나, 위에서 한 입장만 골라 볼 수 있어요.", "A Korean guest books → Uncle Day confirms and looks after them → the shop welcomes them → the therapist serves and gets reviewed. Press Next, or pick one role above.") },
+    { who: "guest", tab: "cust", key: "send",
+      h: P("Khách Hàn đặt lịch trên điện thoại", "손님: 휴대폰으로 예약", "Guest books on their phone"),
+      p: P("Màn hình khách nhìn thấy (tiếng Hàn). Khách xem trang cửa hàng, chọn dịch vụ, giờ, số người rồi gửi yêu cầu. Khách trả tiền tại cửa hàng theo đúng giá niêm yết.", "손님이 보는 화면이에요(한국어). 매장 페이지를 보고 코스 · 시간 · 인원을 골라 예약 요청을 보내요. 결제는 매장에서 매장 가격 그대로 해요.", "What the guest sees (in Korean). They view the shop page, pick service, time and party size, and send a request. They pay at the shop at the listed price."),
+      act: P("Bấm vào Spa Mẫu → chọn dịch vụ → Gửi yêu cầu", "Spa Mẫu → 코스 선택 → '예약 요청 보내기'를 눌러 보세요", "Tap Spa Mẫu → pick a service → Send request") },
+    { who: "ud", tab: "ud", key: "udnew",
+      h: P("Uncle Day nhận lịch và chuyển cho cửa hàng", "엉클데이: 예약 접수 → 업체에 자동 전달", "Uncle Day receives it → forwards to the shop"),
+      p: P("Lịch mới vào trang quản trị Uncle Day và tự động báo cho cửa hàng. Uncle Day trò chuyện với khách bằng tiếng Hàn (chat, KakaoTalk) và giữ thông tin liên hệ của khách.", "새 예약이 엉클데이 관리자 화면에 들어오고, 업체에는 자동으로 알림이 가요. 손님과의 대화(채팅 · 카카오톡)와 연락처는 엉클데이가 맡아요.", "The booking lands in Uncle Day's admin and the shop is notified automatically. Uncle Day talks with the guest in Korean (chat, KakaoTalk) and keeps their contact.") },
+    { who: "owner", tab: "book", key: "accept",
+      h: P("Cửa hàng nhận thông báo → bấm Nhận", "업체: 알림 → 수락", "Shop gets notified → Accept"),
+      p: P("Yêu cầu hiện ngay trên điện thoại chủ cửa hàng. Xem giờ, số người, dịch vụ rồi bấm Nhận. Nếu giờ đó không được, chọn 'Đề xuất giờ khác' — Uncle Day sẽ hỏi lại khách.", "요청이 사장님 휴대폰에 바로 떠요. 시간 · 인원 · 코스를 보고 '수락'을 눌러요. 그 시간이 안 되면 '다른 시간 제안'을 누르면 엉클데이가 손님에게 다시 물어봐요.", "The request appears on the owner's phone. Check it and press Accept. If the time doesn't work, propose other times — Uncle Day asks the guest."),
+      act: P("Bấm Nhận ở yêu cầu mới", "새 요청에서 '수락'을 눌러 보세요", "Press Accept on the new request") },
+    { who: "ud", tab: "ud", key: "udconfirm",
+      h: P("Uncle Day xác nhận với khách", "엉클데이: 예약 확정 → 손님 안내", "Uncle Day confirms with the guest"),
+      p: P("Khi cửa hàng đã nhận, Uncle Day bấm 'Xác nhận đặt lịch'. Khách nhận tin xác nhận bằng tiếng Hàn kèm địa chỉ, và được nhắc lịch trước giờ hẹn.", "업체가 수락하면 엉클데이가 '예약 확정'을 눌러요. 손님에게 한국어 확정 안내 · 주소 · 방문 전 알림이 가요.", "Once the shop accepts, Uncle Day presses Confirm. The guest gets a Korean confirmation with the address and a reminder."),
+      act: P("Bấm ✅ 예약 확정 (Xác nhận)", "'✅ 예약 확정'을 눌러 보세요", "Press ✅ Confirm") },
+    { who: "guest", tab: "cust", key: "gconf",
+      h: P("Khách nhận xác nhận bằng tiếng Hàn", "손님: 한국어 확정 안내 받기", "Guest gets a Korean confirmation"),
+      p: P("Cửa hàng không cần nhắn tin hay gọi điện cho khách — Uncle Day lo phần này.", "매장은 손님에게 따로 연락할 필요가 없어요. 엉클데이가 해요.", "The shop never has to message the guest — Uncle Day does it.") },
+    { who: "staff", tab: "staff", key: "clockin",
+      h: P("KTV chấm công bằng điện thoại", "테라피스트: 휴대폰으로 출근", "Therapist clocks in on their phone"),
+      p: P("Mỗi KTV có màn hình riêng (đăng nhập bằng số điện thoại + mã PIN). Xem ca hôm nay và bấm Chấm công vào — bảng điều hành của cửa hàng cập nhật ngay, biết ai đúng giờ, ai trễ.", "테라피스트마다 자기 화면이 있어요(전화번호 + PIN 로그인). 오늘 근무를 보고 '출근하기'를 누르면 매장 현황판에 바로 반영되고, 정시 · 지각도 자동으로 기록돼요.", "Each therapist has their own screen (phone + PIN). They see today's shift and clock in — the shop's board updates instantly, on time or late."),
+      act: P("Bấm Chấm công vào", "'출근하기'를 눌러 보세요", "Press Clock in") },
+    { who: "owner", tab: "board", key: "checkin",
+      h: P("Khách đến → bấm Đã đến", "업체: 손님이 오면 → 도착", "Guest arrives → Arrived"),
+      p: P("Lịch đã xác nhận hiện ở 'Khách Uncle Day hôm nay' (nhãn UD). Khách đến thì bấm Đã đến: khách vào ghế chờ trên bản đồ cửa hàng.", "확정된 예약은 '오늘 올 엉클데이 손님'에 UD 표시로 보여요. 손님이 오면 '도착'을 눌러요. 지도에서 손님이 대기석에 앉아요.", "Confirmed bookings show under 'Uncle Day guests today' with a UD tag. Press Arrived and the guest sits in the lobby."),
+      act: P("Bấm Đã đến cho khách vừa đặt", "방금 예약한 손님 옆 '도착'을 눌러 보세요", "Press Arrived for the guest who just booked") },
+    { who: "owner", tab: "board", key: "assign",
+      h: P("Xếp giường và KTV cho từng người", "업체: 한 명씩 베드 · 테라피스트 배정", "Assign a bed and therapist to each person"),
+      p: P("Nhóm nhiều người được xếp riêng từng người. Chọn KTV (tối đa 4 người cho 1 khách) và giường rồi bấm Bắt đầu. Nhân viên trên bản đồ sẽ đi vào phòng.", "여러 명 팀은 한 명씩 따로 배정해요. 테라피스트(손님 1명에 최대 4명)와 베드를 고르고 시작을 눌러요. 지도에서 직원이 방으로 걸어가요.", "A group is assigned one by one. Pick therapists (up to 4 per guest) and a bed, then Start. Staff walk into the room on the map."),
+      act: P("Bấm Xếp → chọn KTV → Bắt đầu, làm cho từng khách", "배정 → 테라피스트 선택 → 시작, 한 분씩 해 보세요", "Assign → pick a therapist → Start, for each guest") },
+    { who: "staff", tab: "staff", key: "swork",
+      h: P("KTV thấy mình đang làm phòng nào", "테라피스트: 지금 내 시술 확인", "Therapist sees their current session"),
+      p: P("Trên điện thoại, KTV thấy phòng, khách, thời gian còn lại, và số lượt đã làm hôm nay / tháng này.", "테라피스트 휴대폰에 방 · 손님 · 남은 시간, 오늘 · 이번 달 시술 수가 보여요.", "The therapist sees the room, guest, time left, and today's / this month's count.") },
+    { who: "owner", tab: "board", key: "finish",
+      h: P("Xong → số tiền tự điền", "업체: 끝나면 금액이 자동으로", "Finish → amount is pre-filled"),
+      p: P("Bấm Xong, số tiền theo giá dịch vụ đã điền sẵn. Khi cả nhóm xong, lịch Uncle Day tự chuyển sang 'Đã đến' — không cần gửi ảnh hóa đơn.", "'끝내기'를 누르면 코스 금액이 미리 채워져 있어요. 팀이 모두 끝나면 엉클데이 예약이 자동으로 '방문 완료'가 돼요. 영수증 사진을 따로 보낼 필요가 없어요.", "Press Finish; the price is pre-filled. When the whole group is done, the booking is marked visited automatically — no receipt photos."),
+      act: P("Bấm Xong → Xác nhận cho từng khách", "한 분씩 '끝내기' → 확인을 눌러 보세요", "Press Finish → Confirm for each guest") },
+    { who: "guest", tab: "cust", key: "review",
+      h: P("Khách đánh giá từng KTV", "손님: 테라피스트별 후기", "Guest reviews each therapist"),
+      p: P("Sau khi về, khách nhận lời mời đánh giá từng KTV đã làm cho mình. Chỉ khách đã thực sự đến mới viết được.", "방문이 끝나면 손님이 담당 테라피스트마다 후기를 남겨요. 실제로 방문한 손님만 쓸 수 있어요.", "After the visit the guest reviews each therapist. Only real visitors can review."),
+      act: P("Chấm sao cho từng KTV → Gửi đánh giá", "테라피스트마다 별점을 고르고 '후기 보내기'를 눌러 보세요", "Rate each therapist → Send review") },
+    { who: "staff", tab: "staff", key: "srev",
+      h: P("KTV nhận đánh giá và thưởng", "테라피스트: 후기 · 보너스 확인", "Therapist sees reviews and bonus"),
+      p: P("Mỗi đánh giá thật (đã xác nhận khách có đến) được thưởng như nhau, không phụ thuộc số sao. KTV có mã QR riêng để mời khách đánh giá.", "진짜 후기(방문 확인됨) 1건마다 별점과 상관없이 같은 금액의 보너스가 있어요. 테라피스트마다 후기 부탁용 QR도 있어요.", "Every verified review earns the same bonus regardless of stars. Each therapist has a QR to invite reviews.") },
+    { who: "ud", tab: "ud", key: "bonus",
+      h: P("Uncle Day duyệt thưởng và đối soát", "엉클데이: 보너스 지급 · 정산", "Uncle Day pays bonuses and settles"),
+      p: P("Uncle Day kiểm tra đánh giá (khách có thật sự đến), trả thưởng cho KTV, và tổng hợp hoa hồng của từng cửa hàng.", "엉클데이가 후기(실제 방문 여부)를 확인하고 테라피스트 보너스를 지급해요. 업체별 수수료도 여기서 모아 봐요.", "Uncle Day verifies reviews, pays the therapist bonus, and totals each shop's commission."),
+      act: P("Bấm 💸 보너스 지급 (Trả thưởng)", "'💸 보너스 지급'을 눌러 보세요", "Press 💸 Pay bonus") },
+    { who: "owner", tab: "board", key: "walkin",
+      h: P("Khách vãng lai cũng quản lý được", "업체: 워크인 손님도 같이 관리", "Walk-in guests too"),
+      p: P("Khách tự đến (không qua Uncle Day) nhập ở 'Tiếp nhận khách'. Dùng chung bảng, chung nhân viên — nhưng KHÔNG tính hoa hồng.", "엉클데이를 거치지 않고 직접 온 손님은 '손님 접수'에 넣어요. 같은 현황판 · 같은 직원으로 관리하지만 수수료는 없어요.", "Walk-ins go in 'Add a guest'. Same board, same staff — but NO commission."),
+      act: P("Nhập tên bất kỳ → Tiếp nhận", "아무 이름이나 넣고 '접수'를 눌러 보세요", "Type any name → Add") },
+    { who: "staff", tab: "staff", key: "sreq",
+      h: P("KTV xin nghỉ / đổi ca trên điện thoại", "테라피스트: 휴무 · 근무 변경 요청", "Therapist requests a day off / shift change"),
+      p: P("Bấm vào ngày trong lịch làm, chọn Xin nghỉ, Đổi ca hoặc Đổi với đồng nghiệp, ghi lý do rồi gửi. Đổi với đồng nghiệp: bạn đồng ý trước, sau đó chủ cửa hàng duyệt.", "근무표에서 날짜를 누르고 휴무 · 근무 변경 · 동료와 교대 중 골라 이유와 함께 보내요. 교대는 동료가 먼저 수락하고 그다음 사장님이 승인해요.", "Tap a day, choose day off, shift change or swap, add a reason and send. Swaps: the coworker agrees first, then the owner approves."),
+      act: P("Bấm một ngày → Xin nghỉ → Gửi yêu cầu", "날짜 하나 → 휴무 요청 → '요청 보내기'를 눌러 보세요", "Tap a day → Day off → Send") },
+    { who: "owner", tab: "sched", key: "sched",
+      h: P("Chủ cửa hàng duyệt yêu cầu, lịch tự cập nhật", "업체: 요청 승인 → 근무표 자동 반영", "Owner approves, the rota updates itself"),
+      p: P("Yêu cầu của KTV hiện ở dưới lịch làm. Bấm Duyệt hoặc Từ chối. Bấm vào ô bất kỳ để đổi ca hoặc đặt giờ riêng (ví dụ chỉ làm 4 tiếng). Dòng dưới cùng báo khi ca sáng/tối thiếu người.", "테라피스트 요청이 근무표 아래에 모여요. 승인이나 거절만 누르면 돼요. 칸을 누르면 근무를 바꾸거나 시간을 직접 정할 수 있어요(예: 4시간만 근무). 맨 아래 줄은 오전 · 오후 인원이 모자라면 알려 줘요.", "Requests gather under the rota. Approve or decline. Tap any cell to change a shift or set custom hours. The bottom row warns when short-staffed."),
+      act: P("Kéo xuống 'Yêu cầu' → bấm Duyệt", "아래 '요청'에서 '승인'을 눌러 보세요", "Scroll to Requests → Approve") },
+    { who: "owner", tab: "settle", key: "settle",
+      h: P("Đối soát rõ ràng", "업체: 투명한 정산", "Clear settlement"),
+      p: P("Chỉ những lượt khách Uncle Day đã đến và thanh toán mới tính hoa hồng. Mọi con số tự cộng từ bảng điều hành.", "방문해서 결제한 엉클데이 손님만 수수료가 붙어요. 숫자는 현황판에서 자동으로 모여요.", "Only Uncle Day guests who visited and paid are charged. All numbers come from the board automatically.") },
+    { who: "all", tab: null, key: "end", more: true,
+      h: P("Miễn phí đăng ký · chỉ trả khi có khách", "입점 무료 · 손님이 와야만 수수료", "Free to join · pay only when guests come"),
+      p: P("", "", "") },
   ];
+  const ROLES = ["all", "guest", "ud", "owner", "staff"];
+  const RL = { all: P("Toàn bộ", "전체 흐름", "Full story"), guest: P("🇰🇷 Khách", "🇰🇷 손님", "🇰🇷 Guest"), ud: P("🧡 Uncle Day", "🧡 엉클데이 운영", "🧡 Uncle Day ops"), owner: P("🏪 Cửa hàng", "🏪 업체 사장님", "🏪 Shop owner"), staff: P("💆 KTV", "💆 테라피스트", "💆 Therapist") };
+  let role = (() => { try { const q = new URLSearchParams(location.search).get("role"); if (ROLES.includes(q)) return q; } catch (e) {} return "all"; })();
+  let STEPS = [];
+  const buildFlow = () => { STEPS = STEPS_ALL.filter(x => role === "all" || x.who === "all" || x.who === role); };
+  buildFlow();
   const SI = k => STEPS.findIndex(x => x.key === k);
   const MORE = [
     ["🕘", ["Chấm công: nhân viên bấm vào/ra ca bằng điện thoại", "출퇴근: 직원이 휴대폰으로 출근 · 퇴근", "Attendance: staff clock in/out on their phone"]],
@@ -127,7 +160,7 @@
       in_at: inAgo == null ? null : iso(now - inAgo * 60e3), out_at: null, late_min: 0, in_via: inAgo == null ? null : "phone", app: true, has_phone: true, stars: 4.8, reviews: 12, done_today: 0, rev_today: 0 });
     S = {
       open: true,
-      staff: [mk("s1", "Linh", "tp", LOOK("long", 0), 180, "A", 1), mk("s2", "Mai", "tp", LOOK("pony", 1), 170, "F", 3), mk("s3", "Hạnh", "tp", LOOK("bun", 2), 160, "A", 5), mk("s4", "Thảo", "tp", LOOK("short", 3), null, "B", 2), mk("s5", "Trang", "rcp", LOOK("bun", 4), 200, "F", 4), mk("s6", "Vy", "tp", LOOK("pony", 0), null, "C", 0, [1080, 1320])],
+      staff: [mk("s1", "Linh", "tp", LOOK("long", 0), null, "A", null), mk("s2", "Mai", "tp", LOOK("pony", 1), 170, "F", 3), mk("s3", "Hạnh", "tp", LOOK("bun", 2), 160, "A", 5), mk("s4", "Thảo", "tp", LOOK("short", 3), null, "B", 2), mk("s5", "Trang", "rcp", LOOK("bun", 4), 200, "F", 4), mk("s6", "Vy", "tp", LOOK("pony", 0), null, "C", 0, [1080, 1320])],
       guests: [], sessions: [],
       bookings: [
         { id: "b1", code: "UD-7K3P", name: "Kim Minji", menu_name: "", menu_ko: "", min: 90, people: 2, price: 0, time: "", status: "none", req: true },
@@ -141,7 +174,7 @@
       items: [{ k: "plant", fl: 1, id: "i1", rx: 0.1, ry: 0.42 }, { k: "flower", fl: 1, id: "i2", rx: 0.4, ry: 0.42 }, { k: "cat", fl: 1, id: "i3", rx: 0.27, ry: 0.62 }, { k: "lantern", fl: 1, id: "i4", rx: 0.93, ry: 0.36 }],
       done: {},
       cust: { scr: 0, course: "c2", people: 2, time: null, stars: {} },
-      smode: "mon",
+      smode: "mon", stab: "today", sday: null, sform: { type: "off", reason: "", must: false }, bonusPaid: false, career: false, open2work: false,
       reqs: [], over: {},
     };
     seedSched();
@@ -164,7 +197,7 @@
       shop_state: { open: "10:00", close: "22:00", dayoff: false, status: S.open ? (S.openedAt ? "open_manual" : "open_auto") : "closed_manual", is_open: S.open, opened_at: S.openedAt || null, closed_at: S.closedAt || null },
       layout: layout(), staff: st,
       guests: S.guests.filter(g => g.status === "waiting" || g.status === "in_session").map(g => Object.assign({}, g, { taken: taken(g.id) })),
-      expected: S.bookings.filter(b => b.status === "confirmed" && !S.guests.some(g => g.booking_id === b.id)).map(b => ({ id: b.id, code: b.code, name: b.name, menu_name: lang === "ko" ? b.menu_ko : b.menu_name, min: b.min, people: b.people, price: b.price, time: b.time, status: b.status })),
+      expected: S.bookings.filter(b => (b.status === "confirmed" || b.status === "shop_ok") && !S.guests.some(g => g.booking_id === b.id)).map(b => ({ id: b.id, code: b.code, name: b.name, menu_name: lang === "ko" ? b.menu_ko : b.menu_name, min: b.min, people: b.people, price: b.price, time: b.time, status: b.status })),
       sessions: S.sessions.filter(x => x.status !== "cancelled").map(x => { const g = S.guests.find(y => y.id === x.guest_id); return Object.assign({}, x, { guest_name: g ? g.name : "", people: g ? g.people : 1, ud: !!x.booking_id }); }).sort((a, b) => b.started_at.localeCompare(a.started_at)),
       pending_req: S.reqs.filter(q => q.status === "pending").length,
     }));
@@ -262,13 +295,15 @@
   function toast(m) { const el = $("#dmToast"); el.textContent = m; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { el.hidden = true; }, 2600); }
   function mark(k) { if (S.done[k]) return; S.done[k] = true; const i = STEPS.findIndex(s => s.key === k); if (i === step) setTimeout(renderGuide, 50); }
   function setTab(k) {
-    if (k === tab && $("#dmMain").dataset.tab === k) return;
+    if (k === tab && $("#dmMain").dataset.tab === k) { ({ cust: renderCust, staff: renderStaff, ud: renderUd, book: renderBook, settle: renderSettle }[k] || (() => {}))(); return; }
     tab = k; $("#dmMain").dataset.tab = k;
     document.querySelectorAll("[data-tab]").forEach(b => b.classList.toggle("on", b.dataset.tab === k));
     if (window.OwnerBoard) window.OwnerBoard.unmount();
     const m = $("#dmMain");
     if (k === "board" || k === "sched") { m.innerHTML = '<div id="dmBoard"></div>'; window.OwnerBoard.mount($("#dmBoard"), { view: k, rpc, shopId: "demo", lang, isOwner: true, toast, errMsg: e => (e && e.message) || String(e), onPending: () => {} }); }
     else if (k === "cust") renderCust();
+    else if (k === "staff") renderStaff();
+    else if (k === "ud") renderUd();
     else if (k === "book") renderBook();
     else renderSettle();
   }
@@ -293,8 +328,8 @@
     const tps = [...new Set(S.sessions.filter(x => x.booking_id === "b1" && x.status === "done").map(x => x.staff_name))];
     let k, ph;
     if (b.status === "none") k = ["home", "shop", "form"][c.scr] || "home";
-    else if (b.status === "requested") k = "wait";
-    else if (b.status === "visited" || step >= SI("review")) k = "rev";
+    else if (b.status === "requested" || b.status === "shop_ok") k = "wait";
+    else if (b.status === "visited") k = "rev";
     else k = "ok";
     const bar = (title, back) => `<div class="ph-bar">${back != null ? `<button class="ph-back" data-cs="${back}">‹</button>` : ""}<b>${title}</b></div>`;
     if (k === "home") ph = `<div class="ph-top"><span class="ph-logo">엉클데이</span><span class="ph-sm">Uncle Day</span></div>
@@ -313,7 +348,7 @@
         <p class="ph-lock">🔒 연락처는 엉클데이만 보관해요. 매장에는 이름 · 인원 · 시간만 전달돼요.</p>
         <div class="ph-total"><span>현장 결제 예상</span><b>${won(co.price * c.people)}</b></div>
         <button class="ph-go pulse" data-send>예약 요청 보내기</button></div>`; }
-    else if (k === "wait") ph = bar("예약 내역") + `<div class="ph-pad ph-c"><div class="ph-big">⏳</div><h4>매장 확인을 기다리고 있어요</h4><p>예약번호 <b>${esc(b.code)}</b><br>보통 10분 안에 답이 와요.<br>카카오톡으로 알려 드릴게요.</p>
+    else if (k === "wait") ph = bar("예약 내역") + `<div class="ph-pad ph-c"><div class="ph-big">⏳</div><h4>매장 확인을 기다리고 있어요</h4><p>예약번호 <b>${esc(b.code)}</b><br>${b.status === "shop_ok" ? "매장이 가능하다고 답했어요 👍<br>엉클데이가 곧 확정해 드려요." : "보통 10분 안에 답이 와요."}<br>카카오톡으로 알려 드릴게요.</p>
         <div class="ph-sum"><b>Spa Mẫu · 오늘 ${esc(b.time)}</b><small>${esc(b.menu_ko)} · ${b.people}명</small></div></div>`;
     else if (k === "ok") ph = `<div class="ph-kbar"><b>엉클데이</b><small>카카오톡</small></div><div class="ph-chat">
         <div class="ph-msg"><b>[엉클데이] 예약이 확정됐어요 ✅</b><br>Spa Mẫu<br>📅 오늘 ${esc(b.time)} · ${b.people}명<br>💆 ${esc(b.menu_ko)}<br>🔖 예약번호 ${esc(b.code)}<br>📍 12 Võ Nguyên Giáp, Đà Nẵng<br><span class="ph-link">지도 보기 · 택시 기사님께 보여 주기</span></div>
@@ -326,7 +361,131 @@
         <button class="ph-go ${all ? "pulse" : ""}" data-rev ${all ? "" : "disabled"}>후기 보내기</button></div>`; })()); }
     m.innerHTML = `<div class="dm-cust"><div class="dm-phone"><div class="ph-notch"></div><div class="ph-scr">${ph}</div></div>
       <div class="dm-cap"><span class="dm-cap-k">🇰🇷 ${["Màn hình của khách (tiếng Hàn)", "손님 화면 (한국어)", "Guest's screen (Korean)"][li()]}</span><p>${esc(CAP[k][li()])}</p>
-      ${k === "wait" ? `<button class="dm-btn pulse" data-tab="book">📩 ${t("tBook").replace(/^\S+\s/, "")} →</button>` : ""}</div></div>`;
+</div></div>`;
+  }
+  /* ---------- 자동 진행 (앞 단계를 건너뛸 때) ---------- */
+  const b1 = () => S.bookings.find(x => x.id === "b1");
+  const linh = () => S.staff.find(x => x.id === "s1");
+  function clockIn() { const l = linh(); if (!l.in_at) { l.in_at = new Date().toISOString(); l.in_via = "phone"; l.late_min = 0; } }
+  function autoAssign() {
+    const g = S.guests.find(x => x.booking_id === "b1" && x.status === "waiting"); if (!g) return;
+    for (let k = 0; k < 4; k++) {
+      const gg = S.guests.find(x => x.id === g.id); if (!gg || gg.status !== "waiting") break;
+      const busy = new Set(S.sessions.filter(x => x.status === "working").map(x => x.staff_id)), used = new Set(S.sessions.filter(x => x.status === "working").map(x => x.station));
+      const tp = S.staff.filter(x => x.role === "tp" && x.in_at && !x.out_at && !busy.has(x.id)).sort((a, b) => (b.id === "s1") - (a.id === "s1"))[0], st = stations().find(x => !used.has(x));
+      if (!tp || !st) break; API.session_begin({ gid: g.id, tps: [tp.id], stn: st });
+    }
+  }
+  function autoFinish() { const g = S.guests.find(x => x.booking_id === "b1"); if (!g) return; S.sessions.filter(x => x.guest_id === g.id && x.status === "working" && x.id === x.grp).forEach(x => API.session_finish({ xid: x.id })); }
+  const EFFECT = {
+    send: () => { if (b1().status === "none") sendBooking(); },
+    accept: () => { if (b1().status === "requested") b1().status = "shop_ok"; },
+    udconfirm: () => { if (b1().status === "shop_ok" || b1().status === "requested") b1().status = "confirmed"; },
+    clockin: clockIn,
+    checkin: () => { if (!S.guests.some(g => g.booking_id === "b1")) API.guest_checkin({ bid: "b1" }); },
+    assign: () => { clockIn(); autoAssign(); },
+    finish: autoFinish,
+    review: () => { const ns = [...new Set(S.sessions.filter(x => x.booking_id === "b1" && x.status === "done").map(x => x.staff_name))]; ns.forEach(n => { S.cust.stars[n] = S.cust.stars[n] || 5; }); S.cust.reviewed = true; },
+    bonus: () => { S.bonusPaid = true; },
+    walkin: () => { if (!S.guests.some(g => g.source === "walkin")) API.guest_add({ nm: "Anh Tuấn", course: COURSES[0], people: 1 }); },
+    sreq: () => { if (!S.reqs.some(q => q.staff_id === "s1")) addReq(addDay(vnToday(), 4), "off", ["Về quê thăm bố mẹ", "고향에 부모님 뵈러 가요", "Visiting my parents"], false); },
+    sched: () => { const q = S.reqs.find(x => x.status === "pending"); if (q) API.req_decide({ rid: q.id, ok: true }); },
+  };
+  function addReq(day, type, reason, must, want) { S.reqs.unshift({ id: Date.now() % 1e9, staff_id: "s1", day, type, must: !!must, want: want || null, mate_id: null, reason, status: "pending", created_at: new Date().toISOString() }); }
+
+  /* ---------- 테라피스트 휴대폰 화면 (Linh) ---------- */
+  const ST = {
+    hi: P("Xin chào, Linh 👋", "안녕하세요, Linh 👋", "Hi, Linh 👋"), shop: P("Spa Mẫu · KTV", "Spa Mẫu · 테라피스트", "Spa Mẫu · Therapist"),
+    tToday: P("Hôm nay", "오늘", "Today"), tRota: P("Lịch làm", "근무표", "Rota"), tRev: P("Đánh giá", "후기", "Reviews"), tMe: P("Tôi", "내 정보", "Me"),
+    myShift: P("Ca hôm nay", "오늘 근무", "Today's shift"), clockIn: P("Chấm công vào", "출근하기", "Clock in"), clockOut: P("Chấm công ra", "퇴근하기", "Clock out"),
+    inAt: P("Vào lúc {t} · Đúng giờ ✓", "{t} 출근 · 정시 ✓", "In at {t} · On time ✓"), notIn: P("Chưa chấm công", "아직 출근 전", "Not clocked in"),
+    now: P("Đang làm", "지금 시술 중", "In session"), left: P("còn {n}′", "{n}분 남음", "{n}′ left"), idle: P("Đang chờ khách", "손님 대기 중", "Waiting for a guest"),
+    dToday: P("Hôm nay", "오늘", "Today"), dMonth: P("Tháng này", "이번 달", "This month"), times: P("{n} lượt", "{n}회", "{n} sessions"),
+    tapDay: P("Bấm vào ngày để xin nghỉ, đổi ca hoặc đổi với đồng nghiệp.", "날짜를 누르면 휴무 · 근무 변경 · 교대를 요청할 수 있어요.", "Tap a day to request a day off, shift change or swap."),
+    rOff: P("Xin nghỉ", "휴무", "Day off"), rShift: P("Đổi ca", "근무 변경", "Change shift"), rSwap: P("Đổi với đồng nghiệp", "동료와 교대", "Swap"),
+    reason: P("Lý do", "이유", "Reason"), must: P("Rất cần (việc gấp)", "꼭 필요해요 (급한 일)", "Really need it"), send: P("Gửi yêu cầu", "요청 보내기", "Send request"),
+    myReq: P("Yêu cầu của tôi", "내 요청", "My requests"), pend: P("Chờ duyệt", "승인 대기", "Pending"), okd: P("Đã duyệt ✓", "승인됨 ✓", "Approved ✓"), nod: P("Từ chối", "거절됨", "Declined"),
+    avg: P("Điểm TB", "평균 별점", "Average"), cnt: P("Số đánh giá", "후기 수", "Reviews"), bonusT: P("Thưởng đánh giá", "후기 보너스", "Review bonus"),
+    bEach: P("Mỗi đánh giá được xác nhận: 20.000₫ (ví dụ) — không phụ thuộc số sao", "확인된 후기 1건당 20,000₫ (예시) — 별점과 상관없어요", "Per verified review: 20,000₫ (example) — regardless of stars"),
+    bPend: P("Chờ trả", "지급 대기", "Pending"), bPaid: P("Đã trả", "지급 완료", "Paid"), qr: P("📱 Mã QR mời khách đánh giá", "📱 후기 부탁 QR", "📱 Review QR"),
+    noRv: P("Đánh giá mới sẽ hiện ở đây sau khi khách gửi.", "손님이 후기를 보내면 여기에 떠요.", "New reviews appear here after guests send them."),
+    career: P("Lưu hồ sơ nghề nghiệp", "경력 프로필 저장", "Keep a career profile"), careerS: P("Uncle Day lưu kinh nghiệm, đánh giá của bạn — mang theo khi đổi chỗ làm.", "엉클데이가 경력 · 후기를 보관해요. 일하는 곳이 바뀌어도 이어져요.", "Uncle Day keeps your experience and reviews — they follow you."),
+    o2w: P("Đang tìm việc mới", "새 일자리 찾는 중", "Open to new jobs"), o2wS: P("Chỉ Uncle Day thấy. Chủ cửa hàng KHÔNG thấy.", "엉클데이만 봐요. 사장님에게는 보이지 않아요.", "Only Uncle Day sees this. Your shop owner does NOT."),
+    pin: P("Đăng nhập bằng số điện thoại + mã PIN 6 số", "전화번호 + 6자리 PIN으로 로그인", "Log in with phone + 6-digit PIN"),
+  };
+  const st_ = k => ST[k][li()];
+  const stx = (k, v) => { let x = st_(k); for (const q in v || {}) x = x.split("{" + q + "}").join(v[q]); return x; };
+  const SHN = { A: P("Ca mở cửa", "오픈조", "Opening"), B: P("Ca đóng cửa", "마감조", "Closing"), F: P("Cả ngày", "종일", "Full day"), O: P("Nghỉ", "휴무", "Off"), C: P("Giờ riêng", "직접 정한 시간", "Custom") };
+  function renderStaff() {
+    const m = $("#dmMain"); if (tab !== "staff") return;
+    const L = linh(), td = vnToday(), code = codeOf(L, td), hh = hoursOf(L, td), stb = S.stab;
+    const mine = S.sessions.filter(x => x.staff_id === "s1"), cur = mine.find(x => x.status === "working"), dn = mine.filter(x => x.status === "done").length;
+    const nav = `<div class="sp-nav">${[["today", "tToday", "🏠"], ["rota", "tRota", "📅"], ["rev", "tRev", "⭐"], ["me", "tMe", "👤"]].map(([k, l, ic]) => `<button class="${stb === k ? "on" : ""}" data-stab="${k}"><span>${ic}</span>${st_(l)}</button>`).join("")}</div>`;
+    let body = "";
+    if (stb === "today") {
+      const g = cur && S.guests.find(x => x.id === cur.guest_id), left = cur ? Math.max(0, Math.round((Date.parse(cur.ends_at) - Date.now()) / 60e3)) : 0;
+      body = `<div class="sp-card"><small>${st_("myShift")} · ${esc(dShort2(td))}</small><b class="sp-big">${SHN[code][li()]}${hh ? ` · ${hm(hh[0])}–${hm(hh[1])}` : ""}</b>
+          ${L.in_at ? `<div class="sp-ok">${stx("inAt", { t: hm(Math.round((Date.parse(L.in_at) + 7 * 3600e3) / 60e3) % 1440) })}</div><button class="sp-btn l" data-sclock="out">${st_("clockOut")}</button>`
+            : `<div class="sp-muted">${st_("notIn")}</div><button class="sp-btn pulse" data-sclock="in">⏰ ${st_("clockIn")}</button>`}</div>
+        <div class="sp-card ${cur ? "work" : ""}"><small>${cur ? st_("now") : "·"}</small>${cur ? `<b class="sp-big">${esc(cur.station.split("-")[0])} · ${esc(g ? g.name : "")}${g && g.people > 1 ? ` (${cur.pno}/${g.people})` : ""}</b><div>${esc(cur.course_name)} · <b>${stx("left", { n: left })}</b></div>` : `<div class="sp-muted">${L.in_at ? st_("idle") : "—"}</div>`}</div>
+        <div class="sp-two"><div class="sp-card"><small>${st_("dToday")}</small><b class="sp-big">${stx("times", { n: dn })}</b></div><div class="sp-card"><small>${st_("dMonth")}</small><b class="sp-big">${stx("times", { n: 41 + dn })}</b></div></div>`;
+    } else if (stb === "rota") {
+      const d0 = monday(td), days = Array.from({ length: 14 }, (_, i) => addDay(d0, i)), wd = [P("CN", "일", "Sun"), P("T2", "월", "Mon"), P("T3", "화", "Tue"), P("T4", "수", "Wed"), P("T5", "목", "Thu"), P("T6", "금", "Fri"), P("T7", "토", "Sat")];
+      const reqs = S.reqs.filter(q => q.staff_id === "s1");
+      body = `<p class="sp-muted">${st_("tapDay")}</p><div class="sp-week">${days.map(d => { const c = codeOf(L, d), h = hoursOf(L, d); return `<button class="sp-day k-${c} ${d === td ? "td" : ""} ${S.sday === d ? "on" : ""}" data-sday="${d}" ${d < td ? "disabled" : ""}><small>${wd[dow(d)][li()]} ${+d.slice(8)}</small><b>${SHN[c][li()]}</b><i>${h ? hm(h[0]) + "–" + hm(h[1]) : "🌙"}</i></button>`; }).join("")}</div>
+        ${S.sday ? `<div class="sp-card"><b>${esc(dShort2(S.sday))}</b><div class="sp-seg">${[["off", "rOff"], ["shift", "rShift"], ["swap", "rSwap"]].map(([k, l]) => `<button class="${S.sform.type === k ? "on" : ""}" data-stype="${k}">${st_(l)}</button>`).join("")}</div>
+          <div class="sp-in">${st_("reason")}: ${S.sform.type === "off" ? ["Về quê thăm bố mẹ", "고향에 부모님 뵈러 가요", "Visiting my parents"][li()] : S.sform.type === "shift" ? ["Muốn làm ca tối", "마감조로 하고 싶어요", "Prefer the closing shift"][li()] : ["Đổi với Mai (Mai đồng ý trước)", "Mai와 교대 (Mai가 먼저 수락)", "Swap with Mai (Mai agrees first)"][li()]}</div>
+          <label class="sp-chk"><input type="checkbox" data-smust ${S.sform.must ? "checked" : ""}> ${st_("must")}</label><button class="sp-btn pulse" data-ssend>${st_("send")}</button></div>` : ""}
+        <h4 class="sp-h">${st_("myReq")}</h4>${reqs.length ? reqs.map(q => `<div class="sp-req"><b>${esc(dShort2(q.day))} · ${q.type === "off" ? st_("rOff") : q.type === "shift" ? st_("rShift") : st_("rSwap")}</b><span class="sp-st ${q.status}">${q.status === "pending" ? st_("pend") : q.status === "ok" ? st_("okd") : st_("nod")}</span></div>`).join("") : `<p class="sp-muted">—</p>`}`;
+    } else if (stb === "rev") {
+      const got = S.cust.reviewed && S.cust.stars.Linh;
+      const list = (got ? [{ n: "Kim Minji", s: S.cust.stars.Linh, ko: "압이 딱 좋았어요. 다음에도 또 올게요!", vi: "Lực vừa phải, lần sau sẽ quay lại!", fresh: true, paid: S.bonusPaid }] : []).concat([{ n: "Lee Sora", s: 5, ko: "친절하고 시원했어요", vi: "Thân thiện, rất dễ chịu", paid: true }, { n: "Choi Yuna", s: 4, ko: "좋았어요", vi: "Tốt", paid: true }]);
+      const avg = (list.reduce((a, r) => a + r.s, 0) / list.length).toFixed(1);
+      body = `<div class="sp-two"><div class="sp-card"><small>${st_("avg")}</small><b class="sp-big">⭐ ${avg}</b></div><div class="sp-card"><small>${st_("cnt")}</small><b class="sp-big">${list.length + 9}</b></div></div>
+        <div class="sp-card"><small>${st_("bonusT")}</small><p class="sp-muted" style="margin:4px 0 0">${st_("bEach")}</p></div>
+        ${list.map(r => `<div class="sp-rv ${r.fresh ? "fresh" : ""}"><div><b>${"★".repeat(r.s)}<span class="sp-dim">${"★".repeat(5 - r.s)}</span></b> · ${esc(r.n)}</div><p>${esc(r.ko)}<br><small>🇻🇳 ${esc(r.vi)}</small></p><span class="sp-st ${r.paid ? "ok" : "pending"}">${r.paid ? st_("bPaid") : st_("bPend")} · 20.000₫</span></div>`).join("")}
+        ${got ? "" : `<p class="sp-muted">${st_("noRv")}</p>`}<button class="sp-btn l" data-sqr>${st_("qr")}</button>`;
+    } else {
+      body = `<div class="sp-card"><b>Linh</b><div class="sp-muted">${st_("pin")}</div></div>
+        <div class="sp-card"><div class="sp-row"><div><b>${st_("career")}</b><p class="sp-muted">${st_("careerS")}</p></div><button class="sp-sw ${S.career ? "on" : ""}" data-scar><i></i></button></div>
+        <div class="sp-row"><div><b>${st_("o2w")}</b><p class="sp-muted">🔒 ${st_("o2wS")}</p></div><button class="sp-sw ${S.open2work ? "on" : ""}" data-so2w ${S.career ? "" : "disabled"}><i></i></button></div></div>`;
+    }
+    const CAPS = { today: P("Màn hình riêng của KTV: ca hôm nay, chấm công, đang làm phòng nào, đã làm bao nhiêu lượt.", "테라피스트 전용 화면: 오늘 근무 · 출근 · 지금 시술 · 시술 횟수.", "The therapist's own screen: today's shift, clock-in, current session, counts."),
+      rota: P("KTV tự xin nghỉ / đổi ca. Yêu cầu đi thẳng đến chủ cửa hàng (tab 📅 Lịch làm).", "테라피스트가 직접 휴무 · 근무 변경을 요청해요. 요청은 사장님 근무표로 바로 가요.", "Therapists request days off / changes; requests go straight to the owner's rota."),
+      rev: P("Đánh giá từ khách Hàn có kèm bản dịch tiếng Việt. Thưởng như nhau cho mỗi đánh giá thật.", "한국인 손님 후기에 베트남어 번역이 붙어요. 진짜 후기마다 같은 보너스.", "Korean reviews come with a Vietnamese translation. Same bonus per verified review."),
+      me: P("Hồ sơ nghề nghiệp chỉ lưu khi KTV đồng ý. 'Đang tìm việc' chỉ Uncle Day thấy, chủ cửa hàng không thấy.", "경력 프로필은 본인이 동의할 때만 저장돼요. '구직 중'은 엉클데이만 보고 사장님에게는 보이지 않아요.", "The career profile is kept only with consent. 'Open to work' is visible to Uncle Day only, never the owner.") };
+    m.innerHTML = `<div class="dm-cust staff"><div class="dm-phone sp"><div class="ph-notch"></div><div class="ph-scr"><div class="sp-top"><b>${st_("hi")}</b><small>${st_("shop")}</small></div><div class="sp-body">${body}</div>${nav}</div></div>
+      <div class="dm-cap"><span class="dm-cap-k st">💆 ${["Màn hình của KTV", "테라피스트 화면", "Therapist's screen"][li()]}</span><p>${esc(CAPS[stb][li()])}</p></div></div>`;
+  }
+  const dShort2 = ds => { const d = new Date(ds + "T00:00:00Z"), w = [P("CN", "일", "Sun"), P("T2", "월", "Mon"), P("T3", "화", "Tue"), P("T4", "수", "Wed"), P("T5", "목", "Thu"), P("T6", "금", "Fri"), P("T7", "토", "Sat")][d.getUTCDay()][li()]; return lang === "ko" ? `${d.getUTCMonth() + 1}/${d.getUTCDate()} (${w})` : `${w}, ${d.getUTCDate()}/${d.getUTCMonth() + 1}`; };
+
+  /* ---------- 엉클데이 운영 화면 (관리자 · 한국어) ---------- */
+  function renderUd() {
+    const m = $("#dmMain"); if (tab !== "ud") return;
+    const b = b1(), stK = { none: "—", requested: "접수 (업체 확인 전)", shop_ok: "업체 가능 (확정 대기)", confirmed: "예약 확정", visited: "방문 완료" }[b.status] || b.status;
+    const tps = [...new Set(S.sessions.filter(x => x.booking_id === "b1" && x.status === "done").map(x => x.staff_name))];
+    const today = vnNow(), past = S.past.reduce((a, r) => a + r.paid, 0) + (b.status === "visited" ? b.paid : 0), fee = Math.round(past * RATE / 100);
+    const rows = [b.status !== "none" ? b : null, S.bookings.find(x => x.id === "b2")].filter(Boolean);
+    m.innerHTML = `<div class="ud-wrap"><div class="ud-hd"><span class="ud-logo">엉클데이 관리자</span><span class="ud-tabs"><i class="on">📅 예약</i><i>💬 채팅</i><i>⭐ 후기</i><i>💰 정산</i><i>🌌 유니버스</i></span></div>
+      <div class="ud-grid">
+        <section class="ud-card ${step === SI("udnew") || step === SI("udconfirm") ? "hl" : ""}"><h4>📅 예약 · 오늘</h4>
+          ${rows.length ? rows.map(x => `<div class="ud-bk"><div><b>${esc(x.name)}</b> · ${x.people}명 · ${esc(x.menu_ko)}<br><small>${esc(x.code)} · Spa Mẫu · 오늘 ${esc(x.time)} · ${won(x.price)}</small></div>
+            <span class="ud-st s-${x.status}">${x.id === "b1" ? stK : "예약 확정"}</span>
+            ${x.id === "b1" && x.status === "shop_ok" ? `<button class="ud-btn pulse" data-udok>✅ 예약 확정</button>` : ""}
+            ${x.id === "b1" && x.status === "requested" ? `<small class="ud-hint">업체에 알림이 갔어요 · 업체 답을 기다리는 중 (목표 30분)</small>` : ""}</div>`).join("") : `<p class="ud-muted">아직 새 예약이 없어요. (손님 화면에서 예약을 보내 보세요)</p>`}
+          <div class="ud-chat"><b>💬 손님 채팅</b><p>${b.status === "none" ? "—" : b.status === "requested" ? "김민지: 2명 가능할까요? 🙏<br><i>엉클데이: 매장에 확인하고 바로 알려 드릴게요!</i>" : "김민지: 확정 고마워요!<br><i>엉클데이: 택시 기사님께 주소 화면을 보여 주세요 😊</i>"}</p></div></section>
+        <section class="ud-card ${step === SI("bonus") ? "hl" : ""}"><h4>⭐ 후기 · 테라피스트 보너스</h4>
+          ${S.cust.reviewed ? `<div class="ud-rv"><b>김민지 → ${tps.map(esc).join(", ") || "Linh"}</b> <span class="ud-ok">방문 확인됨 ✓</span><br><small>★ ${Object.values(S.cust.stars).join(" · ") || 5} · "압이 딱 좋았어요"</small></div>
+            <div class="ud-bn">보너스: 확인된 후기 ${tps.length || 1}건 × 20,000₫ (예시) = <b>${won((tps.length || 1) * 20000)}</b> ${S.bonusPaid ? `<span class="ud-ok">지급 완료 ✓</span>` : `<button class="ud-btn pulse" data-udbonus>💸 보너스 지급</button>`}</div>`
+            : `<p class="ud-muted">손님이 후기를 보내면 여기에 떠요. 실제로 방문한 예약에만 후기가 붙어요.</p>`}
+          <small class="ud-muted">보너스는 별점과 상관없이 확인된 후기 1건마다 같은 금액이에요.</small></section>
+        <section class="ud-card"><h4>💰 업체 정산 · 이번 달</h4>
+          <div class="ud-set"><span>Spa Mẫu</span><span>매출 ${won(past)}</span><b>수수료 ${won(fee)}</b></div>
+          <div class="ud-set dim"><span>Lotus Spa</span><span>매출 ${won(6200000)}</span><b>수수료 ${won(930000)}</b></div>
+          <small class="ud-muted">정산 방식(건별 / 월 1회)은 계약할 때 정해요 · 예시 수수료율 ${RATE}%</small></section>
+        <section class="ud-card"><h4>🌌 유니버스 · 매장 현황</h4><div class="ud-set"><span>Spa Mẫu</span><span>출근 ${S.staff.filter(x => x.in_at && !x.out_at).length}/${S.staff.length}</span><b>시술 중 ${S.sessions.filter(x => x.status === "working" && x.id === x.grp).length}</b></div>
+          <small class="ud-muted">엉클데이는 모든 업체의 현황판 · 근무표를 보고, 필요하면 대신 고쳐 줄 수 있어요 (고친 기록은 사장님께 보여요).</small></section>
+      </div></div>`;
   }
   function renderBook() {
     const m = $("#dmMain"); if (tab !== "book") return;
@@ -337,7 +496,7 @@
         <div class="dm-bk-h"><b>${esc(b.name)}</b><span class="dm-ud">UD</span><span class="dm-code">${esc(b.code)}</span></div>
         <div class="dm-bk-g"><span>🕒 ${t("today")} ${esc(b.time)}</span><span>👥 ${t("people", { n: b.people })}</span><span>💆 ${esc(lang === "ko" ? b.menu_ko : b.menu_name)}</span><span>💵 ${won(b.price)}</span></div>
         ${b.status === "requested" ? `<div class="dm-bk-b"><button class="dm-btn l" data-dec="${b.id}">${t("decline")}</button><button class="dm-btn pulse" data-acc="${b.id}">${t("accept")}</button></div>`
-          : `<div class="dm-st ${st}">${b.status === "declined" ? t("declined") : b.status === "visited" ? "✓ " + ["Đã đến", "방문 완료", "Visited"][li()] : "✓ " + t("accepted")}</div>`}</div>`;
+          : `<div class="dm-st ${st}">${b.status === "declined" ? t("declined") : b.status === "visited" ? "✓ " + ["Đã đến", "방문 완료", "Visited"][li()] : b.status === "shop_ok" ? "⏳ " + t("waitUd") : "✓ " + t("accepted")}</div>`}</div>`;
     }).join("")}<p class="dm-note">${t("noContact")}</p></div>`;
   }
   function renderSettle() {
@@ -362,10 +521,13 @@
   }
   function renderGuide() {
     const s = STEPS[step], n = STEPS.length, g = $("#dmGuide");
-    const done = s.key && S.done[s.key]; g.classList.toggle("min", gMin);
-    g.innerHTML = `<div class="dm-g-top"><span class="dm-stepn">${t("stepOf", { a: step + 1, b: n })}</span><button class="dm-min" data-min>${gMin ? "▲" : "▼"} ${gMin ? ["Xem thêm", "펼치기", "More"][li()] : ["Thu gọn", "접기", "Less"][li()]}</button><div class="dm-dots">${STEPS.map((_, i) => `<i class="${i === step ? "on" : i < step ? "past" : ""}" data-go="${i}"></i>`).join("")}</div></div>
-      <h2>${esc(s.h[li()])}</h2>${s.p[li()] ? `<p>${esc(s.p[li()])}</p>` : ""}
-      ${s.flow ? `<div class="dm-flow"><div><span class="ic">🇰🇷</span><b>${["Khách Hàn", "한국인 손님", "Korean guest"][li()]}</b><small>${["đặt bằng tiếng Hàn", "한국어로 예약", "books in Korean"][li()]}</small></div><i>→</i><div class="ud"><span class="ic">🧡</span><b>Uncle Day</b><small>${["tư vấn · nhắc lịch", "상담 · 알림", "support · reminders"][li()]}</small></div><i>→</i><div><span class="ic">💆</span><b>${["Cửa hàng", "매장", "Your shop"][li()]}</b><small>${["đón khách", "손님 맞이", "welcomes guest"][li()]}</small></div></div>
+    const done = s.key && S.done[s.key]; g.classList.toggle("min", gMin); g.dataset.key = s.key;
+    g.innerHTML = `<div class="dm-g-top"><span class="dm-stepn">${t("stepOf", { a: step + 1, b: n })}</span><button class="dm-min" data-min>${gMin ? "▲" : "▼"} ${gMin ? ["Xem thêm", "펼치기", "More"][li()] : ["Thu gọn", "접기", "Less"][li()]}</button>${STEPS.length > 10 ? `<div class="dm-prog"><i style="width:${Math.round((step + 1) / STEPS.length * 100)}%"></i></div>` : `<div class="dm-dots">${STEPS.map((_, i) => `<i class="${i === step ? "on" : i < step ? "past" : ""}" data-go="${i}"></i>`).join("")}</div>`}</div>
+      ${s.who !== "all" ? `<span class="dm-who w-${s.who}">${RL[s.who][li()]}</span>` : ""}<h2>${esc(s.h[li()])}</h2>${s.p[li()] ? `<p>${esc(s.p[li()])}</p>` : ""}
+      ${s.intro ? `<div class="dm-4">${[["guest", "🇰🇷", P("Đặt lịch bằng tiếng Hàn, trả tiền tại cửa hàng, đánh giá KTV", "한국어로 예약 · 매장에서 결제 · 테라피스트 후기", "Books in Korean, pays in store, reviews therapists")],
+          ["ud", "🧡", P("Tư vấn, xác nhận, nhắc lịch, phiên dịch, đối soát, thưởng KTV", "상담 · 확정 · 알림 · 통역 · 정산 · 테라피스트 보너스", "Support, confirm, remind, translate, settle, bonus")],
+          ["owner", "🏪", P("Nhận lịch, bảng điều hành, lịch làm, đối soát", "예약 수락 · 현황판 · 근무표 · 정산", "Accept, live board, rota, settlement")],
+          ["staff", "💆", P("Chấm công, xem ca, xin nghỉ, nhận đánh giá & thưởng", "출퇴근 · 근무 확인 · 휴무 요청 · 후기 · 보너스", "Clock in, shifts, requests, reviews & bonus")]].map(([r, ic, d]) => `<button class="dm-4c" data-role="${r}"><span class="ic">${ic}</span><b>${RL[r][li()].replace(/^\S+\s/, "")}</b><small>${esc(d[li()])}</small></button>`).join("")}</div>
         <div class="dm-pill">💡 ${["Không phí đăng ký · không phí tháng · chỉ trả hoa hồng khi khách đến và thanh toán", "입점비 · 월 고정비 없음 · 손님이 와서 결제했을 때만 수수료", "No sign-up or monthly fee · commission only when guests visit and pay"][li()]}</div>` : ""}
       ${s.more ? `<h3 class="dm-h">${t("endT")}</h3><ul class="dm-more">${MORE.map(([ic, x]) => `<li><span class="ic">${ic}</span><span>${esc(x[li()])}</span></li>`).join("")}</ul><div class="dm-pill">🤝 ${t("cta")}</div>` : ""}
       ${s.act ? `<div class="dm-act ${done ? "ok" : ""}">${done ? t("ok") : `<b>${t("doThis")}</b> ${esc(s.act[li()])}`}</div>` : ""}
@@ -375,27 +537,32 @@
     if (i >= STEPS.length) { reset(); i = 0; }
     step = Math.max(0, i); const s = STEPS[step];
     // 앞 단계를 건너뛰어도 흐름이 이어지게: 예약은 자동으로 수락
-    const b1 = S.bookings.find(x => x.id === "b1");
-    if (step > SI("send") && b1.status === "none") sendBooking();
-    if (step > SI("accept") && b1.status === "requested") { b1.status = "confirmed"; S.done.accept = true; }
-    if (s.tab) setTab(s.tab); else if (!$("#dmMain").dataset.tab) setTab("board");
+    // 다른 입장의 앞 단계는 자동으로 진행돼요 (한 입장만 볼 때도 이야기가 이어지게)
+    const cur = STEPS_ALL.findIndex(x => x.key === s.key);
+    STEPS_ALL.slice(0, cur).forEach(x => { if (!S.done[x.key] && EFFECT[x.key]) { try { EFFECT[x.key](); } catch (e) {} S.done[x.key] = true; } });
+    if (s.tab === "staff") { S.stab = { clockin: "today", swork: "today", srev: "rev", sreq: "rota" }[s.key] || S.stab; if (s.key === "sreq" && !S.sday) S.sday = addDay(vnToday(), 4); }
+    if (s.tab) setTab(s.tab); else if (!$("#dmMain").dataset.tab) setTab(firstTab()); else if (tab === "cust") renderCust(); else if (tab === "staff") renderStaff(); else if (tab === "ud") renderUd();
     renderGuide();
     if (innerWidth < 900) { $("#dmGuide").scrollTop = 0; const a = $(".dm-app"); if (a) window.scrollTo({ top: Math.max(0, a.getBoundingClientRect().top + scrollY - 64), behavior: "smooth" }); }
   }
+  const TABS = [["cust", "tCust", "guest"], ["ud", "tUd", "ud"], ["book", "tBook", "owner"], ["board", "tBoard", "owner"], ["sched", "tSched", "owner"], ["settle", "tSettle", "owner"], ["staff", "tStaff", "staff"]];
+  const firstTab = () => (STEPS.find(x => x.tab) || {}).tab || "board";
   function shell() {
     document.documentElement.lang = lang;
     document.title = "Uncle Day · " + t("title");
     $("#dm").innerHTML = `<header class="dm-hdr"><img src="images/owner-180.png" alt=""><div class="dm-t"><b>${t("title")}</b><small>Spa Mẫu · <span class="dm-demo">${t("demoTag")}</span></small></div>
+      <div class="dm-roles">${ROLES.map(r => `<button class="${r === role ? "on" : ""}" data-role="${r}">${RL[r][li()]}</button>`).join("")}</div>
       <div class="dm-langs">${LANGS.map(k => `<button class="${k === lang ? "on" : ""}" data-lang="${k}">${k.toUpperCase()}</button>`).join("")}</div></header>
       <div class="dm-wrap"><aside class="dm-guide" id="dmGuide"></aside>
-        <section class="dm-app"><nav class="dm-tabs">${[["cust", "tCust"], ["book", "tBook"], ["board", "tBoard"], ["sched", "tSched"], ["settle", "tSettle"]].map(([k, l]) => `<button data-tab="${k}">${t(l)}</button>`).join("")}<button class="dm-rs" data-reset>${t("restart")}</button></nav>
+        <section class="dm-app"><nav class="dm-tabs">${TABS.filter(([k, , w]) => role === "all" || w === role).map(([k, l, w]) => `<button data-tab="${k}" class="w-${w}">${t(l)}</button>`).join("")}<button class="dm-rs" data-reset>${t("restart")}</button></nav>
           <div id="dmMain" data-tab=""></div></section></div>
       <div class="dm-toast" id="dmToast" hidden></div>`;
-    const cur = tab; tab = null; $("#dmMain").dataset.tab = ""; setTab(STEPS[step].tab || cur || "board"); renderGuide();
+    const cur = tab; tab = null; $("#dmMain").dataset.tab = ""; setTab(STEPS[step].tab || cur || firstTab()); renderGuide();
   }
+  document.addEventListener("change", e => { if (e.target.hasAttribute && e.target.hasAttribute("data-smust")) S.sform.must = e.target.checked; });
   document.addEventListener("click", e => {
     const b = e.target.closest("button, [data-go]"); if (!b) return;
-    if (b.dataset.lang) { lang = b.dataset.lang; try { history.replaceState(null, "", "?lang=" + lang); } catch (x) {} shell(); return; }
+    if (b.dataset.lang) { lang = b.dataset.lang; try { history.replaceState(null, "", `?role=${role}&lang=${lang}`); } catch (x) {} shell(); return; }
     if (b.hasAttribute("data-min")) { gMin = !gMin; renderGuide(); return; }
     if (b.dataset.tab) { setTab(b.dataset.tab); return; }
     if (b.dataset.go != null) { goStep(+b.dataset.go); return; }
@@ -408,8 +575,19 @@
     if (b.hasAttribute("data-send")) { sendBooking(); renderCust(); toast(["🔔 Điện thoại chủ cửa hàng: có yêu cầu đặt lịch mới", "🔔 사장님 휴대폰: 새 예약 요청이 왔어요", "🔔 Owner's phone: new booking request"][li()]); return; }
     if (b.dataset.star) { S.cust.stars[b.dataset.tp] = +b.dataset.star; renderCust(); return; }
     if (b.hasAttribute("data-rev")) { S.cust.reviewed = true; mark("review"); renderCust(); return; }
+    if (b.dataset.stab) { S.stab = b.dataset.stab; renderStaff(); return; }
+    if (b.dataset.sclock) { const l = linh(); if (b.dataset.sclock === "in") { clockIn(); mark("clockin"); toast(["Đã chấm công vào · Bảng điều hành cập nhật", "출근했어요 · 매장 현황판에 바로 반영돼요", "Clocked in · the shop board updated"][li()]); } else { l.out_at = new Date().toISOString(); } renderStaff(); return; }
+    if (b.dataset.sday) { S.sday = S.sday === b.dataset.sday ? null : b.dataset.sday; renderStaff(); return; }
+    if (b.dataset.stype) { S.sform.type = b.dataset.stype; renderStaff(); return; }
+    if (b.hasAttribute("data-ssend")) { const f = S.sform; addReq(S.sday, f.type === "swap" ? "off" : f.type, f.type === "off" ? ["Về quê thăm bố mẹ", "고향에 부모님 뵈러 가요", "Visiting my parents"] : f.type === "shift" ? ["Muốn làm ca tối", "마감조로 하고 싶어요", "Prefer the closing shift"] : ["Đổi với Mai", "Mai와 교대", "Swap with Mai"], f.must, f.type === "shift" ? "B" : null); S.sday = null; mark("sreq"); toast(["Đã gửi · chủ cửa hàng sẽ thấy ở 📅 Lịch làm", "보냈어요 · 사장님 근무표에 바로 떠요", "Sent · the owner sees it in the rota"][li()]); renderStaff(); return; }
+    if (b.hasAttribute("data-sqr")) { toast(["Khách quét QR → chọn đúng KTV đã làm cho mình → viết đánh giá", "손님이 QR을 찍으면 자기 담당 테라피스트를 골라 후기를 써요", "Guest scans → picks their therapist → writes a review"][li()]); return; }
+    if (b.hasAttribute("data-scar")) { S.career = !S.career; if (!S.career) S.open2work = false; renderStaff(); return; }
+    if (b.hasAttribute("data-so2w")) { S.open2work = !S.open2work; renderStaff(); return; }
+    if (b.hasAttribute("data-udok")) { b1().status = "confirmed"; mark("udconfirm"); toast(["Đã xác nhận · khách nhận tin KakaoTalk tiếng Hàn", "확정했어요 · 손님에게 카카오톡 안내가 가요", "Confirmed · guest gets a Korean KakaoTalk"][li()]); renderUd(); return; }
+    if (b.hasAttribute("data-udbonus")) { S.bonusPaid = true; mark("bonus"); renderUd(); return; }
+    if (b.dataset.role) { role = b.dataset.role; buildFlow(); try { history.replaceState(null, "", `?role=${role}&lang=${lang}`); } catch (x) {} reset(); step = 0; tab = null; shell(); goStep(0); return; }
     if (b.dataset.sm) { S.smode = b.dataset.sm; renderSettle(); return; }
-    if (b.dataset.acc) { const x = S.bookings.find(y => y.id === b.dataset.acc); x.status = "confirmed"; toast(t("acceptToast")); renderBook(); mark("accept"); return; }
+    if (b.dataset.acc) { const x = S.bookings.find(y => y.id === b.dataset.acc); x.status = "shop_ok"; toast(t("acceptToast")); renderBook(); mark("accept"); return; }
     if (b.dataset.dec) { toast(["Bản demo: hãy bấm Nhận để xem tiếp", "체험판에서는 '수락'을 눌러 다음으로 가 보세요", "Demo: press Accept to continue"][li()]); return; }
   });
   reset();
