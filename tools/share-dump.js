@@ -17,8 +17,15 @@ eval(read("config.js") + read("data.js") + read("shops.js") + read("catimgs.js")
     const s = await fetch(`${SUPA.url}/rest/v1/settings?select=value&key=eq.cat_imgs`, { headers: h }).then(r => r.ok ? r.json() : []);
     if (s[0] && s[0].value) cat = { ...cat, ...s[0].value };
   } catch (e) { console.error("DB 읽기 실패, shops.js 사용:", e.message); }
+  // 관리자가 숨긴 미입점 가게 (universe20.sql)
+  let hidden = [];
+  try {
+    const h = { apikey: SUPA.key, "Content-Type": "application/json" }; if (/^eyJ/.test(SUPA.key)) h.Authorization = "Bearer " + SUPA.key;
+    const r = await fetch(`${SUPA.url}/rest/v1/rpc/osm_hidden_ids`, { method: "POST", headers: h, body: "{}" });
+    if (r.ok) hidden = await r.json() || []; else console.error("숨김 목록 없음 (universe20.sql 실행 전?)", r.status);
+  } catch (e) { console.error("숨김 목록 읽기 실패:", e.message); }
   const common = read("common.js"); const m = common.match(/(?:const|var) PH_IMGS = (\{[^\n]*\});/);
   const ph = m ? eval("(" + m[1] + ")") : {};
-  fs.writeFileSync(process.argv[2] || "share.json", JSON.stringify({ src, supa: { url: SUPA.url, key: SUPA.key }, kakao: (typeof SITE !== "undefined" && SITE.kakao) || "", shops, categories: CATEGORIES, cities: CITIES, catImgs: cat, phImgs: ph }));
+  fs.writeFileSync(process.argv[2] || "share.json", JSON.stringify({ src, supa: { url: SUPA.url, key: SUPA.key }, hidden, kakao: (typeof SITE !== "undefined" && SITE.kakao) || "", shops, categories: CATEGORIES, cities: CITIES, catImgs: cat, phImgs: ph }));
   console.log(src, shops.length, "곳");
 })();

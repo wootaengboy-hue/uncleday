@@ -571,6 +571,7 @@ def en_topic_page(cid, t, xs, shops_c):
 
 # ---- ② 미입점 업체 p/<도시>/<id>/ : 오픈스트리트맵 공개 정보(이름 · 주소 · 영업시간 · 위치)만 + 근처 엉클데이 업체 + 문의 · 입점 신청 ----
 import math, unicodedata
+HIDDEN = set(d.get("hidden") or [])
 OSM = json.load(open("data/osm.json")) if os.path.exists("data/osm.json") else {"cities": {}}
 def km(a, b):
     la1, lo1, la2, lo2 = map(math.radians, [a[0], a[1], b[0], b[1]])
@@ -585,6 +586,7 @@ def osm_addr(tg): return ", ".join(x for x in [" ".join(v for v in [tg.get("addr
 def unclaimed(cid):
     rows = []; seen = set()
     for r in OSM.get("cities", {}).get(cid, []):
+        if r["id"] in HIDDEN: continue   # 관리자가 숨긴 가게
         tg = r["tags"]; nm = tg.get("name:ko") or tg.get("name"); key = norm(tg.get("name"))
         if not key or key in seen: continue
         # 이미 엉클데이에 있는 업체면 빼요 (이름이 같거나, 120m 안에 이름이 비슷한 곳)
@@ -604,6 +606,8 @@ UNC_CSS = """.badge{display:inline-block;background:var(--sand);color:var(--navy
 .lead-box{background:#fff;border-radius:16px;padding:16px;border:2px solid var(--green);margin-top:16px}.lead-box.own{border-color:var(--navy)}
 .lead-box form{display:grid;gap:8px}.lead-box input,.lead-box textarea,.lead-box select{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--navy);padding:10px;font:inherit}
 .lead-box button{border:0;border-radius:12px;background:var(--orange);color:#fff;font-weight:800;padding:13px;font-size:15.5px;cursor:pointer}.lead-box.own button{background:var(--navy)}
+.vi-link{background:#fff;border:1px solid var(--line);text-decoration:none;color:var(--green)!important}.views{display:flex;gap:12px;align-items:center;background:var(--navy);color:#fff;border-radius:16px;padding:14px 18px;margin:14px 0}.views b{font-size:30px;line-height:1}.views span{font-size:14.5px;line-height:1.45}
+.why{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:10px;padding:0;list-style:none}.why li{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 16px}.why li b{display:block;font-size:16px;margin-bottom:4px}.why li span{font-size:14px;color:#3a4656}
 .ok{background:var(--green-t);color:var(--green);border-radius:10px;padding:10px;font-weight:700}.osm{color:var(--sub);font-size:12px}.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}"""
 def lead_js(cid, ref, nm):
     if not _SU.get("url"): return ""
@@ -627,11 +631,12 @@ def unclaimed_page(cid, u):
     return f"""<!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{esc(title)}</title><meta name="description" content="{esc(desc)}"><link rel="canonical" href="{url}">{'' if u['rich'] else '<meta name="robots" content="noindex,follow">'}
+<link rel="alternate" hreflang="ko" href="{url}"><link rel="alternate" hreflang="vi" href="{url}vi/">
 <meta property="og:type" content="website"><meta property="og:site_name" content="엉클데이 Uncle Day"><meta property="og:title" content="{esc(title)}"><meta property="og:description" content="{esc(desc)}"><meta property="og:url" content="{url}"><meta property="og:image" content="{SITE}/images/og-image.jpg">
 <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png"><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>{HUB_CSS}{UNC_CSS}</style><script type="application/ld+json">{js(ld)}</script>
 </head><body><header class="hd"><div class="in"><a class="logo" href="/"><img src="/images/logo-full.webp" alt="엉클데이 Uncle Day" width="167" height="72"></a><nav><a href="/c/{cid}/">{esc(cko)} 업체</a></nav>{HCTA}</div></header>
-<main class="wrap"><p><span class="badge">엉클데이 미입점 업체 · 공개 지도 정보</span></p>
+<main class="wrap"><p><span class="badge">엉클데이 미입점 업체 · 공개 지도 정보</span> <a class="badge vi-link" href="vi/" lang="vi">🇻🇳 Tiếng Việt · Dành cho chủ cửa hàng</a></p>
 <h1>{esc(u['name'])}{f' <small class="en">{esc(u["en"])}</small>' if u['en'] and u['en'] != u['name'] else ''}</h1>
 <p class="lead">{esc(cko)}에 있는 {esc(u['kind'])} 가게예요. 아직 엉클데이에 입점하지 않은 곳이라 가격 · 한국어 응대는 확인되지 않았어요. 아래에 예약 문의를 남기면 엉클데이가 가게에 확인해서 한국어로 알려 드려요.</p>
 <div class="facts"><div><span>종류</span><b>{esc(u['kind'])}</b></div>{f'<div><span>주소</span><b>{esc(u["addr"])}</b></div>' if u['addr'] else ''}{f'<div><span>영업시간</span><b>{esc(hours_ko(u["hours"]))}</b></div>' if u['hours'] else ''}
@@ -648,9 +653,55 @@ def unclaimed_page(cid, u):
 <form data-lead="owner" data-ok="Cảm ơn! Uncle Day sẽ liên hệ sớm. · 고마워요! 곧 연락드릴게요." data-err="Vui lòng thử lại sau. · 잠시 후 다시 시도해 주세요.">
 <input name="name" placeholder="Tên của bạn · 이름" maxlength="60"><input name="contact" required placeholder="Số điện thoại / Zalo · 전화 · 잘로" maxlength="120">
 <textarea name="msg" rows="2" placeholder="Lời nhắn (không bắt buộc) · 남길 말 (선택)" maxlength="1000"></textarea><button type="submit">Đăng ký miễn phí · 무료 입점 신청</button></form>
-<p class="muted"><a href="/demo.html?role=owner&lang=vi" target="_blank" rel="noopener">Xem thử trang quản lý cửa hàng · 사장님 페이지 체험해 보기 ↗</a></p></div>
+<p class="muted"><a href="vi/">Xem trang này bằng tiếng Việt · 베트남어로 보기 →</a> · <a href="/demo.html?role=owner&lang=vi" target="_blank" rel="noopener">Xem thử trang quản lý cửa hàng · 사장님 페이지 체험해 보기 ↗</a></p></div>
 <p class="osm">가게 정보: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors (ODbL). 정보가 틀렸거나 내리고 싶다면 <a href="{KAKAO}" target="_blank" rel="noopener">엉클데이에 알려 주세요</a>.</p>
 </main><footer class="wrap">엉클데이 Uncle Day — 베트남 마사지 · 스파 · 뷰티 한국어 예약 · <a href="/">홈</a></footer>{TRACK()}{lead_js(cid, "osm:" + u["id"], u["name"])}</body></html>
+"""
+DAY_VI = {"Mo": "T2", "Tu": "T3", "We": "T4", "Th": "T5", "Fr": "T6", "Sa": "T7", "Su": "CN", "PH": "Ngày lễ", "off": "nghỉ"}
+def hours_vi(h): return re.sub(r"\b(Mo|Tu|We|Th|Fr|Sa|Su|PH|off)\b", lambda m: DAY_VI[m.group(1)], h or "")
+def views_js(path):
+    # 손님용(한국어) 페이지의 최근 30일 조회수를 보여 줘요. 5번 미만이면 안 보여요 (universe20.sql)
+    if not _SU.get("url"): return ""
+    auth = f',Authorization:"Bearer {_SU["key"]}"' if str(_SU.get("key", "")).startswith("eyJ") else ""
+    return ("<script>fetch(" + json.dumps(_SU["url"]) + "+'/rest/v1/rpc/seo_page_views',{method:'POST',headers:{apikey:" + json.dumps(_SU["key"]) + auth + ",'Content-Type':'application/json'},body:JSON.stringify({path:" + json.dumps(path) + "})})"
+            ".then(function(r){return r.ok?r.json():0}).then(function(n){n=+n||0;if(n<5)return;var el=document.getElementById('views');el.querySelector('b').textContent=n.toLocaleString('vi-VN');el.hidden=false}).catch(function(){})</script>")
+def unclaimed_vi_page(cid, u):
+    city = cities.get(cid, {}); cvi = lang(city.get("name"), "vi") or CITY_EN.get(cid, cid); url = f"{SITE}/p/{cid}/{u['slug']}/vi/"; ko = f"/p/{cid}/{u['slug']}/"
+    kvi = OSM_KIND_VI.get(u["kind"], "Làm đẹp"); n_city = sum(1 for x in live if x.get("city") == cid)
+    title = f"{u['name']} — {kvi} tại {cvi} | Uncle Day"
+    desc = f"{u['name']} ({kvi}, {cvi}) trên Uncle Day — nền tảng đặt chỗ bằng tiếng Hàn cho du khách Hàn Quốc. Chủ cửa hàng đăng ký miễn phí để nhận khách."
+    gmap = f"https://www.google.com/maps/search/?api=1&query={u['lat']},{u['lon']}"
+    return f"""<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{esc(title)}</title><meta name="description" content="{esc(desc)}"><link rel="canonical" href="{url}">{'' if u['rich'] else '<meta name="robots" content="noindex,follow">'}
+<link rel="alternate" hreflang="ko" href="{SITE}{ko}"><link rel="alternate" hreflang="vi" href="{url}">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Uncle Day"><meta property="og:title" content="{esc(title)}"><meta property="og:description" content="{esc(desc)}"><meta property="og:url" content="{url}"><meta property="og:image" content="{SITE}/images/og-image.jpg">
+<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png"><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>{HUB_CSS}{UNC_CSS}</style>
+</head><body><header class="hd"><div class="in"><a class="logo" href="/"><img src="/images/logo-full.webp" alt="Uncle Day" width="167" height="72"></a><nav><a href="{ko}" lang="ko">한국어</a></nav><a class="hcta" href="#dk">Đăng ký miễn phí</a></div></header>
+<main class="wrap"><p><span class="badge">Chưa đăng ký Uncle Day · Thông tin bản đồ công khai</span></p>
+<h1>{esc(u['name'])}</h1>
+<p class="lead">Đây là trang của cửa hàng bạn trên <b>Uncle Day</b> — trang web đặt chỗ massage · spa · làm đẹp <b>bằng tiếng Hàn</b> cho du khách Hàn Quốc tại Việt Nam. Khách Hàn Quốc tìm trên Google · Naver sẽ thấy <a href="{ko}" lang="ko">trang tiếng Hàn này</a>.</p>
+<div class="views" id="views" hidden><b>0</b><span>lượt xem trang của cửa hàng bạn<br>trong 30 ngày qua</span></div>
+<div class="facts"><div><span>Loại</span><b>{esc(kvi)}</b></div>{f'<div><span>Địa chỉ</span><b>{esc(u["addr"])}</b></div>' if u['addr'] else ''}{f'<div><span>Giờ mở cửa</span><b>{esc(hours_vi(u["hours"]))}</b></div>' if u['hours'] else ''}
+<div><span>Vị trí</span><b><a data-cta="map" href="{gmap}" target="_blank" rel="noopener">Xem bản đồ</a></b></div></div>
+<p class="muted">Cửa hàng chưa đăng ký nên Uncle Day chưa thể gửi khách Hàn Quốc đến. Khi khách để lại yêu cầu đặt chỗ, chúng tôi sẽ liên hệ cửa hàng.</p>
+<h2>Đăng ký Uncle Day được gì?</h2>
+<ul class="why">
+<li><b>🇰🇷 Khách Hàn Quốc</b><span>Khách tìm và đặt chỗ bằng tiếng Hàn. Uncle Day xác nhận đặt chỗ và gửi khách đến cửa hàng.</span></li>
+<li><b>💸 Không phí cố định</b><span>Không phí đăng ký, không phí hàng tháng. Chỉ trả hoa hồng khi khách đến và thanh toán.</span></li>
+<li><b>📱 Trang quản lý miễn phí</b><span>Nhận đặt chỗ, bảng phòng, lịch làm của nhân viên, đối soát — trên điện thoại, bằng tiếng Việt.</span></li>
+<li><b>🔒 Thông tin khách an toàn</b><span>Uncle Day lo phần liên lạc với khách. Cửa hàng chỉ cần phục vụ.</span></li>
+</ul>
+{f'<p class="muted">Hiện đã có <b>{n_city}</b> cửa hàng ở {esc(cvi)} trên Uncle Day.</p>' if n_city else ''}
+<p><a class="cta" href="/demo.html?role=owner&lang=vi" target="_blank" rel="noopener">▶ Xem thử trang quản lý cửa hàng</a></p>
+<div class="lead-box own" id="dk"><h2 style="margin-top:0">🏪 Bạn là chủ cửa hàng này?</h2>
+<p class="muted">Để lại số điện thoại / Zalo. Uncle Day sẽ liên hệ để giới thiệu và hướng dẫn đăng ký.</p>
+<form data-lead="owner" data-ok="Cảm ơn! Uncle Day sẽ liên hệ sớm." data-err="Vui lòng thử lại sau.">
+<input name="name" placeholder="Tên của bạn" maxlength="60"><input name="contact" required placeholder="Số điện thoại / Zalo" maxlength="120">
+<textarea name="msg" rows="2" placeholder="Lời nhắn (không bắt buộc)" maxlength="1000"></textarea><button type="submit">Đăng ký miễn phí</button></form></div>
+<p class="osm">Thông tin cửa hàng: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors (ODbL). Thông tin sai hoặc muốn gỡ trang này? Hãy để lại số điện thoại ở biểu mẫu trên và ghi “gỡ thông tin” — chúng tôi sẽ gỡ.</p>
+</main><footer class="wrap">Uncle Day — đặt chỗ massage · spa · làm đẹp bằng tiếng Hàn tại Việt Nam · <a href="/">Trang chủ</a></footer>{TRACK()}{lead_js(cid, "osm:" + u["id"], u["name"])}{views_js(ko)}</body></html>
 """
 def more_page(cid, us):
     city = cities.get(cid, {}); cko = tx(city.get("name")); url = f"{SITE}/c/{cid}/more/"
@@ -682,7 +733,8 @@ for cid in hubs:
         os.makedirs(f"c/{cid}/more", exist_ok=True); open(f"c/{cid}/more/index.html", "w").write(more_page(cid, us))
         os.makedirs(f"p/{cid}", exist_ok=True); keep_p = set()
         for u in us:
-            os.makedirs(f"p/{cid}/{u['slug']}", exist_ok=True); open(f"p/{cid}/{u['slug']}/index.html", "w").write(unclaimed_page(cid, u)); keep_p.add(u["slug"])
+            os.makedirs(f"p/{cid}/{u['slug']}/vi", exist_ok=True); open(f"p/{cid}/{u['slug']}/index.html", "w").write(unclaimed_page(cid, u)); keep_p.add(u["slug"])
+            open(f"p/{cid}/{u['slug']}/vi/index.html", "w").write(unclaimed_vi_page(cid, u))
         for f in os.listdir(f"p/{cid}"):
             if f not in keep_p: shutil.rmtree(f"p/{cid}/{f}", ignore_errors=True)
     for t, xs in city_topics(cid, sc):
@@ -747,7 +799,7 @@ for cid in hubs:
 for cid in hubs:
     if UNC.get(cid):
         topic_urls.append(f"{SITE}/c/{cid}/more/")
-        topic_urls += [f"{SITE}/p/{cid}/{u['slug']}/" for u in UNC[cid] if u["rich"]]
+        topic_urls += [f"{SITE}/p/{cid}/{u['slug']}/{v}" for u in UNC[cid] if u["rich"] for v in ("", "vi/")]
 urls = [f"{SITE}/"] + [f"{SITE}/c/{c}/" for c in hubs] + topic_urls + [f"{SITE}/c/{c}/guide/" for c in hubs if c in GUIDES] \
      + [f"{SITE}/en/c/{c}/" for c in hubs] + [f"{SITE}/en/c/{c}/guide/" for c in hubs if c in GUIDES_EN] + [f"{SITE}/s/{x}/" for x in sorted(keep_s)]
 open("sitemap.xml", "w").write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
