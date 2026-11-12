@@ -708,8 +708,12 @@
       const sw = Math.max(380, D.TW - bw - 12), z = Math.max(1, Math.min(1.6, sw / 420));
       side.style.zoom = z; side.classList.toggle("two", sw / z >= 720);
       side.style.maxHeight = Math.round(D.availH / z) + "px";
+      // 위쪽 버튼 · 층 칩 · 상태 설명도 오른쪽 현황판 크기에 맞춰 키워요
+      const tz = Math.max(1, Math.min(1.45, z * 0.95));
+      ["#obTop", "#obFl", "#obLg", "#obDeco"].forEach(q => { const el = root.querySelector(q); if (el) el.style.zoom = tz; });
     } else {
       grid.style.gridTemplateColumns = ""; side.style.zoom = ""; side.classList.remove("two"); side.style.maxHeight = "";
+      ["#obTop", "#obFl", "#obLg", "#obDeco"].forEach(q => { const el = root.querySelector(q); if (el) el.style.zoom = ""; });
       s = Math.max(0.48, stage.clientWidth / G.PW);
     }
     box.style.width = G.PW * s + "px"; box.style.height = G.H * s + "px"; plan.style.transform = `scale(${s})`; plan.classList.toggle("compact", s < 0.78);
