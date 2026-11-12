@@ -1,5 +1,5 @@
 /* 엉클데이 관리자 — 업무: 할 일 보드, 업체 영업 진행 */
-let TASKS = [], LEADS = [], ADMINS = [], CMT_N = {};
+let TASKS = [], LEADS = [], ADMINS = [], CMT_N = {}, NOTES = null;
 const TASK_COLS = [["todo", "할 일"], ["doing", "진행 중"], ["done", "완료"]];
 const LEAD_COLS = [["found", "후보 발굴", "찾아 둔 업체"], ["contacted", "연락함", "첫 연락·답 기다림"], ["meeting", "미팅", "방문·통화 상담"],
   ["negotiating", "계약 협의", "수수료·조건 조율"], ["signed", "계약 완료", "사이트 등록 준비"], ["live", "입점 완료", "사이트에 공개됨"], ["hold", "보류·거절", "나중에 다시"]];
@@ -13,6 +13,8 @@ async function loadWork() {
     sb.from("leads").select("*").order("updated_at", { ascending: false }).limit(3000),
     sb.from("admins").select("email,name").order("created_at")]);
   TASKS = t.error ? [] : t.data; LEADS = l.error ? [] : l.data; ADMINS = a.error ? [] : a.data;
+  const nt = await sb.from("notes").select("*").order("updated_at", { ascending: false }).limit(2000);
+  NOTES = nt.error ? null : nt.data;
   const c = await sb.from("comments").select("target_id").limit(20000);
   CMT_N = {}; (c.error ? [] : c.data).forEach(x => CMT_N[x.target_id] = (CMT_N[x.target_id] || 0) + 1);
   return !t.error && !l.error;
@@ -73,14 +75,11 @@ function workTodos() {
 
 function drawWork() {
   const t = vnToday();
-  if (workView === "guide") {
-    $("tab-work").innerHTML = `<div class="work-top"><div class="seg"><button data-v="tasks">✅ 할 일 보드</button><button data-v="leads">🤝 업체 영업</button><button data-v="guide" class="on">📘 사용 안내</button></div></div><div id="guideBox"></div>`;
-    $("tab-work").querySelectorAll("[data-v]").forEach(b => b.onclick = () => { workView = b.dataset.v; drawWork(); });
-    drawGuide($("guideBox")); return;
-  }
+  if (workView === "guide") { workView = "tasks"; if (typeof PORTAL !== "undefined") PORTAL.guide = true; showTab("home"); return; }
+  if (workView === "notes") return drawNotes();
   $("tab-work").innerHTML = `
     <div class="work-top">
-      <div class="seg"><button data-v="tasks" class="${workView === "tasks" ? "on" : ""}">✅ 할 일 보드</button><button data-v="leads" class="${workView === "leads" ? "on" : ""}">🤝 업체 영업</button><button data-v="guide" class="${workView === "guide" ? "on" : ""}">📘 사용 안내</button></div>
+      <div class="seg"><button data-v="tasks" class="${workView === "tasks" ? "on" : ""}">✅ 할 일 보드</button><button data-v="leads" class="${workView === "leads" ? "on" : ""}">🤝 업체 영업</button><button data-v="notes">📓 노트</button></div>
       <select id="wWho"><option value="all">담당자 전체</option><option value="me" ${workWho === "me" ? "selected" : ""}>내 것 (담당+참조)</option><option value="ref" ${workWho === "ref" ? "selected" : ""}>나를 참조한 것</option><option value="none" ${workWho === "none" ? "selected" : ""}>미지정</option>${ADMINS.filter(a => a.email !== ME.email).map(a => `<option value="${esc(a.email)}" ${workWho === a.email ? "selected" : ""}>${esc(who(a.email))}</option>`).join("")}</select>
       <span class="grow"></span>
       ${workView === "leads" ? `<button class="btn main" id="leadNew">＋ 영업 업체 추가</button>` : `<button class="btn main" id="taskNew">＋ 할 일</button>`}
@@ -639,3 +638,95 @@ function initNotis() {
   loadNotis(true);
   setInterval(() => { if (!document.hidden) loadNotis(false); }, 30000);
 }
+
+
+/* ---------- 📓 노트: 칸반 말고 자유롭게 쓰는 문서 (편집 도구는 할 일과 같아요) ---------- */
+let noteSel = null, noteQ = "", noteF = "all", noteEd = null, noteBase = null, noteDirty = false, noteTimer = 0, noteSaving = false;
+const noteFolders = () => [...new Set((NOTES || []).map(n => n.folder).filter(Boolean))].sort();
+const noteMine = n => String(n.owner || "").toLowerCase() === String(ME.email || "").toLowerCase();
+function drawNotes() {
+  const host = $("tab-work");
+  const seg = `<div class="seg"><button data-v="tasks">✅ 할 일 보드</button><button data-v="leads">🤝 업체 영업</button><button data-v="notes" class="on">📓 노트</button></div>`;
+  if (NOTES == null) {
+    host.innerHTML = `<div class="work-top">${seg}</div><div class="uni-err" style="margin-top:12px">노트를 쓰려면 Supabase 에서 <b>supabase/universe12.sql</b> 을 한 번 실행해 주세요.</div>`;
+    host.querySelectorAll("[data-v]").forEach(b => b.onclick = () => noteLeave(() => { workView = b.dataset.v; drawWork(); })); return;
+  }
+  const q = noteQ.trim().toLowerCase(), F = noteFolders();
+  const list = NOTES.filter(n => (noteF === "all" || (noteF === "pin" ? n.pinned : noteF === "me" ? n.private : n.folder === noteF)) &&
+      (!q || ((n.title || "") + " " + richText(n.body || "") + " " + (n.folder || "")).toLowerCase().includes(q)))
+    .sort((a, b) => (b.pinned - a.pinned) || String(b.updated_at).localeCompare(String(a.updated_at)));
+  const cur = noteSel === "new" ? noteBase : NOTES.find(n => n.id === noteSel);
+  host.innerHTML = `<div class="work-top">${seg}<span class="grow"></span><button class="btn main" id="noteNew">＋ 새 노트</button></div>
+    <div class="notes ${cur ? "has" : ""}">
+      <aside class="notes-side"><input type="search" id="noteQ" placeholder="🔎 노트 검색" value="${esc(noteQ)}">
+        <div class="notes-f">${[["all", "전체"], ["pin", "📌 고정"], ["me", "🔒 나만 보기"]].concat(F.map(f => [f, "📁 " + f])).map(([k, l]) => `<button class="chip ${noteF === k ? "on" : ""}" data-nf="${esc(k)}">${esc(l)}</button>`).join("")}</div>
+        <div class="notes-list">${list.length ? list.map(n => `<button class="note-it ${n.id === noteSel ? "on" : ""}" data-note="${n.id}"><b>${n.pinned ? "📌 " : ""}${n.private ? "🔒 " : ""}${esc(n.title || "제목 없음")}</b>
+          <small>${esc(richText(n.body || "").slice(0, 80))}</small><em>${n.folder ? "📁 " + esc(n.folder) + " · " : ""}${esc(n.updated_by || "")} · ${dt(n.updated_at)}</em></button>`).join("") : `<p class="hint" style="padding:12px">${q || noteF !== "all" ? "조건에 맞는 노트가 없어요." : "아직 노트가 없어요. ＋ 새 노트로 시작해요."}</p>`}</div></aside>
+      <section class="notes-main">${cur ? `
+        <div class="note-head"><button class="btn sm note-back" id="noteBack">← 목록</button>
+          <input id="noteTitle" class="note-title" placeholder="제목" value="${esc(cur.title || "")}">
+        </div>
+        <div class="note-meta"><label>📁 <input id="noteFolder" list="noteFolders" placeholder="폴더 (예: 회의록)" value="${esc(cur.folder || "")}"><datalist id="noteFolders">${F.map(f => `<option value="${esc(f)}">`).join("")}</datalist></label>
+          <label class="tg2"><input type="checkbox" id="notePin" ${cur.pinned ? "checked" : ""}> 📌 고정</label>
+          <label class="tg2" title="${cur.id && !noteMine(cur) ? "만든 사람만 바꿀 수 있어요" : "나만 볼 수 있어요"}"><input type="checkbox" id="notePriv" ${cur.private ? "checked" : ""} ${cur.id && !noteMine(cur) ? "disabled" : ""}> 🔒 나만 보기</label>
+          <span class="grow"></span><span class="hint" id="noteState">${cur.id ? `${esc(cur.updated_by || "")} · ${dt(cur.updated_at)}` : "새 노트"}</span></div>
+        <div id="noteBody" class="re note-re"></div>
+        <div class="note-foot">${cur.id ? `<button class="btn danger sm" id="noteDel">삭제</button>` : ""}<span class="grow"></span><span class="hint">입력을 멈추면 자동으로 저장돼요 · Ctrl+S</span><button class="btn main" id="noteSave">저장</button></div>`
+      : `<div class="notes-empty"><b>📓 노트</b><p>회의록, 업체 미팅 메모, 아이디어, 매뉴얼 초안처럼 칸반 카드로 나누기 어려운 글을 자유롭게 써요.<br>'/'를 누르면 제목 · 체크리스트 · 토글 · 강조 상자 메뉴가 나와요. 사진은 붙여넣기나 끌어 놓기로 넣어요.</p><button class="btn main" id="noteNew2">＋ 새 노트</button></div>`}</section></div>`;
+  host.querySelectorAll("[data-v]").forEach(b => b.onclick = () => noteLeave(() => { workView = b.dataset.v; drawWork(); }));
+  const nn = () => noteLeave(() => { noteSel = "new"; noteBase = { title: "", body: "", folder: ["all", "pin", "me"].includes(noteF) ? "" : noteF, pinned: false, private: noteF === "me" }; noteDirty = false; drawNotes(); setTimeout(() => $("noteTitle") && $("noteTitle").focus(), 0); });
+  $("noteNew").onclick = nn; if ($("noteNew2")) $("noteNew2").onclick = nn;
+  const qi = $("noteQ"); qi.oninput = () => { noteQ = qi.value; const pos = qi.selectionStart; const keep = noteEd ? noteEd.get() : null; drawNotesKeep(keep); const q2 = $("noteQ"); q2.focus(); q2.setSelectionRange(pos, pos); };
+  host.querySelectorAll("[data-nf]").forEach(b => b.onclick = () => { noteF = b.dataset.nf; drawNotesKeep(noteEd ? noteEd.get() : null); });
+  host.querySelectorAll("[data-note]").forEach(b => b.onclick = () => { if (b.dataset.note === noteSel) return; noteLeave(() => { noteSel = b.dataset.note; noteDirty = false; drawNotes(); }); });
+  if (!cur) { noteEd = null; return; }
+  noteEd = richEditor($("noteBody"), cur._draft != null ? cur._draft : (cur.body || ""), { placeholder: "자유롭게 적어요. '/'를 누르면 제목 · 체크리스트 · 토글 메뉴가 나와요" });
+  delete cur._draft;
+  if (cur.id) noteBase = { ...cur };
+  const dirty = () => { noteDirty = true; $("noteState").textContent = "고치는 중…"; clearTimeout(noteTimer); noteTimer = setTimeout(() => noteSave(true), 1800); };
+  noteEd.el.addEventListener("input", dirty);
+  ["noteTitle", "noteFolder"].forEach(i => $(i).addEventListener("input", dirty));
+  ["notePin", "notePriv"].forEach(i => $(i).addEventListener("change", dirty));
+  $("noteSave").onclick = () => noteSave(false);
+  $("noteBack").onclick = () => noteLeave(() => { noteSel = null; drawNotes(); });
+  if ($("noteDel")) $("noteDel").onclick = async () => {
+    if (!confirm(`'${cur.title || "제목 없음"}' 노트를 지울까요? 되돌릴 수 없어요.`)) return;
+    const r = await sb.from("notes").delete().eq("id", cur.id); if (r.error) return dbErr(r.error, "노트 삭제");
+    NOTES = NOTES.filter(n => n.id !== cur.id); noteSel = null; noteDirty = false; toast("노트를 지웠어요"); drawNotes(); };
+}
+// 검색 · 폴더를 바꿔도 쓰던 내용은 그대로
+function drawNotesKeep(draft) { const cur = noteSel === "new" ? noteBase : (NOTES || []).find(n => n.id === noteSel); if (cur && draft != null) { cur._draft = draft; if (noteSel === "new") noteBase.title = ($("noteTitle") || {}).value || noteBase.title; } drawNotes(); }
+async function noteSave(auto) {
+  if (!noteEd || noteSaving || (auto && !noteDirty)) return;
+  clearTimeout(noteTimer);
+  const row = { title: $("noteTitle").value.trim(), body: noteEd.get(), folder: $("noteFolder").value.trim() || null, pinned: $("notePin").checked, private: $("notePriv").checked };
+  if (!row.title && !richText(row.body).trim()) { if (!auto) toast("제목이나 내용을 적어 주세요"); return; }
+  if (!row.title) row.title = richText(row.body).trim().slice(0, 40);
+  noteSaving = true; $("noteState").textContent = "저장 중…";
+  let r;
+  if (noteSel === "new") r = await sb.from("notes").insert(row).select().single();
+  else {
+    // 동시 작성 대비: 내가 연 뒤로 다른 분이 고쳤으면 덮어쓰지 않아요
+    r = await sb.from("notes").update(row).eq("id", noteSel).eq("updated_at", noteBase.updated_at).select();
+    if (!r.error && (!r.data || !r.data.length)) {
+      noteSaving = false; $("noteState").textContent = "⚠️ 다른 분이 먼저 고쳤어요";
+      if (confirm("다른 분이 이 노트를 먼저 고쳤어요.\n\n확인: 내 내용으로 덮어쓰기\n취소: 다른 분 내용 불러오기 (내 내용은 복사해 두세요)")) {
+        r = await sb.from("notes").update(row).eq("id", noteSel).select();
+      } else { const f = await sb.from("notes").select("*").eq("id", noteSel).single(); if (!f.error) { NOTES = NOTES.map(n => n.id === noteSel ? f.data : n); noteDirty = false; drawNotes(); } return; }
+    }
+    if (!r.error) r = { data: r.data[0] };
+  }
+  noteSaving = false;
+  if (r.error) { $("noteState").textContent = "⚠️ 저장 못 했어요"; return dbErr(r.error, "노트 저장"); }
+  const saved = r.data, wasNew = noteSel === "new";
+  NOTES = [saved].concat(NOTES.filter(n => n.id !== saved.id)); noteBase = { ...saved }; noteDirty = false;
+  if (wasNew) { noteSel = saved.id; drawNotesKeep(null); }
+  else {
+    const st = $("noteState"); if (st) st.textContent = `저장됨 ✓ ${dt(saved.updated_at)}`;
+    const it = document.querySelector(`[data-note="${saved.id}"] b`); if (it) it.textContent = (saved.pinned ? "📌 " : "") + (saved.private ? "🔒 " : "") + (saved.title || "제목 없음");
+  }
+  if (!auto) toast("저장했어요 ✅");
+}
+function noteLeave(go) { if (noteDirty && noteEd) { noteSave(true).then(go); } else go(); }
+document.addEventListener("keydown", e => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s" && TAB === "work" && workView === "notes" && noteEd && !document.querySelector(".overlay")) { e.preventDefault(); noteSave(false); } });
+window.addEventListener("beforeunload", e => { if (noteDirty) { e.preventDefault(); e.returnValue = ""; } });

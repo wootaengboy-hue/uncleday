@@ -180,10 +180,7 @@ function drawDash() {
       <div class="kpi money"><small>청구했는데 입금 전</small><b>${vnd(billed)}</b><em>${krw(billed)}</em></div>
     </div>
 
-    <h2 class="sec">할 일 <small>업체와 손님 사이에서 놓치면 기록이 비는 일이에요</small></h2>
-    <div class="todo">${todos.map(([k, ic, label, n]) => `<div class="todo-row ${n ? "" : "zero"}" data-todo="${k}"><span class="ic">${ic}</span><b>${label}</b><span class="n" style="${n ? "color:var(--danger)" : ""}">${n}</span></div>`).join("")}
-      ${workTodos().map(([k, ic, label, n]) => `<div class="todo-row ${n ? "" : "zero"}" data-wtodo="${k}"><span class="ic">${ic}</span><b>${label}</b><span class="n" style="${n ? "color:var(--danger)" : ""}">${n}</span></div>`).join("")}
-      <div class="todo-row ${pendRv ? "" : "zero"}" data-tab-go="rv"><span class="ic">⭐</span><b>게시를 기다리는 손님 후기</b><span class="n" style="${pendRv ? "color:var(--danger)" : ""}">${pendRv}</span></div></div>
+    <div class="todo-link" data-tab-go-home="1">✅ <b>할 일</b>은 <b>🏠 포털 → 오늘 할 일</b>로 옮겼어요 · 지금 <b style="color:var(--danger)">${typeof portalTodos === "function" ? portalTodos().flatMap(g => g[1]).reduce((t, x) => t + (x[2] || 0), 0) : todos.reduce((t, x) => t + x[3], 0) + pendRv}건</b> <span class="go">포털에서 보기 →</span></div>
 
     <h2 class="sec">월별 실적 <select class="month-pick" id="dashMonth">${months.map(m => `<option value="${m}" ${m === dashMonth ? "selected" : ""}>${monthKo(m)}</option>`).join("")}</select> <small>방문일 기준</small></h2>
     <div class="kpis">
@@ -217,6 +214,7 @@ function drawDash() {
   $("dashMonth").onchange = e => { dashMonth = e.target.value; drawDash(); };
   $("tab-dash").querySelectorAll("[data-todo]").forEach(r => r.onclick = () => { if (r.classList.contains("zero")) return; bkF = { ...BKF0, st: "all", todo: r.dataset.todo }; showTab("bk"); });
   $("tab-dash").querySelectorAll("[data-wtodo]").forEach(r => r.onclick = () => { if (r.classList.contains("zero")) return; const t = workTodos().find(x => x[0] === r.dataset.wtodo); if (t) t[4](); });
+  $("tab-dash").querySelectorAll("[data-tab-go-home]").forEach(r => r.onclick = () => showTab("home"));
   $("tab-dash").querySelectorAll("[data-tab-go]").forEach(r => r.onclick = () => { if (!r.classList.contains("zero")) showTab(r.dataset.tabGo); });
   $("tab-dash").querySelectorAll("[data-go]").forEach(r => r.onclick = () => {
     bkF = r.dataset.go === "today" ? { ...BKF0, st: "all", from: today, to: today } : { ...BKF0, st: "requested" }; showTab("bk"); });
