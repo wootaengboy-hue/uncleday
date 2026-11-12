@@ -1,0 +1,5195 @@
+{
+"fetched": "2026-11-12T15:04:08",
+"license": "© OpenStreetMap contributors, ODbL 1.0",
+"cities": {
+"danang": [],
+"nhatrang": [
+{
+"id": "n10648186306",
+"lat": 12.239596,
+"lon": 109.190103,
+"tags": {
+"name": "ㆍ",
+"leisure": "sauna"
+}
+},
+{
+"id": "n11657014747",
+"lat": 12.247037,
+"lon": 109.179356,
+"tags": {
+"name": "khu đô thị Lê Hồng Phong 2, đường 6c",
+"name:en": "Le hong Phong 2, duong 6c",
+"shop": "beauty"
+}
+},
+{
+"id": "n12712812401",
+"lat": 12.226602,
+"lon": 109.199556,
+"tags": {
+"name": "Hong Kong",
+"shop": "massage",
+"addr:street": "4 Trần Phú, Lộc Thọ, Nha Trang, Khánh Hòa 650000"
+}
+},
+{
+"id": "n13511396317",
+"lat": 12.264398,
+"lon": 109.191871,
+"tags": {
+"name": "Champa Spa",
+"shop": "beauty"
+}
+},
+{
+"id": "n13655325811",
+"lat": 12.243726,
+"lon": 109.166919,
+"tags": {
+"name": "AV Spa & Beauty",
+"shop": "beauty",
+"amenity": "spa",
+"beauty": "skin_care;massage;spa;hair",
+"massage": "yes",
+"addr:housenumber": "95",
+"addr:street": "Đường Số 65",
+"addr:subdistrict": "Nam Nha Trang",
+"addr:city": "Nha Trang",
+"opening_hours": "Mo-Su 09:00-20:00"
+}
+},
+{
+"id": "n13798275704",
+"lat": 12.235064,
+"lon": 109.195599,
+"tags": {
+"name": "Adelia spa",
+"shop": "massage",
+"addr:housenumber": "140",
+"addr:street": "Hùng Vương"
+}
+},
+{
+"id": "n13828416396",
+"lat": 12.23553,
+"lon": 109.197124,
+"tags": {
+"name": "XQ SPA",
+"shop": "massage",
+"addr:housenumber": "64",
+"addr:street": "Trần Phú"
+}
+},
+{
+"id": "n13833663101",
+"lat": 12.232172,
+"lon": 109.195371,
+"tags": {
+"name": "Mina spa",
+"shop": "massage"
+}
+},
+{
+"id": "n4130343690",
+"lat": 12.250599,
+"lon": 109.19136,
+"tags": {
+"name": "Sen Spa",
+"shop": "beauty",
+"addr:housenumber": "05",
+"addr:street": "Lý Thánh Tôn",
+"opening_hours": "Mo-Su 09:00-21:30"
+}
+},
+{
+"id": "n4589307290",
+"lat": 12.233838,
+"lon": 109.196232,
+"tags": {
+"name": "Axar blind massage",
+"name:vi": "Axar blind massage",
+"shop": "beauty"
+}
+},
+{
+"id": "n4936209721",
+"lat": 12.233235,
+"lon": 109.195291,
+"tags": {
+"name": "Lotus Spa",
+"name:ko": "로투스스파",
+"shop": "massage",
+"addr:housenumber": "28",
+"addr:street": "Trần Quang Khải"
+}
+},
+{
+"id": "n4948353007",
+"lat": 12.233347,
+"lon": 109.195635,
+"tags": {
+"name": "Manu Spa",
+"shop": "massage",
+"addr:housenumber": "26B",
+"addr:street": "Trần Quang Khải",
+"addr:subdistrict": "Lộc Thọ",
+"addr:city": "Nha Trang",
+"opening_hours": "Mo-Su 10:00-22:00"
+}
+},
+{
+"id": "n5245621182",
+"lat": 12.239699,
+"lon": 109.19174,
+"tags": {
+"name": "Thiện nam",
+"shop": "massage",
+"addr:housenumber": "55",
+"addr:street": "Đống Đa"
+}
+},
+{
+"id": "n5245621184",
+"lat": 12.239202,
+"lon": 109.193439,
+"tags": {
+"name": "Tropic Spa",
+"shop": "massage",
+"addr:housenumber": "22",
+"addr:street": "Nguyễn Thiện Thuật",
+"opening_hours": "Mo-Su 10:00-23:00"
+}
+},
+{
+"id": "n5300347021",
+"lat": 12.233023,
+"lon": 109.194422,
+"tags": {
+"name": "У Антона",
+"shop": "massage",
+"addr:housenumber": "120/32",
+"addr:street": "Nguyen thien thuat",
+"opening_hours": "Mo-Su 08:30-23:00"
+}
+},
+{
+"id": "n5302705023",
+"lat": 12.236988,
+"lon": 109.195408,
+"tags": {
+"name": "spa Lê Nhi",
+"shop": "massage"
+}
+},
+{
+"id": "n5373297521",
+"lat": 12.244461,
+"lon": 109.189221,
+"tags": {
+"name": "Ngos tuen",
+"shop": "massage"
+}
+},
+{
+"id": "n5517657923",
+"lat": 12.242297,
+"lon": 109.187753,
+"tags": {
+"name": "80",
+"shop": "massage"
+}
+},
+{
+"id": "n5920407986",
+"lat": 12.243765,
+"lon": 109.193967,
+"tags": {
+"name": "Orchid SPA",
+"shop": "massage"
+}
+},
+{
+"id": "n6301712586",
+"lat": 12.235462,
+"lon": 109.184745,
+"tags": {
+"name": "Cơ Sở Massage Hoa Đào 2",
+"name:en": "Hoa Dao 2",
+"shop": "massage",
+"addr:housenumber": "18",
+"addr:street": "Vân Đồn"
+}
+},
+{
+"id": "n6400793487",
+"lat": 12.236664,
+"lon": 109.193363,
+"tags": {
+"name": "king blind massage",
+"shop": "massage"
+}
+},
+{
+"id": "n6751848885",
+"lat": 12.244255,
+"lon": 109.189324,
+"tags": {
+"name": "Массаж Слепых",
+"shop": "massage"
+}
+},
+{
+"id": "n7291731885",
+"lat": 12.237595,
+"lon": 109.194864,
+"tags": {
+"name": "Massage bayou mu",
+"shop": "massage",
+"addr:housenumber": "92/16",
+"addr:street": "Hùng Vương",
+"opening_hours": "Mo-Su 09:00-21:00"
+}
+},
+{
+"id": "n7598930485",
+"lat": 12.236052,
+"lon": 109.197029,
+"tags": {
+"name": "Manu Spa",
+"shop": "massage",
+"addr:housenumber": "62",
+"addr:street": "Trần Phú",
+"opening_hours": "Mo-Su 10:00-22:00"
+}
+},
+{
+"id": "n9885451831",
+"lat": 12.213019,
+"lon": 109.195489,
+"tags": {
+"name": "THÁI Y VIỆN Beauty Spa & Clinic",
+"shop": "beauty",
+"beauty": "skin_care;spa;massage;cosmetics;hair",
+"addr:housenumber": "50",
+"addr:street": "Trường Sa",
+"addr:subdistrict": "Phước Long",
+"addr:city": "Nha Trang",
+"opening_hours": "Mo-Su 09:00-21:00"
+}
+},
+{
+"id": "w1050183741",
+"lat": 12.243505,
+"lon": 109.193531,
+"tags": {
+"name": "Tyni Kid&Family Spa",
+"shop": "beauty"
+}
+}
+],
+"hcm": [
+{
+"id": "n10227814809",
+"lat": 10.788704,
+"lon": 106.691356,
+"tags": {
+"name": "Phòng khám Genki Dermatology",
+"shop": "beauty",
+"beauty": "skin_care",
+"addr:housenumber": "242-244",
+"addr:street": "Đường Hai Bà Trưng",
+"addr:subdistrict": "Tân Định",
+"addr:district": "Quận 1",
+"addr:city": "Ho Chi Minh City",
+"opening_hours": "Mo-Su 08:00-20:00"
+}
+},
+{
+"id": "n10722921724",
+"lat": 10.775891,
+"lon": 106.689863,
+"tags": {
+"name": "Thẩm mỹ viện Athena",
+"shop": "beauty"
+}
+},
+{
+"id": "n10763829837",
+"lat": 10.785541,
+"lon": 106.699779,
+"tags": {
+"name": "AN's spa",
+"shop": "massage",
+"addr:street": "Hẻm 18Bis/13 Nguyễn Thị Minh Khai",
+"addr:subdistrict": "Ward Da Kao",
+"addr:district": "District 1",
+"addr:city": "Ho Chi Minh City",
+"opening_hours": "Mo-Su 10:00-22:00"
+}
+},
+{
+"id": "n10939958642",
+"lat": 10.850972,
+"lon": 106.625726,
+"tags": {
+"name": "Anphucspa",
+"shop": "massage",
+"addr:housenumber": "2242/19",
+"addr:street": "Quốc lộ 1",
+"addr:subdistrict": "Trung My Tay",
+"addr:district": "District 12",
+"addr:city": "Ho chi Minh",
+"opening_hours": "Mo-Su 09:00-21:00"
+}
+},
+{
+"id": "n11289662869",
+"lat": 10.763294,
+"lon": 106.696021,
+"tags": {
+"name": "Косметолог Хошимин Вьетнам",
+"name:en": "Cosmetologist Hochiminh Vietnam",
+"shop": "beauty",
+"addr:housenumber": "30",
+"addr:street": "30 Đ. Đề Thám, Phường Cầu Ông Lãnh, Quận 1, Thành phố Hồ Chí Minh",
+"opening_hours": "24/7"
+}
+},
+{
+"id": "n11358218630",
+"lat": 10.7588,
+"lon": 106.653692,
+"tags": {
+"name": "Hoa Kiều",
+"shop": "massage"
+}
+},
+{
+"id": "n11358218631",
+"lat": 10.771763,
+"lon": 106.669551,
+"tags": {
+"name": "Massage P.A Relax",
+"shop": "massage",
+"addr:housenumber": "383",
+"addr:street": "Đường Sư Vạn Hạnh",
+"opening_hours": "Mo-Su 09:00-03:00"
+}
+},
+{
+"id": "n11358218632",
+"lat": 10.772405,
+"lon": 106.67212,
+"tags": {
+"name": "Koi Spa",
+"shop": "massage"
+}
+},
+{
+"id": "n11358218633",
+"lat": 10.773394,
+"lon": 106.671635,
+"tags": {
+"name": "Thanh Thanh Spa",
+"shop": "massage"
+}
+},
+{
+"id": "n11358218635",
+"lat": 10.771502,
+"lon": 106.700141,
+"tags": {
+"name": "Rona Massage FS",
+"shop": "massage"
+}
+},
+{
+"id": "n11358218636",
+"lat": 10.792086,
+"lon": 106.692894,
+"tags": {
+"name": "Massage Queen",
+"shop": "massage",
+"opening_hours": "Mo-Su 10:00-03:00"
+}
+},
+{
+"id": "n11358218637",
+"lat": 10.799581,
+"lon": 106.678788,
+"tags": {
+"name": "Hoa Tulip",
+"shop": "massage"
+}
+},
+{
+"id": "n11358218638",
+"lat": 10.795784,
+"lon": 106.6714,
+"tags": {
+"name": "Hoa Bay",
+"shop": "massage",
+"opening_hours": "11:00-23:00"
+}
+},
+{
+"id": "n11515759838",
+"lat": 10.772428,
+"lon": 106.695875,
+"tags": {
+"name": "Mai Anh Beauty Salon",
+"shop": "massage"
+}
+},
+{
+"id": "n11515767081",
+"lat": 10.767345,
+"lon": 106.697826,
+"tags": {
+"name": "Hoàng Triều hair salon",
+"shop": "massage"
+}
+},
+{
+"id": "n11515768166",
+"lat": 10.769198,
+"lon": 106.658668,
+"tags": {
+"name": "Hawaii Luxury Massage HCM",
+"shop": "massage"
+}
+},
+{
+"id": "n11515774504",
+"lat": 10.774052,
+"lon": 106.706025,
+"tags": {
+"name": "BEAUTY SALON Ngân Hà",
+"name:ko": "응안하 (은하수) 이발소",
+"shop": "massage"
+}
+},
+{
+"id": "n11515774656",
+"lat": 10.768639,
+"lon": 106.696563,
+"tags": {
+"name": "DAI NAM",
+"shop": "massage"
+}
+},
+{
+"id": "n11515846155",
+"lat": 10.779704,
+"lon": 106.705072,
+"tags": {
+"name": "Massage Linh Cherry Quận 1",
+"shop": "massage"
+}
+},
+{
+"id": "n11515859469",
+"lat": 10.780358,
+"lon": 106.704662,
+"tags": {
+"name": "Enjoy Massage Therapy;Góc Nhật Bản",
+"name:en": "Japanese Corners",
+"shop": "massage"
+}
+},
+{
+"id": "n11515870720",
+"lat": 10.737479,
+"lon": 106.691043,
+"tags": {
+"name": "Bồng Lai Các Trung Sơn HealthClub",
+"shop": "massage"
+}
+},
+{
+"id": "n11533096023",
+"lat": 10.770546,
+"lon": 106.700786,
+"tags": {
+"name": "Massage 123",
+"shop": "massage"
+}
+},
+{
+"id": "n11533096024",
+"lat": 10.770796,
+"lon": 106.700185,
+"tags": {
+"name": "137 Hàm Nghi",
+"shop": "massage"
+}
+},
+{
+"id": "n11533096025",
+"lat": 10.772333,
+"lon": 106.700406,
+"tags": {
+"name": "Massage 123",
+"shop": "massage"
+}
+},
+{
+"id": "n11533096026",
+"lat": 10.773242,
+"lon": 106.699056,
+"tags": {
+"name": "KAKA SPA",
+"shop": "massage"
+}
+},
+{
+"id": "n11533096027",
+"lat": 10.771529,
+"lon": 106.697157,
+"tags": {
+"name": "YUJU Spa",
+"shop": "massage"
+}
+},
+{
+"id": "n11533096028",
+"lat": 10.773661,
+"lon": 106.697257,
+"tags": {
+"name": "137 Luxury Massage",
+"shop": "massage"
+}
+},
+{
+"id": "n11533096029",
+"lat": 10.773523,
+"lon": 106.69631,
+"tags": {
+"name": "Massage Golden",
+"shop": "massage"
+}
+},
+{
+"id": "n11533096036",
+"lat": 10.773313,
+"lon": 106.695889,
+"tags": {
+"name": "CiCi International Spa",
+"shop": "massage"
+}
+},
+{
+"id": "n11533096037",
+"lat": 10.773043,
+"lon": 106.695507,
+"tags": {
+"name": "La Spa Sai Gon",
+"shop": "massage"
+}
+},
+{
+"id": "n11533096038",
+"lat": 10.772706,
+"lon": 106.695654,
+"tags": {
+"name": "Cyclo Spa",
+"shop": "massage"
+}
+},
+{
+"id": "n11533096040",
+"lat": 10.772049,
+"lon": 106.694161,
+"tags": {
+"name": "Bar and spa Joy Green",
+"shop": "massage"
+}
+},
+{
+"id": "n11533128053",
+"lat": 10.791822,
+"lon": 106.693083,
+"tags": {
+"name": "Gội Đầu Tuấn Tâm",
+"shop": "massage"
+}
+},
+{
+"id": "n11607893169",
+"lat": 10.732574,
+"lon": 106.705834,
+"tags": {
+"name": "SPA Cozy",
+"name:en": "Cozy massage Spa",
+"shop": "massage",
+"addr:street": "SC35 -2 Sky3 Phu My Hung, phuong Tan Phong, quan 7"
+}
+},
+{
+"id": "n11747193567",
+"lat": 10.751661,
+"lon": 106.612327,
+"tags": {
+"name": "Mallorie Beauty",
+"shop": "beauty",
+"beauty": "nails;skin_care;waxing;eyelash;gội_đầu;massage;trị_nám;trị_mụn;dưỡng_sinh;body",
+"addr:housenumber": "293",
+"addr:street": "Đường số 7",
+"addr:subdistrict": "Bình Trị Đông B",
+"addr:district": "Bình Tân",
+"addr:city": "Hồ Chí Minh",
+"opening_hours": "Mo-Su 09:00-20:00"
+}
+},
+{
+"id": "n11884321088",
+"lat": 10.749358,
+"lon": 106.611609,
+"tags": {
+"name": "La Jolie Beauty & Spa",
+"shop": "beauty",
+"beauty": "skin_care;eyebrow;massage",
+"addr:housenumber": "268",
+"addr:street": "Đường Tên Lửa",
+"addr:city": "Phường An Lạc"
+}
+},
+{
+"id": "n12218545660",
+"lat": 10.770801,
+"lon": 106.699946,
+"tags": {
+"name": "Tiệm massage Quỳnh Như 137",
+"shop": "massage",
+"addr:housenumber": "147-151",
+"addr:street": "Hàm Nghi",
+"addr:subdistrict": "Phường Nguyễn Thái Bình",
+"addr:district": "Quận 1",
+"addr:city": "Thành phố Hồ Chí Minh"
+}
+},
+{
+"id": "n12219263650",
+"lat": 10.770504,
+"lon": 106.699557,
+"tags": {
+"name": "Sol Academy & Makeup",
+"shop": "beauty"
+}
+},
+{
+"id": "n12230294807",
+"lat": 10.770784,
+"lon": 106.700559,
+"tags": {
+"name": "Tiệm massage Quỳnh Như 137",
+"shop": "massage",
+"addr:housenumber": "115-117",
+"addr:street": "Hàm Nghi",
+"addr:subdistrict": "Phường Nguyễn Thái Bình",
+"addr:district": "Quận 1",
+"addr:city": "Thành phố Hồ Chí Minh"
+}
+},
+{
+"id": "n12293946535",
+"lat": 10.775945,
+"lon": 106.750959,
+"tags": {
+"name": "Anna Nail & Spa",
+"shop": "beauty",
+"beauty": "nails"
+}
+},
+{
+"id": "n12307106119",
+"lat": 10.770513,
+"lon": 106.690182,
+"tags": {
+"name": "Letty Studio",
+"shop": "beauty",
+"beauty": "nails"
+}
+},
+{
+"id": "n12307203767",
+"lat": 10.770514,
+"lon": 106.690399,
+"tags": {
+"name": "G-ENZ Beautyhouse",
+"shop": "massage"
+}
+},
+{
+"id": "n12326914049",
+"lat": 10.769107,
+"lon": 106.702805,
+"tags": {
+"name": "Yên Ả Herbal Spa - Gội Đầu Dưỡng Sinh",
+"shop": "massage"
+}
+},
+{
+"id": "n12348262226",
+"lat": 10.777531,
+"lon": 106.752358,
+"tags": {
+"name": "Me Spa",
+"shop": "massage"
+}
+},
+{
+"id": "n12348266153",
+"lat": 10.778377,
+"lon": 106.753063,
+"tags": {
+"name": "Hồng Ngọc",
+"shop": "massage"
+}
+},
+{
+"id": "n12348267964",
+"lat": 10.781442,
+"lon": 106.750701,
+"tags": {
+"name": "Blue Spa",
+"shop": "massage"
+}
+},
+{
+"id": "n12369444336",
+"lat": 10.778433,
+"lon": 106.751457,
+"tags": {
+"name": "Serenity Clinic",
+"shop": "massage"
+}
+},
+{
+"id": "n12373761643",
+"lat": 10.776356,
+"lon": 106.75239,
+"tags": {
+"name": "Viki Nail & Spa",
+"shop": "massage"
+}
+},
+{
+"id": "n12382367922",
+"lat": 10.777995,
+"lon": 106.746306,
+"tags": {
+"name": "Just Spa",
+"shop": "massage"
+}
+},
+{
+"id": "n12397817647",
+"lat": 10.7792,
+"lon": 106.756229,
+"tags": {
+"name": "Thảo Điền Spa 2",
+"shop": "massage"
+}
+},
+{
+"id": "n12513980833",
+"lat": 10.777043,
+"lon": 106.690413,
+"tags": {
+"name": "Bông Spa",
+"shop": "massage"
+}
+},
+{
+"id": "n12517906936",
+"lat": 10.732039,
+"lon": 106.707184,
+"tags": {
+"name": "Windy 2",
+"shop": "massage",
+"addr:housenumber": "84",
+"addr:street": "Cao Triều Phát",
+"opening_hours": "Mo-Su 10:00-05:00"
+}
+},
+{
+"id": "n12652322243",
+"lat": 10.784809,
+"lon": 106.669554,
+"tags": {
+"name": "Mây Beauty Spa",
+"shop": "massage"
+}
+},
+{
+"id": "n12656679155",
+"lat": 10.76778,
+"lon": 106.681403,
+"tags": {
+"name": "Hebe - Healing & Beauty",
+"shop": "beauty",
+"beauty": "skin_care;cosmetics;hair;massage;spa",
+"addr:housenumber": "543/35-37",
+"addr:street": "Nguyễn Đình Chiểu",
+"addr:subdistrict": "Phường 2",
+"addr:district": "Quan 3",
+"addr:city": "Ho Chi Minh City",
+"opening_hours": "Mo-Su 09:00-21:00"
+}
+},
+{
+"id": "n12756537101",
+"lat": 10.775292,
+"lon": 106.690495,
+"tags": {
+"name": "Massage Sài Gòn Star",
+"name:en": "Massge SaiGon Star",
+"shop": "massage",
+"addr:street": "Nguyễn Thị Minh Khai",
+"opening_hours": "24/7"
+}
+},
+{
+"id": "n12813469650",
+"lat": 10.75291,
+"lon": 106.627049,
+"tags": {
+"name": "Salon Thanh Ngọc",
+"shop": "beauty",
+"addr:housenumber": "17",
+"addr:street": "Đường số 11"
+}
+},
+{
+"id": "n12813469662",
+"lat": 10.752928,
+"lon": 106.627129,
+"tags": {
+"name": "Beauty Salon Bảo Quyên",
+"shop": "beauty",
+"addr:housenumber": "15",
+"addr:street": "Đường số 11"
+}
+},
+{
+"id": "n13081590510",
+"lat": 10.845834,
+"lon": 106.66164,
+"tags": {
+"name": "LMoon Beauty | Chăm sóc da | Mụn | Béo | Gội đầu",
+"shop": "beauty",
+"beauty": "skin_care;cosmetics;hair_removal",
+"addr:housenumber": "88",
+"addr:street": "Đường Số 1",
+"addr:subdistrict": "Phường 16",
+"addr:district": "Gò Vấp",
+"opening_hours": "Mo-Su 09:00-20:00"
+}
+},
+{
+"id": "n13083811501",
+"lat": 10.788327,
+"lon": 106.69741,
+"tags": {
+"name": "Ollin Beauty",
+"shop": "beauty",
+"addr:housenumber": "132",
+"addr:street": "Nguyễn Văn Thủ"
+}
+},
+{
+"id": "n13083926201",
+"lat": 10.788383,
+"lon": 106.697343,
+"tags": {
+"name": "Ollin Beauty",
+"shop": "massage"
+}
+},
+{
+"id": "n13133029083",
+"lat": 10.786027,
+"lon": 106.677199,
+"tags": {
+"name": "Akiko Spa",
+"shop": "massage"
+}
+},
+{
+"id": "n13136131204",
+"lat": 10.752335,
+"lon": 106.638088,
+"tags": {
+"name": "Min Beauty & Spa",
+"shop": "beauty",
+"addr:housenumber": "995/124",
+"addr:street": "Hẻm 995 Hồng Bàng"
+}
+},
+{
+"id": "n13185248426",
+"lat": 10.772517,
+"lon": 106.699648,
+"tags": {
+"name": "Health Land Spa",
+"shop": "massage",
+"addr:housenumber": "123",
+"addr:street": "Lê Lợi",
+"addr:subdistrict": "Phường Bến Thành",
+"addr:district": "Quận 1",
+"addr:city": "Thành phố Hồ Chí Minh",
+"opening_hours": "Mo-Su 09:30-21:30"
+}
+},
+{
+"id": "n13286568330",
+"lat": 10.704345,
+"lon": 106.730128,
+"tags": {
+"name": "Indy Nail Eyelashes",
+"shop": "beauty",
+"beauty": "nails",
+"addr:housenumber": "190",
+"addr:street": "Phạm Hữu Lầu",
+"addr:subdistrict": "Phu My",
+"addr:district": "Quan 7",
+"addr:city": "Hồ Chí Minh",
+"opening_hours": "Mo-Su 09:00-21:00"
+}
+},
+{
+"id": "n13455430900",
+"lat": 10.803555,
+"lon": 106.663746,
+"tags": {
+"name": "Chuẩn Massage - Massage trị liệu Tân Bình",
+"shop": "massage",
+"addr:housenumber": "59",
+"addr:street": "Trần Quốc Hoàn",
+"addr:subdistrict": "Phường 04",
+"addr:district": "Quận Tân Bình",
+"addr:city": "Thành phố Hồ Chí Minh",
+"opening_hours": "Mo-Su 10:00-23:00"
+}
+},
+{
+"id": "n13475984938",
+"lat": 10.793685,
+"lon": 106.687243,
+"tags": {
+"name": "Heracare",
+"shop": "beauty",
+"addr:housenumber": "77",
+"addr:street": "Trần Khánh Dư"
+}
+},
+{
+"id": "n13531464667",
+"lat": 10.808987,
+"lon": 106.733361,
+"tags": {
+"name": "R&R Beauty Clinic",
+"shop": "beauty"
+}
+},
+{
+"id": "n13623567501",
+"lat": 10.751471,
+"lon": 106.664935,
+"tags": {
+"name": "Thảo Hút Mụn",
+"shop": "beauty",
+"beauty": "skin_care",
+"addr:housenumber": "89",
+"addr:street": "Đường An Điềm"
+}
+},
+{
+"id": "n13665226201",
+"lat": 10.78857,
+"lon": 106.719073,
+"tags": {
+"name": "Môc Huong",
+"shop": "massage"
+}
+},
+{
+"id": "n13674535847",
+"lat": 10.806031,
+"lon": 106.715708,
+"tags": {
+"name": "Massage Hoàng Kim",
+"shop": "massage",
+"addr:street": "Đường D5",
+"addr:subdistrict": "Phường 25",
+"addr:district": "Bình Thạnh",
+"addr:city": "Hồ Chí Minh (Saïgon)",
+"opening_hours": "24/7"
+}
+},
+{
+"id": "n13674651504",
+"lat": 10.805993,
+"lon": 106.715759,
+"tags": {
+"name": "Massage Hoàng Kim",
+"shop": "massage",
+"addr:street": "Đường D5",
+"opening_hours": "24/7"
+}
+},
+{
+"id": "n13674705301",
+"lat": 10.789103,
+"lon": 106.698958,
+"tags": {
+"name": "KIỀU TRINH - HIGH CLASS SERVICE",
+"shop": "massage",
+"addr:housenumber": "34",
+"addr:street": "Đinh Tiên Hoàng",
+"opening_hours": "24/7"
+}
+},
+{
+"id": "n13674705401",
+"lat": 10.714153,
+"lon": 106.739125,
+"tags": {
+"name": "Massage Phong Nguyệt Cát",
+"shop": "massage",
+"addr:housenumber": "37",
+"addr:street": "Đường Hoàng Quốc Việt",
+"opening_hours": "Mo-Su 10:00-03:00"
+}
+},
+{
+"id": "n13674714901",
+"lat": 10.762177,
+"lon": 106.68875,
+"tags": {
+"name": "Waxing House",
+"shop": "beauty",
+"addr:street": "Hẻm 87 Trần Ðình Xu",
+"opening_hours": "Mo-Sa 09:00-18:00"
+}
+},
+{
+"id": "n13679006901",
+"lat": 10.838698,
+"lon": 106.673918,
+"tags": {
+"name": "Massage Dubai Go Vap",
+"shop": "massage",
+"addr:street": "206 Đ. Nguyễn Văn Lượng",
+"opening_hours": "Mo-Su 10:00-04:00"
+}
+},
+{
+"id": "n13754786001",
+"lat": 10.765717,
+"lon": 106.686023,
+"tags": {
+"name": "Anna spa",
+"shop": "massage"
+}
+},
+{
+"id": "n13967075968",
+"lat": 10.755738,
+"lon": 106.678028,
+"tags": {
+"name": "Thái Hà",
+"shop": "beauty",
+"addr:housenumber": "007 Lô B",
+"addr:street": "Đường Phan Văn Trị"
+}
+},
+{
+"id": "n13995545047",
+"lat": 10.75326,
+"lon": 106.672942,
+"tags": {
+"name": "H Nail",
+"shop": "beauty",
+"beauty": "nails",
+"addr:housenumber": "950",
+"addr:street": "Đường Trần Hưng Ðạo"
+}
+},
+{
+"id": "n13995545075",
+"lat": 10.753395,
+"lon": 106.673448,
+"tags": {
+"name": "Zen",
+"shop": "beauty",
+"beauty": "spa",
+"addr:housenumber": "928-930",
+"addr:street": "Đường Trần Hưng Ðạo"
+}
+},
+{
+"id": "n14000621551",
+"lat": 10.754402,
+"lon": 106.67444,
+"tags": {
+"name": "J",
+"shop": "beauty",
+"beauty": "spa",
+"addr:housenumber": "141",
+"addr:street": "Đường Bùi Hữu Nghĩa"
+}
+},
+{
+"id": "n14021751788",
+"lat": 10.752662,
+"lon": 106.667563,
+"tags": {
+"name": "Vy",
+"shop": "beauty",
+"addr:housenumber": "150",
+"addr:street": "Đường Trần Hưng Ðạo"
+}
+},
+{
+"id": "n14023990382",
+"lat": 10.765576,
+"lon": 106.704859,
+"tags": {
+"name": "Sen Beauty",
+"shop": "beauty",
+"beauty": "nails"
+}
+},
+{
+"id": "n14053984083",
+"lat": 10.768398,
+"lon": 106.692694,
+"tags": {
+"name": "Riraku Spa",
+"shop": "massage",
+"addr:housenumber": "221",
+"addr:street": "Phạm Ngũ Lão",
+"addr:subdistrict": "Phường Phạm Ngũ Lão",
+"addr:district": "Quận 1",
+"addr:city": "Ho Chi Minh City",
+"opening_hours": "24/7"
+}
+},
+{
+"id": "n14056035934",
+"lat": 10.753247,
+"lon": 106.616585,
+"tags": {
+"name": "Gội đầu dưỡng sinh Cát Hỷ",
+"shop": "beauty"
+}
+},
+{
+"id": "n14063322181",
+"lat": 10.797301,
+"lon": 106.717334,
+"tags": {
+"name": "TriN Spa - Bình Thạnh",
+"shop": "beauty",
+"beauty": "hair_removal;spa;aesthetic;skin_care",
+"addr:housenumber": "602/43c",
+"addr:street": "Hẻm 602 Điện Biên Phủ",
+"addr:subdistrict": "Phường Thạnh Mỹ Tây",
+"addr:district": "Quận Bình Thạnh",
+"addr:city": "Thành phố Hồ Chí Minh",
+"opening_hours": "9:30-19:30"
+}
+},
+{
+"id": "n14106746792",
+"lat": 10.750915,
+"lon": 106.618393,
+"tags": {
+"name": "Hạnh Nail",
+"shop": "beauty",
+"addr:housenumber": "121",
+"addr:street": "Đường số 6",
+"addr:subdistrict": "Phường An Lạc",
+"addr:city": "Thành phố Hồ Chí Minh"
+}
+},
+{
+"id": "n14106746824",
+"lat": 10.749175,
+"lon": 106.618408,
+"tags": {
+"name": "Doong Spa Health & Beauty",
+"shop": "beauty",
+"beauty": "spa",
+"addr:housenumber": "49A",
+"addr:street": "Đường số 6",
+"addr:subdistrict": "An Lạc",
+"addr:district": "Phường An Lạc",
+"addr:city": "Thành phố Hồ Chí Minh",
+"opening_hours": "Mo-Su 10:00-22:00"
+}
+},
+{
+"id": "n14140442225",
+"lat": 10.755418,
+"lon": 106.614982,
+"tags": {
+"name": "Tiệm nail Na Na",
+"shop": "beauty",
+"beauty": "nails"
+}
+},
+{
+"id": "n14141713835",
+"lat": 10.75491,
+"lon": 106.614887,
+"tags": {
+"name": "Kim Spa",
+"shop": "beauty"
+}
+},
+{
+"id": "n14142694536",
+"lat": 10.754409,
+"lon": 106.614639,
+"tags": {
+"name": "New You - NUU Beauty",
+"shop": "beauty",
+"beauty": "eyelash;eyebrow"
+}
+},
+{
+"id": "n14161776758",
+"lat": 10.761779,
+"lon": 106.632527,
+"tags": {
+"name": "Phương Anh",
+"shop": "beauty",
+"addr:housenumber": "38",
+"addr:street": "Lũy Bán Bích",
+"addr:subdistrict": "Phường Tân Phú",
+"addr:city": "Thành phố Hồ Chí Minh"
+}
+},
+{
+"id": "n14166136979",
+"lat": 10.778149,
+"lon": 106.680793,
+"tags": {
+"name": "Massage Nguyệt Lâu Quận 10",
+"shop": "massage",
+"addr:housenumber": "275",
+"addr:street": "Cách Mạng Tháng Tám",
+"addr:subdistrict": "Phường 12",
+"addr:district": "Quận 10",
+"addr:city": "Thành phố Hồ Chí Minh",
+"opening_hours": "Mo-Su 10:00-22:00"
+}
+},
+{
+"id": "n14241582395",
+"lat": 10.74829,
+"lon": 106.619516,
+"tags": {
+"name": "Win",
+"shop": "beauty",
+"beauty": "nails",
+"addr:street": "Đường số 1",
+"addr:district": "Phường An Lạc",
+"addr:city": "Thành phố Hồ Chí Minh"
+}
+},
+{
+"id": "n14241623810",
+"lat": 10.747967,
+"lon": 106.619676,
+"tags": {
+"name": "1997",
+"shop": "beauty",
+"addr:housenumber": "22",
+"addr:street": "Đường số 1A",
+"opening_hours": "09:00-21:00"
+}
+},
+{
+"id": "n14241623820",
+"lat": 10.747987,
+"lon": 106.616586,
+"tags": {
+"name": "Kem Bơ's Nail",
+"shop": "beauty",
+"beauty": "nails",
+"addr:street": "Đường số 1A",
+"addr:district": "Phường An Lạc",
+"addr:city": "Thành phố Hồ Chí Minh",
+"opening_hours": "Mo-Su 09:00-10:00"
+}
+},
+{
+"id": "n14241623849",
+"lat": 10.748317,
+"lon": 106.617121,
+"tags": {
+"name": "Massage Tỷ Muội",
+"shop": "massage",
+"addr:housenumber": "157",
+"addr:street": "Đường số 1",
+"addr:district": "Phường An Lạc",
+"addr:city": "Thành phố Hồ Chí Minh"
+}
+},
+{
+"id": "n14241623856",
+"lat": 10.748321,
+"lon": 106.617595,
+"tags": {
+"name": "Uyên Beauty Spa",
+"shop": "beauty",
+"beauty": "spa",
+"addr:housenumber": "139",
+"addr:street": "Đường số 1",
+"addr:district": "Phường An Lạc",
+"addr:city": "Thành phố Hồ Chí Minh"
+}
+},
+{
+"id": "n14241623857",
+"lat": 10.748316,
+"lon": 106.61763,
+"tags": {
+"name": "Kim Thư Thư Nails",
+"shop": "beauty",
+"beauty": "nails",
+"addr:housenumber": "135",
+"addr:street": "Đường số 1",
+"addr:district": "Phường An Lạc",
+"addr:city": "Thành phố Hồ Chí Minh"
+}
+},
+{
+"id": "n14241623865",
+"lat": 10.748316,
+"lon": 106.618004,
+"tags": {
+"name": "Nailroom Như Ý",
+"shop": "beauty",
+"beauty": "nails",
+"addr:housenumber": "117",
+"addr:street": "Đường số 1",
+"addr:district": "Phường An Lạc",
+"addr:city": "Thành phố Hồ Chí Minh"
+}
+},
+{
+"id": "n14286545830",
+"lat": 10.795293,
+"lon": 106.690918,
+"tags": {
+"name": "Salon Thanh Nga",
+"shop": "beauty",
+"beauty": "hair",
+"addr:housenumber": "120",
+"addr:street": "Trần Khắc Chân",
+"addr:subdistrict": "Phường Tân Định",
+"addr:district": "Quận 1",
+"addr:city": "Thành phố Hồ Chí Minh"
+}
+},
+{
+"id": "n14286666523",
+"lat": 10.795319,
+"lon": 106.690914,
+"tags": {
+"name": "Viện Nối Mĩ Quốc Tế",
+"shop": "beauty",
+"addr:housenumber": "122",
+"addr:street": "Trần Khắc Chân"
+}
+},
+{
+"id": "n14288765994",
+"lat": 10.791426,
+"lon": 106.688107,
+"tags": {
+"name": "Cuong Hair Studio",
+"shop": "beauty",
+"amenity": "fast_food"
+}
+},
+{
+"id": "n14300146161",
+"lat": 10.795021,
+"lon": 106.690973,
+"tags": {
+"name": "lina Beauty Room",
+"shop": "beauty",
+"beauty": "nails;eyelash;eyebrow",
+"addr:housenumber": "108",
+"addr:street": "Trần Khắc Chân",
+"addr:subdistrict": "Phường Tân Định",
+"addr:district": "Quận 1",
+"addr:city": "Thành phố Hồ Chí Minh"
+}
+},
+{
+"id": "n14300206336",
+"lat": 10.794609,
+"lon": 106.690858,
+"tags": {
+"name": "Đào Nails",
+"shop": "beauty",
+"beauty": "nails;eyelash",
+"addr:housenumber": "81",
+"addr:street": "Trần Khắc Chân",
+"addr:subdistrict": "Phường Tân Định",
+"addr:district": "Quận 1",
+"addr:city": "Thành phố Hồ Chí Minh"
+}
+},
+{
+"id": "n14303715276",
+"lat": 10.7549,
+"lon": 106.618594,
+"tags": {
+"name": "Lachin Éco",
+"shop": "beauty",
+"beauty": "nails;spa;hair",
+"opening_hours": "09:00-20:30"
+}
+},
+{
+"id": "n14303715286",
+"lat": 10.755337,
+"lon": 106.618581,
+"tags": {
+"name": "Ngân",
+"shop": "beauty",
+"beauty": "nails;hair"
+}
+},
+{
+"id": "n14317505301",
+"lat": 10.79286,
+"lon": 106.688136,
+"tags": {
+"name": "élan Beauty Lab",
+"shop": "beauty",
+"addr:housenumber": "30A",
+"addr:street": "Ðặng Tất",
+"addr:subdistrict": "Phường Tân Định",
+"addr:district": "Quận 1",
+"addr:city": "Thành phố Hồ Chí Minh",
+"opening_hours": "Mo-Su 09:00-20:30"
+}
+},
+{
+"id": "n14318580543",
+"lat": 10.737118,
+"lon": 106.655165,
+"tags": {
+"name": "Như Anh Beauty",
+"shop": "beauty",
+"beauty": "nails;eyelash",
+"addr:housenumber": "266",
+"addr:street": "Bùi Minh Trực",
+"addr:subdistrict": "Phường Bình Đông",
+"addr:city": "Thành phố Hồ Chí Minh",
+"opening_hours": "Mo-Su 09:00-21:00"
+}
+},
+{
+"id": "n14318580551",
+"lat": 10.736792,
+"lon": 106.654354,
+"tags": {
+"name": "Cham Nails",
+"shop": "beauty",
+"beauty": "nails",
+"addr:housenumber": "2B-2",
+"addr:street": "Bùi Minh Trực",
+"addr:subdistrict": "Phường Bình Đông",
+"addr:city": "Thành phố Hồ Chí Minh"
+}
+},
+{
+"id": "n14329463101",
+"lat": 10.755099,
+"lon": 106.619347,
+"tags": {
+"name": "Beauty Salon Hoài Trang",
+"shop": "beauty",
+"beauty": "hair;cosmetics;nails",
+"addr:housenumber": "116",
+"addr:street": "Đường số 6",
+"addr:subdistrict": "Phường An Lạc",
+"addr:city": "Thành phố Hồ Chí Minh"
+}
+},
+{
+"id": "n14329463106",
+"lat": 10.75575,
+"lon": 106.619398,
+"tags": {
+"name": "Spa Quyền Trang",
+"shop": "beauty"
+}
+},
+{
+"id": "n14329463109",
+"lat": 10.755888,
+"lon": 106.619404,
+"tags": {
+"name": "Facet",
+"shop": "beauty",
+"addr:housenumber": "148",
+"addr:street": "Đường số 6",
+"addr:subdistrict": "Phường An Lạc",
+"addr:city": "Thành phố Hồ Chí Minh"
+}
+},
+{
+"id": "n14329463110",
+"lat": 10.755934,
+"lon": 106.619407,
+"tags": {
+"name": "Thích Nails",
+"shop": "beauty",
+"beauty": "nails",
+"addr:housenumber": "150",
+"addr:street": "Đường số 6",
+"addr:subdistrict": "Phường An Lạc",
+"addr:city": "Thành phố Hồ Chí Minh"
+}
+},
+{
+"id": "n14330710466",
+"lat": 10.730527,
+"lon": 106.708044,
+"tags": {
+"name": "Sora Skin Lounge",
+"shop": "massage",
+"addr:housenumber": "34",
+"addr:street": "Đường Hưng Phước 3",
+"addr:subdistrict": "Tân Hưng",
+"addr:district": "Quận 7",
+"addr:city": "Thành phố Hồ Chí Minh",
+"opening_hours": "Tu-Su 10:00-20:00"
+}
+},
+{
+"id": "n14340524435",
+"lat": 10.764992,
+"lon": 106.691316,
+"tags": {
+"name": "Anne Nail & Spa",
+"shop": "beauty",
+"beauty": "nails",
+"addr:housenumber": "36",
+"addr:street": "Hẻm 102 Cống Quỳnh"
+}
+},
+{
+"id": "n14342002870",
+"lat": 10.752839,
+"lon": 106.672511,
+"tags": {
+"name": "Lysskin",
+"shop": "beauty",
+"addr:housenumber": "1155",
+"addr:street": "Đường Trần Hưng Ðạo"
+}
+},
+{
+"id": "n14342002873",
+"lat": 10.752812,
+"lon": 106.672409,
+"tags": {
+"name": "Thiên Vượng",
+"shop": "beauty",
+"addr:housenumber": "1159B",
+"addr:street": "Đường Trần Hưng Ðạo"
+}
+},
+{
+"id": "n14342002874",
+"lat": 10.752803,
+"lon": 106.672375,
+"tags": {
+"name": "Thanh Long",
+"shop": "massage",
+"addr:housenumber": "1161",
+"addr:street": "Đường Trần Hưng Ðạo"
+}
+},
+{
+"id": "n14363984536",
+"lat": 10.748549,
+"lon": 106.618181,
+"tags": {
+"name": "KiO Nails",
+"shop": "beauty",
+"beauty": "nails",
+"addr:street": "Đường số 1",
+"addr:subdistrict": "Phường An Lạc",
+"addr:city": "Thành phố Hồ Chí Minh"
+}
+},
+{
+"id": "n14363984544",
+"lat": 10.748545,
+"lon": 106.61788,
+"tags": {
+"name": "Roséa Crystal Beauté",
+"shop": "beauty",
+"addr:housenumber": "102",
+"addr:street": "Đường số 1",
+"addr:subdistrict": "Phường An Lạc",
+"addr:city": "Thành phố Hồ Chí Minh"
+}
+},
+{
+"id": "n14363984559",
+"lat": 10.748565,
+"lon": 106.616888,
+"tags": {
+"name": "Go On",
+"shop": "beauty",
+"addr:housenumber": "150",
+"addr:street": "Đường số 1",
+"addr:subdistrict": "Phường An Lạc",
+"addr:city": "Thành phố Hồ Chí Minh"
+}
+},
+{
+"id": "n2158751788",
+"lat": 10.798857,
+"lon": 106.6878,
+"tags": {
+"name": "Chăm Sóc Da Ngọc Ánh",
+"shop": "beauty",
+"addr:street": "Hoa Phượng"
+}
+},
+{
+"id": "n2350423020",
+"lat": 10.731893,
+"lon": 106.710014,
+"tags": {
+"name": "Apple Pen",
+"shop": "massage"
+}
+},
+{
+"id": "n2371478792",
+"lat": 10.73371,
+"lon": 106.70931,
+"tags": {
+"name": "Kiwi Spa",
+"shop": "massage",
+"addr:housenumber": "25",
+"addr:street": "Hưng Gia 5"
+}
+},
+{
+"id": "n2616958813",
+"lat": 10.773202,
+"lon": 106.695154,
+"tags": {
+"name": "Tiệm Massage Hán Cung",
+"shop": "massage",
+"massage": "thai"
+}
+},
+{
+"id": "n2616958817",
+"lat": 10.773121,
+"lon": 106.695244,
+"tags": {
+"name": "Tiệm Massage Lê Duyên 4",
+"shop": "massage",
+"massage": "thai"
+}
+},
+{
+"id": "n4266835696",
+"lat": 10.776961,
+"lon": 106.705347,
+"tags": {
+"name": "Sen Spa",
+"shop": "beauty",
+"addr:housenumber": "26-28",
+"addr:street": "Đông Du"
+}
+},
+{
+"id": "n4296387389",
+"lat": 10.779484,
+"lon": 106.682234,
+"tags": {
+"name": "Cửa Hàng Beauty Salon Belas",
+"shop": "beauty",
+"addr:housenumber": "235",
+"addr:street": "Lý Chính Thắng",
+"opening_hours": "Mo-Su 08:00-20:00"
+}
+},
+{
+"id": "n4383587390",
+"lat": 10.76767,
+"lon": 106.694413,
+"tags": {
+"name": "Spa Niki Trinh",
+"shop": "beauty",
+"opening_hours": "Mo-Su 09:00-00:00"
+}
+},
+{
+"id": "n4432953289",
+"lat": 10.77381,
+"lon": 106.6969,
+"tags": {
+"name": "Phòng Xông Hơi & Spa Jolene",
+"name:vi": "Joleni Spa",
+"leisure": "sauna",
+"addr:housenumber": "193",
+"addr:street": "Lý Tự Trọng",
+"opening_hours": "Mo-Su 10:00-23:00"
+}
+},
+{
+"id": "n4471596686",
+"lat": 10.78187,
+"lon": 106.704743,
+"tags": {
+"name": "Tiệm Spa Miu Miu",
+"shop": "beauty"
+}
+},
+{
+"id": "n4540504594",
+"lat": 10.814255,
+"lon": 106.669366,
+"tags": {
+"name": "Trung Tâm Sắc Đẹp KangNam Boutique",
+"shop": "beauty",
+"addr:housenumber": "122/21",
+"addr:street": "Bạch Đằng",
+"opening_hours": "Mo-Su 09:00-19:00"
+}
+},
+{
+"id": "n4571495998",
+"lat": 10.781235,
+"lon": 106.705434,
+"tags": {
+"name": "Tiệm Spa Miu Miu 3",
+"shop": "massage"
+}
+},
+{
+"id": "n4571507995",
+"lat": 10.772178,
+"lon": 106.703999,
+"tags": {
+"name": "Tiệm Spa Miu Miu 4",
+"shop": "massage"
+}
+},
+{
+"id": "n4571530492",
+"lat": 10.781474,
+"lon": 106.705273,
+"tags": {
+"name": "Tiệm Spa Miu Miu 2",
+"shop": "massage",
+"addr:housenumber": "4",
+"addr:street": "Chu Mạnh Trinh"
+}
+},
+{
+"id": "n4596262797",
+"lat": 10.733913,
+"lon": 106.708652,
+"tags": {
+"name": "Massage Ruby 1",
+"shop": "massage",
+"addr:housenumber": "64",
+"addr:street": "Đường Số 2",
+"opening_hours": "Mo-Su 09:00-23:00"
+}
+},
+{
+"id": "n4603177146",
+"lat": 10.764837,
+"lon": 106.691573,
+"tags": {
+"name": "Massage Ngọc Anh",
+"shop": "massage"
+}
+},
+{
+"id": "n4694584391",
+"lat": 10.798457,
+"lon": 106.678367,
+"tags": {
+"name": "Cửa Hàng Spa Đan Thi",
+"name:en": "DAN THI SPA",
+"shop": "beauty",
+"addr:housenumber": "73/12",
+"addr:street": "Hoàng Văn Thụ",
+"opening_hours": "Mo-Su 08:00-20:00"
+}
+},
+{
+"id": "n4777146124",
+"lat": 10.813297,
+"lon": 106.667178,
+"tags": {
+"name": "Thẩm Mỹ Viện Lam",
+"shop": "beauty"
+}
+},
+{
+"id": "n4796035821",
+"lat": 10.83844,
+"lon": 106.677807,
+"tags": {
+"name": "Trị Mụn Dr.Huệ",
+"name:vi": "Trị mụn Dr Huệ",
+"shop": "beauty",
+"addr:street": "Đường Nguyễn Văn Lượng"
+}
+},
+{
+"id": "n4832978197",
+"lat": 10.756838,
+"lon": 106.625388,
+"tags": {
+"name": "Mỹ Phẩm Tóc Thu Nhung",
+"shop": "beauty",
+"addr:housenumber": "260/21F",
+"addr:street": "Bà Hom",
+"addr:subdistrict": "13",
+"addr:district": "Quan 6",
+"addr:city": "Phường 13"
+}
+},
+{
+"id": "n4869085330",
+"lat": 10.726236,
+"lon": 106.709407,
+"tags": {
+"name": "Cơ Sở Mát Xa 137",
+"shop": "massage",
+"addr:housenumber": "B2-04",
+"addr:street": "Hà Huy Tập",
+"addr:subdistrict": "Phường Tân Phong",
+"addr:district": "7",
+"addr:city": "Hồ Chí Minh"
+}
+},
+{
+"id": "n4886976307",
+"lat": 10.727269,
+"lon": 106.70934,
+"tags": {
+"name": "Tiệm Massage & Spa Happy",
+"shop": "massage",
+"addr:housenumber": "315",
+"addr:street": "Phạm Thái Bường",
+"addr:subdistrict": "Phường Tân Phong",
+"addr:district": "7",
+"addr:city": "Hồ Chí Minh"
+}
+},
+{
+"id": "n5123512130",
+"lat": 10.772415,
+"lon": 106.695774,
+"tags": {
+"name": "Tiệm Massage Duyên Dáng 3",
+"shop": "massage"
+}
+},
+{
+"id": "n5160350121",
+"lat": 10.774754,
+"lon": 106.704453,
+"tags": {
+"name": "Tiệm Spa Blue Moon",
+"shop": "massage"
+}
+},
+{
+"id": "n5248388021",
+"lat": 10.791642,
+"lon": 106.692211,
+"tags": {
+"name": "Hớt tóc Quỳnh Anh",
+"shop": "massage"
+}
+},
+{
+"id": "n5261556125",
+"lat": 10.791794,
+"lon": 106.693428,
+"tags": {
+"name": "Cut tóc Hoàng Gia",
+"shop": "massage"
+}
+},
+{
+"id": "n5334914025",
+"lat": 10.766328,
+"lon": 106.688616,
+"tags": {
+"name": "Mát Xa Người Mù",
+"shop": "massage"
+}
+},
+{
+"id": "n5349359430",
+"lat": 10.788311,
+"lon": 106.658202,
+"tags": {
+"name": "Salon Nguyễn Mi",
+"shop": "beauty",
+"beauty": "nails"
+}
+},
+{
+"id": "n5350664356",
+"lat": 10.799971,
+"lon": 106.696198,
+"tags": {
+"name": "Cửa Hàng Mỹ Phẩm TheFaceShop",
+"shop": "beauty"
+}
+},
+{
+"id": "n5587368021",
+"lat": 10.726348,
+"lon": 106.711275,
+"tags": {
+"name": "Tiệm Spa Mifuki",
+"shop": "massage"
+}
+},
+{
+"id": "n5653940921",
+"lat": 10.855744,
+"lon": 106.765966,
+"tags": {
+"name": "Viện Thẩm Mỹ Uy Tín YB Spa Thủ Đức",
+"shop": "beauty",
+"addr:housenumber": "18",
+"addr:street": "Số 4",
+"opening_hours": "Mo-Su 09:30-18:30"
+}
+},
+{
+"id": "n5653940922",
+"lat": 10.815459,
+"lon": 106.678188,
+"tags": {
+"name": "Viện Thẩm Mỹ Uy Tín YB Spa Gò Vấp",
+"name:en": "YB Spa Go Vap",
+"shop": "beauty",
+"addr:housenumber": "689/28",
+"addr:street": "Nguyễn Kiệm",
+"opening_hours": "Mo-Su 08:30-18:30"
+}
+},
+{
+"id": "n5660924522",
+"lat": 10.776904,
+"lon": 106.704647,
+"tags": {
+"name": "Cửa Hàng Saigon Heritage Spa",
+"shop": "beauty"
+}
+},
+{
+"id": "n5808285953",
+"lat": 10.790329,
+"lon": 106.699087,
+"tags": {
+"name": "Cửa Hàng Chăm Sóc Sắc Đẹp EVA",
+"shop": "beauty",
+"addr:housenumber": "10",
+"addr:street": "Phan Kế Bính",
+"opening_hours": "Mo-Su 09:00-20:00"
+}
+},
+{
+"id": "n6172368886",
+"lat": 10.773713,
+"lon": 106.697313,
+"tags": {
+"name": "Quán Liberty Massage 45",
+"shop": "massage",
+"addr:housenumber": "45",
+"addr:street": "Thủ Khoa Huân"
+}
+},
+{
+"id": "n6180507817",
+"lat": 10.789421,
+"lon": 106.664417,
+"tags": {
+"name": "Cửa Hàng Làm Móng",
+"shop": "beauty",
+"beauty": "nails"
+}
+},
+{
+"id": "n6296989886",
+"lat": 10.772158,
+"lon": 106.695105,
+"tags": {
+"name": "Beauty Salon Lộc Thiên Ý",
+"shop": "beauty"
+}
+},
+{
+"id": "n6302867685",
+"lat": 10.772553,
+"lon": 106.695084,
+"tags": {
+"name": "Tiệm Massge & Spa May",
+"shop": "massage"
+}
+},
+{
+"id": "n6315672854",
+"lat": 10.772227,
+"lon": 106.691656,
+"tags": {
+"name": "Massage FYou",
+"shop": "massage",
+"addr:housenumber": "81-83",
+"addr:street": "Cách Mạng Tháng Tám",
+"opening_hours": "24/7"
+}
+},
+{
+"id": "n6315685103",
+"lat": 10.779021,
+"lon": 106.69073,
+"tags": {
+"name": "Cửa Hàng Shynh House Premium",
+"name:en": "Shynh House Beauty",
+"shop": "beauty"
+}
+},
+{
+"id": "n6315688588",
+"lat": 10.768901,
+"lon": 106.698559,
+"tags": {
+"name": "루나 이발소",
+"name:en": "LUNA BARBERSHOP",
+"shop": "massage",
+"addr:housenumber": "130",
+"addr:street": "Calmette",
+"addr:subdistrict": "Phường Nguyễn Thái Bình",
+"addr:district": "Quận 1",
+"addr:city": "TP. Hồ Chí Minh",
+"opening_hours": "Mo-Su 08:00-22:00"
+}
+},
+{
+"id": "n6388617478",
+"lat": 10.755943,
+"lon": 106.69303,
+"tags": {
+"name": "Thảo Mộc Beauty",
+"shop": "beauty"
+}
+},
+{
+"id": "n6388617992",
+"lat": 10.75508,
+"lon": 106.692002,
+"tags": {
+"name": "Trung Tâm Thẩm Mỹ Viện Kelly Beauty;Cà Phê Morning",
+"shop": "beauty",
+"amenity": "cafe"
+}
+},
+{
+"id": "n6592907188",
+"lat": 10.795996,
+"lon": 106.686165,
+"tags": {
+"name": "Cửa Hàng Sophie Beauty International",
+"shop": "beauty",
+"addr:housenumber": "253a",
+"addr:street": "Hoàng Sa",
+"addr:city": "Ho Chi Minh City",
+"opening_hours": "Mo-Su 09:00-18:00"
+}
+},
+{
+"id": "n6902284385",
+"lat": 10.73063,
+"lon": 106.707269,
+"tags": {
+"name": "Hương Sen Spa",
+"shop": "massage",
+"addr:housenumber": "34",
+"addr:street": "Nội Khu Hưng Phước 3",
+"opening_hours": "Mo-Su 08:00-20:00"
+}
+},
+{
+"id": "n6909743953",
+"lat": 10.783856,
+"lon": 106.698223,
+"tags": {
+"name": "Trung Tâm Chăm Sóc Sắc Đẹp Sen Trang",
+"shop": "beauty",
+"addr:housenumber": "7/2",
+"addr:street": "Phùng Khắc Khoan"
+}
+},
+{
+"id": "n6938649483",
+"lat": 10.768303,
+"lon": 106.651258,
+"tags": {
+"name": "Thương Hiệu Mỹ Phẩm Nhật Bản Oshirma Re-X",
+"shop": "beauty",
+"beauty": "cosmetics",
+"addr:housenumber": "19/10",
+"addr:street": "Đường Bình Thới",
+"addr:subdistrict": "11",
+"addr:district": "11",
+"addr:city": "Ho Chi Minh City",
+"opening_hours": "Mo-Sa 08:30-17:30"
+}
+},
+{
+"id": "n7088117085",
+"lat": 10.809231,
+"lon": 106.666818,
+"tags": {
+"name": "TIệm Làm Móng Si",
+"shop": "beauty",
+"beauty": "nails"
+}
+},
+{
+"id": "n7279413385",
+"lat": 10.786428,
+"lon": 106.691914,
+"tags": {
+"name": "Cửa Hàng Chăm Sóc Sắc Đẹp YKC Wellness Spa & Hair Studio",
+"shop": "massage",
+"addr:housenumber": "66/2",
+"addr:street": "Phạm Ngọc Thạch",
+"opening_hours": "Mo-Su 09:00-23:30"
+}
+},
+{
+"id": "n7502711472",
+"lat": 10.771872,
+"lon": 106.697125,
+"tags": {
+"name": "Cửa hàng Mỹ Phẩm & Spa L'Opéra",
+"shop": "beauty",
+"beauty": "spa",
+"addr:street": "Nguyễn An Ninh"
+}
+},
+{
+"id": "n7502711474",
+"lat": 10.771839,
+"lon": 106.697092,
+"tags": {
+"name": "Kim Spa",
+"shop": "beauty",
+"beauty": "spa",
+"addr:housenumber": "25",
+"addr:street": "Nguyễn An Ninh"
+}
+},
+{
+"id": "n7502727774",
+"lat": 10.77356,
+"lon": 106.69918,
+"tags": {
+"name": "Hậu Nails & Spa",
+"shop": "massage"
+}
+},
+{
+"id": "n8038997286",
+"lat": 10.825241,
+"lon": 106.719208,
+"tags": {
+"name": "Makup Anh Tú",
+"shop": "beauty"
+}
+},
+{
+"id": "n8100983483",
+"lat": 10.747153,
+"lon": 106.682259,
+"tags": {
+"name": "Thẩm Mỹ H2 Nail",
+"shop": "beauty",
+"beauty": "nails"
+}
+},
+{
+"id": "n8137717663",
+"lat": 10.771499,
+"lon": 106.686353,
+"tags": {
+"name": "Gội Đầu Thư Giãn Mộc",
+"shop": "massage",
+"addr:housenumber": "42/22",
+"addr:street": "Đường Nguyễn Thượng Hiền",
+"addr:subdistrict": "Phường 5",
+"addr:district": "Quận 3",
+"addr:city": "Thành phố Hồ Chí Minh",
+"opening_hours": "Mo-Su 09:00-21:00"
+}
+},
+{
+"id": "n947763347",
+"lat": 10.763695,
+"lon": 106.705185,
+"tags": {
+"name": "Cửa Hàng Beauty Salon Nhật",
+"shop": "beauty"
+}
+},
+{
+"id": "n9584824726",
+"lat": 10.784239,
+"lon": 106.694076,
+"tags": {
+"name": "Trung Tâm Chăm Sóc Sắc Đẹp Golden Lotus Spa",
+"shop": "massage"
+}
+},
+{
+"id": "n9584833418",
+"lat": 10.777016,
+"lon": 106.69048,
+"tags": {
+"name": "Cửa Hàng Lavender By Chang Sài Gòn",
+"shop": "beauty"
+}
+},
+{
+"id": "n9584932184",
+"lat": 10.778028,
+"lon": 106.701977,
+"tags": {
+"name": "Cửa Hàng Innisfree Vincom",
+"name:en": "Innisfree Vincom Center Dong Khoi",
+"shop": "beauty"
+}
+},
+{
+"id": "n9585001090",
+"lat": 10.802221,
+"lon": 106.647137,
+"tags": {
+"name": "Massage Minh Tâm",
+"shop": "massage"
+}
+},
+{
+"id": "n9585983491",
+"lat": 10.802662,
+"lon": 106.738191,
+"tags": {
+"name": "Tiệm Massage & Spa Mandarin",
+"shop": "massage"
+}
+},
+{
+"id": "n9586251035",
+"lat": 10.803707,
+"lon": 106.733362,
+"tags": {
+"name": "Mộc Hương Spa Thảo Điền",
+"shop": "beauty"
+}
+},
+{
+"id": "n9665654052",
+"lat": 10.765003,
+"lon": 106.685567,
+"tags": {
+"name": "Thẩm Mỹ Viện Thanh Nhi",
+"shop": "beauty"
+}
+},
+{
+"id": "n9708524315",
+"lat": 10.796851,
+"lon": 106.732266,
+"tags": {
+"name": "Massage Thiên Đường Gold",
+"shop": "massage",
+"addr:housenumber": "6B",
+"addr:street": "Đường số 2",
+"addr:subdistrict": "Binh An",
+"addr:district": "Quan 2",
+"addr:city": "Thành phố Hồ Chí Minh",
+"opening_hours": "Mo-Su 10:00-03:00"
+}
+},
+{
+"id": "n9832482117",
+"lat": 10.792915,
+"lon": 106.689253,
+"tags": {
+"name": "Thé SixtyNine Zone",
+"name:en": "the 69 sauna zone",
+"leisure": "sauna",
+"addr:housenumber": "5",
+"addr:street": "Đường Ðặng Tất"
+}
+},
+{
+"id": "w1042824174",
+"lat": 10.805559,
+"lon": 106.664855,
+"tags": {
+"name": "Massage Mimoda Sân Bay",
+"shop": "massage",
+"addr:housenumber": "52Đ",
+"addr:street": "Phan Đình Giót",
+"addr:subdistrict": "Phường 2",
+"addr:district": "Tân Bình",
+"addr:city": "Thành phố Hồ Chí Minh"
+}
+},
+{
+"id": "w1042877528",
+"lat": 10.792826,
+"lon": 106.690578,
+"tags": {
+"name": "Viện Thẩm Mỹ Belas",
+"shop": "beauty"
+}
+},
+{
+"id": "w1449964782",
+"lat": 10.757751,
+"lon": 106.662143,
+"tags": {
+"name": "Orlaine Paris",
+"shop": "beauty",
+"addr:housenumber": "7A",
+"addr:street": "Đường Tăng Bạt Hổ"
+}
+},
+{
+"id": "w1456717192",
+"lat": 10.755806,
+"lon": 106.668745,
+"tags": {
+"name": "The Great Clinic",
+"shop": "beauty",
+"beauty": "skin_care",
+"addr:housenumber": "58",
+"addr:street": "Đường Phước Hưng"
+}
+},
+{
+"id": "w1457214641",
+"lat": 10.753856,
+"lon": 106.664907,
+"tags": {
+"name": "Golde Silk",
+"shop": "beauty",
+"beauty": "spa",
+"addr:housenumber": "646O",
+"addr:street": "Đường Nguyễn Trãi"
+}
+},
+{
+"id": "w1457214642",
+"lat": 10.753863,
+"lon": 106.664943,
+"tags": {
+"name": "Yora",
+"shop": "beauty",
+"beauty": "nails",
+"addr:housenumber": "646N",
+"addr:street": "Đường Nguyễn Trãi"
+}
+},
+{
+"id": "w1463054035",
+"lat": 10.755513,
+"lon": 106.681065,
+"tags": {
+"name": "Hàn Quốc 3D",
+"shop": "beauty",
+"addr:housenumber": "540",
+"addr:street": "Đường Trần Hưng Ðạo"
+}
+},
+{
+"id": "w1463054058",
+"lat": 10.757461,
+"lon": 106.679701,
+"tags": {
+"name": "Bliss",
+"shop": "beauty",
+"beauty": "skin_care",
+"addr:housenumber": "129/9",
+"addr:street": "Đường Nguyễn Trãi"
+}
+},
+{
+"id": "w1463054076",
+"lat": 10.757794,
+"lon": 106.680028,
+"tags": {
+"name": "Baas+",
+"shop": "beauty",
+"beauty": "skin_care",
+"addr:housenumber": "119",
+"addr:street": "Đường Nguyễn Trãi"
+}
+},
+{
+"id": "w1463633180",
+"lat": 10.757782,
+"lon": 106.680672,
+"tags": {
+"name": "MOI Beauty",
+"shop": "beauty",
+"addr:housenumber": "157-159",
+"addr:street": "Đường Trần Bình Trọng"
+}
+},
+{
+"id": "w1463889071",
+"lat": 10.755891,
+"lon": 106.679113,
+"tags": {
+"name": "An Nhiên Spa",
+"shop": "beauty",
+"beauty": "spa",
+"addr:housenumber": "58/2/3",
+"addr:street": "Đường Lê Hồng Phong"
+}
+},
+{
+"id": "w1465244515",
+"lat": 10.754288,
+"lon": 106.667075,
+"tags": {
+"name": "Bàng Kiều",
+"shop": "beauty",
+"beauty": "spa",
+"addr:housenumber": "632A",
+"addr:street": "Đường Nguyễn Trãi"
+}
+},
+{
+"id": "w1465244522",
+"lat": 10.754337,
+"lon": 106.667327,
+"tags": {
+"name": "Spa Núp Hẻm",
+"shop": "beauty",
+"beauty": "spa",
+"addr:housenumber": "626",
+"addr:street": "Đường Nguyễn Trãi"
+}
+},
+{
+"id": "w1469350421",
+"lat": 10.753711,
+"lon": 106.666045,
+"tags": {
+"name": "Misa",
+"shop": "beauty",
+"beauty": "nails",
+"addr:housenumber": "615",
+"addr:street": "Đường Nguyễn Trãi"
+}
+},
+{
+"id": "w1470052588",
+"lat": 10.7541,
+"lon": 106.667714,
+"tags": {
+"name": "Nam Tiến",
+"shop": "beauty",
+"beauty": "cosmetics",
+"addr:housenumber": "561A",
+"addr:street": "Đường Nguyễn Trãi"
+}
+},
+{
+"id": "w1473510531",
+"lat": 10.754364,
+"lon": 106.669215,
+"tags": {
+"name": "May Beauty",
+"shop": "beauty",
+"beauty": "cosmetics",
+"addr:housenumber": "511",
+"addr:street": "Đường Nguyễn Trãi"
+}
+},
+{
+"id": "w1473780211",
+"lat": 10.753032,
+"lon": 106.650839,
+"tags": {
+"name": "Maryderma Beauty",
+"shop": "beauty",
+"beauty": "cosmetics",
+"addr:housenumber": "62",
+"addr:street": "Đường Nguyễn Thị Nhỏ"
+}
+},
+{
+"id": "w1474060805",
+"lat": 10.753103,
+"lon": 106.652066,
+"tags": {
+"name": "Mai Spa",
+"shop": "beauty",
+"beauty": "spa",
+"addr:housenumber": "1026",
+"addr:street": "Đường Nguyễn Trãi"
+}
+},
+{
+"id": "w1474137780",
+"lat": 10.752925,
+"lon": 106.65322,
+"tags": {
+"name": "T.2004",
+"shop": "beauty",
+"beauty": "nails",
+"addr:housenumber": "974",
+"addr:street": "Đường Nguyễn Trãi"
+}
+},
+{
+"id": "w1486116584",
+"lat": 10.751498,
+"lon": 106.665539,
+"tags": {
+"name": "Kate",
+"shop": "beauty",
+"beauty": "nails",
+"addr:housenumber": "55",
+"addr:street": "Đường An Điềm"
+}
+},
+{
+"id": "w1486116589",
+"lat": 10.751458,
+"lon": 106.665239,
+"tags": {
+"name": "08 03",
+"shop": "beauty",
+"beauty": "cosmetics;nails",
+"addr:housenumber": "73",
+"addr:street": "Đường An Điềm"
+}
+},
+{
+"id": "w1486116592",
+"lat": 10.751443,
+"lon": 106.665128,
+"tags": {
+"name": "Bon Spa",
+"shop": "beauty",
+"beauty": "spa",
+"addr:housenumber": "79",
+"addr:street": "Đường An Điềm"
+}
+},
+{
+"id": "w1487437468",
+"lat": 10.752999,
+"lon": 106.655375,
+"tags": {
+"name": "Duyên Ngọc",
+"shop": "massage",
+"addr:housenumber": "916",
+"addr:street": "Đường Nguyễn Trãi"
+}
+},
+{
+"id": "w1487718861",
+"lat": 10.753072,
+"lon": 106.656791,
+"tags": {
+"name": "Thảo Ly",
+"shop": "beauty",
+"addr:housenumber": "856",
+"addr:street": "Đường Nguyễn Trãi"
+}
+},
+{
+"id": "w1487718874",
+"lat": 10.753071,
+"lon": 106.656753,
+"tags": {
+"name": "Uyên Trinh",
+"shop": "beauty",
+"addr:housenumber": "858",
+"addr:street": "Đường Nguyễn Trãi"
+}
+},
+{
+"id": "w1489501126",
+"lat": 10.768443,
+"lon": 106.693096,
+"tags": {
+"name": "Mia Spa",
+"shop": "beauty",
+"addr:housenumber": "203",
+"addr:street": "Phạm Ngũ Lão",
+"addr:subdistrict": "Phường Bến Thành",
+"addr:district": "Quận 1",
+"addr:city": "Ho Chi Minh City"
+}
+},
+{
+"id": "w1492074389",
+"lat": 10.753147,
+"lon": 106.659138,
+"tags": {
+"name": "ST HomeSpa",
+"shop": "beauty",
+"beauty": "spa",
+"addr:housenumber": "778",
+"addr:street": "Đường Nguyễn Trãi"
+}
+},
+{
+"id": "w1497591450",
+"lat": 10.752599,
+"lon": 106.661286,
+"tags": {
+"name": "Hân Nail",
+"shop": "beauty",
+"beauty": "nails",
+"addr:housenumber": "125",
+"addr:street": "Đường Triệu Quang Phục"
+}
+},
+{
+"id": "w1499809209",
+"lat": 10.753407,
+"lon": 106.662658,
+"tags": {
+"name": "Nương Beauty",
+"shop": "beauty",
+"beauty": "skin_care",
+"addr:housenumber": "658",
+"addr:street": "Đường Nguyễn Trãi"
+}
+},
+{
+"id": "w1524313558",
+"lat": 10.753054,
+"lon": 106.671284,
+"tags": {
+"name": "Tròn Beauty",
+"shop": "beauty",
+"addr:housenumber": "24",
+"addr:street": "Đường Trần Hưng Đạo"
+}
+},
+{
+"id": "w1524793385",
+"lat": 10.752907,
+"lon": 106.669669,
+"tags": {
+"name": "Kelly Pang",
+"shop": "beauty",
+"addr:housenumber": "110",
+"addr:street": "Đường Trần Hưng Ðạo"
+}
+},
+{
+"id": "w1524793408",
+"lat": 10.752966,
+"lon": 106.670085,
+"tags": {
+"name": "Lê My 68",
+"shop": "beauty",
+"addr:housenumber": "88",
+"addr:street": "Đường Trần Hưng Ðạo"
+}
+},
+{
+"id": "w1525476286",
+"lat": 10.75521,
+"lon": 106.676709,
+"tags": {
+"name": "Mị",
+"shop": "beauty",
+"addr:housenumber": "72",
+"addr:street": "Đường Huỳnh Mẫn Đạt"
+}
+},
+{
+"id": "w1527620023",
+"lat": 10.755489,
+"lon": 106.676707,
+"tags": {
+"name": "Moss Beauty Clinic",
+"shop": "beauty",
+"addr:housenumber": "408",
+"addr:street": "Đường Phan Văn Trị"
+}
+},
+{
+"id": "w1527759211",
+"lat": 10.756224,
+"lon": 106.676565,
+"tags": {
+"name": "Sophie",
+"shop": "beauty",
+"addr:housenumber": "104/5",
+"addr:street": "Đường Huỳnh Mẫn Đạt"
+}
+},
+{
+"id": "w1528379273",
+"lat": 10.756836,
+"lon": 106.677763,
+"tags": {
+"name": "Hasaki",
+"shop": "beauty",
+"beauty": "hair_removal",
+"addr:housenumber": "185-187",
+"addr:street": "Đường Nguyễn Trãi"
+}
+},
+{
+"id": "w1529565477",
+"lat": 10.754633,
+"lon": 106.674765,
+"tags": {
+"name": "Hoa",
+"shop": "beauty",
+"addr:housenumber": "509B",
+"addr:street": "Đường Phan Văn Trị"
+}
+},
+{
+"id": "w1529565491",
+"lat": 10.753921,
+"lon": 106.675115,
+"tags": {
+"name": "Lhala#",
+"shop": "beauty",
+"addr:housenumber": "848",
+"addr:street": "Đường Trần Hưng Ðạo"
+}
+},
+{
+"id": "w1529565496",
+"lat": 10.753858,
+"lon": 106.67483,
+"tags": {
+"name": "Thiên Anh",
+"shop": "massage",
+"addr:housenumber": "864A",
+"addr:street": "Đường Trần Hưng Ðạo"
+}
+},
+{
+"id": "w1529565515",
+"lat": 10.75418,
+"lon": 106.676,
+"tags": {
+"name": "Arion",
+"shop": "beauty",
+"addr:housenumber": "796",
+"addr:street": "Đường Trần Hưng Ðạo"
+}
+},
+{
+"id": "w1530466357",
+"lat": 10.755305,
+"lon": 106.676113,
+"tags": {
+"name": "Dễ Thương",
+"shop": "beauty",
+"addr:housenumber": "430",
+"addr:street": "Đường Phan Văn Trị"
+}
+},
+{
+"id": "w1530524967",
+"lat": 10.75484,
+"lon": 106.675534,
+"tags": {
+"name": "Khánh Thủy",
+"shop": "beauty",
+"addr:housenumber": "467",
+"addr:street": "Đường Phan Văn Trị"
+}
+},
+{
+"id": "w1530524973",
+"lat": 10.754796,
+"lon": 106.675317,
+"tags": {
+"name": "An Spa",
+"shop": "massage",
+"addr:housenumber": "481",
+"addr:street": "Đường Phan Văn Trị"
+}
+},
+{
+"id": "w1530524977",
+"lat": 10.75476,
+"lon": 106.675143,
+"tags": {
+"name": "Kiều Vũ",
+"shop": "beauty",
+"addr:housenumber": "491",
+"addr:street": "Đường Phan Văn Trị"
+}
+},
+{
+"id": "w1530568980",
+"lat": 10.754968,
+"lon": 106.676276,
+"tags": {
+"name": "Lương Hỷ",
+"shop": "beauty",
+"beauty": "spa",
+"addr:housenumber": "93/10",
+"addr:street": "Đường Huỳnh Mẫn Đạt"
+}
+},
+{
+"id": "w1530568991",
+"lat": 10.755053,
+"lon": 106.676123,
+"tags": {
+"name": "Xinh",
+"shop": "beauty",
+"addr:housenumber": "427",
+"addr:street": "Đường Phan Văn Trị"
+}
+},
+{
+"id": "w1531436946",
+"lat": 10.755297,
+"lon": 106.67494,
+"tags": {
+"name": "Nail Xynh",
+"shop": "beauty",
+"beauty": "nails",
+"addr:housenumber": "349/12",
+"addr:street": "Đường Nguyễn Trãi"
+}
+},
+{
+"id": "w1531436964",
+"lat": 10.755461,
+"lon": 106.675187,
+"tags": {
+"name": "Ngọc",
+"shop": "beauty",
+"beauty": "nails",
+"addr:housenumber": "349/7C",
+"addr:street": "Đường Nguyễn Trãi"
+}
+},
+{
+"id": "w1531436971",
+"lat": 10.75539,
+"lon": 106.675349,
+"tags": {
+"name": "Linda Thuy Duong",
+"shop": "beauty",
+"beauty": "eyelash",
+"addr:housenumber": "323/10E",
+"addr:street": "Đường Nguyễn Trãi"
+}
+},
+{
+"id": "w1531539404",
+"lat": 10.755182,
+"lon": 106.675166,
+"tags": {
+"name": "Nhi",
+"shop": "beauty",
+"addr:housenumber": "486/12",
+"addr:street": "Đường Phan Văn Trị"
+}
+},
+{
+"id": "w1531539407",
+"lat": 10.755353,
+"lon": 106.675078,
+"tags": {
+"name": "30 Facial",
+"shop": "beauty",
+"addr:housenumber": "349/13",
+"addr:street": "Đường Nguyễn Trãi"
+}
+},
+{
+"id": "w1531689672",
+"lat": 10.755353,
+"lon": 106.675497,
+"tags": {
+"name": "Nguyễn Thúy Spa",
+"shop": "beauty",
+"addr:housenumber": "458/12",
+"addr:street": "Đường Phan Văn Trị"
+}
+},
+{
+"id": "w1532742905",
+"lat": 10.755856,
+"lon": 106.677798,
+"tags": {
+"name": "Nail Pinky",
+"shop": "beauty",
+"beauty": "nails",
+"addr:housenumber": "340",
+"addr:street": "Đường Phan Văn Trị"
+}
+},
+{
+"id": "w1532742906",
+"lat": 10.755834,
+"lon": 106.677733,
+"tags": {
+"name": "Mây Beauty",
+"shop": "beauty",
+"addr:housenumber": "344",
+"addr:street": "Đường Phan Văn Trị"
+}
+},
+{
+"id": "w1532742919",
+"lat": 10.755797,
+"lon": 106.677597,
+"tags": {
+"name": "Vũ Beauty",
+"shop": "beauty",
+"addr:housenumber": "354",
+"addr:street": "Đường Phan Văn Trị"
+}
+},
+{
+"id": "w1532742921",
+"lat": 10.755817,
+"lon": 106.677656,
+"tags": {
+"name": "Ruby",
+"shop": "beauty",
+"addr:housenumber": "350",
+"addr:street": "Đường Phan Văn Trị"
+}
+},
+{
+"id": "w1533234099",
+"lat": 10.754709,
+"lon": 106.674317,
+"tags": {
+"name": "Thi Nguyễn",
+"shop": "beauty",
+"addr:housenumber": "528",
+"addr:street": "Đường Phan Văn Trị"
+}
+},
+{
+"id": "w1535224247",
+"lat": 10.754888,
+"lon": 106.675994,
+"tags": {
+"name": "Mít",
+"shop": "beauty",
+"beauty": "eyelash",
+"addr:housenumber": "431/4",
+"addr:street": "Đường Phan Văn Trị"
+}
+},
+{
+"id": "w1539963915",
+"lat": 10.752596,
+"lon": 106.666421,
+"tags": {
+"name": "Kiều",
+"shop": "beauty",
+"beauty": "eyelash",
+"addr:housenumber": "198",
+"addr:street": "Đường Trần Hưng Ðạo"
+}
+},
+{
+"id": "w1540713685",
+"lat": 10.752298,
+"lon": 106.662649,
+"tags": {
+"name": "Ananas",
+"shop": "beauty",
+"beauty": "spa",
+"addr:housenumber": "304",
+"addr:street": "Đường Trần Hưng Ðạo"
+}
+},
+{
+"id": "w1543155938",
+"lat": 10.752317,
+"lon": 106.666928,
+"tags": {
+"name": "Lạc Lạc",
+"shop": "massage",
+"addr:housenumber": "115-117",
+"addr:street": "Đường Trần Hưng Ðạo"
+}
+},
+{
+"id": "w1545385129",
+"lat": 10.7517,
+"lon": 106.664683,
+"tags": {
+"name": "The Balance",
+"shop": "beauty",
+"beauty": "spa",
+"addr:housenumber": "38A",
+"addr:street": "Đường Tản Đà"
+}
+},
+{
+"id": "w1545385134",
+"lat": 10.752138,
+"lon": 106.665043,
+"tags": {
+"name": "Điệu Spa",
+"shop": "beauty",
+"beauty": "spa",
+"addr:housenumber": "203",
+"addr:street": "Đường Trần Hưng Ðạo"
+}
+},
+{
+"id": "w1547517685",
+"lat": 10.751924,
+"lon": 106.66209,
+"tags": {
+"name": "Ngọc Anh 321",
+"shop": "massage",
+"addr:housenumber": "321",
+"addr:street": "Đường Trần Hưng Ðạo"
+}
+},
+{
+"id": "w1547517687",
+"lat": 10.751922,
+"lon": 106.662013,
+"tags": {
+"name": "Ngân Giang",
+"shop": "beauty",
+"beauty": "skin_care",
+"addr:housenumber": "325",
+"addr:street": "Đường Trần Hưng Ðạo"
+}
+},
+{
+"id": "w1551376033",
+"lat": 10.754261,
+"lon": 106.66051,
+"tags": {
+"name": "Merci",
+"shop": "beauty",
+"beauty": "nails",
+"addr:housenumber": "71",
+"addr:street": "Đường Ký Hòa"
+}
+},
+{
+"id": "w1554417979",
+"lat": 10.753375,
+"lon": 106.614778,
+"tags": {
+"name": "Thẩm mỹ viện Angel Beauty",
+"shop": "beauty",
+"addr:housenumber": "138-140",
+"addr:street": "Đường số 19",
+"addr:subdistrict": "Phường An Lạc",
+"addr:city": "Thành phố Hồ Chí Minh"
+}
+},
+{
+"id": "w1559934734",
+"lat": 10.752004,
+"lon": 106.664281,
+"tags": {
+"name": "Đẹp",
+"shop": "beauty",
+"addr:housenumber": "65",
+"addr:street": "Đường Tản Đà"
+}
+},
+{
+"id": "w1570099237",
+"lat": 10.752588,
+"lon": 106.669914,
+"tags": {
+"name": "Kelly Pang",
+"shop": "beauty",
+"beauty": "nails",
+"addr:housenumber": "61C",
+"addr:street": "Đường Trần Hưng Ðạo"
+}
+},
+{
+"id": "w1570099251",
+"lat": 10.752221,
+"lon": 106.669715,
+"tags": {
+"name": "Kim Beauty",
+"shop": "beauty",
+"addr:housenumber": "59",
+"addr:street": "Đường Nguyễn Thời Trung"
+}
+},
+{
+"id": "w1570099270",
+"lat": 10.752551,
+"lon": 106.669613,
+"tags": {
+"name": "Lisa",
+"shop": "beauty",
+"beauty": "spa",
+"addr:housenumber": "75",
+"addr:street": "Đường Trần Hưng Ðạo"
+}
+},
+{
+"id": "w1570099279",
+"lat": 10.75211,
+"lon": 106.669572,
+"tags": {
+"name": "Cát Dương",
+"shop": "beauty",
+"addr:housenumber": "52",
+"addr:street": "Đường Nguyễn Tri Phương"
+}
+},
+{
+"id": "w1570099280",
+"lat": 10.752072,
+"lon": 106.66957,
+"tags": {
+"name": "Giang Mi",
+"shop": "beauty",
+"addr:housenumber": "50",
+"addr:street": "Đường Nguyễn Tri Phương"
+}
+},
+{
+"id": "w1570099286",
+"lat": 10.751817,
+"lon": 106.669555,
+"tags": {
+"name": "Love Spa",
+"shop": "beauty",
+"beauty": "spa",
+"addr:housenumber": "36",
+"addr:street": "Đường Nguyễn Tri Phương"
+}
+},
+{
+"id": "w1571409542",
+"lat": 10.752616,
+"lon": 106.670278,
+"tags": {
+"name": "Ngọc Châu",
+"shop": "massage",
+"addr:housenumber": "53A",
+"addr:street": "Đường Trần Hưng Ðạo"
+}
+},
+{
+"id": "w1571409543",
+"lat": 10.75265,
+"lon": 106.67072,
+"tags": {
+"name": "Minh Minh",
+"shop": "beauty",
+"addr:housenumber": "43",
+"addr:street": "Đường Trần Hưng Ðạo"
+}
+},
+{
+"id": "w1574737068",
+"lat": 10.75289,
+"lon": 106.673057,
+"tags": {
+"name": "Hạnh Long",
+"shop": "massage",
+"addr:housenumber": "1129",
+"addr:street": "Đường Trần Hưng Ðạo"
+}
+},
+{
+"id": "w1574914387",
+"lat": 10.753503,
+"lon": 106.675171,
+"tags": {
+"name": "Foot Papa",
+"shop": "massage",
+"addr:housenumber": "1035-1037",
+"addr:street": "Đường Trần Hưng Ðạo"
+}
+},
+{
+"id": "w1574914396",
+"lat": 10.753438,
+"lon": 106.674938,
+"tags": {
+"name": "Sơn Thủy",
+"shop": "beauty",
+"addr:housenumber": "1049",
+"addr:street": "Đường Trần Hưng Ðạo"
+}
+},
+{
+"id": "w543179748",
+"lat": 10.770412,
+"lon": 106.692199,
+"tags": {
+"name": "Ae-Ri Nailroom",
+"shop": "beauty",
+"beauty": "nails",
+"addr:housenumber": "10",
+"addr:street": "Nguyễn Văn Tráng"
+}
+},
+{
+"id": "w900287988",
+"lat": 10.804784,
+"lon": 106.735883,
+"tags": {
+"name": "Villa Aesthetica Cosmedi Clinic - Spa",
+"shop": "beauty"
+}
+}
+],
+"hanoi": [
+{
+"id": "n10196169252",
+"lat": 21.018152,
+"lon": 105.824019,
+"tags": {
+"name": "Thẩm mỹ viện Orchard Group",
+"name:vi": "Thẩm mỹ viện Orchard Group",
+"shop": "beauty",
+"beauty": "filler;botox;tiêm_filler;tiêm_botox;chỉnh_mặt;skin_care",
+"addr:housenumber": "36",
+"addr:street": "Phố Hoàng Cầu",
+"addr:subdistrict": "Phường Ô Chợ Dừa",
+"addr:district": "Đống Đa",
+"addr:city": "Hà Nội",
+"opening_hours": "Mo-Su 09:00-19:00"
+}
+},
+{
+"id": "n10198711515",
+"lat": 21.01821,
+"lon": 105.823743,
+"tags": {
+"name": "Thẩm mỹ Huy Hoàng",
+"shop": "beauty",
+"beauty": "cosmetics;waxing;skin_care",
+"addr:housenumber": "2",
+"addr:street": "Phố Mai Anh Tuấn",
+"addr:subdistrict": "Phường Ô Chợ Dừa",
+"addr:district": "Quận Đống Đa",
+"addr:city": "Hà Nội",
+"opening_hours": "Mo-Su 09:00-21:00"
+}
+},
+{
+"id": "n10248628273",
+"lat": 21.041696,
+"lon": 105.781605,
+"tags": {
+"name": "Hoàn Mỹ Clinic",
+"shop": "beauty",
+"addr:housenumber": "267",
+"addr:street": "Phố Trần Quốc Hoàn",
+"addr:subdistrict": "Phường Dịch Vọng Hậu",
+"addr:district": "Quận Cầu Giấy",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n10266548610",
+"lat": 21.03119,
+"lon": 105.850051,
+"tags": {
+"name": "urban oasis spa",
+"shop": "massage"
+}
+},
+{
+"id": "n10846785320",
+"lat": 21.048558,
+"lon": 105.807506,
+"tags": {
+"name": "Hương Anh Beauty Spa",
+"shop": "beauty",
+"beauty": "nails"
+}
+},
+{
+"id": "n10848050606",
+"lat": 21.048414,
+"lon": 105.808202,
+"tags": {
+"name": "GDVSport",
+"shop": "massage"
+}
+},
+{
+"id": "n10871038317",
+"lat": 21.029518,
+"lon": 105.848349,
+"tags": {
+"name": "Omamori spa",
+"shop": "massage"
+}
+},
+{
+"id": "n11211915134",
+"lat": 21.012964,
+"lon": 105.832109,
+"tags": {
+"name": "Green Spa",
+"shop": "beauty",
+"addr:housenumber": "194",
+"addr:street": "Ngõ Xã Đàn 2",
+"addr:subdistrict": "Nam Đồng",
+"addr:district": "Đống Đa",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11211967775",
+"lat": 21.048502,
+"lon": 105.784177,
+"tags": {
+"name": "Spa Mai Lê",
+"shop": "beauty",
+"addr:housenumber": "17",
+"addr:street": "Ngõ 234 Hoàng Quốc Việt",
+"addr:subdistrict": "Phường Cổ Nhuế 1",
+"addr:district": "Quận Bắc Từ Liêm",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11212149520",
+"lat": 21.009176,
+"lon": 105.835044,
+"tags": {
+"name": "Biliev",
+"shop": "beauty",
+"addr:housenumber": "8B10",
+"addr:street": "Phố Phạm Ngọc Thạch",
+"addr:subdistrict": "Kim Liên",
+"addr:district": "Đống Đa",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11227192944",
+"lat": 21.048896,
+"lon": 105.784122,
+"tags": {
+"name": "Healthy & Beauty Việt Nam",
+"shop": "beauty",
+"addr:housenumber": "31",
+"addr:street": "Ngõ 234 Hoàng Quốc Việt",
+"addr:subdistrict": "Phường Cổ Nhuế 1",
+"addr:district": "Quận Bắc Từ Liêm",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11263842271",
+"lat": 21.015408,
+"lon": 105.832665,
+"tags": {
+"name": "VIP Massage Eva",
+"shop": "massage",
+"addr:housenumber": "197",
+"addr:street": "Phố Xã Đàn",
+"addr:subdistrict": "Nam Đồng",
+"addr:district": "Đống Đa",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11281683532",
+"lat": 21.016517,
+"lon": 105.83143,
+"tags": {
+"name": "Lapari Beauty Center",
+"shop": "beauty",
+"beauty": "cosmetics;skin_care;hair",
+"addr:housenumber": "239",
+"addr:street": "Phố Xã Đàn",
+"addr:subdistrict": "Nam Đồng",
+"addr:district": "Đống Đa",
+"addr:city": "Hà Nội",
+"opening_hours": "Mo-Sa 08:00-21:00"
+}
+},
+{
+"id": "n11286564280",
+"lat": 21.017283,
+"lon": 105.831668,
+"tags": {
+"name": "Charis Beauty & Spa",
+"shop": "beauty",
+"addr:housenumber": "141",
+"addr:street": "Đường Đê La Thành",
+"addr:subdistrict": "Nam Đồng",
+"addr:district": "Đống Đa",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11295778638",
+"lat": 21.017034,
+"lon": 105.831894,
+"tags": {
+"name": "Lyly Đặng",
+"shop": "beauty",
+"beauty": "nails",
+"addr:housenumber": "133",
+"addr:street": "Đường Đê La Thành",
+"addr:subdistrict": "Nam Đồng",
+"addr:district": "Đống Đa",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11295820790",
+"lat": 21.01674,
+"lon": 105.832203,
+"tags": {
+"name": "Spa Mỹ Á Beauty & Clinic",
+"shop": "beauty",
+"addr:housenumber": "115",
+"addr:street": "Đường Đê La Thành",
+"addr:subdistrict": "Nam Đồng",
+"addr:district": "Đống Đa",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11362154951",
+"lat": 21.009573,
+"lon": 105.791062,
+"tags": {
+"name": "Xuka VIP Massage",
+"shop": "massage"
+}
+},
+{
+"id": "n11362154952",
+"lat": 21.005531,
+"lon": 105.856115,
+"tags": {
+"name": "J Spa & Massage",
+"shop": "massage"
+}
+},
+{
+"id": "n11362154953",
+"lat": 21.019058,
+"lon": 105.829397,
+"tags": {
+"name": "Neko Nuru Massage",
+"shop": "massage"
+}
+},
+{
+"id": "n11462471438",
+"lat": 21.011994,
+"lon": 105.850043,
+"tags": {
+"name": "Halei",
+"shop": "beauty",
+"beauty": "nails",
+"addr:housenumber": "20",
+"addr:street": "Phố Đoàn Trần Nghiệp",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11462471454",
+"lat": 21.011966,
+"lon": 105.849899,
+"tags": {
+"name": "AuViet Beauty Salon & Spa",
+"shop": "beauty",
+"addr:housenumber": "179",
+"addr:street": "Phố Bùi Thị Xuân",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11470110664",
+"lat": 21.012939,
+"lon": 105.850901,
+"tags": {
+"name": "Phương Anh Beauty & Spa",
+"shop": "beauty",
+"addr:housenumber": "88A",
+"addr:street": "Phố Mai Hắc Đế",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11470121169",
+"lat": 21.012753,
+"lon": 105.850557,
+"tags": {
+"name": "The MOC Beauty Lab",
+"shop": "beauty",
+"addr:housenumber": "145",
+"addr:street": "Phố Triệu Việt Vương",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11472430128",
+"lat": 21.013032,
+"lon": 105.850917,
+"tags": {
+"name": "Mai Phan Makeup Artist",
+"shop": "beauty",
+"beauty": "cosmetics",
+"addr:housenumber": "84",
+"addr:street": "Phố Mai Hắc Đế",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11486942489",
+"lat": 21.013776,
+"lon": 105.850012,
+"tags": {
+"name": "Maikan Spa & Academy",
+"shop": "beauty",
+"addr:housenumber": "141",
+"addr:street": "Phố Bùi Thị Xuân",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11486942491",
+"lat": 21.013929,
+"lon": 105.850023,
+"tags": {
+"name": "Dencoss Luxury Health Care & Spa",
+"shop": "beauty",
+"addr:housenumber": "135-137",
+"addr:street": "Phố Bùi Thị Xuân",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11486942496",
+"lat": 21.014467,
+"lon": 105.85002,
+"tags": {
+"name": "H.E.R Beauty Clinic",
+"shop": "beauty",
+"addr:housenumber": "119",
+"addr:street": "Phố Bùi Thị Xuân",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11486942536",
+"lat": 21.015052,
+"lon": 105.850062,
+"tags": {
+"name": "Menard Shop & Spa",
+"shop": "beauty",
+"beauty": "cosmetics;spa;skin_care",
+"addr:housenumber": "35-37",
+"addr:street": "Phố Tuệ Tĩnh",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11491092586",
+"lat": 21.014917,
+"lon": 105.850257,
+"tags": {
+"name": "Aoki Beauty",
+"shop": "beauty",
+"addr:housenumber": "110C",
+"addr:street": "Phố Triệu Việt Vương",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội",
+"opening_hours": "Mo-Sa 08:30-18:00"
+}
+},
+{
+"id": "n11491290556",
+"lat": 21.014259,
+"lon": 105.850245,
+"tags": {
+"name": "Rohto Aohal Clinic",
+"shop": "beauty",
+"addr:housenumber": "136",
+"addr:street": "Phố Triệu Việt Vương",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội",
+"opening_hours": "Mo-Su 08:30-19:30"
+}
+},
+{
+"id": "n11505669847",
+"lat": 21.01391,
+"lon": 105.850597,
+"tags": {
+"name": "SeSe Beauty",
+"shop": "beauty",
+"addr:housenumber": "123",
+"addr:street": "Phố Triệu Việt Vương",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11505669848",
+"lat": 21.013868,
+"lon": 105.850589,
+"tags": {
+"name": "Vạn Xuân Foot Massage",
+"shop": "massage",
+"addr:housenumber": "125",
+"addr:street": "Phố Triệu Việt Vương",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11510383976",
+"lat": 21.014975,
+"lon": 105.84982,
+"tags": {
+"name": "Emma Lab",
+"shop": "beauty",
+"beauty": "spa",
+"addr:housenumber": "88C",
+"addr:street": "Phố Bùi Thị Xuân",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11534643039",
+"lat": 21.013583,
+"lon": 105.849337,
+"tags": {
+"name": "BB Beauté",
+"shop": "beauty",
+"addr:housenumber": "74",
+"addr:street": "Phố Tô Hiến Thành",
+"addr:subdistrict": "Lê Đại Hành",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11556689534",
+"lat": 21.042421,
+"lon": 105.78632,
+"tags": {
+"name": "Amita Academy",
+"shop": "beauty",
+"addr:housenumber": "14",
+"addr:street": "Phố Phạm Tuấn Tài",
+"addr:subdistrict": "Phường Dịch Vọng Hậu",
+"addr:district": "Quận Cầu Giấy",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11563431180",
+"lat": 21.045335,
+"lon": 105.786071,
+"tags": {
+"name": "Ogana Spa Cosmetics",
+"shop": "beauty",
+"addr:housenumber": "2A",
+"addr:street": "Ngõ 61 Phạm Tuấn Tài",
+"addr:subdistrict": "Phường Cổ Nhuế 1",
+"addr:district": "Quận Bắc Từ Liêm",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11563520043",
+"lat": 21.045143,
+"lon": 105.786124,
+"tags": {
+"name": "Spa Quỳnh Hương",
+"shop": "beauty",
+"addr:housenumber": "3",
+"addr:street": "Ngõ 61 Phạm Tuấn Tài",
+"addr:subdistrict": "Phường Cổ Nhuế 1",
+"addr:district": "Quận Bắc Từ Liêm",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11563562478",
+"lat": 21.045123,
+"lon": 105.786276,
+"tags": {
+"name": "Angel",
+"shop": "beauty",
+"addr:housenumber": "57",
+"addr:street": "Phố Phạm Tuấn Tài",
+"addr:subdistrict": "Phường Cổ Nhuế 1",
+"addr:district": "Quận Bắc Từ Liêm",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11563562479",
+"lat": 21.045082,
+"lon": 105.786274,
+"tags": {
+"name": "Spa H2 Beauty",
+"shop": "beauty",
+"addr:housenumber": "55",
+"addr:street": "Phố Phạm Tuấn Tài",
+"addr:subdistrict": "Phường Cổ Nhuế 1",
+"addr:district": "Quận Bắc Từ Liêm",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11564316610",
+"lat": 21.044524,
+"lon": 105.785279,
+"tags": {
+"name": "Lan Beauty Center",
+"shop": "beauty",
+"addr:housenumber": "37",
+"addr:street": "Phố Đặng Thùy Trâm",
+"addr:subdistrict": "Phường Cổ Nhuế 1",
+"addr:district": "Quận Bắc Từ Liêm",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11568829083",
+"lat": 21.044194,
+"lon": 105.784643,
+"tags": {
+"name": "Massage VIP",
+"shop": "massage",
+"addr:housenumber": "11",
+"addr:street": "Ngõ 26 Đặng Thùy Trâm",
+"addr:subdistrict": "Phường Cổ Nhuế 1",
+"addr:district": "Quận Bắc Từ Liêm",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11568907803",
+"lat": 21.043822,
+"lon": 105.785749,
+"tags": {
+"name": "Dr. Zo Spa & Clinic",
+"shop": "beauty",
+"addr:housenumber": "44",
+"addr:street": "Phố Đặng Thùy Trâm",
+"addr:subdistrict": "Phường Dịch Vọng Hậu",
+"addr:district": "Quận Cầu Giấy",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11571556929",
+"lat": 21.043517,
+"lon": 105.785192,
+"tags": {
+"name": "Prédia",
+"shop": "beauty",
+"addr:housenumber": "31",
+"addr:street": "Ngõ 3 Phạm Tuấn Tài",
+"addr:subdistrict": "Phường Dịch Vọng Hậu",
+"addr:district": "Quận Cầu Giấy",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11571705771",
+"lat": 21.042858,
+"lon": 105.78593,
+"tags": {
+"name": "Mộc Tấm Spa",
+"shop": "beauty",
+"addr:housenumber": "5",
+"addr:street": "Ngách 3/1 Phạm Tuấn Tài",
+"addr:subdistrict": "Phường Dịch Vọng Hậu",
+"addr:district": "Quận Cầu Giấy",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11572113159",
+"lat": 21.042075,
+"lon": 105.786599,
+"tags": {
+"name": "Dr. Lacir",
+"shop": "beauty",
+"addr:housenumber": "11",
+"addr:street": "Ngõ 2 Phạm Tuấn Tài",
+"addr:subdistrict": "Phường Dịch Vọng Hậu",
+"addr:district": "Quận Cầu Giấy",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11572171970",
+"lat": 21.042239,
+"lon": 105.786316,
+"tags": {
+"name": "HB",
+"shop": "beauty",
+"addr:housenumber": "8",
+"addr:street": "Phố Phạm Tuấn Tài",
+"addr:subdistrict": "Phường Dịch Vọng Hậu",
+"addr:district": "Quận Cầu Giấy",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11586961130",
+"lat": 21.042291,
+"lon": 105.786565,
+"tags": {
+"name": "Dr. Thanh Trang",
+"shop": "beauty",
+"addr:housenumber": "10",
+"addr:street": "Ngõ 12 Phạm Tuấn Tài",
+"addr:subdistrict": "Phường Dịch Vọng Hậu",
+"addr:district": "Quận Cầu Giấy",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11591740415",
+"lat": 21.015351,
+"lon": 105.849522,
+"tags": {
+"name": "Oceania Spa & Clinic",
+"shop": "beauty",
+"addr:housenumber": "60",
+"addr:street": "Phố Tuệ Tĩnh",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11601645092",
+"lat": 21.016601,
+"lon": 105.849742,
+"tags": {
+"name": "Nail's",
+"shop": "beauty",
+"beauty": "nails",
+"addr:housenumber": "30A",
+"addr:street": "Phố Bùi Thị Xuân",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11601645093",
+"lat": 21.016639,
+"lon": 105.849746,
+"tags": {
+"name": "Amore Nail Art",
+"shop": "beauty",
+"beauty": "nails",
+"addr:housenumber": "28A",
+"addr:street": "Phố Bùi Thị Xuân",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội",
+"opening_hours": "Mo-Su 09:00-21:00"
+}
+},
+{
+"id": "n11613119450",
+"lat": 21.036803,
+"lon": 105.785732,
+"tags": {
+"name": "Cocolux",
+"shop": "beauty",
+"addr:housenumber": "128",
+"addr:street": "Đường Xuân Thủy",
+"addr:subdistrict": "Phường Dịch Vọng Hậu",
+"addr:district": "Quận Cầu Giấy",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11613547703",
+"lat": 21.015364,
+"lon": 105.850291,
+"tags": {
+"name": "Junhee Beauty Center",
+"shop": "beauty",
+"addr:housenumber": "32",
+"addr:street": "Phố Tuệ Tĩnh",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11613547705",
+"lat": 21.015395,
+"lon": 105.850132,
+"tags": {
+"name": "HB Spa",
+"shop": "massage",
+"addr:housenumber": "38A",
+"addr:street": "Phố Tuệ Tĩnh",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11613547714",
+"lat": 21.015648,
+"lon": 105.850214,
+"tags": {
+"name": "Viện thẩm mỹ Korea",
+"shop": "beauty",
+"addr:housenumber": "100",
+"addr:street": "Phố Triệu Việt Vương",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội",
+"opening_hours": "Mo-Su 08:30-20:00"
+}
+},
+{
+"id": "n11615961388",
+"lat": 21.016287,
+"lon": 105.850218,
+"tags": {
+"name": "Swizz Clinic",
+"shop": "beauty",
+"addr:housenumber": "74",
+"addr:street": "Phố Triệu Việt Vương",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11615961398",
+"lat": 21.016512,
+"lon": 105.849939,
+"tags": {
+"name": "D.D Nails",
+"shop": "beauty",
+"beauty": "nails",
+"addr:housenumber": "53",
+"addr:street": "Phố Bùi Thị Xuân",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11615961415",
+"lat": 21.015343,
+"lon": 105.849945,
+"tags": {
+"name": "Peony Nailroom",
+"shop": "beauty",
+"beauty": "nails",
+"addr:housenumber": "101",
+"addr:street": "Phố Bùi Thị Xuân",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11633344451",
+"lat": 21.045565,
+"lon": 105.868775,
+"tags": {
+"name": "Diệu Anh Nail",
+"shop": "beauty",
+"beauty": "nails",
+"addr:housenumber": "76",
+"addr:street": "Đường Long Biên 1",
+"addr:subdistrict": "Ngọc Lâm",
+"addr:district": "Long Biên",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11652137674",
+"lat": 21.016199,
+"lon": 105.850742,
+"tags": {
+"name": "July Beauty Care",
+"shop": "beauty",
+"addr:housenumber": "12A",
+"addr:street": "Phố Mai Hắc Đế",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11656924767",
+"lat": 21.037275,
+"lon": 105.851637,
+"tags": {
+"name": "Chi Mai",
+"shop": "beauty",
+"addr:housenumber": "18",
+"addr:district": "Phường Hoàn Kiếm",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11662698952",
+"lat": 21.035424,
+"lon": 105.852908,
+"tags": {
+"name": "Suzi Spa",
+"shop": "massage"
+}
+},
+{
+"id": "n11671752241",
+"lat": 21.036084,
+"lon": 105.848744,
+"tags": {
+"name": "Moc",
+"shop": "massage",
+"addr:housenumber": "23",
+"addr:district": "Phường Hoàn Kiếm",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11671786853",
+"lat": 21.035493,
+"lon": 105.850729,
+"tags": {
+"name": "Viet Massage by the Blind",
+"shop": "massage",
+"addr:housenumber": "95",
+"addr:district": "Phường Hoàn Kiếm",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11680976229",
+"lat": 21.009438,
+"lon": 105.850791,
+"tags": {
+"name": "Tra My Beauty & Spa",
+"shop": "beauty",
+"addr:housenumber": "171",
+"addr:street": "Phố Mai Hắc Đế",
+"addr:subdistrict": "Lê Đại Hành",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11782452948",
+"lat": 21.015318,
+"lon": 105.851341,
+"tags": {
+"name": "Zema Beauty & more",
+"shop": "beauty",
+"addr:housenumber": "150",
+"addr:street": "Phố Huế",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội",
+"opening_hours": "Mo 09:00-18:00; Tu-Su 09:00-20:00"
+}
+},
+{
+"id": "n11782452952",
+"lat": 21.015251,
+"lon": 105.851195,
+"tags": {
+"name": "Dear Peonia",
+"shop": "beauty",
+"beauty": "nails",
+"addr:housenumber": "8",
+"addr:street": "Phố Tuệ Tĩnh",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11782452958",
+"lat": 21.015542,
+"lon": 105.851047,
+"tags": {
+"name": "The Skin Master",
+"shop": "beauty",
+"addr:housenumber": "41",
+"addr:street": "Phố Mai Hắc Đế",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11843102003",
+"lat": 21.03267,
+"lon": 105.84688,
+"tags": {
+"name": "Spa -Nail",
+"shop": "massage",
+"addr:housenumber": "56",
+"addr:street": "Phố Hàng Điếu",
+"addr:district": "Phường Hoàn Kiếm",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n11919147569",
+"lat": 21.034197,
+"lon": 105.827219,
+"tags": {
+"name": "No.23 Nail Artist",
+"shop": "beauty",
+"addr:housenumber": "58",
+"addr:street": "Phố Giang Văn Minh",
+"addr:district": "Phường Ba Đình",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n12050991771",
+"lat": 21.044102,
+"lon": 105.845794,
+"tags": {
+"name": "Thành Gia Masage Chân",
+"shop": "massage",
+"addr:housenumber": "4 B",
+"addr:street": "Phố Hàng Bún",
+"addr:district": "Phường Ba Đình",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n12092826927",
+"lat": 21.031983,
+"lon": 105.836889,
+"tags": {
+"name": "La Casa",
+"shop": "beauty",
+"addr:housenumber": "10B",
+"addr:street": "Phố Khúc Hạo",
+"addr:district": "Phường Ba Đình",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n12105870164",
+"lat": 21.016523,
+"lon": 105.851225,
+"tags": {
+"name": "Thẩm mỹ viện Ngọc Dung",
+"shop": "beauty",
+"addr:housenumber": "106",
+"addr:street": "Phố Huế",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội",
+"opening_hours": "Mo-Su 09:00-19:00"
+}
+},
+{
+"id": "n12105870171",
+"lat": 21.016561,
+"lon": 105.850975,
+"tags": {
+"name": "C's Clinic",
+"shop": "beauty",
+"addr:housenumber": "3",
+"addr:street": "Phố Mai Hắc Đế",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n12116589724",
+"lat": 21.018394,
+"lon": 105.849794,
+"tags": {
+"name": "Stendhal Beauty Lab",
+"shop": "beauty",
+"addr:housenumber": "8",
+"addr:street": "Phố Bùi Thị Xuân",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n12116601425",
+"lat": 21.018327,
+"lon": 105.849488,
+"tags": {
+"name": "Viện thẩm mỹ Thiên Hà",
+"shop": "beauty",
+"addr:housenumber": "79",
+"addr:street": "Phố Bà Triệu",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n12116601427",
+"lat": 21.01844,
+"lon": 105.849521,
+"tags": {
+"name": "Bloom Spa",
+"shop": "beauty",
+"beauty": "spa",
+"addr:housenumber": "75",
+"addr:street": "Phố Bà Triệu",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n12323010510",
+"lat": 21.038162,
+"lon": 105.799758,
+"tags": {
+"name": "Nuru Massage Vip | Rose Spa Nuru Massage Hanoi",
+"shop": "massage",
+"addr:housenumber": "47",
+"addr:street": "Ngõ 167 Dương Quảng Hàm",
+"addr:subdistrict": "Phường Quan Hoa",
+"addr:district": "Quận Cầu Giấy",
+"addr:city": "Hà Nội",
+"opening_hours": "10:00-03:00"
+}
+},
+{
+"id": "n12873080102",
+"lat": 21.061765,
+"lon": 105.828232,
+"tags": {
+"name": "Tropicana Nail Lab",
+"shop": "beauty",
+"addr:street": "số 37D Ng.31 Đ. Xuân Diệu",
+"opening_hours": "Mo-Su 09:00-19:30"
+}
+},
+{
+"id": "n13011221832",
+"lat": 21.013185,
+"lon": 105.817218,
+"tags": {
+"name": "Cửa hàng Hi Beauty",
+"shop": "beauty",
+"addr:street": "Ngõ 38 Yên Lãng"
+}
+},
+{
+"id": "n13234059993",
+"lat": 21.036486,
+"lon": 105.846623,
+"tags": {
+"name": "Tara Spa",
+"shop": "massage",
+"addr:housenumber": "2",
+"addr:street": "Phố Cổng Đục",
+"addr:district": "Phường Hoàn Kiếm",
+"addr:city": "Hà Nội",
+"opening_hours": "Mo-Su 09:00-22:00"
+}
+},
+{
+"id": "n13282395301",
+"lat": 21.077297,
+"lon": 105.813948,
+"tags": {
+"name": "May Spa",
+"shop": "massage",
+"addr:housenumber": "52",
+"addr:street": "Vườn Đào"
+}
+},
+{
+"id": "n13468461132",
+"lat": 21.007885,
+"lon": 105.819079,
+"tags": {
+"name": "SEN 1992",
+"shop": "beauty",
+"beauty": "spa"
+}
+},
+{
+"id": "n13505650401",
+"lat": 21.078429,
+"lon": 105.816012,
+"tags": {
+"name": "Cuni Nails",
+"shop": "beauty",
+"addr:housenumber": "668",
+"addr:street": "Đường Lạc Long Quân"
+}
+},
+{
+"id": "n13617875901",
+"lat": 21.004362,
+"lon": 105.810182,
+"tags": {
+"name": "Ivy Beauty",
+"shop": "beauty",
+"addr:housenumber": "27",
+"addr:street": "Ngõ 144 Phố Quan Nhân"
+}
+},
+{
+"id": "n13617885501",
+"lat": 21.004273,
+"lon": 105.809959,
+"tags": {
+"name": "Beauty Mi Lan Hair Salon",
+"shop": "beauty",
+"addr:housenumber": "35",
+"addr:street": "Ngõ 144 Phố Quan Nhân"
+}
+},
+{
+"id": "n13629782001",
+"lat": 21.017806,
+"lon": 105.850334,
+"tags": {
+"name": "Tràng An Foot Massage",
+"shop": "massage",
+"addr:housenumber": "26",
+"addr:street": "Phố Triệu Việt Vương",
+"opening_hours": "Mo-Su 10:00-23:00"
+}
+},
+{
+"id": "n13629824201",
+"lat": 21.03018,
+"lon": 105.850491,
+"tags": {
+"name": "Orient Spa",
+"shop": "massage",
+"addr:housenumber": "18",
+"addr:street": "Phố Báo Khánh"
+}
+},
+{
+"id": "n13632874703",
+"lat": 21.030259,
+"lon": 105.844646,
+"tags": {
+"name": "Orient Spa",
+"shop": "massage",
+"addr:housenumber": "36",
+"addr:street": "Phố Phùng Hưng",
+"opening_hours": "Mo-Su 10:00-22:00"
+}
+},
+{
+"id": "n13632885301",
+"lat": 21.028946,
+"lon": 105.848743,
+"tags": {
+"name": "Orient Spa",
+"shop": "massage",
+"addr:housenumber": "26",
+"addr:street": "Phố Ấu Triệu",
+"opening_hours": "Mo-Su 10:00-22:00"
+}
+},
+{
+"id": "n13632894701",
+"lat": 21.028972,
+"lon": 105.848821,
+"tags": {
+"name": "La Flora Spa & Nails",
+"shop": "massage",
+"addr:housenumber": "22",
+"addr:street": "Phố Ấu Triệu",
+"opening_hours": "Mo-Su 10:00-22:00"
+}
+},
+{
+"id": "n13633091541",
+"lat": 21.033292,
+"lon": 105.850299,
+"tags": {
+"name": "Vie Nail",
+"shop": "beauty",
+"beauty": "nails"
+}
+},
+{
+"id": "n13760239511",
+"lat": 21.034486,
+"lon": 105.854623,
+"tags": {
+"name": "Thùy Linh Massage Parlour",
+"shop": "massage",
+"addr:housenumber": "20 P.",
+"addr:street": "Hàng Muối",
+"addr:district": "Phường Hoàn Kiếm",
+"addr:city": "Hà Nội",
+"opening_hours": "Mo-Su 17:00-05:00"
+}
+},
+{
+"id": "n14079699746",
+"lat": 21.013721,
+"lon": 105.81653,
+"tags": {
+"name": "Heni Skin Beauty & Spa",
+"shop": "beauty",
+"beauty": "skin_care",
+"addr:housenumber": "58A",
+"addr:street": "Ngõ 38 Phố Yên Lãng",
+"addr:subdistrict": "Láng Hạ",
+"addr:district": "Đống Đa",
+"addr:city": "Hà Nội",
+"opening_hours": "Mo-Su 10:00-22:00"
+}
+},
+{
+"id": "n14091927504",
+"lat": 21.032253,
+"lon": 105.854334,
+"tags": {
+"name": "La Belle Vie Spa",
+"shop": "massage",
+"addr:housenumber": "22A",
+"addr:street": "Phố Hàng Thùng"
+}
+},
+{
+"id": "n14137150493",
+"lat": 21.061184,
+"lon": 105.826085,
+"tags": {
+"name": "Flamingo Nail & Beauty",
+"shop": "beauty"
+}
+},
+{
+"id": "n14156564903",
+"lat": 21.055545,
+"lon": 105.820964,
+"tags": {
+"name": "Sunny Spa",
+"shop": "massage",
+"addr:housenumber": "7/26",
+"addr:street": "Phố Quảng Khánh",
+"opening_hours": "Mo-Su 09:00-21:00"
+}
+},
+{
+"id": "n14156602302",
+"lat": 21.061395,
+"lon": 105.827406,
+"tags": {
+"name": "Hali Beauty",
+"shop": "beauty",
+"addr:housenumber": "42",
+"addr:street": "Ngõ 31 Xuân Diệu"
+}
+},
+{
+"id": "n14182291301",
+"lat": 21.052534,
+"lon": 105.837689,
+"tags": {
+"name": "Thảo Nail",
+"shop": "beauty",
+"beauty": "nails",
+"addr:housenumber": "77A",
+"addr:street": "Phố Yên Phụ"
+}
+},
+{
+"id": "n14218770801",
+"lat": 21.055496,
+"lon": 105.820461,
+"tags": {
+"name": "Dao Care",
+"shop": "massage",
+"addr:housenumber": "20-8B",
+"addr:street": "Ngách 50/59 Phố Đặng Thai Mai"
+}
+},
+{
+"id": "n14277223801",
+"lat": 21.025647,
+"lon": 105.85345,
+"tags": {
+"name": "Facialbar",
+"shop": "beauty",
+"addr:housenumber": "89",
+"addr:street": "Phố Đinh Tiên Hoàng"
+}
+},
+{
+"id": "n14278655201",
+"lat": 21.032095,
+"lon": 105.848568,
+"tags": {
+"name": "Land zen spa",
+"shop": "massage"
+}
+},
+{
+"id": "n14280303701",
+"lat": 21.033119,
+"lon": 105.853188,
+"tags": {
+"name": "Aimerbeauty",
+"shop": "beauty"
+}
+},
+{
+"id": "n14282776801",
+"lat": 21.030681,
+"lon": 105.841459,
+"tags": {
+"name": "Moon n spa",
+"shop": "beauty"
+}
+},
+{
+"id": "n14283210801",
+"lat": 21.027985,
+"lon": 105.843701,
+"tags": {
+"name": "Plush",
+"shop": "beauty"
+}
+},
+{
+"id": "n14337683301",
+"lat": 21.059163,
+"lon": 105.833618,
+"tags": {
+"name": "Moon Spa 2",
+"shop": "massage"
+}
+},
+{
+"id": "n14358055302",
+"lat": 21.066092,
+"lon": 105.826689,
+"tags": {
+"name": "Nail Nhi",
+"shop": "beauty",
+"beauty": "nails",
+"addr:housenumber": "69",
+"addr:street": "Đường Xuân Diệu"
+}
+},
+{
+"id": "n14364397072",
+"lat": 21.01646,
+"lon": 105.854214,
+"tags": {
+"name": "Olivia",
+"shop": "beauty",
+"addr:housenumber": "25C",
+"addr:street": "Phố Thi Sách"
+}
+},
+{
+"id": "n4226771604",
+"lat": 21.030162,
+"lon": 105.849099,
+"tags": {
+"name": "R & M 마사지",
+"shop": "massage",
+"addr:street": "Phố Lý Quốc Sư"
+}
+},
+{
+"id": "n4226772614",
+"lat": 21.032994,
+"lon": 105.852457,
+"tags": {
+"name": "SF SPA Hanoi Lakeview",
+"leisure": "sauna",
+"addr:street": "Gia Ngư"
+}
+},
+{
+"id": "n4336278559",
+"lat": 21.061435,
+"lon": 105.831618,
+"tags": {
+"name": "Yakushi center",
+"leisure": "sauna"
+}
+},
+{
+"id": "n4561621794",
+"lat": 21.067252,
+"lon": 105.826945,
+"tags": {
+"name": "Trung Tâm Just Massage",
+"shop": "massage",
+"addr:housenumber": "237",
+"addr:street": "Đường Âu Cơ"
+}
+},
+{
+"id": "n4561625962",
+"lat": 21.061521,
+"lon": 105.832033,
+"tags": {
+"name": "Yakushi",
+"name:ko": "야쿠시 마사지",
+"shop": "massage",
+"addr:street": "6, Alley 28, Xuan Dieu Tu Lien"
+}
+},
+{
+"id": "n4719849289",
+"lat": 21.027695,
+"lon": 105.844548,
+"tags": {
+"name": "Queen Luxury spa & clinic",
+"name:vi": "Queen Luxury spa & clinic",
+"shop": "beauty",
+"addr:housenumber": "35",
+"addr:street": "Phố Thợ Nhuộm",
+"opening_hours": "Mo-Su 09:00-18:00"
+}
+},
+{
+"id": "n4727204389",
+"lat": 21.010862,
+"lon": 105.851743,
+"tags": {
+"name": "Cửa Hàng Mỹ Phẩm Dr.Lê",
+"shop": "beauty",
+"addr:housenumber": "314",
+"addr:street": "Phố Huế"
+}
+},
+{
+"id": "n5137400021",
+"lat": 21.062598,
+"lon": 105.823462,
+"tags": {
+"name": "Viet Lotus Spa",
+"name:en": "Viet Lotus Spa",
+"shop": "massage",
+"addr:housenumber": "26",
+"addr:street": "Ngõ 12 Đặng Thai Mai",
+"opening_hours": "Mo-Su 09:30-22:00"
+}
+},
+{
+"id": "n5166717821",
+"lat": 21.043208,
+"lon": 105.844719,
+"tags": {
+"name": "Liên Makeup & Hair",
+"shop": "beauty",
+"addr:housenumber": "13",
+"addr:street": "Phố Yên Ninh",
+"addr:district": "Phường Ba Đình",
+"addr:city": "Hà Nội",
+"opening_hours": "24/7"
+}
+},
+{
+"id": "n5221674824",
+"lat": 21.035467,
+"lon": 105.847284,
+"tags": {
+"name": "Toiletries shop",
+"shop": "beauty",
+"addr:street": "Phố Hàng Vải"
+}
+},
+{
+"id": "n5384763225",
+"lat": 21.060692,
+"lon": 105.82381,
+"tags": {
+"name": "Cửa Hàng Mỹ Phẩm Body And Soul",
+"shop": "beauty",
+"addr:housenumber": "5",
+"addr:street": "Đặng Thai Mai"
+}
+},
+{
+"id": "n5415671023",
+"lat": 21.034819,
+"lon": 105.853404,
+"tags": {
+"name": "Quán Spa Marguerite",
+"shop": "massage",
+"addr:street": "ma may street 68",
+"opening_hours": "Mo-Su 09:00-23:30"
+}
+},
+{
+"id": "n5485796271",
+"lat": 21.028515,
+"lon": 105.810805,
+"tags": {
+"name": "Spa July",
+"shop": "beauty",
+"beauty": "nails",
+"addr:housenumber": "12",
+"addr:street": "Phạm Huy Thông",
+"addr:subdistrict": "Ngọc Khánh",
+"addr:district": "Quận Ba Đình",
+"addr:city": "Hà Nội",
+"opening_hours": "09:00-21:00"
+}
+},
+{
+"id": "n5485798268",
+"lat": 21.02268,
+"lon": 105.800652,
+"tags": {
+"name": "Thẩm mĩ viện Hoài Anh",
+"shop": "beauty"
+}
+},
+{
+"id": "n5721597321",
+"lat": 21.030506,
+"lon": 105.849834,
+"tags": {
+"name": "Tiệm Nail Phương Chuột",
+"name:en": "The Mousenail Salon",
+"shop": "beauty",
+"addr:street": "Phố Hàng Trống"
+}
+},
+{
+"id": "n5745702575",
+"lat": 21.032932,
+"lon": 105.846399,
+"tags": {
+"name": "Cửa Hàng Mỹ Phẩm Nail Kitchen",
+"shop": "beauty",
+"addr:housenumber": "37",
+"addr:street": "Đường Thành",
+"addr:district": "Phường Hoàn Kiếm",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n5769895971",
+"lat": 21.063092,
+"lon": 105.831916,
+"tags": {
+"name": "Cửa Hàng Mỹ Phẩm Nail Kitchen",
+"shop": "beauty",
+"beauty": "nails",
+"addr:street": "Đường Âu Cơ",
+"addr:city": "Hanoi",
+"opening_hours": "Mo-Su 09:30-19:30"
+}
+},
+{
+"id": "n6709438259",
+"lat": 21.020088,
+"lon": 105.843706,
+"tags": {
+"name": "Cửa Hàng Mỹ Phẩm Michelia Beauty",
+"shop": "beauty",
+"beauty": "spa",
+"addr:housenumber": "84",
+"addr:street": "Phố Nguyễn Du",
+"addr:subdistrict": "Trần Hưng Đạo",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n6986697628",
+"lat": 21.014547,
+"lon": 105.815374,
+"tags": {
+"name": "Spa HB",
+"shop": "massage",
+"addr:housenumber": "63",
+"addr:street": "Ngõ Thái Hà",
+"addr:subdistrict": "Láng Hạ",
+"addr:district": "Đống Đa",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n7162737583",
+"lat": 21.034859,
+"lon": 105.851235,
+"tags": {
+"name": "Thanh Thái",
+"shop": "beauty"
+}
+},
+{
+"id": "n7162745075",
+"lat": 21.034893,
+"lon": 105.851319,
+"tags": {
+"name": "Spa",
+"shop": "massage",
+"addr:housenumber": "31",
+"addr:district": "Phường Hoàn Kiếm",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "n7162759375",
+"lat": 21.031017,
+"lon": 105.855929,
+"tags": {
+"name": "Thuan Beauty Salon",
+"shop": "beauty"
+}
+},
+{
+"id": "n7168904369",
+"lat": 21.032274,
+"lon": 105.848486,
+"tags": {
+"name": "Thu Spa",
+"shop": "massage"
+}
+},
+{
+"id": "n7176665445",
+"lat": 21.025482,
+"lon": 105.851787,
+"tags": {
+"name": "The Nail Bar",
+"shop": "beauty"
+}
+},
+{
+"id": "n7176897213",
+"lat": 21.030228,
+"lon": 105.849069,
+"tags": {
+"name": "Thang Long",
+"shop": "massage"
+}
+},
+{
+"id": "n7176900623",
+"lat": 21.033639,
+"lon": 105.853887,
+"tags": {
+"name": "Pure Bliss Spa",
+"shop": "massage"
+}
+},
+{
+"id": "n7200180181",
+"lat": 21.031766,
+"lon": 105.848431,
+"tags": {
+"name": "Quán Massge Mido",
+"shop": "massage"
+}
+},
+{
+"id": "n7472889610",
+"lat": 21.033211,
+"lon": 105.806533,
+"tags": {
+"name": "Thẩm Mỹ Sen",
+"shop": "beauty",
+"beauty": "spa;skin_care;hair_removal;waxing;eyebrow;cosmetics;laser_hair_removal;foot;aesthetic;massage;skin",
+"addr:housenumber": "57",
+"addr:street": "Phố Đào Tấn",
+"addr:subdistrict": "Ngọc Khánh",
+"addr:district": "Quận Ba Đình",
+"addr:city": "Hà Nội",
+"opening_hours": "Mo-Su 09:00-21:00"
+}
+},
+{
+"id": "n8516000218",
+"lat": 21.003158,
+"lon": 105.816225,
+"tags": {
+"name": "Q Brows Microblading",
+"name:en": "Q Brows Microblading - Permanent Makeup",
+"name:vi": "Q Brows Microblading - Permanent Makeup",
+"shop": "beauty",
+"addr:housenumber": "R4",
+"addr:street": "Royal City Complex",
+"opening_hours": "Mo-Sa 09:00-18:00"
+}
+},
+{
+"id": "n8784791199",
+"lat": 20.999642,
+"lon": 105.870314,
+"tags": {
+"name": "Cửa Hàng Thẩm Mỹ Dr Pluscell",
+"shop": "beauty",
+"addr:housenumber": "505",
+"addr:street": "Phố Minh Khai",
+"addr:subdistrict": "Vĩnh Tuy",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "r20959387",
+"lat": 21.025458,
+"lon": 105.857177,
+"tags": {
+"name": "Hà Anh Health & Beauty",
+"shop": "beauty",
+"addr:housenumber": "8",
+"addr:street": "Phố Lý Đạo Thành",
+"addr:subdistrict": "Tràng Tiền",
+"addr:district": "Hoàn Kiếm",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "w1196690240",
+"lat": 21.031188,
+"lon": 105.800493,
+"tags": {
+"name": "Thu Cúc",
+"shop": "beauty"
+}
+},
+{
+"id": "w1219036275",
+"lat": 21.016931,
+"lon": 105.831732,
+"tags": {
+"name": "Charlie International Clinic",
+"shop": "beauty",
+"addr:housenumber": "480",
+"addr:street": "Phố Xã Đàn",
+"addr:subdistrict": "Nam Đồng",
+"addr:district": "Đống Đa",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "w1219334461",
+"lat": 21.016308,
+"lon": 105.832494,
+"tags": {
+"name": "Phòng khám thẩm mỹ quốc tế Mega Gangnam",
+"shop": "beauty",
+"addr:housenumber": "454",
+"addr:street": "Phố Xã Đàn",
+"addr:subdistrict": "Nam Đồng",
+"addr:district": "Đống Đa",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "w1235442380",
+"lat": 21.012586,
+"lon": 105.850539,
+"tags": {
+"name": "Charm by Cham Clinic",
+"shop": "beauty",
+"addr:housenumber": "149",
+"addr:street": "Phố Triệu Việt Vương",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "w1238050542",
+"lat": 21.014425,
+"lon": 105.850597,
+"tags": {
+"name": "Shynh Premium",
+"shop": "beauty",
+"addr:housenumber": "99",
+"addr:street": "Phố Triệu Việt Vương",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "w1247335539",
+"lat": 21.015467,
+"lon": 105.849695,
+"tags": {
+"name": "Uyen Beauty",
+"shop": "beauty",
+"addr:housenumber": "76",
+"addr:street": "Phố Bùi Thị Xuân",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "w1253325088",
+"lat": 21.016095,
+"lon": 105.850744,
+"tags": {
+"name": "Viện thẩm mỹ Kang Jin",
+"shop": "beauty",
+"addr:housenumber": "14-16",
+"addr:street": "Phố Mai Hắc Đế",
+"addr:subdistrict": "Nguyễn Du",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "w702889625",
+"lat": 20.982923,
+"lon": 105.849868,
+"tags": {
+"name": "Thùy Dương Hair & Beauty",
+"shop": "beauty",
+"addr:housenumber": "174",
+"addr:street": "Phố Tân Mai"
+}
+},
+{
+"id": "w892577149",
+"lat": 21.000839,
+"lon": 105.816398,
+"tags": {
+"name": "Lisa Medi",
+"shop": "beauty"
+}
+},
+{
+"id": "w892577354",
+"lat": 21.000758,
+"lon": 105.81627,
+"tags": {
+"name": "Lebon Skin Lab",
+"shop": "beauty"
+}
+},
+{
+"id": "w904729835",
+"lat": 21.01151,
+"lon": 105.84849,
+"tags": {
+"name": "Arina Clinic",
+"shop": "beauty",
+"addr:housenumber": "42",
+"addr:street": "Phố Lê Đại Hành",
+"addr:subdistrict": "Lê Đại Hành",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+},
+{
+"id": "w904729836",
+"lat": 21.011552,
+"lon": 105.848447,
+"tags": {
+"name": "Zenila",
+"shop": "beauty",
+"addr:housenumber": "42",
+"addr:street": "Phố Lê Đại Hành",
+"addr:subdistrict": "Lê Đại Hành",
+"addr:district": "Hai Bà Trưng",
+"addr:city": "Hà Nội"
+}
+}
+]
+}
+}
