@@ -204,3 +204,8 @@ Object.assign(UI.vi, { vTp: "Kỹ thuật viên phụ trách", vTpNow: "đang l�
   tpRvNote: "Một lời khen", tpRvPh: "VD: Lực tay rất vừa", tpRvSend: "Gửi cho kỹ thuật viên", tpRvDone: "Đánh giá đã đến kỹ thuật viên. Cảm ơn bạn!",
   tpRvBoxTitle: "Hãy khen kỹ thuật viên của bạn", tpRvBoxDesc: "Đánh giá sẽ đến kỹ thuật viên bạn chọn. Mỗi đánh giá được xác nhận, Uncle Day tặng kỹ thuật viên một khoản thưởng nhỏ.",
   tpRvNeed: "Hãy chọn kỹ thuật viên.", tpQrFind: "Để đánh giá kỹ thuật viên, hãy tìm lịch hẹn của bạn trước. Mở lịch hẹn là chọn được kỹ thuật viên.", tpRvSent: "Kỹ thuật viên đã được bạn đánh giá" });
+
+/* 예약 조회 입구 */
+Object.assign(UI.ko, { vAlready: "이미 예약하셨나요?", vFindFoot: "로그인 없이 예약번호와 연락처로 내 예약을 볼 수 있어요.", vTooMany: "여러 번 틀려서 잠시 막혔어요. 15분 뒤에 다시 해 주세요." });
+Object.assign(UI.en, { vAlready: "Already booked?", vFindFoot: "See your booking without logging in — just your booking number and contact.", vTooMany: "Too many tries. Please try again in 15 minutes." });
+Object.assign(UI.vi, { vAlready: "Bạn đã đặt lịch rồi?", vFindFoot: "Xem lịch hẹn không cần đăng nhập — chỉ cần mã đặt lịch và thông tin liên hệ.", vTooMany: "Bạn nhập sai nhiều lần. Hãy thử lại sau 15 phút." });

@@ -178,6 +178,7 @@ if (!shop) {
     <div class="sim">${similar.map(s => `<a class="sim-item" href="${shopLink(s.id)}"><b>${tx(s.name)}</b><small>${cityName(s.city)} · ${s.tags.slice(0, 2).map(t => tx(t)).join(", ")}</small></a>`).join("")}</div>` : ""}
 
     <h2 id="bookTitle" ${pending ? "hidden" : ""}>${ui("book")}</h2>
+    <p class="find-hint" ${pending ? "hidden" : ""}>${ui("vAlready")} <a href="booking.html">🔎 ${ui("vFind")}</a></p>
     <form id="form" class="form" ${pending ? "hidden" : ""}>
       <label>${ui("fMenu")}<select name="menu" id="fMenu">${shop.menu.map((m, i) =>
         `<option value="${i}">${tx(m.name)} – ${money(m.price)}</option>`).join("")}</select></label>

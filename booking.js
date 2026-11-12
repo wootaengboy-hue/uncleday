@@ -30,7 +30,7 @@ function findForm(msg) {
     try {
       const t = await LIVE.rpc("find_booking", { c: f.c, ct: f.ct });
       if (t) location.hash = t; else toastV(ui("vNotFound"));
-    } catch (err) { toastV(ui("vNotFound")); }
+    } catch (err) { toastV(/Too many/i.test(err && err.message || "") ? ui("vTooMany") : ui("vNotFound")); }
   };
 }
 
