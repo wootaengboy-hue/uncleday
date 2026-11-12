@@ -237,3 +237,25 @@
 .ob-q.ok { color: var(--green); font-weight: 600; }
 .ob-qdone { margin: 0; text-align: center; font-weight: 700; color: var(--green); }
 .ob-plan { user-select: none; -webkit-user-select: none; }
+/* 게임: 화분 · 펫 · 챙기기 · 레벨 */
+.ob-item .e { display: block; }
+.ob-item .st { position: absolute; left: 50%; top: -12px; transform: translateX(-50%); font-size: 10px; line-height: 1; white-space: nowrap; color: #2E7D4F; letter-spacing: -1px; }
+.ob-item.thirsty .st { font-size: 15px; animation: ob-bob 1.2s ease-in-out infinite; letter-spacing: 0; }
+.ob-item.thirsty .e { filter: saturate(.55); }
+.ob-item.ready .st { font-size: 16px; animation: ob-twinkle 1s ease-in-out infinite; letter-spacing: 0; }
+.ob-item.ready .e { transform: scale(1.12); }
+.ob-item.play { pointer-events: auto; cursor: pointer; }
+.ob-item.play:hover .e { transform: scale(1.18); transition: transform .15s; }
+@keyframes ob-bob { 50% { transform: translate(-50%, -3px); } }
+@keyframes ob-twinkle { 50% { opacity: .45; transform: translateX(-50%) scale(1.25); } }
+.ob-float { position: absolute; transform: translate(-50%, 0); background: #fff; border: 1.5px solid var(--green); color: var(--green); font-weight: 700; font-size: 13px; border-radius: 999px; padding: 2px 9px; white-space: nowrap; pointer-events: none; z-index: 5000; animation: ob-up 1.6s ease forwards; }
+@keyframes ob-up { 0% { opacity: 0; transform: translate(-50%, 8px); } 15% { opacity: 1; transform: translate(-50%, 0); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -22px); } }
+.ob-w.tap .ob-spr { pointer-events: auto; cursor: pointer; }
+.ob-care { position: absolute; transform: translate(-50%, -100%); background: #fff; border: 1.5px solid #3A2E25; border-radius: 12px; padding: 6px; display: flex; gap: 4px; align-items: center; z-index: 5001; box-shadow: 0 6px 18px rgba(14,40,67,.18); white-space: nowrap; }
+.ob-care b { font-size: 12px; padding: 0 4px; }
+.ob-care button { border: 1px solid var(--line); background: #F7F5F0; border-radius: 9px; padding: 5px 8px; font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+.ob-hud { display: inline-flex; align-items: center; border-radius: 999px; background: #FFF4D6; color: #7A5200; font-weight: 700; font-size: 13px; padding: 0 12px; min-height: 36px; white-space: nowrap; }
+.ob-lv { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; font-size: 13px; }
+.ob-lv i { height: 8px; border-radius: 999px; background: linear-gradient(90deg, #F5B84C var(--p), #EEE9DD var(--p)); }
+.ob-lv small { color: var(--sub); font-variant-numeric: tabular-nums; }
+.ob-q .ob-btn { min-height: 30px; padding: 0 10px; font-size: 12.5px; }

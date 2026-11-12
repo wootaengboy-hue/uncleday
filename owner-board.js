@@ -16,6 +16,13 @@
     hNoStaff: ["Chưa ghi KTV", "담당 미기록", "No therapist"], hSetTp: ["Thêm KTV", "담당 넣기", "Add therapist"], hEditTp: ["Đổi", "바꾸기", "Edit"], hSaveTp: ["Lưu", "저장", "Save"], hTpSaved: ["Đã lưu KTV phụ trách.", "담당을 저장했어요.", "Therapist saved."], hByReview: ["khách xác nhận qua đánh giá", "손님 후기로 확인", "confirmed by guest review"], hRv: ["Đánh giá KTV", "💌 테라피스트 후기", "💌 Therapist reviews"], hRvNone: ["Chưa có đánh giá.", "아직 받은 후기가 없어요.", "No reviews yet."], hRvHint: ["Khách đặt qua Uncle Day có thể viết đánh giá cho KTV sau khi đến. Mỗi đánh giá được xác nhận, Uncle Day thưởng cho KTV.", "엉클데이 예약 손님은 방문 뒤 담당 테라피스트에게 후기를 쓸 수 있어요. 확인된 후기 한 건마다 엉클데이가 테라피스트에게 보너스를 줘요.", "Uncle Day guests can review their therapist after the visit. Uncle Day pays the therapist a bonus per verified review."],
     hByShop: ["nhập tay", "직접 입력", "entered by shop"],
     decoBtn: ["🪴 Trang trí", "🪴 꾸미기", "🪴 Decorate"], decoHint: ["Kéo để di chuyển · bấm đúp để xoá · tối đa 40 món", "끌어서 옮기고, 두 번 누르면 지워요 · 최대 40개", "Drag to move · double-tap to remove · up to 40"],
+    gq_done: ["Xong {n} lượt làm", "시술 {n}건 끝내기", "Finish {n} sessions"], gq_water: ["Tưới cây {n} lần", "화분에 물 {n}번 주기", "Water plants {n} times"], gq_care: ["Chăm KTV {n} lần (ăn vặt · khen)", "테라피스트 챙기기 {n}번 (간식 · 칭찬)", "Care for staff {n} times (snack · praise)"],
+    gq_ud: ["Đón {n} khách Uncle Day", "엉클데이 손님 {n}팀 모시기", "Serve {n} Uncle Day guests"], gq_ontime: ["Hôm nay không ai đi trễ", "오늘 지각 0명", "Nobody late today"],
+    claim: ["Nhận", "받기", "Claim"], claimed: ["Đã nhận ✓", "받음 ✓", "Claimed ✓"], gHint: ["🪴 Bấm chậu cây để tưới, cây nở hoa (✨) thì bấm để thu hoạch · bấm nhân viên đang nghỉ để cho ăn vặt/khen · vuốt ve thú cưng", "🪴 화분을 누르면 물을 줘요. 꽃이 피면(✨) 눌러서 수확해요 · 쉬는 직원을 누르면 간식·칭찬 · 펫을 쓰다듬어 보세요", "🪴 Tap a plant to water it, tap again when it blooms (✨) to harvest · tap a resting staff for a snack/praise · pet the animals"],
+    gNoPlant: ["Chưa có chậu cây. Bấm 🪴 Trang trí để đặt chậu cây.", "화분이 아직 없어요. 🪴 꾸미기에서 화분을 놓아 보세요.", "No plants yet. Add one with 🪴 Decorate."],
+    lvT: [["Mầm non", "Tiệm khu phố", "Có khách quen", "Được truyền tai", "Điểm hẹn khu phố", "Spa được yêu thích", "Nổi tiếng khu vực", "Uncle Day đề cử", "Uncle Day chứng nhận", "Huyền thoại"], ["새싹 매장", "동네 가게", "단골 생긴 집", "입소문 난 곳", "동네 명소", "인기 스파", "지역 대표", "엉클 추천", "엉클 인증", "전설의 스파"], ["Sprout", "Local shop", "Has regulars", "Word of mouth", "Local spot", "Popular spa", "Area favorite", "Uncle Day pick", "Uncle Day certified", "Legend"]],
+    lvUp: ["🎉 Lên cấp! Lv{n} {t}", "🎉 레벨 업! Lv{n} {t}", "🎉 Level up! Lv{n} {t}"], watered: ["💧 +3XP", "💧 물 줬어요 +3XP", "💧 +3XP"], harvested: ["🌸 +10🪙 +8XP", "🌸 수확! +10🪙 +8XP", "🌸 +10🪙 +8XP"], petted: ["❤️ +2XP", "❤️ 좋아해요 +2XP", "❤️ +2XP"],
+    snack: ["🍵 Ăn vặt (5🪙)", "🍵 간식 (5🪙)", "🍵 Snack (5🪙)"], praise: ["👏 Khen", "👏 칭찬", "👏 Praise"], snacked: ["🍵 +2XP", "🍵 간식 줬어요 +2XP", "🍵 +2XP"], praised: ["👏 +1XP", "👏 칭찬했어요 +1XP", "👏 +1XP"],
     decoSave: ["Lưu trang trí", "꾸미기 저장", "Save"], decoCancel: ["Huỷ", "취소", "Cancel"], decoSaved: ["Đã lưu trang trí.", "꾸민 모습을 저장했어요.", "Decor saved."], decoMax: ["Tối đa 40 món.", "40개까지 놓을 수 있어요.", "Up to 40 items."],
     dk_plant: ["Chậu cây", "화분", "Plant"], dk_palm: ["Cây cọ", "야자수", "Palm"], dk_flower: ["Hoa", "꽃", "Flowers"], dk_fish: ["Bể cá", "어항", "Aquarium"], dk_lantern: ["Đèn lồng", "등불", "Lantern"], dk_candle: ["Nến thơm", "아로마 캔들", "Candle"], dk_cat: ["Mèo", "고양이", "Cat"], dk_dog: ["Chó", "강아지", "Dog"],
     qT: ["🎯 Nhiệm vụ hôm nay", "🎯 오늘의 퀘스트", "🎯 Today's quests"], q1: ["Phục vụ {n} lượt khách", "손님 {n}팀 모시기", "Serve {n} guests"], q2: ["Không ai đi trễ", "지각 0명", "Nobody late"], q3: ["Không để khách chờ", "기다리는 손님 0명", "No one waiting"], q4: ["Mọi người đã chấm công", "근무자 모두 출근", "Everyone clocked in"],
@@ -187,6 +194,14 @@
     "Booking not found": ["Không tìm thấy đặt chỗ.", "예약을 찾을 수 없어요.", "Booking not found."],
     "Floors: 1 to 6": ["Số tầng: 1–6.", "층은 1~6층까지예요.", "Floors: 1 to 6."],
     "Rooms: 1 to 40": ["Số phòng: 1–40.", "방은 40개까지예요.", "Rooms: 1 to 40."],
+    "Still moist": ["Đất còn ẩm. Tưới lại sau 2 tiếng.", "아직 촉촉해요. 2시간 뒤에 다시 주세요.", "Still moist. Water again in 2 hours."],
+    "Ready to harvest": ["Cây đã nở hoa, bấm để thu hoạch.", "꽃이 폈어요. 눌러서 수확하세요.", "It bloomed. Tap to harvest."],
+    "Not ready yet": ["Chưa nở hoa.", "아직 꽃이 안 폈어요.", "Not bloomed yet."],
+    "Not enough coins": ["Không đủ xu.", "코인이 모자라요.", "Not enough coins."],
+    "Praise once an hour": ["Mỗi người khen 1 lần mỗi giờ.", "칭찬은 한 사람에게 1시간에 한 번이에요.", "Praise once an hour per person."],
+    "Pet is napping": ["Bé đang ngủ, lát nữa nhé.", "펫이 낮잠 자요. 30분 뒤에 다시 쓰다듬어 주세요.", "Napping. Try again in 30 minutes."],
+    "Quest not finished": ["Nhiệm vụ chưa xong.", "아직 퀘스트를 다 못 했어요.", "Quest not finished."],
+    "Plant not found": ["Hãy lưu trang trí trước.", "꾸미기를 먼저 저장해 주세요.", "Save the decor first."],
     "Too many items": ["Quá nhiều đồ vật.", "배치한 물건이 너무 많아요.", "Too many items."],
   };
   const errTx = e => { const m = e && e.message, k = m && Object.keys(ERR).find(x => m.indexOf(x) >= 0); return k ? ERR[k][li()] : C.errMsg(e); };
@@ -196,7 +211,8 @@
     catch (e) { C.toast(errTx(e)); return null; }
     finally { busy = false; }
   }
-  async function load() { try { setData(await C.rpc("board_get", { shop: C.shopId })); } catch (e) { C.toast(errTx(e)); } }
+  let gameT = 0;
+  async function load() { try { setData(await C.rpc("board_get", { shop: C.shopId })); } catch (e) { C.toast(errTx(e)); return; } if (!game || Date.now() - gameT > 30000) { gameT = Date.now(); loadGame(); } }
   function setData(d) {
     if (!d || !d.layout) return;
     data = d; skew = Date.parse(d.now) - Date.now();
@@ -298,7 +314,9 @@
   /* ---------- 6단계: 꾸미기 · 펫 · 대기 중 몸짓 · 오늘의 퀘스트 ---------- */
   const DECO = { plant: "🪴", palm: "🌴", flower: "💐", fish: "🐠", lantern: "🏮", candle: "🕯️", cat: "🐈", dog: "🐕" };
   const PETS = ["cat", "dog"];
-  let deco = null, pets = [], drag = null, itemSig = "";
+  let deco = null, pets = [], drag = null, itemSig = "", game = null, care = null;
+  const rid = () => Math.random().toString(36).slice(2, 9);
+  const POTS = ["plant", "palm", "flower"];
   const itemsNow = () => deco ? deco.items : ((data && data.layout && data.layout.items) || []).filter(it => it && DECO[it.k]);
   function slabOf(fl) { return (G.slabs || []).find(s => s.fl === fl) || (G.slabs || [])[(G.slabs || []).length - 1]; }
   function renderItems() {
@@ -307,11 +325,47 @@
     itemsNow().forEach((it, i) => {
       const sl = slabOf(it.fl); if (!sl) return;
       const x = sl.x + Math.max(0.02, Math.min(0.98, +it.rx || 0.5)) * sl.w, y = sl.y + Math.max(0.1, Math.min(0.98, +it.ry || 0.5)) * sl.h;
-      const el = document.createElement("div"); el.className = "ob-item" + (PETS.includes(it.k) ? " pet" : "") + (deco ? " edit" : "");
-      el.dataset.i = i; el.textContent = DECO[it.k]; el.title = t("dk_" + it.k); el.style.left = x + "px"; el.style.top = y + "px";
+      const el = document.createElement("div"); el.className = "ob-item" + (PETS.includes(it.k) ? " pet" : "") + (POTS.includes(it.k) ? " pot" : "") + (deco ? " edit" : "") + (!deco && !C.readOnly && it.id && game && (POTS.includes(it.k) || PETS.includes(it.k)) ? " play" : "");
+      el.dataset.i = i; if (it.id) el.dataset.gi = it.id; el.innerHTML = `<span class="e">${DECO[it.k]}</span><span class="st"></span>`; el.title = t("dk_" + it.k); el.style.left = x + "px"; el.style.top = y + "px";
       plan.appendChild(el);
       if (PETS.includes(it.k) && !deco) pets.push({ el, x, y, hx: x, sl, vx: Math.random() < 0.5 ? -1 : 1, rest: Math.random() * 3 });
     });
+    updatePots();
+  }
+  // 화분 상태: 💧 목마름 · 🌱 자라는 중(●●○) · ✨ 수확
+  function updatePots() {
+    if (!plan) return;
+    plan.querySelectorAll(".ob-item.pot").forEach(el => {
+      const p = game && el.dataset.gi ? (game.plants || {})[el.dataset.gi] || {} : null, st = el.querySelector(".st");
+      if (!p) { st.textContent = ""; el.classList.remove("ready", "thirsty"); return; }
+      const g = +p.g || 0, w = p.w ? Date.parse(p.w) : 0, thirsty = g < 3 && (!w || Date.now() - w > 6 * 3600e3);
+      el.classList.toggle("ready", g >= 3); el.classList.toggle("thirsty", thirsty);
+      st.textContent = g >= 3 ? "✨" : thirsty ? "💧" : "●".repeat(g) + "○".repeat(3 - g);
+    });
+  }
+  async function loadGame() {
+    try { game = await C.rpc("game_get", { shop: C.shopId }); } catch (e) { game = null; return; }
+    // 예전에 놓은 꾸미기에 아이디가 없으면 한 번 붙여서 저장 (물 주기 · 쓰다듬기에 필요해요)
+    const its = (data && data.layout && data.layout.items) || [];
+    if (!C.readOnly && its.some(it => it && !it.id)) {
+      const items = its.map(it => Object.assign({}, it, { id: it.id || rid() }));
+      try { await C.rpc("board_items_save", { shop: C.shopId, items }); data.layout.items = items; itemSig = JSON.stringify(items); } catch (e) {}
+    }
+    renderItems(); renderTop(); renderQuests();
+  }
+  function renderCare() {
+    if (!plan) return; plan.querySelectorAll(".ob-care").forEach(e => e.remove()); if (!care) return;
+    const el = document.createElement("div"); el.className = "ob-care"; el.style.left = care.at.x + "px"; el.style.top = care.at.y + "px";
+    el.innerHTML = `<b>${esc(care.name)}</b><button data-care="snack">${t("snack")}</button><button data-care="praise">${t("praise")}</button>`; plan.appendChild(el);
+  }
+  function floatAt(x, y, txt) { if (!plan) return; const f = document.createElement("div"); f.className = "ob-float"; f.textContent = txt; f.style.left = x + "px"; f.style.top = y + "px"; plan.appendChild(f); setTimeout(() => f.remove(), 1600); }
+  async function gameAct(act, arg, at, okTxt) {
+    if (busy || C.readOnly) return; busy = true;
+    const lv0 = game && game.level ? game.level.lv : 0;
+    try { game = await C.rpc("game_act", { shop: C.shopId, act, arg }); if (at) floatAt(at.x, at.y, okTxt); }
+    catch (e) { C.toast(errTx(e)); busy = false; return; }
+    busy = false; updatePots(); renderTop(); renderQuests();
+    if (game.level && game.level.lv > lv0 && lv0) C.toast(t("lvUp", { n: game.level.lv, t: T.lvT[li()][game.level.lv - 1] || "" }));
   }
   function petStep(dt) {
     pets.forEach(p => {
@@ -332,7 +386,7 @@
   function decoStart() { deco = { items: JSON.parse(JSON.stringify(itemsNow())) }; decoBar(); renderItems(); renderTop(); }
   async function decoEnd(save) {
     if (save && deco) {
-      const items = deco.items.slice(0, 40).map(it => ({ k: it.k, fl: it.fl, rx: Math.round(it.rx * 1000) / 1000, ry: Math.round(it.ry * 1000) / 1000 }));
+      const items = deco.items.slice(0, 40).map(it => ({ id: it.id || rid(), k: it.k, fl: it.fl, rx: Math.round(it.rx * 1000) / 1000, ry: Math.round(it.ry * 1000) / 1000 }));
       if (busy) return; busy = true;
       try { await C.rpc("board_items_save", { shop: C.shopId, items }); data.layout.items = items; C.toast(t("decoSaved")); } catch (e) { C.toast(errTx(e)); busy = false; return; }
       busy = false;
@@ -358,6 +412,7 @@
   const EMO = ["☕", "💬", "📱", "🎵", "😊", "💪", "🍜", "😴"];
   function emote() {
     if (!data || view !== "board" || document.hidden) return;
+    updatePots();
     const idle = data.staff.filter(s => ["idle", "desk"].includes(stOf(s))).map(s => W.get(s.id)).filter(w => w && !w.moving && !w.el.hidden);
     if (!idle.length) return;
     const w = idle[Math.floor(Math.random() * idle.length)], b = document.createElement("div");
@@ -365,6 +420,17 @@
   }
   function renderQuests() {
     const el = root.querySelector("#obQ"); if (!el || !data) return;
+    if (game && Array.isArray(game.quests)) {
+      const lv = game.level || { lv: 1, from: 0, to: 60 }, pct = lv.to ? Math.round((game.xp - lv.from) / (lv.to - lv.from) * 100) : 100;
+      const hasPot = ((data.layout && data.layout.items) || []).some(it => it && POTS.includes(it.k));
+      el.innerHTML = `<h3><span>${t("qT")}</span><small>🪙 ${game.coins}</small></h3>
+        <div class="ob-lv"><b>Lv${lv.lv} ${esc(T.lvT[li()][lv.lv - 1] || "")}</b><i style="--p:${pct}%"></i><small>${game.xp}${lv.to ? " / " + lv.to : ""} XP</small></div>
+        ${game.quests.map(q => { const ok = q.p >= q.n; return `<div class="ob-q ${q.claimed ? "ok" : ""}"><span>${q.claimed ? "✅" : ok ? "🎁" : "⬜"} ${esc(t("gq_" + q.id, { n: q.n }))}</span>
+          ${q.claimed ? `<b>${t("claimed")}</b>` : ok && !C.readOnly ? `<button class="ob-btn" data-claim="${q.id}">${t("claim")} +${q.c}🪙</button>` : `<b>${Math.min(q.p, q.n)}/${q.n}</b>`}<i style="--p:${Math.round(Math.min(1, q.p / q.n) * 100)}%"></i></div>`; }).join("")}
+        ${game.quests.every(q => q.claimed) ? `<p class="ob-qdone">${t("qDone")}</p>` : ""}
+        <p class="ob-note">${C.readOnly ? "" : hasPot ? t("gHint") : t("gNoPlant")}</p>`;
+      return;
+    }
     const groups = new Set(data.sessions.filter(x => x.status === "done").map(x => x.grp || x.id)).size;
     const target = Math.max(5, Math.min(30, (G.st ? G.st.size : 4) * 2));
     const sched = data.staff.filter(s => s.code !== "O"), ins = sched.filter(s => s.in_at).length;
@@ -453,7 +519,7 @@
     data.staff.forEach((s, i) => {
       seen.add(s.id);
       let w = W.get(s.id);
-      if (!w) { w = mkW(lookOf(s.look, i)); W.set(s.id, w); }
+      if (!w) { w = mkW(lookOf(s.look, i)); W.set(s.id, w); w.el.dataset.sid = s.id; if (!C.readOnly) w.el.classList.add("tap"); }
       const state = stOf(s), x = sessOf(s.id);
       w.el.classList.toggle("hi", s.role === "tp" && tps.indexOf(s) % 2 === 1);
       let loc = { k: "out" };
@@ -544,7 +610,7 @@
   }
   function renderTop() {
     const n = data.pending_req || 0;
-    root.querySelector("#obTop").innerHTML = `<button class="ob-vt ${view === "board" ? "on" : ""}" data-v="board">🗺️ ${t("vBoard")}</button><button class="ob-vt ${view === "sched" ? "on" : ""}" data-v="sched">📅 ${t("vSched")}${n ? `<span class="n">${n}</span>` : ""}</button>${owner() ? `<button class="ob-vt ${view === "hist" ? "on" : ""}" data-v="hist">📋 ${t("vHist")}</button>` : ""}<span class="ob-sp"></span>${view === "board" && !C.readOnly && !deco ? `<button class="ob-vt" data-a="deco">${t("decoBtn")}</button>` : ""}${openBtn()}${owner() ? `<button class="ob-vt" data-a="set">${t("vSet")}</button>` : ""}<button class="ob-vt" data-a="reload" aria-label="refresh">${t("refresh")}</button>`;
+    root.querySelector("#obTop").innerHTML = `<button class="ob-vt ${view === "board" ? "on" : ""}" data-v="board">🗺️ ${t("vBoard")}</button><button class="ob-vt ${view === "sched" ? "on" : ""}" data-v="sched">📅 ${t("vSched")}${n ? `<span class="n">${n}</span>` : ""}</button>${owner() ? `<button class="ob-vt ${view === "hist" ? "on" : ""}" data-v="hist">📋 ${t("vHist")}</button>` : ""}<span class="ob-sp"></span>${view === "board" && !C.readOnly && !deco ? `<button class="ob-vt" data-a="deco">${t("decoBtn")}</button>` : ""}${openBtn()}${game && game.level && view === "board" ? `<span class="ob-hud" title="XP ${game.xp}">Lv${game.level.lv} ${esc(T.lvT[li()][game.level.lv - 1] || "")} · 🪙${game.coins}</span>` : ""}${owner() ? `<button class="ob-vt" data-a="set">${t("vSet")}</button>` : ""}<button class="ob-vt" data-a="reload" aria-label="refresh">${t("refresh")}</button>`;
   }
   function openBtn() {
     const ss = data.shop_state; if (!ss) return "";
@@ -881,8 +947,20 @@
       loadHist(); return; }
     const dk = e.target.closest("[data-dk]"); if (dk && deco) { if (deco.items.length >= 40) { C.toast(t("decoMax")); return; } const r = plan.getBoundingClientRect(), sc = r.width / G.PW, vy = (Math.min(window.innerHeight, r.bottom) + Math.max(0, r.top)) / 2;
       const py = (vy - r.top) / sc, sl = (G.slabs || []).find(q => py >= q.y && py <= q.y + q.h) || slabOf(1);
-      deco.items.push({ k: dk.dataset.dk, fl: sl.fl, rx: 0.25 + Math.random() * 0.5, ry: sl.fl === 1 ? 0.2 + Math.random() * 0.15 : 0.82 + Math.random() * 0.1 }); renderItems(); return; }
+      deco.items.push({ id: rid(), k: dk.dataset.dk, fl: sl.fl, rx: 0.25 + Math.random() * 0.5, ry: sl.fl === 1 ? 0.2 + Math.random() * 0.15 : 0.82 + Math.random() * 0.1 }); renderItems(); return; }
     const dx = e.target.closest("[data-dx]"); if (dx) { decoEnd(dx.dataset.dx === "save"); return; }
+    if (!deco && !C.readOnly && game) {
+      const cl = e.target.closest("[data-claim]"); if (cl) { gameAct("claim", cl.dataset.claim); return; }
+      const cb = e.target.closest("[data-care]"); if (cb && care) { const c0 = care; care = null; renderCare(); gameAct(cb.dataset.care, c0.sid, c0.at, t(cb.dataset.care === "snack" ? "snacked" : "praised")); return; }
+      const gi = e.target.closest(".ob-item.play"); if (gi) { const it = itemsNow().find(x => x.id === gi.dataset.gi); if (!it) return;
+        const at = { x: parseFloat(gi.style.left), y: parseFloat(gi.style.top) - 34 };
+        if (PETS.includes(it.k)) gameAct("pet", it.id, at, t("petted"));
+        else { const p = (game.plants || {})[it.id] || {}; (+p.g || 0) >= 3 ? gameAct("harvest", it.id, at, t("harvested")) : gameAct("water", it.id, at, t("watered")); }
+        return; }
+      const wk = e.target.closest(".ob-w.tap"); if (wk) { const st = data.staff.find(x => x.id === wk.dataset.sid), w = W.get(wk.dataset.sid);
+        if (st && w && ["idle", "desk"].includes(stOf(st)) && !w.moving) { care = care && care.sid === st.id ? null : { sid: st.id, name: st.name, at: { x: w.x, y: w.y - 60 } }; renderCare(); return; } }
+      if (care && !e.target.closest(".ob-care")) { care = null; renderCare(); }
+    }
     if (pick && !e.target.closest(".ob-pop") && !e.target.closest('[data-a="cell"]')) { pick = null; renderPick(); }
     const b = e.target.closest("[data-a]"); if (!b) return;
     const a = b.dataset.a, id = b.dataset.id;
