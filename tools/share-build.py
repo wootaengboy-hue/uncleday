@@ -271,16 +271,93 @@ def hub_page(cid, shops_c):
 </head><body><header class="hd"><div class="in"><a href="/">엉클데이</a><nav>{nav}</nav></div></header>
 <main class="wrap"><h1>{esc(cko)} 마사지 · 스파 · 뷰티 한국어 예약</h1>
 <p class="lead"><b>{esc(lead)}</b></p><p class="en" lang="en">{esc(lead_en)}</p><p class="date">정보 확인: {upd} · 엉클데이(uncleday.com)</p>
-<a class="cta" href="/?city={cid}">엉클데이에서 {esc(cko)} 업체 보기 · 예약하기</a>
+<a class="cta" href="/?city={cid}">엉클데이에서 {esc(cko)} 업체 보기 · 예약하기</a>{f' <a class="cta" style="background:#0e2843" href="/c/{cid}/guide/">📘 {esc(cko)} 마사지 가이드 (가격 · 팁 · 고르는 법)</a>' if cid in GUIDES else ''}
 {sec}
 <h2>자주 묻는 질문</h2><dl>{"".join(f"<dt>{esc(q)}</dt><dd>{esc(a)}</dd>" for q, a in faq)}</dl></main>
 <footer class="wrap">엉클데이 Uncle Day — 베트남 마사지 · 스파 · 뷰티 한국어 예약 · <a href="/">홈</a></footer></body></html>
 """
+# ---- 도시별 안내 글 c/<도시>/guide/ : 사람이 쓴 설명(tools/guides.py) + 업체 데이터에서 자동으로 뽑은 숫자 · 목록 ----
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from guides import GUIDES, SOURCES
+def blob(x): return " ".join([tx(t) for t in (x.get("tags") or [])] + [tx(m.get("name")) for m in (x.get("menu") or [])] + [tx(x.get("desc")), tx(x.get("address")), lang(x.get("address"), "vi")])
+def has(x, pat): return re.search(pat, blob(x)) is not None
+def late(x): c = x.get("close") or ""; return c >= "23:00" or c.startswith("24") or (c and c < "05:00")
+def guide_page(cid, shops_c):
+    G = GUIDES[cid]; city = cities.get(cid, {}); cko = tx(city.get("name")); url = f"{SITE}/c/{cid}/guide/"
+    sp = [x for x in shops_c if grp(x) == "spabody"]
+    link = lambda x: f'<a href="/s/{x["id"]}/">{esc(tx(x.get("name")))}</a>'
+    lst = lambda xs: ", ".join(link(x) for x in xs) if xs else "아직 없어요"
+    srcref = lambda keys: " ".join(f'<sup><a href="#src-{k}">[{list(SOURCES).index(k) + 1}]</a></sup>' for k in keys)
+    used = set()
+    def S(keys): used.update(keys); return srcref(keys)
+    ko = [x for x in sp if "ko" in (x.get("staffLangs") or []) or has(x, "한국어|한국인")]
+    feats = [("🗣️ 한국어 응대", ko), ("🧳 짐 보관", [x for x in sp if has(x, "짐 보관")]), ("🚐 픽업 · 샌딩", [x for x in sp if has(x, "픽업|샌딩")]),
+             ("🚿 샤워", [x for x in sp if has(x, "샤워")]), ("🌙 밤 11시 이후까지", [x for x in sp if late(x)])]
+    # 가격표: 우리가 확인한 참고가만 (시간별)
+    rows = {}
+    for x in sp:
+        for m in x.get("menu") or []:
+            if isinstance(m.get("price"), (int, float)) and m["price"] > 0 and m.get("min"):
+                k = 60 if m["min"] <= 60 else 90 if m["min"] <= 90 else 120
+                rows.setdefault(k, []).append((int(m["price"]), x))
+    ptab = "".join(f'<tr><td>{"120분 이상" if k == 120 else str(k) + "분"}</td><td>{won(min(p for p, _ in v)) + (" ~ " + won(max(p for p, _ in v)) if max(p for p, _ in v) > min(p for p, _ in v) else "")}</td><td>{len({id(x) for _, x in v})}곳</td></tr>' for k, v in sorted(rows.items()))
+    summary = f"엉클데이에 등록된 {cko} 마사지 · 스파는 {len(sp)}곳이고, 그중 {len(ko)}곳이 한국어로 응대해요."
+    if rows: summary += f" 엉클데이가 확인한 참고가는 60분 기준 {won(min(p for p, _ in rows.get(60, rows[min(rows)])))}부터예요."
+    faq = [(q, a) for q, a, _ in G["tip"]] + G.get("faq_extra", []) + [("엉클데이로 예약하면 더 비싼가요?", "아니요. 엉클데이를 통해도 매장 가격 그대로이고, 손님이 엉클데이에 따로 내는 돈은 없어요. 결제는 시술 후 매장에서 직접 해요.")]
+    h2 = []
+    body = f"""<p class="lead">{esc(G['intro'])}</p>
+<div class="box"><b>한눈에 보기</b><p>{esc(summary)}</p><ul>{"".join(f"<li><b>{l}</b> {len(v)}곳 — {lst(v)}</li>" for l, v in feats)}</ul></div>
+<h2 id="price">가격은 얼마쯤이에요?</h2>
+{f'<table class="tb"><thead><tr><th>시간</th><th>엉클데이 확인 참고가</th><th>업체 수</th></tr></thead><tbody>{ptab}</tbody></table>' if ptab else ''}
+<p>{esc(G['price_note'])} {S([G['price_src']])}</p><p class="muted">가격은 메뉴 · 시간 · 시즌에 따라 달라요. 업체 페이지의 최신 가격이나 상담으로 확인해 주세요.</p>
+<h2 id="tip">팁은 얼마나 줘요?</h2>{"".join(f"<h3>{esc(q)}</h3><p>{esc(a)} {S(k)}</p>" for q, a, k in G['tip'])}
+{f'<p>엉클데이 업체 중 팁 포함 · 노팁을 내건 곳: {lst([x for x in sp if has(x, "팁 포함|노팁")])}</p>' if any(has(x, "팁 포함|노팁") for x in sp) else ''}
+<h2 id="kinds">어떤 마사지를 고를까요?</h2><dl class="kinds">{"".join(f"<dt>{esc(n)}</dt><dd>{esc(d_)}<br><small>할 수 있는 곳: {lst([x for x in sp if has(x, pat)])}</small></dd>" for n, pat, d_ in G['kinds'])}</dl>
+<h2 id="area">어느 동네에서 받을까요?</h2><dl class="kinds">{"".join(f"<dt>{esc(n)}</dt><dd>{esc(d_)}<br><small>{lst([x for x in sp if has(x, pat)])}</small></dd>" for n, pat, d_ in G['areas'])}</dl>
+<h2 id="when">공항 가기 전 마지막 일정이라면</h2><p>{esc(G['when'])} {S([G['when_src']])}</p>
+<p>엉클데이 업체 중 짐 보관 · 샤워 · 샌딩 되는 곳: {lst([x for x in sp if has(x, "짐 보관|샤워|샌딩")])}</p>
+<h2 id="book">엉클데이로 예약하는 방법</h2><ol><li>업체 페이지에서 시간 · 인원 · 코스를 골라 예약을 요청하거나, 사이트 채팅 · 카카오톡으로 한국어 상담을 해요.</li>
+<li>엉클데이가 매장에 확인한 뒤 예약을 확정하고, 주소와 찾아가는 법을 한국어로 보내 드려요.</li><li>시간에 맞춰 방문하고, 시술 후 매장에서 매장 가격 그대로 결제해요. 엉클데이에 따로 내는 돈은 없어요.</li>
+<li>다녀온 뒤 테라피스트 후기를 남길 수 있어요. 실제로 방문한 손님만 쓸 수 있어요.</li></ol>
+<p><a class="cta" href="/c/{cid}/">{esc(cko)} 업체 {len(shops_c)}곳 모두 보기</a></p>
+<h2 id="faq">자주 묻는 질문</h2><dl>{"".join(f"<dt>{esc(q)}</dt><dd>{esc(a)}</dd>" for q, a in faq)}</dl>
+<h2 id="src">출처</h2><ol class="src">{"".join(f'<li id="src-{k}"><a href="{SOURCES[k][1]}" rel="nofollow noopener" target="_blank">{esc(SOURCES[k][0])}</a></li>' for k in SOURCES)}</ol>
+<p class="muted">업체 정보는 엉클데이가 확인한 내용이에요. 바깥 자료의 숫자는 각 출처의 게시 시점 기준이에요.</p>"""
+    title = G["title"]; desc = summary + " 가격 · 팁 · 고르는 법 · 예약 방법을 정리했어요."
+    upd = max([G["checked"]] + [checked(x) for x in sp])
+    js = lambda o: json.dumps(o, ensure_ascii=False).replace("</", "<\\/")
+    lds = [{"@context": "https://schema.org", "@type": "Article", "headline": title, "inLanguage": "ko", "url": url, "dateModified": upd, "datePublished": G["checked"],
+            "author": {"@type": "Organization", "name": "엉클데이 Uncle Day", "url": SITE + "/"}, "publisher": {"@type": "Organization", "name": "엉클데이 Uncle Day", "logo": {"@type": "ImageObject", "url": SITE + "/images/logo-og.png"}},
+            "image": SITE + "/images/og-image.jpg", "description": desc, "citation": [SOURCES[k][1] for k in SOURCES]},
+           {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in faq]},
+           {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "엉클데이", "item": SITE + "/"},
+             {"@type": "ListItem", "position": 2, "name": cko, "item": f"{SITE}/c/{cid}/"}, {"@type": "ListItem", "position": 3, "name": "가이드", "item": url}]}]
+    css = HUB_CSS + """.box{background:#fff;border-radius:16px;padding:14px 18px;border:1px solid #e6f4f3}.box ul{padding-left:18px;margin:6px 0 0}.box li{margin:3px 0;font-size:14.5px}
+.tb{border-collapse:collapse;width:100%;max-width:560px;background:#fff;border-radius:12px;overflow:hidden}.tb th,.tb td{padding:9px 12px;border-bottom:1px solid #eee;text-align:left;font-size:14.5px}.tb th{background:#f0fbfb}
+h3{font-size:16px;margin:16px 0 4px}.muted{color:#778;font-size:13px}.kinds dd small{color:#556}main a{color:#13908b}.src{font-size:13.5px}sup a{text-decoration:none}.toc{font-size:13.5px;color:#556}.toc a{margin-right:10px}"""
+    toc = " ".join(f'<a href="#{i}">{n}</a>' for i, n in [("price", "가격"), ("tip", "팁"), ("kinds", "종류"), ("area", "동네"), ("when", "공항 가기 전"), ("book", "예약"), ("faq", "질문")])
+    nav = "".join(f'<a href="/c/{k}/" class="{"on" if k == cid else ""}">{esc(tx(cities[k]["name"]))}</a>' for k in hubs)
+    return f"""<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{esc(title)} | 엉클데이</title><meta name="description" content="{esc(desc[:155])}"><link rel="canonical" href="{url}">
+<meta property="og:type" content="article"><meta property="og:site_name" content="엉클데이 Uncle Day"><meta property="og:title" content="{esc(title)}"><meta property="og:description" content="{esc(desc[:155])}"><meta property="og:url" content="{url}"><meta property="og:image" content="{SITE}/images/og-image.jpg">
+<meta property="article:modified_time" content="{upd}"><link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800&display=swap">
+<style>{css}</style>
+{"".join(f'<script type="application/ld+json">{js(o)}</script>' for o in lds)}
+</head><body><header class="hd"><div class="in"><a href="/">엉클데이</a><nav>{nav}</nav></div></header>
+<main class="wrap"><h1>{esc(title)}</h1><p class="date">업데이트: {upd} · 엉클데이(uncleday.com)</p><p class="toc">{toc}</p>
+{body}</main><footer class="wrap">엉클데이 Uncle Day — 베트남 마사지 · 스파 · 뷰티 한국어 예약 · <a href="/">홈</a> · <a href="/c/{cid}/">{esc(cko)} 업체</a></footer></body></html>
+"""
+
 hubs = [c["id"] for c in d["cities"] if any(x.get("city") == c["id"] for x in live)]
 os.makedirs("c", exist_ok=True)
 for cid in hubs:
     os.makedirs(f"c/{cid}", exist_ok=True)
     open(f"c/{cid}/index.html", "w").write(hub_page(cid, [x for x in live if x.get("city") == cid]))
+    if cid in GUIDES:
+        os.makedirs(f"c/{cid}/guide", exist_ok=True)
+        open(f"c/{cid}/guide/index.html", "w").write(guide_page(cid, [x for x in live if x.get("city") == cid]))
+    elif os.path.isdir(f"c/{cid}/guide"): shutil.rmtree(f"c/{cid}/guide", ignore_errors=True)
 for f in os.listdir("c"):
     if f not in hubs: shutil.rmtree(f"c/{f}", ignore_errors=True)
 
@@ -296,6 +373,7 @@ L = ["# 엉클데이 Uncle Day", "",
 for cid in hubs:
     n = sum(1 for x in live if x.get("city") == cid)
     L.append(f"- [{tx(cities[cid]['name'])} ({CITY_EN.get(cid, '')}) {n}곳]({SITE}/c/{cid}/): 마사지 · 스파 · 뷰티 업체 목록과 자주 묻는 질문")
+    if cid in GUIDES: L.append(f"- [{GUIDES[cid]['title']}]({SITE}/c/{cid}/guide/): 가격 · 팁 · 마사지 종류 · 동네 · 예약 방법 (출처 포함)")
 for cid in hubs:
     L += ["", f"## {tx(cities[cid]['name'])} 업체"]
     for x in [y for y in live if y.get("city") == cid]:
@@ -306,7 +384,9 @@ open("llms.txt", "w").write("\n".join(L) + "\n")
 # 사이트맵: 검색엔진에 '이 페이지들이 있어요' + 언제 바뀌었는지(lastmod) 알려 주기
 mod = {f"{SITE}/s/{x['id']}/": checked(x) for x in live}
 for cid in hubs: mod[f"{SITE}/c/{cid}/"] = max(checked(x) for x in live if x.get("city") == cid)
-urls = [f"{SITE}/"] + [f"{SITE}/c/{c}/" for c in hubs] + [f"{SITE}/s/{x}/" for x in sorted(keep_s)]
+for cid in hubs:
+    if cid in GUIDES: mod[f"{SITE}/c/{cid}/guide/"] = max([GUIDES[cid]["checked"]] + [checked(x) for x in live if x.get("city") == cid])
+urls = [f"{SITE}/"] + [f"{SITE}/c/{c}/" for c in hubs] + [f"{SITE}/c/{c}/guide/" for c in hubs if c in GUIDES] + [f"{SITE}/s/{x}/" for x in sorted(keep_s)]
 open("sitemap.xml", "w").write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
     + "".join(f"  <url><loc>{u}</loc><lastmod>{mod.get(u, BUILT)}</lastmod>{'<priority>1.0</priority>' if u == SITE + '/' else '<priority>0.8</priority>' if '/c/' in u else ''}</url>\n" for u in urls) + "</urlset>\n")
 print(len(keep_s), "곳 업체 페이지 ·", len(hubs), "개 도시 페이지 · llms.txt · 사이트맵 완료")
