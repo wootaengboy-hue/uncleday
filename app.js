@@ -2,6 +2,8 @@
 window.SPA = true;
 const HOME_TITLE = document.title;
 const state = { cat: "", city: "all", q: "", from: null, fromName: "" };
+// 도시 모아보기(c/<도시>/)에서 들어오면 그 도시를 먼저 보여 줘요: /?city=danang
+try { const qc = new URLSearchParams(location.search).get("city"); if (qc && typeof CITIES !== "undefined" && CITIES.some(c => c.id === qc)) state.city = qc; } catch (e) {}
 
 // 두 지점 사이 거리(km)
 const distKm = (a, b) => {

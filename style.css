@@ -701,3 +701,9 @@ html:not([lang="ko"]) .about-ud .about-en { font-size: 14px; color: inherit; }
 @media (max-width: 700px) { .top-in > .btn.find-bk .fb-t { display: none; } .top-in > .btn.find-bk { padding: 7px 10px; } }
 .foot-find { margin: 6px 0; font-size: 13.5px; } .foot-find a { font-weight: 700; }
 .find-hint { margin: -4px 0 10px; font-size: 14px; color: var(--muted, #6b7280); } .find-hint a { font-weight: 700; }
+
+.about-ud .about-links a { color: inherit; font-weight: 700; }
+.about-faq { margin: 4px 0 10px; font-size: 14px; } .about-faq summary { cursor: pointer; font-weight: 700; }
+.about-faq dt { font-weight: 700; margin-top: 8px; } .about-faq dd { margin: 2px 0 0; color: #4b5563; }
+/* 업체 페이지 미리 그린 본문 (자바스크립트가 꺼진 검색 · AI 로봇이 읽어요) */
+.seo-pre .seo-sum { font-size: 15px; } .seo-pre .seo-date { color: #6b7280; font-size: 13px; } .seo-faq dt { font-weight: 700; margin-top: 8px; } .seo-faq dd { margin: 2px 0 0; }

@@ -1,8 +1,32 @@
+# 엉클데이 Uncle Day — 검색엔진 · AI 검색이 공개 페이지를 읽어도 돼요
 User-agent: *
 Allow: /
 Disallow: /admin.html
 Disallow: /booking.html
 Disallow: /partner.html
+Disallow: /owner.html
+Disallow: /staff.html
 Disallow: /imports/
 
+# AI 검색 · 답변 서비스 (명시적으로 허용)
+User-agent: GPTBot
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: ClaudeBot
+User-agent: Claude-SearchBot
+User-agent: Claude-User
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+User-agent: Google-Extended
+User-agent: Applebot-Extended
+User-agent: Bingbot
+Allow: /
+Disallow: /admin.html
+Disallow: /booking.html
+Disallow: /partner.html
+Disallow: /owner.html
+Disallow: /staff.html
+Disallow: /imports/
+
+# AI용 사이트 안내: https://www.uncleday.com/llms.txt
 Sitemap: https://www.uncleday.com/sitemap.xml
