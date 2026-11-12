@@ -81,13 +81,15 @@ def esc(s): return html.escape(s or "", quote=True)
 # ---- 🔎 검색 유입 기록: 어디서 들어왔는지(구글 · 네이버 · ChatGPT …)와 버튼 누름을 날짜별 숫자로만 세요 (universe18 seo_hit) ----
 _SU = d.get("supa") or {}
 KAKAO = d.get("kakao") or "https://pf.kakao.com/_xgkuxeX/chat"
+HCTA = f'<a class="hcta" data-cta="kakao" href="{KAKAO}" target="_blank" rel="noopener">💬 상담하기</a>'
+HCTA_EN = f'<a class="hcta" data-cta="kakao" href="{KAKAO}" target="_blank" rel="noopener">💬 Chat with us</a>'
 def TRACK():
     if not _SU.get("url"): return ""
     auth = f',Authorization:"Bearer {_SU["key"]}"' if str(_SU.get("key", "")).startswith("eyJ") else ""
     return ("<script>(function(){var U=" + json.dumps(_SU["url"]) + ",K=" + json.dumps(_SU["key"]) + ";function S(){try{var r=document.referrer;if(!r)return'direct';var h=new URL(r).hostname;"
             "if(h==location.hostname)return'internal';var m=[['google','google'],['naver','naver'],['bing','bing'],['daum','daum'],['chatgpt','chatgpt'],['openai','chatgpt'],['perplexity','perplexity'],['claude','claude'],['gemini','gemini'],['kakao','kakao'],['facebook','facebook'],['instagram','instagram']];"
             "for(var i=0;i<m.length;i++)if(h.indexOf(m[i][0])>=0)return m[i][1];return'other'}catch(e){return'other'}}"
-            "var src=S();window.UD_SRC=src;window.udHit=function(k){try{fetch(U+'/rest/v1/rpc/seo_hit',{method:'POST',keepalive:true,headers:{apikey:K" + auth + ",'Content-Type':'application/json'},body:JSON.stringify({path:location.pathname,src:src,kind:k})})}catch(e){}};"
+            "var src=S();window.UD_SRC=src;var BOT=navigator.webdriver||/bot|crawl|spider|slurp|preview|headless|lighthouse|google-inspectiontool/i.test(navigator.userAgent);window.udHit=function(k){if(BOT)return;try{fetch(U+'/rest/v1/rpc/seo_hit',{method:'POST',keepalive:true,headers:{apikey:K" + auth + ",'Content-Type':'application/json'},body:JSON.stringify({path:location.pathname,src:src,kind:k})}).catch(function(){})}catch(e){}};"
             "udHit('view');document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('[data-cta]');if(a)udHit(a.getAttribute('data-cta'))})})()</script>")
 # 업체 페이지 틀: shop.html 을 그대로 가져와서 업체별 제목·설명·구조화 데이터·본문을 채워요 (검색엔진용)
 TPL = open("shop.html", encoding="utf-8").read()
@@ -240,13 +242,21 @@ for f in os.listdir("s"):
 live = [x for x in d["shops"] if x.get("id") in keep_s]
 GROUPS = [("spabody", "마사지 · 스파", "Massage & spa"), ("beauty", "피부 · 뷰티 · 성형", "Skin, beauty & clinics")]
 def grp(shop): c = cats.get(shop.get("cat"), {}); return c.get("id") or "beauty"
-HUB_CSS = """body{margin:0;font-family:'Noto Sans KR','Pretendard Variable',-apple-system,'Segoe UI',sans-serif;background:#f6f7f9;color:#222;line-height:1.65}
-.hd{background:#fff;box-shadow:0 1px 4px #0001;position:sticky;top:0}.hd .in,.wrap{max-width:1000px;margin:0 auto;padding:0 16px}.hd .in{display:flex;gap:12px;align-items:center;height:58px}
-.hd a{color:#2ac1bc;font-weight:800;font-size:20px;text-decoration:none}.hd .in>a{white-space:nowrap;flex:none}.hd nav{scrollbar-width:none}.hd nav{margin-left:auto;display:flex;gap:6px;overflow-x:auto}.hd nav a{font-size:13.5px;font-weight:700;color:#222;border:1px solid #ddd;border-radius:999px;padding:4px 12px;white-space:nowrap}
-.hd nav a.on{background:#2ac1bc;border-color:#2ac1bc;color:#fff}h1{font-size:26px;letter-spacing:-.03em;margin:26px 0 8px}h2{font-size:20px;margin:30px 0 10px}.lead{font-size:16px}.en{color:#667;font-size:14px}.date{color:#889;font-size:13px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:12px}.card{background:#fff;border-radius:16px;padding:14px 16px;text-decoration:none;color:#222;display:block;border:1px solid #eee}.card:hover{border-color:#2ac1bc}
-.card b{font-size:16.5px}.card small{display:block;color:#667;font-size:12.5px;margin:2px 0 6px}.card p{margin:0;font-size:13.5px;color:#333}.cta{display:inline-block;background:#2ac1bc;color:#fff;border-radius:999px;padding:10px 18px;font-weight:700;text-decoration:none;margin:8px 0}
-dl dt{font-weight:700;margin-top:12px}dl dd{margin:4px 0 0}footer{color:#889;font-size:13px;padding:30px 0 50px}"""
+HUB_CSS = """:root{--green:#116241;--green-t:#E5F0EA;--orange:#FD6A00;--orange-d:#E25E00;--navy:#0E2843;--sand:#F4EAD8;--cream:#FFF8E8;--line:#EEE2CB;--sub:#5b6676}
+body{margin:0;font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',sans-serif;background:var(--cream);color:var(--navy);line-height:1.7;letter-spacing:-.01em;word-break:keep-all;overflow-wrap:anywhere;-webkit-font-smoothing:antialiased}
+.hd{background:#FAF3E0;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}.hd .in,.wrap{max-width:1000px;margin:0 auto;padding:0 16px}
+.hd .in{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;padding-top:8px;padding-bottom:8px}.hd .logo{flex:none;margin-right:auto;line-height:0}.hd .logo img{height:52px;width:auto;display:block}
+.hd .hcta{flex:none;background:var(--orange);color:#fff;border-radius:999px;padding:8px 14px;font-weight:700;font-size:14px;text-decoration:none;white-space:nowrap}.hd .hcta:hover{background:var(--orange-d)}
+.hd nav{order:3;flex:1 1 100%;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}.hd nav::-webkit-scrollbar{display:none}
+.hd nav a{font-size:14px;font-weight:600;color:var(--navy);background:#fff;border:1px solid var(--line);border-radius:999px;padding:5px 13px;white-space:nowrap;text-decoration:none}.hd nav a.on{background:var(--green);border-color:var(--green);color:#fff;font-weight:700}
+@media(min-width:760px){.hd .logo img{height:72px}.hd nav{order:2;flex:0 1 auto;margin-left:auto}.hd .logo{margin-right:0}.hd .hcta{order:3}}
+h1,h2,h3{color:var(--navy);letter-spacing:-.03em;font-weight:800}h1{font-size:27px;line-height:1.35;margin:26px 0 10px}h2{font-size:21px;margin:34px 0 12px}.lead{font-size:16.5px}.en{color:var(--sub);font-size:14px;font-weight:500}.date{color:var(--sub);font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:12px}.card{background:#fff;border-radius:16px;padding:14px 16px;text-decoration:none;color:var(--navy);display:block;border:1px solid var(--line);transition:box-shadow .15s,border-color .15s}.card:hover{border-color:var(--green);box-shadow:0 6px 16px rgba(14,40,67,.08)}
+.card b{font-size:17px}.card small{display:block;color:var(--green);font-weight:600;font-size:13px;margin:2px 0 6px}.card p{margin:0;font-size:14px;color:#3a4656}
+.cta{display:inline-block;background:var(--orange);color:#fff;border-radius:999px;padding:11px 20px;font-weight:700;text-decoration:none;margin:8px 4px 8px 0}.cta:hover{background:var(--orange-d)}
+dl dt{font-weight:700;margin-top:12px}dl dd{margin:4px 0 0}main a{color:var(--green)}main a.cta,main a.card,main a.chip{color:inherit}main a.cta{color:#fff}
+footer{background:var(--navy);color:#C9D2DC;font-size:13.5px;padding:26px max(16px,calc((100% - 968px)/2)) 50px;margin-top:44px;max-width:none}footer a{color:#fff}
+@media(max-width:700px){h1{font-size:24px}}"""
 def hub_page(cid, shops_c):
     city = cities.get(cid, {}); cko = tx(city.get("name")); cen = CITY_EN.get(cid, lang(city.get("name"), "en")); url = f"{SITE}/c/{cid}/"
     by = {g: [x for x in shops_c if grp(x) == g] for g, _, _ in GROUPS}
@@ -283,15 +293,15 @@ def hub_page(cid, shops_c):
 <title>{esc(title)}</title><meta name="description" content="{esc(desc)}"><link rel="canonical" href="{url}">
 <link rel="alternate" hreflang="ko" href="{url}"><link rel="alternate" hreflang="en" href="{SITE}/en/c/{cid}/"><link rel="alternate" hreflang="x-default" href="{url}">
 <meta property="og:type" content="website"><meta property="og:site_name" content="엉클데이 Uncle Day"><meta property="og:title" content="{esc(title)}"><meta property="og:description" content="{esc(desc)}"><meta property="og:url" content="{url}"><meta property="og:image" content="{SITE}/images/og-image.jpg">
-<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800&display=swap">
+<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png"><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>{HUB_CSS}</style>
 {"".join(f'<script type="application/ld+json">{js(o)}</script>' for o in lds)}
-</head><body><header class="hd"><div class="in"><a href="/">엉클데이</a><nav>{nav}<a href="/en/c/{cid}/" lang="en">EN</a></nav></div></header>
+</head><body><header class="hd"><div class="in"><a class="logo" href="/"><img src="/images/logo-full.webp" alt="엉클데이 Uncle Day" width="167" height="72"></a><nav>{nav}<a href="/en/c/{cid}/" lang="en">EN</a></nav>{HCTA}</div></header>
 <main class="wrap"><h1>{esc(cko)} 마사지 · 스파 · 뷰티 한국어 예약</h1>
 <p class="lead"><b>{esc(lead)}</b></p><p class="en" lang="en">{esc(lead_en)}</p><p class="date">정보 확인: {upd} · 엉클데이(uncleday.com)</p>
-<a class="cta" data-cta="book" href="/?city={cid}">엉클데이에서 {esc(cko)} 업체 보기 · 예약하기</a>{f' <a class="cta" data-cta="guide" style="background:#0e2843" href="/c/{cid}/guide/">📘 {esc(cko)} 마사지 가이드 (가격 · 팁 · 고르는 법)</a>' if cid in GUIDES else ''}
+<a class="cta" data-cta="book" href="/?city={cid}">엉클데이에서 {esc(cko)} 업체 보기 · 예약하기</a>{f' <a class="cta" data-cta="guide" style="background:var(--green)" href="/c/{cid}/guide/">📘 {esc(cko)} 마사지 가이드 (가격 · 팁 · 고르는 법)</a>' if cid in GUIDES else ''}
 <style>{TOPIC_CSS}</style>{topic_chips(cid, shops_c)}
-{sec}{f'<p><a class="cta" style="background:#fff;color:#0e2843;border:1px solid #d7e4e3" href="/c/{cid}/more/">🗺️ 미입점 가게도 보기 ({len(UNC.get(cid, []))}곳) — 예약 문의 가능</a></p>' if UNC.get(cid) else ''}
+{sec}{f'<p><a class="cta" style="background:#fff;color:var(--navy);border:1px solid var(--line)" href="/c/{cid}/more/">🗺️ 미입점 가게도 보기 ({len(UNC.get(cid, []))}곳) — 예약 문의 가능</a></p>' if UNC.get(cid) else ''}
 <h2>자주 묻는 질문</h2><dl>{"".join(f"<dt>{esc(q)}</dt><dd>{esc(a)}</dd>" for q, a in faq)}</dl></main>
 <footer class="wrap">엉클데이 Uncle Day — 베트남 마사지 · 스파 · 뷰티 한국어 예약 · <a href="/">홈</a></footer>{TRACK()}</body></html>
 """
@@ -354,9 +364,9 @@ def guide_page(cid, shops_c):
            {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in faq]},
            {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "엉클데이", "item": SITE + "/"},
              {"@type": "ListItem", "position": 2, "name": cko, "item": f"{SITE}/c/{cid}/"}, {"@type": "ListItem", "position": 3, "name": "가이드", "item": url}]}]
-    css = HUB_CSS + """.box{background:#fff;border-radius:16px;padding:14px 18px;border:1px solid #e6f4f3}.box ul{padding-left:18px;margin:6px 0 0}.box li{margin:3px 0;font-size:14.5px}
-.tb{border-collapse:collapse;width:100%;max-width:560px;background:#fff;border-radius:12px;overflow:hidden}.tb th,.tb td{padding:9px 12px;border-bottom:1px solid #eee;text-align:left;font-size:14.5px}.tb th{background:#f0fbfb}
-h3{font-size:16px;margin:16px 0 4px}.muted{color:#778;font-size:13px}.kinds dd small{color:#556}main a{color:#13908b}.src{font-size:13.5px}sup a{text-decoration:none}.toc{font-size:13.5px;color:#556}.toc a{margin-right:10px}"""
+    css = HUB_CSS + """.box{background:#fff;border-radius:16px;padding:14px 18px;border:1px solid var(--line)}.box ul{padding-left:18px;margin:6px 0 0}.box li{margin:3px 0;font-size:14.5px}
+.tb{border-collapse:collapse;width:100%;max-width:560px;background:#fff;border-radius:12px;overflow:hidden}.tb th,.tb td{padding:9px 12px;border-bottom:1px solid var(--line);text-align:left;font-size:14.5px}.tb th{background:var(--sand)}
+h3{font-size:16px;margin:16px 0 4px}.muted{color:var(--sub);font-size:13px}.kinds dd small{color:var(--sub)}.src{font-size:13.5px}sup a{text-decoration:none}.toc{font-size:13.5px;color:var(--sub)}.toc a{margin-right:10px}"""
     toc = " ".join(f'<a href="#{i}">{n}</a>' for i, n in [("price", "가격"), ("tip", "팁"), ("kinds", "종류"), ("area", "동네"), ("when", "공항 가기 전")] + ([("clinic", "성형 · 피부과")] if G.get("clinic") else []) + [("book", "예약"), ("faq", "질문")])
     nav = "".join(f'<a href="/c/{k}/" class="{"on" if k == cid else ""}">{esc(tx(cities[k]["name"]))}</a>' for k in hubs)
     return f"""<!doctype html>
@@ -364,10 +374,10 @@ h3{font-size:16px;margin:16px 0 4px}.muted{color:#778;font-size:13px}.kinds dd s
 <title>{esc(title)} | 엉클데이</title><meta name="description" content="{esc(desc[:155])}"><link rel="canonical" href="{url}">
 <link rel="alternate" hreflang="ko" href="{url}"><link rel="alternate" hreflang="en" href="{SITE}/en/c/{cid}/guide/"><link rel="alternate" hreflang="x-default" href="{url}">
 <meta property="og:type" content="article"><meta property="og:site_name" content="엉클데이 Uncle Day"><meta property="og:title" content="{esc(title)}"><meta property="og:description" content="{esc(desc[:155])}"><meta property="og:url" content="{url}"><meta property="og:image" content="{SITE}/images/og-image.jpg">
-<meta property="article:modified_time" content="{upd}"><link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800&display=swap">
+<meta property="article:modified_time" content="{upd}"><link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png"><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>{css}</style>
 {"".join(f'<script type="application/ld+json">{js(o)}</script>' for o in lds)}
-</head><body><header class="hd"><div class="in"><a href="/">엉클데이</a><nav>{nav}<a href="/en/c/{cid}/guide/" lang="en">EN</a></nav></div></header>
+</head><body><header class="hd"><div class="in"><a class="logo" href="/"><img src="/images/logo-full.webp" alt="엉클데이 Uncle Day" width="167" height="72"></a><nav>{nav}<a href="/en/c/{cid}/guide/" lang="en">EN</a></nav>{HCTA}</div></header>
 <main class="wrap"><h1>{esc(title)}</h1><p class="date">업데이트: {upd} · 엉클데이(uncleday.com)</p><p class="toc">{toc}</p>
 {body}</main><footer class="wrap">엉클데이 Uncle Day — 베트남 마사지 · 스파 · 뷰티 한국어 예약 · <a href="/">홈</a> · <a href="/c/{cid}/">{esc(cko)} 업체</a></footer>{TRACK()}</body></html>
 """
@@ -384,13 +394,13 @@ def en_facts(x):
     if tags: s_ += f" Highlights: {', '.join(tags[:3])}."
     if "en" in (x.get("staffLangs") or []): s_ += " English-speaking staff."
     return s_ + " Book through Uncle Day at the shop’s own price — no extra fee."
-EN_CSS_FONT = '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800&display=swap">'
+EN_CSS_FONT = '<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">'
 def en_shell(title, desc, url, ko_url, cid, lds, body, kind="website", upd=BUILT):
     js = lambda o: json.dumps(o, ensure_ascii=False).replace("</", "<\\/")
     nav = "".join(f'<a href="/en/c/{k}/" class="{"on" if k == cid else ""}">{esc(ecity(k))}</a>' for k in hubs)
-    css = HUB_CSS + """.box{background:#fff;border-radius:16px;padding:14px 18px;border:1px solid #e6f4f3}.box ul{padding-left:18px;margin:6px 0 0}.box li{margin:3px 0;font-size:14.5px}
-.tb{border-collapse:collapse;width:100%;max-width:560px;background:#fff;border-radius:12px;overflow:hidden}.tb th,.tb td{padding:9px 12px;border-bottom:1px solid #eee;text-align:left;font-size:14.5px}.tb th{background:#f0fbfb}
-h3{font-size:16px;margin:16px 0 4px}.muted{color:#778;font-size:13px}.kinds dd small{color:#556}main a{color:#13908b}.src{font-size:13.5px}sup a{text-decoration:none}.toc{font-size:13.5px;color:#556}.toc a{margin-right:10px}"""
+    css = HUB_CSS + """.box{background:#fff;border-radius:16px;padding:14px 18px;border:1px solid var(--line)}.box ul{padding-left:18px;margin:6px 0 0}.box li{margin:3px 0;font-size:14.5px}
+.tb{border-collapse:collapse;width:100%;max-width:560px;background:#fff;border-radius:12px;overflow:hidden}.tb th,.tb td{padding:9px 12px;border-bottom:1px solid var(--line);text-align:left;font-size:14.5px}.tb th{background:var(--sand)}
+h3{font-size:16px;margin:16px 0 4px}.muted{color:var(--sub);font-size:13px}.kinds dd small{color:var(--sub)}.src{font-size:13.5px}sup a{text-decoration:none}.toc{font-size:13.5px;color:var(--sub)}.toc a{margin-right:10px}"""
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{esc(title)}</title><meta name="description" content="{esc(desc[:155])}"><link rel="canonical" href="{url}">
@@ -399,7 +409,7 @@ h3{font-size:16px;margin:16px 0 4px}.muted{color:#778;font-size:13px}.kinds dd s
 {f'<meta property="article:modified_time" content="{upd}">' if kind == "article" else ""}<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png">{EN_CSS_FONT}
 <style>{css}</style>
 {"".join(f'<script type="application/ld+json">{js(o)}</script>' for o in lds)}
-</head><body><header class="hd"><div class="in"><a href="/">Uncle Day</a><nav>{nav}<a href="{ko_url.replace(SITE, '')}" lang="ko">한국어</a></nav></div></header>
+</head><body><header class="hd"><div class="in"><a class="logo" href="/"><img src="/images/logo-full.webp" alt="Uncle Day" width="167" height="72"></a><nav>{nav}<a href="{ko_url.replace(SITE, '')}" lang="ko">한국어</a></nav>{HCTA_EN}</div></header>
 <main class="wrap">{body}</main>
 <footer class="wrap">Uncle Day — book trusted massage, spa and beauty shops in Vietnam · <a href="/">Home</a></footer>{TRACK()}</body></html>
 """
@@ -427,7 +437,7 @@ def en_hub_page(cid, shops_c):
     lds = [{"@context": "https://schema.org", "@type": "CollectionPage", "name": title, "url": url, "inLanguage": "en", "dateModified": upd, "description": lead, "mainEntity": {"@type": "ItemList", "numberOfItems": len(items), "itemListElement": items}},
            {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in faq]}]
     body = f"""<h1>{esc(cen)} massage, spa &amp; beauty</h1><p class="lead"><b>{esc(lead)}</b></p><p class="date">Last checked: {upd} · Uncle Day (uncleday.com)</p>
-<a class="cta" data-cta="book" href="/?city={cid}">See {esc(cen)} shops on Uncle Day</a>{f' <a class="cta" data-cta="guide" style="background:#0e2843" href="/en/c/{cid}/guide/">📘 {esc(cen)} massage guide (prices, tipping, how to choose)</a>' if cid in GUIDES_EN else ''}
+<a class="cta" data-cta="book" href="/?city={cid}">See {esc(cen)} shops on Uncle Day</a>{f' <a class="cta" data-cta="guide" style="background:var(--green)" href="/en/c/{cid}/guide/">📘 {esc(cen)} massage guide (prices, tipping, how to choose)</a>' if cid in GUIDES_EN else ''}
 <style>{TOPIC_CSS}</style>{topic_chips(cid, shops_c, en=True)}
 {sec}<h2>FAQ</h2><dl>{"".join(f"<dt>{esc(q)}</dt><dd>{esc(a)}</dd>" for q, a in faq)}</dl>"""
     return en_shell(title, lead, url, f"{SITE}/c/{cid}/", cid, lds, body, upd=upd)
@@ -506,7 +516,7 @@ def topic_chips(cid, shops_c, en=False, cur=None):
     pre = "/en" if en else ""
     return ('<h2>' + ("Browse by topic" if en else "주제별로 찾기") + '</h2><p class="chips">' + "".join(
         f'<a class="chip{" on" if t["id"] == cur else ""}" href="{pre}/c/{cid}/{t["id"]}/">{esc(TOPICS_EN[t["id"]][0] if en else t["kw"])} <span>{len(xs)}</span></a>' for t, xs in ts) + '</p>')
-TOPIC_CSS = ".chips{display:flex;flex-wrap:wrap;gap:6px}.chip{border:1px solid #d7e4e3;background:#fff;border-radius:999px;padding:6px 12px;font-size:14px;color:#0e2843!important;text-decoration:none;font-weight:600}.chip span{color:#8a94a3;font-weight:500}.chip.on{background:#2ac1bc;border-color:#2ac1bc;color:#fff!important}.chip.on span{color:#e7fbfa}"
+TOPIC_CSS = ".chips{display:flex;flex-wrap:wrap;gap:6px}.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-size:14px;color:#0e2843!important;text-decoration:none;font-weight:600}.chip span{color:var(--sub);font-weight:500}.chip.on{background:var(--green);border-color:var(--green);color:#fff!important}.chip.on span{color:#d9eadf}"
 def topic_page(cid, t, xs, shops_c):
     city = cities.get(cid, {}); cko = tx(city.get("name")); url = f"{SITE}/c/{cid}/{t['id']}/"
     n = len(xs); pr = sorted(p for x in xs for p in (mprices(x) if t.get("spa") else prices(x)))
@@ -529,13 +539,13 @@ def topic_page(cid, t, xs, shops_c):
 <title>{esc(title)}</title><meta name="description" content="{esc(lead[:155])}"><link rel="canonical" href="{url}">
 <link rel="alternate" hreflang="ko" href="{url}"><link rel="alternate" hreflang="en" href="{SITE}/en/c/{cid}/{t['id']}/"><link rel="alternate" hreflang="x-default" href="{url}">
 <meta property="og:type" content="website"><meta property="og:site_name" content="엉클데이 Uncle Day"><meta property="og:title" content="{esc(title)}"><meta property="og:description" content="{esc(lead[:155])}"><meta property="og:url" content="{url}"><meta property="og:image" content="{SITE}/images/og-image.jpg">
-<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800&display=swap">
+<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png"><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>{HUB_CSS}{TOPIC_CSS}</style>
 {"".join(f'<script type="application/ld+json">{js(o)}</script>' for o in lds)}
-</head><body><header class="hd"><div class="in"><a href="/">엉클데이</a><nav>{nav}<a href="/en/c/{cid}/{t['id']}/" lang="en">EN</a></nav></div></header>
+</head><body><header class="hd"><div class="in"><a class="logo" href="/"><img src="/images/logo-full.webp" alt="엉클데이 Uncle Day" width="167" height="72"></a><nav>{nav}<a href="/en/c/{cid}/{t['id']}/" lang="en">EN</a></nav>{HCTA}</div></header>
 <main class="wrap"><h1>{esc(cko)} {esc(t['kw'])} {n}곳</h1><p class="lead"><b>{esc(lead)}</b></p><p class="date">정보 확인: {upd} · 엉클데이(uncleday.com)</p>
 <div class="grid">{cards}</div>
-<p><a class="cta" href="/c/{cid}/">{esc(cko)} 업체 모두 보기</a>{f' <a class="cta" data-cta="guide" style="background:#0e2843" href="/c/{cid}/guide/">📘 {esc(cko)} 마사지 가이드</a>' if cid in GUIDES else ''}</p>
+<p><a class="cta" href="/c/{cid}/">{esc(cko)} 업체 모두 보기</a>{f' <a class="cta" data-cta="guide" style="background:var(--green)" href="/c/{cid}/guide/">📘 {esc(cko)} 마사지 가이드</a>' if cid in GUIDES else ''}</p>
 {topic_chips(cid, shops_c, cur=t['id'])}
 <h2>자주 묻는 질문</h2><dl>{"".join(f"<dt>{esc(q)}</dt><dd>{esc(a)}</dd>" for q, a in faq)}</dl></main>
 <footer class="wrap">엉클데이 Uncle Day — 베트남 마사지 · 스파 · 뷰티 한국어 예약 · <a href="/">홈</a> · <a href="/c/{cid}/">{esc(cko)} 업체</a></footer>{TRACK()}</body></html>
@@ -554,7 +564,7 @@ def en_topic_page(cid, t, xs, shops_c):
     lds = [{"@context": "https://schema.org", "@type": "CollectionPage", "name": title, "url": url, "inLanguage": "en", "dateModified": upd, "description": lead, "mainEntity": {"@type": "ItemList", "numberOfItems": n, "itemListElement": items}},
            {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in faq]}]
     body = f"""<h1>{esc(name)} in {esc(cen)} — {n} shops</h1><p class="lead"><b>{esc(lead)}</b></p><p class="date">Last checked: {upd} · Uncle Day (uncleday.com)</p>
-<div class="grid">{cards}</div><p><a class="cta" href="/en/c/{cid}/">All shops in {esc(cen)}</a>{f' <a class="cta" data-cta="guide" style="background:#0e2843" href="/en/c/{cid}/guide/">📘 {esc(cen)} massage guide</a>' if cid in GUIDES_EN else ''}</p>
+<div class="grid">{cards}</div><p><a class="cta" href="/en/c/{cid}/">All shops in {esc(cen)}</a>{f' <a class="cta" data-cta="guide" style="background:var(--green)" href="/en/c/{cid}/guide/">📘 {esc(cen)} massage guide</a>' if cid in GUIDES_EN else ''}</p>
 <style>{TOPIC_CSS}</style>{topic_chips(cid, shops_c, en=True, cur=t['id'])}
 <h2>FAQ</h2><dl>{"".join(f"<dt>{esc(q)}</dt><dd>{esc(a)}</dd>" for q, a in faq)}</dl>"""
     return en_shell(title, lead, url, f"{SITE}/c/{cid}/{t['id']}/", cid, lds, body, upd=upd)
@@ -589,12 +599,12 @@ def unclaimed(cid):
         rows.append({**r, "name": nm, "en": tg.get("name:en") or tg.get("name"), "kind": OSM_KIND(tg), "addr": osm_addr(tg), "hours": tg.get("opening_hours", ""),
                      "slug": f"{slug(tg.get('name'))}-{r['id']}", "rich": bool(osm_addr(tg) or tg.get("opening_hours"))})
     return rows
-UNC_CSS = """.badge{display:inline-block;background:#fff4e5;color:#9a5208;border-radius:999px;padding:3px 10px;font-size:12.5px;font-weight:700}
-.facts{background:#fff;border-radius:14px;padding:12px 16px;border:1px solid #eee}.facts div{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid #f3f3f3}.facts div:last-child{border:0}.facts span{color:#778;min-width:70px}
-.lead-box{background:#fff;border-radius:16px;padding:16px;border:2px solid #2ac1bc;margin-top:16px}.lead-box.own{border-color:#0e2843}
-.lead-box form{display:grid;gap:8px}.lead-box input,.lead-box textarea,.lead-box select{width:100%;box-sizing:border-box;border:1px solid #d7dde3;border-radius:10px;padding:10px;font:inherit}
-.lead-box button{border:0;border-radius:12px;background:#2ac1bc;color:#fff;font-weight:800;padding:12px;font-size:15px;cursor:pointer}.lead-box.own button{background:#0e2843}
-.ok{background:#e6f6f3;color:#1f5f55;border-radius:10px;padding:10px;font-weight:700}.osm{color:#889;font-size:12px}.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}"""
+UNC_CSS = """.badge{display:inline-block;background:var(--sand);color:var(--navy);border-radius:999px;padding:3px 10px;font-size:12.5px;font-weight:700}
+.facts{background:#fff;border-radius:16px;padding:12px 16px;border:1px solid var(--line)}.facts div{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--line)}.facts div:last-child{border:0}.facts span{color:var(--sub);min-width:70px}
+.lead-box{background:#fff;border-radius:16px;padding:16px;border:2px solid var(--green);margin-top:16px}.lead-box.own{border-color:var(--navy)}
+.lead-box form{display:grid;gap:8px}.lead-box input,.lead-box textarea,.lead-box select{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--navy);padding:10px;font:inherit}
+.lead-box button{border:0;border-radius:12px;background:var(--orange);color:#fff;font-weight:800;padding:13px;font-size:15.5px;cursor:pointer}.lead-box.own button{background:var(--navy)}
+.ok{background:var(--green-t);color:var(--green);border-radius:10px;padding:10px;font-weight:700}.osm{color:var(--sub);font-size:12px}.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}"""
 def lead_js(cid, ref, nm):
     if not _SU.get("url"): return ""
     auth = f',Authorization:"Bearer {_SU["key"]}"' if str(_SU.get("key", "")).startswith("eyJ") else ""
@@ -618,9 +628,9 @@ def unclaimed_page(cid, u):
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{esc(title)}</title><meta name="description" content="{esc(desc)}"><link rel="canonical" href="{url}">{'' if u['rich'] else '<meta name="robots" content="noindex,follow">'}
 <meta property="og:type" content="website"><meta property="og:site_name" content="엉클데이 Uncle Day"><meta property="og:title" content="{esc(title)}"><meta property="og:description" content="{esc(desc)}"><meta property="og:url" content="{url}"><meta property="og:image" content="{SITE}/images/og-image.jpg">
-<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800&display=swap">
+<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png"><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>{HUB_CSS}{UNC_CSS}</style><script type="application/ld+json">{js(ld)}</script>
-</head><body><header class="hd"><div class="in"><a href="/">엉클데이</a><nav><a href="/c/{cid}/">{esc(cko)} 업체</a></nav></div></header>
+</head><body><header class="hd"><div class="in"><a class="logo" href="/"><img src="/images/logo-full.webp" alt="엉클데이 Uncle Day" width="167" height="72"></a><nav><a href="/c/{cid}/">{esc(cko)} 업체</a></nav>{HCTA}</div></header>
 <main class="wrap"><p><span class="badge">엉클데이 미입점 업체 · 공개 지도 정보</span></p>
 <h1>{esc(u['name'])}{f' <small class="en">{esc(u["en"])}</small>' if u['en'] and u['en'] != u['name'] else ''}</h1>
 <p class="lead">{esc(cko)}에 있는 {esc(u['kind'])} 가게예요. 아직 엉클데이에 입점하지 않은 곳이라 가격 · 한국어 응대는 확인되지 않았어요. 아래에 예약 문의를 남기면 엉클데이가 가게에 확인해서 한국어로 알려 드려요.</p>
@@ -649,8 +659,8 @@ def more_page(cid, us):
     return f"""<!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{esc(title)}</title><meta name="description" content="{esc(f'{cko}의 마사지 · 스파 · 네일 가게 {len(us)}곳. 엉클데이 미입점 가게도 한국어로 예약 문의를 남길 수 있어요.')}"><link rel="canonical" href="{url}">
-<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800&display=swap"><style>{HUB_CSS}{UNC_CSS}</style>
-</head><body><header class="hd"><div class="in"><a href="/">엉클데이</a><nav><a href="/c/{cid}/">{esc(cko)} 인증 업체</a></nav></div></header>
+<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png"><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"><style>{HUB_CSS}{UNC_CSS}</style>
+</head><body><header class="hd"><div class="in"><a class="logo" href="/"><img src="/images/logo-full.webp" alt="엉클데이 Uncle Day" width="167" height="72"></a><nav><a href="/c/{cid}/">{esc(cko)} 인증 업체</a></nav>{HCTA}</div></header>
 <main class="wrap"><h1>{esc(cko)} 가게 {len(us)}곳 더 보기</h1><p class="lead">엉클데이 인증 업체 말고도 {esc(cko)}에 있는 마사지 · 스파 · 네일 가게를 공개 지도 정보로 모았어요. 가격 · 한국어 응대는 아직 확인 전이에요. 가게 페이지에서 예약 문의를 남기면 엉클데이가 확인해 드려요.</p>
 <p><a class="cta" data-cta="book" href="/c/{cid}/">✅ 엉클데이 인증 업체 먼저 보기</a></p><div class="grid">{rows}</div>
 <p class="osm">가게 정보: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors (ODbL)</p></main>
