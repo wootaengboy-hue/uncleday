@@ -65,7 +65,7 @@ button { cursor: pointer; }
 .dm-tabs button.on { background: var(--green); border-color: var(--green); color: #fff; }
 .dm-tabs .dm-rs { margin-left: auto; color: var(--sub); font-weight: 600; }
 #dmMain { min-height: 420px; }
-#dmMain[data-tab="board"] { padding: 8px; background: var(--bg); }
+#dmMain[data-tab="board"], #dmMain[data-tab="sched"] { padding: 8px; background: var(--bg); }
 
 .dm-pane { padding: 16px; max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
 .dm-bk { border: 1.5px solid var(--line); border-radius: 16px; padding: 14px; background: #fff; }
@@ -117,3 +117,75 @@ button { cursor: pointer; }
 }
 .dm-min { display: none; border: 0; background: rgba(255,255,255,.12); color: #fff; border-radius: 999px; font-size: 12px; font-weight: 700; padding: 3px 10px; align-items: center; gap: 4px; min-height: 28px; }
 @media (max-width: 520px) { .dm-tbl th:nth-child(2), .dm-tbl td:nth-child(2) { display: none; } .dm-tbl th, .dm-tbl td { padding: 8px 7px; } }
+
+/* 정산 방식 (미정 · 예시) */
+.dm-mode { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.dm-mk { font-size: 11.5px; font-weight: 700; color: var(--orange-ink); background: var(--orange-t); border-radius: 999px; padding: 2px 9px; }
+.dm-seg { display: inline-flex; background: #F1ECE1; border-radius: 999px; padding: 3px; }
+.dm-seg button { border: 0; background: transparent; border-radius: 999px; padding: 7px 14px; font-weight: 700; font-size: 13.5px; min-height: 36px; }
+.dm-seg button.on { background: var(--ink); color: #fff; }
+.dm-st2 { font-size: 11.5px; font-weight: 700; border-radius: 999px; padding: 1px 8px; }
+.dm-st2.paid { background: var(--green-t); color: var(--green); }
+.dm-st2.due { background: var(--orange-t); color: var(--orange-ink); }
+.dm-tbl tfoot td { background: #FBF9F4; font-weight: 600; border-top: 1px solid var(--line); border-bottom: 0; white-space: normal; }
+
+/* 손님 휴대폰 화면 */
+.dm-cust { display: flex; gap: 28px; align-items: flex-start; justify-content: center; padding: 22px 16px 28px; background: linear-gradient(180deg, #F7F3FB, #fff); flex-wrap: wrap; }
+.dm-phone { width: 340px; max-width: 100%; height: 640px; background: #111; border-radius: 42px; padding: 12px; box-shadow: 0 20px 50px rgba(14,40,67,.25); position: relative; flex: none; }
+.ph-notch { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); width: 110px; height: 22px; background: #111; border-radius: 0 0 14px 14px; z-index: 2; }
+.ph-scr { background: #fff; border-radius: 32px; height: 100%; overflow-y: auto; padding-top: 26px; font-family: "Noto Sans KR", "Be Vietnam Pro", sans-serif; font-size: 14px; color: #1d1d1f; scrollbar-width: none; }
+.ph-scr::-webkit-scrollbar { display: none; }
+.dm-cap { flex: 1 1 260px; max-width: 380px; padding-top: 20px; }
+.dm-cap-k { display: inline-block; background: #EFE6F7; color: var(--ud); font-weight: 700; font-size: 12.5px; border-radius: 999px; padding: 3px 10px; }
+.dm-cap p { font-size: 16px; line-height: 1.55; margin: 12px 0 16px; }
+.ph-top { display: flex; align-items: baseline; gap: 6px; padding: 8px 18px 4px; }
+.ph-logo { font-weight: 800; font-size: 20px; color: var(--ud); }
+.ph-sm { font-size: 11px; color: #888; }
+.ph-search { margin: 8px 16px 12px; background: #F3F1F6; border-radius: 12px; padding: 10px 12px; color: #555; font-size: 13.5px; }
+.ph-card { display: flex; gap: 10px; align-items: center; width: calc(100% - 32px); margin: 0 16px 10px; text-align: left; background: #fff; border: 1.5px solid #ECE8F1; border-radius: 14px; padding: 8px; }
+.ph-card.on { border-color: var(--ud); box-shadow: 0 0 0 4px rgba(107,47,160,.12); animation: dm-pulse2 1.6s ease-in-out infinite; }
+@keyframes dm-pulse2 { 0%, 100% { box-shadow: 0 0 0 0 rgba(107,47,160,.35); } 50% { box-shadow: 0 0 0 6px rgba(107,47,160,0); } }
+.ph-card.dim { opacity: .55; }
+.ph-img { width: 64px; height: 64px; border-radius: 10px; display: grid; place-items: center; font-size: 28px; flex: none; }
+.ph-img.a { background: linear-gradient(135deg, #F6D5C4, #E8A98B); } .ph-img.b { background: linear-gradient(135deg, #D7EBD5, #9CC79A); } .ph-img.c { background: linear-gradient(135deg, #F3D6E6, #D99BBE); }
+.ph-ct { min-width: 0; } .ph-ct b { display: block; font-size: 15px; } .ph-ct small { display: block; font-size: 12px; color: #666; }
+.ph-tags i { font-style: normal; display: inline-block; background: #F3ECFA; color: var(--ud); border-radius: 6px; padding: 0 6px; margin: 4px 4px 0 0; font-size: 11px; }
+.ph-bar { display: flex; align-items: center; gap: 6px; padding: 6px 14px 8px; border-bottom: 1px solid #F0EEF3; }
+.ph-bar b { font-size: 15.5px; }
+.ph-back { border: 0; background: transparent; font-size: 24px; line-height: 1; padding: 0 6px 0 0; min-width: 32px; min-height: 32px; }
+.ph-hero { height: 130px; background: linear-gradient(135deg, #F6D5C4, #C98468); display: flex; align-items: flex-end; gap: 8px; padding: 12px 16px; font-size: 38px; color: #fff; }
+.ph-hero span { font-size: 20px; font-weight: 800; text-shadow: 0 1px 6px rgba(0,0,0,.25); padding-bottom: 6px; }
+.ph-pad { padding: 12px 16px 18px; }
+.ph-pad h4 { font-size: 14.5px; margin: 14px 0 8px; }
+.ph-sub { color: #666; font-size: 12.5px; }
+.ph-opt { display: flex; justify-content: space-between; align-items: center; gap: 8px; width: 100%; text-align: left; background: #fff; border: 1.5px solid #ECE8F1; border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; }
+.ph-opt span b { display: block; font-size: 14px; } .ph-opt small { color: #777; font-size: 12px; }
+.ph-opt.on { border-color: var(--ud); background: #FAF6FD; }
+.ph-go { width: 100%; border: 0; background: var(--ud); color: #fff; font-weight: 700; border-radius: 12px; min-height: 48px; margin-top: 14px; font-size: 15px; }
+.ph-go:disabled { opacity: .4; }
+.ph-go.pulse { animation: dm-pulse2 1.6s ease-in-out infinite; }
+.ph-sum { background: #F7F5FA; border-radius: 12px; padding: 10px 12px; } .ph-sum b { display: block; } .ph-sum small { color: #666; }
+.ph-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.ph-chips button { border: 1.5px solid #E2DDE8; background: #fff; border-radius: 10px; padding: 6px 10px; font-weight: 600; min-height: 36px; }
+.ph-chips button.on { border-color: var(--ud); background: var(--ud); color: #fff; }
+.ph-day { font-weight: 700; font-size: 13px; margin-right: 2px; }
+.ph-step { display: inline-flex; align-items: center; gap: 14px; border: 1.5px solid #E2DDE8; border-radius: 12px; padding: 4px 6px; }
+.ph-step button { border: 0; background: #F3F1F6; border-radius: 8px; width: 36px; height: 36px; font-size: 18px; font-weight: 700; }
+.ph-in { border: 1.5px solid #E2DDE8; border-radius: 10px; padding: 9px 12px; margin-bottom: 6px; } .ph-in.sm { color: #666; font-size: 13px; } .ph-in.ta { min-height: 64px; color: #555; font-size: 13px; }
+.ph-lock { font-size: 12px; color: #6B5B7B; background: #F6F1FA; border-radius: 10px; padding: 8px 10px; margin: 8px 0 0; }
+.ph-total { display: flex; justify-content: space-between; align-items: baseline; margin-top: 12px; font-size: 13px; color: #555; } .ph-total b { font-size: 18px; color: #111; }
+.ph-c { text-align: center; } .ph-c p { color: #555; font-size: 13.5px; line-height: 1.6; }
+.ph-big { font-size: 46px; margin-top: 30px; }
+.ph-kbar { background: #FEE500; padding: 8px 16px; margin-top: -26px; padding-top: 34px; } .ph-kbar b { display: block; } .ph-kbar small { color: #5a4b00; font-size: 11px; }
+.ph-chat { background: #BACEE0; min-height: calc(100% - 50px); padding: 14px 12px; display: flex; flex-direction: column; gap: 8px; }
+.ph-msg { background: #fff; border-radius: 4px 14px 14px 14px; padding: 10px 12px; font-size: 13.5px; line-height: 1.6; max-width: 92%; }
+.ph-link { display: inline-block; margin-top: 4px; color: #2B6CB0; font-weight: 600; }
+.ph-stars { display: flex; gap: 6px; justify-content: center; margin: 10px 0 12px; }
+.ph-stars button { border: 0; background: transparent; font-size: 36px; color: #D9D3E0; min-width: 44px; min-height: 44px; }
+.ph-stars button.on { color: #F5A623; }
+@media (max-width: 899px) { .dm-cust { padding: 14px 8px 20px; } .dm-phone { height: 600px; } .dm-cap { padding-top: 0; } .dm-cap p { font-size: 14.5px; } }
+@media (prefers-reduced-motion: reduce) { .ph-card.on, .ph-go.pulse { animation: none; } }
+.ph-tp { display: flex; align-items: center; justify-content: space-between; gap: 6px; border-bottom: 1px solid #F0EEF3; padding: 4px 0; }
+.ph-tp b { font-size: 14px; }
+.ph-tp .ph-stars { margin: 0; gap: 0; }
+.ph-tp .ph-stars button { font-size: 26px; min-width: 36px; min-height: 40px; padding: 0; }
