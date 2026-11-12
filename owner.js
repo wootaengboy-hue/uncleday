@@ -475,7 +475,8 @@
 
   // ---- 예약 상세 ----
   const wide = () => window.matchMedia && matchMedia("(min-width: 960px)").matches;
-  function openDetail(id) { detail = id; proposing = false; picks = []; pDay = null; detTp = null; drawDetail(); }
+  // 같은 예약을 다시 누르면 닫혀요 (넓은 화면)
+  function openDetail(id) { if (detail === id) { closeDetail(); return; } detail = id; proposing = false; picks = []; pDay = null; detTp = null; drawDetail(); }
   // 담당 테라피스트 고르기 (사장님 페이지에서만, 선택)
   let detTp = null;
   async function loadDetTp(b) {
@@ -493,6 +494,7 @@
       ${withSave ? `<button class="btn line" data-d="tpsave" style="margin-top:8px" ${same ? "disabled" : ""}>${t("tpSave")}</button>` : ""}</div>`;
   }
   function closeDetail() { detail = null; proposing = false; drawDetail(); }
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && detail) closeDetail(); });
   function drawDetail() {
     let ov = document.getElementById("ov");
     const b = detail && rows.find(x => x.id === detail);

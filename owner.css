@@ -254,3 +254,6 @@ textarea.inp { min-height: 64px; resize: vertical; }
 .list.blist .trow:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
 @media (min-width: 1200px) { .body > .list.blist { column-gap: 12px; row-gap: 8px; } }
 @media (min-width: 960px) { .list:not(.blist) .trow.sel { background: var(--green-t); margin: 0 -10px; padding-left: 10px; padding-right: 10px; width: calc(100% + 20px); } }
+/* 예약 카드 배치: 들어갈 수 있는 만큼 칸을 만들고 남는 폭은 꽉 채워요 (1건이면 한 줄 전체) */
+.body > .list.blist, .app.drawer .body > .list.blist { grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); }
+@media (min-width: 1800px) { .body > .list.blist, .app.drawer .body > .list.blist { grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr)); } }
