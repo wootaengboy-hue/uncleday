@@ -18,7 +18,7 @@ async function loadCt(force) {
   if (CT && !force) return CT;
   const r = await sb.from("settings").select("value").eq("key", "contract_tpl").maybeSingle();
   const v = (r.data && r.data.value) || {};
-  CT = { company: v.company || {}, ko: v.ko || CONTRACT_DEFAULT_KO, vi: v.vi || "", en: v.en || "", ver: v.ver || "초안 v2", updated_at: v.updated_at || null, by: v.by || "" };
+  CT = { company: v.company || {}, ko: v.ko || CONTRACT_DEFAULT_KO, vi: v.vi || (typeof CONTRACT_DEFAULT_VI === "string" ? CONTRACT_DEFAULT_VI : ""), en: v.en || "", ver: v.ver || "초안 v2", updated_at: v.updated_at || null, by: v.by || "" };
   return CT;
 }
 const ctToday = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_Minh" }).format(new Date());
@@ -55,6 +55,7 @@ async function openContractTpl() {
       <label class="f"><span>양식 버전</span><input id="ctVer" value="${esc(ct.ver)}" placeholder="예: 확정 v1"></label></div></div>
     <div class="ct-tabs">${CT_LANGS.map(([k, n]) => `<button type="button" class="btn sm" data-lang="${k}">${n}${draft[k] ? "" : " (비어 있음)"}</button>`).join("")}</div>
     <div class="ct-chips"><span class="hint">눌러서 넣기:</span>${CT_VARS.map(([k, n]) => `<button type="button" class="chip" data-v="${k}" title="${esc(n)}">{{${k}}}</button>`).join("")}</div>
+    <div id="ctViDef" hidden style="margin:6px 0"><button type="button" class="btn sm" data-videf>🇻🇳 기본 베트남어 양식 넣기</button> <span class="hint">한국어 초안 v2를 번역한 양식이에요. 지금 베트남어 칸 내용을 바꿔요 (저장 전까지는 되돌릴 수 있어요).</span></div>
     <div id="ctEd"></div>
     <p class="hint">${ct.updated_at ? `마지막 저장: ${esc(dt(ct.updated_at))}${ct.by ? " · " + esc(who(ct.by)) : ""}` : "아직 저장한 적 없어요 (지금 보이는 건 초안 v2 기본 양식이에요)"}</p>
     <div class="btns"><button class="btn" data-no>닫기</button><button class="btn" data-pv>👀 예시 업체로 미리보기</button><button class="btn main" data-yes>저장</button></div></div>`;
@@ -62,10 +63,11 @@ async function openContractTpl() {
   let ed;
   const show = k => {
     if (ed) draft[lang] = ed.get();
-    lang = k; d.querySelectorAll("[data-lang]").forEach(b => b.classList.toggle("main", b.dataset.lang === k));
+    lang = k; d.querySelector("#ctViDef").hidden = k !== "vi" || typeof CONTRACT_DEFAULT_VI !== "string"; d.querySelectorAll("[data-lang]").forEach(b => b.classList.toggle("main", b.dataset.lang === k));
     ed = richEditor(d.querySelector("#ctEd"), draft[k] || "", { placeholder: k === "ko" ? "계약서 내용" : `${CT_LANGS.find(x => x[0] === k)[1]} 번역본을 붙여 넣어요. 비워 두면 한국어본으로 보내요.` });
   };
   d.querySelectorAll("[data-lang]").forEach(b => b.onclick = () => show(b.dataset.lang));
+  d.querySelector("[data-videf]").onclick = () => { if (typeof CONTRACT_DEFAULT_VI !== "string") return; if (ed && ed.get().trim() && !confirm("지금 베트남어 칸 내용을 기본 양식으로 바꿀까요?")) return; ed = null; d.querySelector("#ctEd").innerHTML = ""; draft.vi = CONTRACT_DEFAULT_VI; show("vi"); };
   d.querySelectorAll("[data-v]").forEach(b => { b.onmousedown = e => e.preventDefault(); b.onclick = () => { if (!ed.el.contains(document.getSelection().anchorNode)) ed.el.focus(); document.execCommand("insertText", false, `{{${b.dataset.v}}}`); }; });
   show("ko");
   const company = () => { const o = {}; d.querySelectorAll("[data-co]").forEach(i => o[i.dataset.co] = i.value.trim()); return o; };
