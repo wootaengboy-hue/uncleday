@@ -12,14 +12,15 @@ BBOX = {  # 남, 서, 북, 동
     "hcm": (10.70, 106.60, 10.86, 106.78),
     "hanoi": (20.98, 105.78, 21.09, 105.88),
 }
-ENDPOINTS = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter"]
+ENDPOINTS = ["https://overpass-api.de/api/interpreter", "https://overpass.private.coffee/api/interpreter", "https://maps.mail.ru/osm/tools/overpass/api/interpreter", "https://overpass.kumi.systems/api/interpreter"]
 KEEP = ["name", "name:en", "name:ko", "name:vi", "shop", "leisure", "amenity", "beauty", "massage",
         "addr:housenumber", "addr:street", "addr:subdistrict", "addr:district", "addr:suburb", "addr:city", "opening_hours"]
 
 def fresh():
     if "--force" in sys.argv or not os.path.exists(OUT): return False
     try:
-        t = json.load(open(OUT)).get("fetched", "")
+        o = json.load(open(OUT)); t = o.get("fetched", "")
+        if any(not o.get("cities", {}).get(c) for c in BBOX): return False  # 지난번에 못 받은 도시가 있으면 다시
         return datetime.datetime.fromisoformat(t) > datetime.datetime.utcnow() - datetime.timedelta(days=7)
     except Exception: return False
 
@@ -30,7 +31,7 @@ def q(b):
 
 def fetch(b):
     data = urllib.parse.urlencode({"data": q(b)}).encode()
-    for ep in ENDPOINTS:
+    for ep in ENDPOINTS + ENDPOINTS[:1]:
         try:
             req = urllib.request.Request(ep, data=data, headers={"User-Agent": "uncleday-osm/1.0 (+https://www.uncleday.com)"})
             with urllib.request.urlopen(req, timeout=90) as r: return json.load(r)["elements"]
