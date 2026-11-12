@@ -90,3 +90,10 @@
 ## 안내
 - [엉클데이 홈](https://www.uncleday.com/): 업체 검색 · 예약
 - [예약 확인](https://www.uncleday.com/booking.html): 로그인 없이 예약번호로 확인
+
+## English
+Uncle Day also has English city pages and massage guides for international travelers:
+- [Ho Chi Minh City: shops](https://www.uncleday.com/en/c/hcm/) · [Ho Chi Minh City Massage & Spa Guide 2026 — Tipping, How to Choose, Clinics](https://www.uncleday.com/en/c/hcm/guide/)
+- [Hanoi: shops](https://www.uncleday.com/en/c/hanoi/) · [Hanoi Massage & Spa Guide 2026 — Tipping, How to Choose, How to Book](https://www.uncleday.com/en/c/hanoi/guide/)
+- [Da Nang: shops](https://www.uncleday.com/en/c/danang/) · [Da Nang Massage & Spa Guide 2026 — Prices, Tipping, How to Choose, How to Book](https://www.uncleday.com/en/c/danang/guide/)
+- [Nha Trang: shops](https://www.uncleday.com/en/c/nhatrang/) · [Nha Trang Massage & Spa Guide 2026 — Prices, Tipping, How to Choose, How to Book](https://www.uncleday.com/en/c/nhatrang/guide/)
