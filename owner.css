@@ -210,3 +210,22 @@ textarea.inp { min-height: 64px; resize: vertical; }
 .card.audit { border: 1.5px solid #E9D9A6; background: #FFFBEF; display: grid; gap: 6px; margin-top: 12px; }
 .card.audit ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 14px; }
 .card.audit li { display: flex; gap: 8px; } .card.audit li span { color: #8A6D1F; white-space: nowrap; font-variant-numeric: tabular-nums; }
+/* 아주 넓은 화면: 왼쪽 메뉴 · 머리글도 크게 (현황판 확대와 맞춰요) */
+@media (min-width: 1800px) {
+  .app.in { padding-left: 264px; }
+  .tabs { width: 264px; padding: 96px 16px 20px; gap: 6px; }
+  .tab { font-size: 18px; min-height: 58px; padding: 14px 18px; gap: 14px; }
+  .tab svg, .tab .ic { transform: scale(1.18); }
+  .tab .dot { font-size: 13px; }
+  .hdr { padding: 16px 32px; } .hdr img { width: 44px; height: 44px; }
+  .hdr .shop b { font-size: 21px; } .hdr .shop small { font-size: 14px; }
+  .toast { left: calc(50% + 132px); }
+}
+@media (min-width: 2400px) {
+  .app.in { padding-left: 300px; }
+  .tabs { width: 300px; padding-top: 108px; }
+  .tab { font-size: 20px; min-height: 64px; }
+  .tab svg, .tab .ic { transform: scale(1.3); }
+  .hdr .shop b { font-size: 23px; }
+  .toast { left: calc(50% + 150px); }
+}

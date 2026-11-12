@@ -693,7 +693,8 @@
     const TW = grid ? grid.clientWidth : window.innerWidth;
     const availH = Math.max(320, window.innerHeight - 150);
     const planW = Math.max(480, Math.min(TW - 380 - 12, TW * 0.66));
-    const sh = Math.max(0.55, Math.min(1.35, availH / Hest));
+    // 층이 적으면 화면 높이에 맞추고, 층이 많으면 너무 작게 줄이지 않고(넓은 화면일수록 크게) 위아래로 스크롤해요
+    const sh = Math.max(0.8, Math.min(1.35, Math.max(availH / Hest, planW / 1000)));
     return { wide, TW, planW, sh, availH };
   }
   function fit() {
