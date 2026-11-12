@@ -52,6 +52,10 @@
     noToday: ["Hôm nay chưa có khách.", "오늘 방문 예정인 손님이 없어요.", "No guests today."],
     next7: ["7 ngày tới", "앞으로 7일", "Next 7 days"],
     monthTitle: ["Tháng này", "이번 달", "This month"],
+    repT: ["📈 Cửa hàng của bạn trên Uncle Day", "📈 엉클데이에서 내 가게", "📈 Your shop on Uncle Day"], rep30: ["30 ngày gần đây", "최근 30일", "Last 30 days"],
+    repViews: ["Lượt xem trang", "가게 조회", "Page views"], repSearch: ["Từ Google · Naver · AI", "구글 · 네이버 · AI 검색", "From Google · Naver · AI"],
+    repConsult: ["Bấm tư vấn", "상담 버튼", "Consult taps"], repBook: ["Đặt chỗ", "예약 요청", "Booking requests"], repPrev: ["30 ngày trước: {n}", "그 전 30일 {n}", "Prev. 30 days: {n}"],
+    repNote: ["Số lần khách xem cửa hàng của bạn trên Uncle Day (mỗi người tính 1 lần mỗi lần ghé). Không có thông tin cá nhân — chỉ là con số.", "손님이 엉클데이에서 내 가게를 본 횟수예요 (한 번 들어와서 여러 번 봐도 1번). 개인 정보 없이 숫자만 세요.", "How often guests viewed your shop on Uncle Day (once per visit). Numbers only — no personal data."],
     statVisits: ["Khách đã đến", "방문 완료", "Visits"], statPaid: ["Khách đã trả", "결제 합계", "Paid by guests"], statReply: ["Trả lời TB", "평균 답변", "Avg. reply"],
     min: ["phút", "분", "min"],
     dueLeft: ["còn {n}", "{n} 남음", "{n} left"], dueLate: ["trễ {n}", "{n} 지남", "{n} late"],
@@ -151,7 +155,7 @@
   // ---- 상태 ----
   let sb = null, me = null, shopId = null, rows = [], sched = null, hoursDraft = null;
   let tab = "home", bTab = "new", detail = null, proposing = false, picks = [], pDay = null, schedDay = null, toastMsg = "", busy = false;
-  let knownReq = null, pollTimer = null, boardPending = 0, boardView = null, boardSum = null, audit = null, auditAll = false;
+  let knownReq = null, pollTimer = null, boardPending = 0, boardView = null, boardSum = null, audit = null, auditAll = false, report = null;
   const store = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} };
   const read = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
 
@@ -287,8 +291,17 @@
       <div class="stats"><div class="stat"><b>${mine.length}</b><span>${t("statVisits")}</span></div>
         <div class="stat"><b>${paid >= 1e6 ? (Math.round(paid / 1e5) / 10).toString().replace(".", ",") + "tr₫" : vnd(paid)}</b><span>${t("statPaid")}</span></div>
         <div class="stat"><b>${avg == null ? "-" : avg + " " + t("min")}</b><span>${t("statReply")}</span></div></div>
-      ${shopTodayHtml()}${auditHtml()}
+      ${reportHtml()}${shopTodayHtml()}${auditHtml()}
       </div></div>`;
+  }
+  // 📈 엉클데이에서 내 가게 (최근 30일 · 그 전 30일과 비교) — universe19.sql
+  function reportHtml() {
+    const r = report; if (!r) return "";
+    const it = (k, lb) => { const v = +r[k] || 0, pv = +r[k + "_prev"] || 0, up = v - pv;
+      return `<div class="stat"><b>${v.toLocaleString("en-US")}${pv || v ? ` <em class="${up > 0 ? "up" : up < 0 ? "dn" : ""}">${up > 0 ? "▲" + up : up < 0 ? "▼" + -up : "–"}</em>` : ""}</b><span>${lb}</span><small>${t("repPrev", pv.toLocaleString("en-US"))}</small></div>`; };
+    return `<div class="sec"><h2>${t("repT")}</h2><span>${t("rep30")}</span></div>
+      <div class="stats st4 rep">${it("views", t("repViews"))}${it("search", t("repSearch"))}${it("consult", t("repConsult"))}${it("bookings", t("repBook"))}</div>
+      <p class="muted rep-note">${t("repNote")}</p>`;
   }
   // 엉클데이 관리자가 대신 고친 기록 (최근 30일)
   function auditHtml() {
@@ -604,6 +617,7 @@
     if (tab === "schedule" && !sched) await loadSched();
     if (window.OwnerBoard && tab === "home") { try { boardSum = await rpc("board_get", { shop: shopId }); } catch (e) { boardSum = null; } }
     if (tab === "home") { try { audit = await rpc("board_audit_list", { shop: shopId }); } catch (e) { audit = null; } }
+    if (tab === "home" && (!quiet || !report)) { try { report = await rpc("owner_report", { shop: shopId }); } catch (e) { report = null; } }
     // 입력 중이면 화면을 다시 그리지 않아요
     const ae = document.activeElement; if (quiet && ae && /INPUT|TEXTAREA|SELECT/.test(ae.tagName)) return;
     if (quiet && detail) return;

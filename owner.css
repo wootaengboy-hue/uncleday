@@ -260,3 +260,9 @@ textarea.inp { min-height: 64px; resize: vertical; }
 /* 영업시간: 시간 칸이 남는 폭을 나눠 채워요 (스위치 앞 빈 공간 없음) */
 .wk .h select { flex: 1 1 0; min-width: 0; padding: 6px 8px; }
 .wk .h.x { justify-content: flex-start; }
+
+/* 📈 엉클데이에서 내 가게 */
+.stats.rep .stat b em { font-style: normal; font-size: 12px; font-weight: 700; color: var(--sub); margin-left: 4px; }
+.stats.rep .stat b em.up { color: #116241; } .stats.rep .stat b em.dn { color: #b42318; }
+.stats.rep .stat small { display: block; font-size: 11px; color: var(--sub); margin-top: 2px; }
+.rep-note { font-size: 12px; margin: 6px 2px 0; }

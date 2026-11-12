@@ -17,7 +17,7 @@ async function seoLoad() {
   const e = r.error || l.error;
   if (e) { SEO.err = /seo_|PGRST20|42P01|42883/.test((e.message || "") + (e.code || "")) ? "setup" : e.message; SEO.rep = { by_src: {}, by_day: [], pages: [] }; SEO.leads = []; }
   else { SEO.err = ""; SEO.rep = r.data || { by_src: {}, by_day: [], pages: [] }; SEO.leads = l.data || []; }
-  seoDraw();
+  if (typeof TAB !== "undefined" && TAB === "home" && typeof drawPortal === "function") drawPortal(true); else seoDraw();   // '오늘 할 일'의 새 문의 숫자도 같이
 }
 const seoName = path => {
   const m = path.match(/^\/p\/([a-z]+)\/(.+)-([nwr]\d+)\/$/);
