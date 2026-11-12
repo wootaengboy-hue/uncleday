@@ -166,7 +166,21 @@ textarea.inp { min-height: 64px; resize: vertical; }
   .app:not(.in) { padding-left: 0; }
   .app:not(.in) .login { width: 100%; max-width: 440px; margin: 48px auto; flex: none; border-radius: 20px; border: 1px solid var(--line); }
 }
-@media (min-width: 960px) { .app.drawer .body { max-width: calc(100vw - 220px - 480px); } .app.drawer .hdr .langs { margin-right: 470px; } }
+/* 상세 서랍: 오른쪽에서 밀려 들어오고, 넓은 화면에서는 목록이 옆으로 자연스럽게 밀려요 */
+.ov.new .ov-in { animation: ov-slide .28s cubic-bezier(.2,.8,.2,1); }
+.ov.new { animation: ov-fade .28s ease; }
+.ov.out { pointer-events: none; }
+.ov.out .ov-in { transform: translateX(100%); transition: transform .24s ease-in; }
+.ov.out { background: transparent; transition: background .24s; }
+@keyframes ov-slide { from { transform: translateX(100%); } to { transform: none; } }
+@keyframes ov-fade { from { background: transparent; } }
+@media (min-width: 960px) {
+  .app.in { transition: padding-right .28s cubic-bezier(.2,.8,.2,1); }
+  .app.drawer { padding-right: 480px; }
+  .app.drawer .body { max-width: none; }
+  .hdr { transition: padding .28s; }
+}
+@media (prefers-reduced-motion: reduce) { .ov.new .ov-in, .ov.new { animation: none; } .ov.out .ov-in { transition: none; } .app.in { transition: none; } }
 /* 홈 두 칸 (넓은 화면) */
 .cols, .col { display: flex; flex-direction: column; gap: 14px; }
 @media (min-width: 1200px) {
@@ -229,3 +243,5 @@ textarea.inp { min-height: 64px; resize: vertical; }
   .hdr .shop b { font-size: 23px; }
   .toast { left: calc(50% + 150px); }
 }
+@media (min-width: 1200px) and (max-width: 1799px) { .app.drawer .body > .list.blist { grid-template-columns: minmax(0, 1fr); } .app.drawer .list.blist .trow:nth-child(2) { border-top: 1px solid var(--line2); } .app.drawer .cols.sch { grid-template-columns: minmax(0, 1fr); } }
+@media (min-width: 960px) and (max-width: 1199px) { .app.drawer { padding-right: 400px; } .ov-in { max-width: 400px; } }

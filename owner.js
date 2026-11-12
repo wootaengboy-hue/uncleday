@@ -248,7 +248,7 @@
         ${tabBtn("more", t("tabMore"), '<path d="M4 7h16M4 12h16M4 17h16"/>')}
       </nav>`;
     bindLang();
-    $app.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => { tab = b.dataset.tab; if (tab === "home" || tab === "bookings") load(true); if (tab === "schedule" && !sched) loadSched(); if (tab === "settle") loadSettle(settle && settle.month); draw(); window.scrollTo(0, 0); });
+    $app.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => { if (b.dataset.tab !== tab) { detail = null; proposing = false; } tab = b.dataset.tab; if (tab === "home" || tab === "bookings") load(true); if (tab === "schedule" && !sched) loadSched(); if (tab === "settle") loadSettle(settle && settle.month); draw(); window.scrollTo(0, 0); });
     const m = document.getElementById("main");
     if (tab === "board" && window.OwnerBoard) { window.OwnerBoard.mount(m, { view: boardView, rpc, shopId, lang, isOwner: isOwner(), toast, errMsg, onPending: n => { boardView = null; if (n !== boardPending) { boardPending = n; const d = $app.querySelector('[data-tab="board"] .dot'); if (d) d.textContent = n || ""; else if (n) { const b = $app.querySelector('[data-tab="board"]'); if (b) b.insertAdjacentHTML("beforeend", `<span class="dot">${n}</span>`); } } } }); drawDetail(); return; }
     if (window.OwnerBoard) window.OwnerBoard.unmount();
@@ -448,8 +448,8 @@
     if (a === "instx") { store("ud-owner-inst", "x"); draw(); return; }
     if (a === "refresh") { await load(); return; }
     if (a === "auditmore") { auditAll = !auditAll; draw(); return; }
-    if (a === "toboard") { tab = "board"; draw(); window.scrollTo(0, 0); return; }
-    if (a === "rota") { tab = "board"; boardView = "sched"; draw(); window.scrollTo(0, 0); return; }
+    if (a === "toboard") { tab = "board"; detail = null; draw(); window.scrollTo(0, 0); return; }
+    if (a === "rota") { tab = "board"; boardView = "sched"; detail = null; draw(); window.scrollTo(0, 0); return; }
     if (a === "pw") { drawNewPw(); return; }
     if (a === "logout") { await sb.auth.signOut(); me = null; rows = []; sched = null; knownReq = null; drawLogin(); return; }
     if (a === "capu") { const d = draft(); d.cap = Math.min(50, d.cap + 1); draw(); return; }
@@ -497,8 +497,12 @@
     let ov = document.getElementById("ov");
     const b = detail && rows.find(x => x.id === detail);
     $app.classList.toggle("drawer", !!b);
-    if (!b) { if (ov) ov.remove(); document.body.style.overflow = ""; document.querySelectorAll(".trow.sel,.req.sel").forEach(x => x.classList.remove("sel")); return; }
-    if (!ov) { ov = document.createElement("div"); ov.id = "ov"; ov.className = "ov"; document.body.appendChild(ov); }
+    if (!b) {
+      // 닫을 때: 오른쪽으로 미끄러져 사라지고, 목록은 다시 넓어져요
+      if (ov && !ov.classList.contains("out")) { ov.id = ""; ov.classList.add("out"); const o = ov; setTimeout(() => o.remove(), 260); }
+      document.body.style.overflow = ""; document.querySelectorAll(".trow.sel,.req.sel").forEach(x => x.classList.remove("sel")); return;
+    }
+    if (!ov) { ov = document.createElement("div"); ov.id = "ov"; ov.className = "ov new"; document.body.appendChild(ov); setTimeout(() => ov.classList.remove("new"), 320); }
     document.body.style.overflow = wide() ? "" : "hidden";
     document.querySelectorAll(".trow,.req").forEach(x => x.classList.toggle("sel", x.dataset.open === b.id));
     const st = b.status, td = today(), afterVisit = b.visit_date && b.visit_date <= td;
