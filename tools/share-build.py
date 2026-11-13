@@ -1032,10 +1032,13 @@ hubs = [c["id"] for c in d["cities"] if any(x.get("city") == c["id"] for x in li
 os.makedirs("c", exist_ok=True); os.makedirs("en/c", exist_ok=True); os.makedirs("p", exist_ok=True); UNC = {c: unclaimed(c) for c in hubs}; TREATS = {c: city_treats(c, [x for x in live if x.get("city") == c]) for c in hubs}
 os.makedirs("blog", exist_ok=True); keep_b = set(); BLOG_OUT = []
 BLOG_OUT_RX = re.compile(r"맛집|식당|음식|먹거리|카페|커피|베이커리|호텔|숙소|리조트|풀빌라|빌라|에어비앤비|가라오케|노래방|골프|렌트|렌터카|차량|택시|투어|술집|클럽|\bbar\b|\bpub\b|restaurant|food|cafe|coffee|hotel|villa|golf|karaoke", re.I)
+print("블로그 게시 글", len(BLOG), "개")
 for b in BLOG:
-    if b.get("city") not in hubs or BLOG_OUT_RX.search(b.get("kw") or ""): continue   # 엉클데이 데이터가 없는 분야는 안 만들어요
+    if b.get("city") not in hubs: print("  건너뜀 (도시에 업체 없음):", b.get("kw"), b.get("city")); continue
+    if BLOG_OUT_RX.search(b.get("kw") or ""): print("  건너뜀 (엉클데이 분야 아님):", b.get("kw")); continue   # 엉클데이 데이터가 없는 분야는 안 만들어요
     sl, h, n, t, u = blog_page(b)
-    if n < 2 or sl in keep_b: continue   # 업체 2곳 미만이면 글을 안 만들어요
+    if n < 2 or sl in keep_b: print(f"  건너뜀 (맞는 업체 {n}곳):", b.get("kw")); continue   # 업체 2곳 미만이면 글을 안 만들어요
+    print(f"  ✅ /blog/{sl}/ 업체 {n}곳:", b.get("kw"))
     os.makedirs(f"blog/{sl}", exist_ok=True); open(f"blog/{sl}/index.html", "w").write(h); keep_b.add(sl); BLOG_OUT.append((sl, t, n, u, b["city"]))
 for cid in hubs:
     os.makedirs(f"c/{cid}", exist_ok=True)
