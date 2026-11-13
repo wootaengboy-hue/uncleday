@@ -71,6 +71,7 @@ function drawPortal(skip) {
       <div class="pt-spaces">${PORTAL_SIMS.map(s => `<div class="pt-space"><div class="h"><span class="ic">${s.ic}</span><b>${esc(s.nm)}</b></div><small>${esc(s.desc)}</small>
         <div class="pt-row">${[["vi", "🇻🇳 베트남어"], ["ko", "🇰🇷 한국어"]].map(([l, ln]) => `<a class="btn sm ${l === s.def ? "main" : ""}" href="/demo.html?role=${s.role}&lang=${l}" target="_blank" rel="noopener">${ln} ↗</a>`).join("")}<button class="btn sm" data-pcopy="https://www.uncleday.com/demo.html?role=${s.role}&lang=${s.def}">주소 복사</button></div></div>`).join("")}</div></section>
     <section class="pt-sec" id="ptLinksSec"><h3>🔗 가게에 엉클데이 링크 달기 <span class="hint">구글 지도 예약 링크 · 페이스북 · 잘로 · 인스타 · 매장 QR — 검색 노출 1순위</span></h3><div id="ptLinks"></div></section>
+    <section class="pt-sec" id="ptFillSec"><h3>📋 가게 정보 채우기 <span class="hint">업체별 검색 점수 100점 만점 — 사진 · 가격 · 후기 · 소개 · 위치 빈 칸 찾기 · 사장님께 요청 · 후기 요청</span></h3><div id="ptFill"></div></section>
     <section class="pt-sec" id="ptPriceSec"><h3>💰 가격 채우기 <span class="hint">업체 메뉴 가격 — 채울수록 검색 · AI 에 강해져요 · 영업 현장에서 휴대폰으로</span></h3><div id="ptPrice"></div></section>
     <section class="pt-sec" id="ptCrawlSec"><h3>🔗 링크로 가게 가져오기 <span class="hint">가게 홈페이지 · 가격표 링크를 넣으면 정보를 뽑아 와서 검색 페이지로 만들어요</span></h3><div id="ptCrawl"></div></section>
     <section class="pt-sec" id="ptCompSec"><h3>🔍 경쟁사 분석 <span class="hint">경쟁 사이트가 노리는 검색어 중 엉클데이에 없는 것 · 경쟁사가 소개한 가게 중 엉클데이에 없는 곳</span></h3><div id="ptComp"></div></section>
@@ -94,6 +95,7 @@ function drawPortal(skip) {
   if (typeof brandDraw === "function") brandDraw();
   if (typeof seoDraw === "function") seoDraw();
   if (typeof priceDraw === "function") priceDraw();
+  if (typeof fillDraw === "function") fillDraw();
   if (typeof linksDraw === "function") linksDraw();
   if (typeof crawlDraw === "function") crawlDraw();
   if (typeof blogDraw === "function") blogDraw();
