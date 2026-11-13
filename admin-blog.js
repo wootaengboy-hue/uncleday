@@ -106,6 +106,7 @@ function blogDraw() {
   el.querySelectorAll("[data-bpub]").forEach(b => b.onclick = () => { const id = +b.dataset.bpub, o = collect(id); if (blgPreview({ ...BLG.posts.find(x => x.id === id), ...o }).length < 2 && !confirm("예상 업체가 2곳보다 적어서 페이지가 안 생길 수 있어요. 그래도 게시할까요?")) return; up(id, { ...o, status: "published" }, "🌐 게시했어요. 1시간 안에 블로그 페이지가 생겨요"); });
   el.querySelectorAll("[data-bunpub]").forEach(b => b.onclick = () => up(+b.dataset.bunpub, { status: "draft" }, "게시를 내렸어요. 1시간 안에 페이지가 사라져요"));
   el.querySelectorAll("[data-bdel]").forEach(b => b.onclick = async () => { if (!confirm("이 글을 지울까요?")) return; const r = await sb.from("blog_posts").delete().eq("id", +b.dataset.bdel); if (r.error) { alert(r.error.message); return; } BLG.posts = BLG.posts.filter(x => x.id !== +b.dataset.bdel); blogDraw(); });
+  if (typeof compDraw === "function") compDraw();   // 게시한 검색어는 경쟁사 분석 '빠진 검색어'에서 빠져요
 }
 
 /* 📗 네이버 블로그 요약본 — 사이트 글(blog/<주소>/naver.json)을 네이버 블로그 말투 · 형식으로 바꿔 줘요.

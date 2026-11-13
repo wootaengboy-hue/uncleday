@@ -82,6 +82,15 @@ function crawlDraw() {
 /* 🔍 경쟁사 분석 — 포털 안 (#ptComp) · universe22.sql (crawl_jobs.job = 'site')
  * 경쟁 사이트의 글 목록 · 제목 · 소제목만 읽어서 ① 노리는 검색어 ② 엉클데이에 그 검색어 페이지가 있는지 ③ 글에 나온 가게가 엉클데이에 있는지 */
 const CMP = { open: null, tab: "gap" };
+// 이 검색어로 만든 우리 블로그 글 (검색어가 같거나 🔄 바꾼 주제가 같거나, 이 경쟁사 글 하나에서만 나온 검색어로 만든 글)
+const cmpNorm = s => String(s || "").replace(/\s+/g, "").toLowerCase();
+function cmpBlogOf(k, gap) {
+  const P = (typeof BLG !== "undefined" && BLG.posts) || []; if (!P.length) return null;
+  const ks = [k.kw, typeof blgReframe === "function" ? blgReframe(k.kw) : ""].filter(Boolean).map(cmpNorm);
+  const solo = k.url && gap.filter(x => x.url === k.url).length === 1;
+  const hit = P.filter(p => ks.includes(cmpNorm(p.kw)) || (solo && p.from_url && p.from_url === k.url));
+  return hit.find(p => p.status === "published") || hit[0] || null;
+}
 function compDraw() {
   const el = document.getElementById("ptComp"); if (!el || !CRL.jobs) return;
   if (CRL.err === "setup") { el.innerHTML = `<div class="uni-err">경쟁사 분석을 쓰려면 <b>supabase/universe21.sql</b> · <b>universe22.sql</b> 을 차례로 실행해 주세요.</div>`; return; }
@@ -91,12 +100,12 @@ function compDraw() {
   el.innerHTML = `<div class="crl-add"><input id="cmpUrl" placeholder="경쟁 사이트 주소 (예: https://xinchaodanang43.com/)"><button class="btn sm main" data-cmpadd>분석하기</button></div>
     <p class="hint">글 목록(사이트맵) · 글 제목 · 소제목만 읽어요. 글 내용은 저장 · 복사하지 않아요. 빠진 검색어는 <b>우리 업체 데이터로</b> 페이지를 만들 때 써요.</p>
     <div class="crl-list">${J.length ? J.map(j => {
-      const r = j.result || {}, K = r.keywords || [], S = r.shops || [], gap = K.filter(k => !k.ours), have = K.filter(k => k.ours), open = CMP.open === j.id;
+      const r = j.result || {}, K = r.keywords || [], S = r.shops || [], gap0 = K.filter(k => !k.ours), bp = k => cmpBlogOf(k, gap0), gap = gap0.filter(k => !(bp(k) && bp(k).status === "published")), have = K.filter(k => k.ours).concat(gap0.filter(k => bp(k) && bp(k).status === "published").map(k => ({ ...k, ours: `/blog/${blgSlug(bp(k))}/`, ours_title: "📝 우리 블로그: " + (bp(k).title || bp(k).kw) }))), open = CMP.open === j.id;
       return `<div class="crl-job ${j.status} ${open ? "open" : ""}"><button class="crl-h" data-cmpopen="${j.id}"><span class="st">${ST[j.status] || j.status}</span><b>${esc(r.name || j.url)}</b><small>${j.status === "done" ? `글 ${r.posts || 0}개 · 빠진 검색어 <b>${gap.length}</b> · 있는 검색어 ${have.length} · 언급된 가게 ${S.length}곳 (엉클데이에 없음 ${S.filter(x => x.status === "none").length})` : ""} · ${dt(j.created_at)}</small></button>
         ${j.status === "error" ? `<p class="crl-err">${esc(j.err || "")}</p>` : ""}
         ${open && j.status === "done" ? `<div class="crl-body">
           <div class="br-cats">${[["gap", `➕ 빠진 검색어 ${gap.length}`], ["have", `✅ 있는 검색어 ${have.length}`], ["shops", `🏪 언급된 가게 ${S.length}`]].map(([k, l]) => `<button class="${CMP.tab === k ? "on" : ""}" data-cmptab="${k}">${l}</button>`).join("")}</div>
-          ${CMP.tab === "gap" ? (gap.length ? `<p class="hint">경쟁사는 노리는데 엉클데이에는 맞는 페이지가 없는 검색어예요. 여기 있는 말로 우리 데이터 페이지를 만들면 돼요.</p><div class="cmp-t">${gap.map(k => `<div><b>${esc(k.kw)}</b><small>글 ${k.n}개 · <a href="${esc(k.url)}" target="_blank" rel="noopener nofollow">경쟁사 글 ↗</a></small><button class="btn sm" data-cmpcopy="${esc(k.kw)}">복사</button>${typeof BLG_OUT !== "undefined" && BLG_OUT.test(k.kw) ? (blgReframe(k.kw) ? `<button class="btn sm main" data-cmpblog="${esc(blgReframe(k.kw))}" data-u="${esc(k.url)}" title="경쟁사 주제를 같은 손님 대상의 우리 분야로 바꿔요">🔄 "${esc(blgReframe(k.kw))}"로 만들기</button>` : `<span class="hint">엉클데이 분야 아님</span>`) : `<button class="btn sm main" data-cmpblog="${esc(k.kw)}" data-u="${esc(k.url)}">📝 블로그 글 만들기</button>`}</div>`).join("")}</div><button class="btn sm" data-cmpcopyall="${j.id}">📋 빠진 검색어 전부 복사</button>` : `<p class="hint">🎉 빠진 검색어가 없어요.</p>`)
+          ${CMP.tab === "gap" ? (gap.length ? `<p class="hint">경쟁사는 노리는데 엉클데이에는 맞는 페이지가 없는 검색어예요. 여기 있는 말로 우리 데이터 페이지를 만들면 돼요.</p><div class="cmp-t">${gap.map(k => `<div><b>${esc(k.kw)}</b><small>글 ${k.n}개 · <a href="${esc(k.url)}" target="_blank" rel="noopener nofollow">경쟁사 글 ↗</a></small><button class="btn sm" data-cmpcopy="${esc(k.kw)}">복사</button>${bp(k) ? `<span class="uni-chip warn" title="아래 '📝 블로그'에서 게시하면 이 목록에서 빠져요">📝 초안 있음 · 게시 전</span>` : typeof BLG_OUT !== "undefined" && BLG_OUT.test(k.kw) ? (blgReframe(k.kw) ? `<button class="btn sm main" data-cmpblog="${esc(blgReframe(k.kw))}" data-u="${esc(k.url)}" title="경쟁사 주제를 같은 손님 대상의 우리 분야로 바꿔요">🔄 "${esc(blgReframe(k.kw))}"로 만들기</button>` : `<span class="hint">엉클데이 분야 아님</span>`) : `<button class="btn sm main" data-cmpblog="${esc(k.kw)}" data-u="${esc(k.url)}">📝 블로그 글 만들기</button>`}</div>`).join("")}</div><button class="btn sm" data-cmpcopyall="${j.id}">📋 빠진 검색어 전부 복사</button>` : `<p class="hint">🎉 빠진 검색어가 없어요.</p>`)
           : CMP.tab === "have" ? `<div class="cmp-t">${have.map(k => `<div><b>${esc(k.kw)}</b><small>→ <a href="${esc(k.ours)}" target="_blank" rel="noopener">${esc(k.ours_title || k.ours)}</a></small></div>`).join("") || `<p class="hint">없어요.</p>`}</div>`
           : `<p class="hint">경쟁사가 글에서 소개한 가게 = 한국인 손님이 많이 가는 가게일 가능성이 커요. '엉클데이에 없음'은 영업 1순위예요.</p><div class="cmp-t">${S.map((x, i) => `<div><b>${esc(x.name)}</b><small>${chip(x.status)} 글 ${x.n}개 · <a href="${esc(x.url)}" target="_blank" rel="noopener nofollow">경쟁사 글 ↗</a>${x.ours ? ` · <a href="${esc(x.ours)}" target="_blank" rel="noopener">우리 페이지</a>` : ""}</small>${x.status !== "partner" ? `<button class="btn sm" data-cmplead="${j.id}:${i}">🤝 영업 카드로</button>` : ""}</div>`).join("") || `<p class="hint">찾은 가게가 없어요.</p>`}</div>`}
         </div>` : ""}
