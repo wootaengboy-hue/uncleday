@@ -54,11 +54,10 @@ jobs:
         run: |
           if [ "${{ inputs.indexnow_all }}" = "true" ]; then sleep 60; python3 tools/indexnow.py --all; exit 0; fi
           if [ -s "$RUNNER_TEMP/changed.txt" ]; then sleep 90; python3 tools/indexnow.py "$RUNNER_TEMP/changed.txt"; else echo "알릴 것 없음"; fi
-      - name: 🔎 구글 색인 상태 확인 (매시간 70개 · 구글 하루 한도 2,000건 안)
-        if: github.event_name == 'schedule'
+      - name: 🔎 구글 색인 상태 확인 (타이머 70개 · 올릴 때마다 20개 · 구글 하루 한도 2,000건 안)
         env:
           CRAWL_TOKEN: ${{ secrets.CRAWL_TOKEN }}
         run: |
           [ -n "$CRAWL_TOKEN" ] || { echo "CRAWL_TOKEN 없음 — 건너뜀"; exit 0; }
           U=$(grep -o 'url: *"[^"]*"' config.js | head -1 | sed 's/.*"\(.*\)"/\1/'); K=$(grep -o 'key: *"[^"]*"' config.js | head -1 | sed 's/.*"\(.*\)"/\1/')
-          curl -s -m 150 -X POST "$U/functions/v1/gsc" -H "apikey: $K" -H "Content-Type: application/json" -H "x-crawl-token: $CRAWL_TOKEN" -d '{"action":"sweep","n":70}' | head -c 400 || true
+          curl -s -m 150 -X POST "$U/functions/v1/gsc" -H "apikey: $K" -H "Content-Type: application/json" -H "x-crawl-token: $CRAWL_TOKEN" -d "{\"action\":\"sweep\",\"n\":${{ github.event_name == 'schedule' && 70 || 20 }}}" | head -c 400 || true

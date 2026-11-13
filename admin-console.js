@@ -20,6 +20,16 @@ async function conLoad() {
     CON.urls = [...sm.matchAll(/<loc>([^<]+)<\/loc>/g)].map(m => m[1].trim()); CON.rows = new Map(db.map(r => [r.url, r])); CON.err = "";
   } catch (e) { CON.err = /seo_index|42P01|PGRST20/.test((e.message || "") + (e.code || "")) ? "setup" : e.message; CON.urls = CON.urls || []; CON.rows = CON.rows || new Map(); }
   conDraw();
+  // 깃허브 매시간 타이머가 자주 밀려서(하루 몇 번만 돌 때가 있어요), 콘솔을 열 때 마지막 확인이 1시간 넘었으면 30개를 바로 확인해요
+  if (!CON.err && !CON.auto && !CON.busy) {
+    const last = [...CON.rows.values()].reduce((m, r) => r.checked_at > m ? r.checked_at : m, "");
+    if (!last || Date.now() - new Date(last).getTime() > 60 * 60e3) {
+      CON.auto = "run"; CON.busy = true; conDraw();
+      conGsc({ action: "sweep", n: 30 }).then(d => { CON.auto = d.error ? "err:" + d.error : "ok:" + (d.checked || 0); })
+        .catch(e => { CON.auto = "err:" + (/sweep|action/.test(e.message) ? "gsc 기능을 새 코드로 다시 올려 주세요" : e.message); })
+        .finally(() => { CON.busy = false; CON.urls = null; conDraw(); });
+    }
+  }
   if (!CON.sm && !CON.err) conGsc({ action: "sitemaps" }).then(d => { CON.sm = d.sitemaps ? d : { error: d.error === "setup" ? "서치 콘솔 연결(gsc) 설정을 먼저 끝내 주세요" : d.error || "" }; if (d.site) CON.site = d.site; conDraw(); }).catch(e => { CON.sm = { error: /sitemaps|Unknown|action/.test(e.message) ? "gsc 기능을 새 코드로 다시 올려 주세요" : e.message }; conDraw(); });
 }
 function conDraw() {
@@ -37,7 +47,7 @@ function conDraw() {
   el.innerHTML = `
     <div class="seo-kpi"><div><small>📄 사이트맵 페이지</small><b>${U.length.toLocaleString()}</b></div><div><small>✅ 구글 색인됨</small><b style="color:#116241">${cnt.ok.toLocaleString()}</b></div><div><small>⏳ 아직 색인 안 됨</small><b style="color:#b54708">${cnt.not.toLocaleString()}</b></div><div><small>❔ 확인 전</small><b style="color:#8a94a3">${cnt.wait.toLocaleString()}</b></div></div>
     <div class="con-bar"><i class="ok" style="width:${pct(cnt.ok, U.length)}%"></i><i class="not" style="width:${pct(cnt.not, U.length)}%"></i></div>
-    <p class="hint">색인율 <b>${pct(cnt.ok, cnt.ok + cnt.not)}%</b> (확인한 것 중) · 마지막 확인 ${lastCheck ? dt(lastCheck) : "아직 없음"} · 매시간 70개씩 자동 확인 (구글 하루 한도 2,000건) <button class="btn sm" data-cact="sweep" ${CON.busy ? "disabled" : ""}>${CON.busy ? "확인 중…" : "지금 30개 확인"}</button></p>
+    <p class="hint">색인율 <b>${pct(cnt.ok, cnt.ok + cnt.not)}%</b> (확인한 것 중) · 마지막 확인 ${lastCheck ? dt(lastCheck) : "아직 없음"} · 자동 확인: 매시간 + 콘솔을 열 때 (구글 하루 한도 2,000건 안)${CON.auto === "run" ? ` · <b>🔄 지금 30개 확인 중…</b>` : /^ok:/.test(CON.auto || "") ? ` · ✅ 방금 ${CON.auto.slice(3)}개 확인` : /^err:/.test(CON.auto || "") ? ` · <span class="crl-err">자동 확인 실패: ${esc(CON.auto.slice(4))}</span>` : ""} <button class="btn sm" data-cact="sweep" ${CON.busy ? "disabled" : ""}>${CON.busy ? "확인 중…" : "지금 30개 확인"}</button></p>
     <div class="seo-two">
       <div class="br-box"><h4>페이지 종류별</h4>${Object.entries(kinds).sort((a, b) => (b[1].ok + b[1].not + b[1].wait) - (a[1].ok + a[1].not + a[1].wait)).map(([k, v]) => { const t = v.ok + v.not + v.wait;
         return `<button class="con-k ${CON.kind === k ? "on" : ""}" data-ckind="${esc(k)}"><span>${esc(k)}</span><span class="con-bar sm"><i class="ok" style="width:${pct(v.ok, t)}%"></i><i class="not" style="width:${pct(v.not, t)}%"></i></span><small>${v.ok}/${t}</small></button>`; }).join("")}</div>
