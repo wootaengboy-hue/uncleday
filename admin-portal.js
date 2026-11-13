@@ -20,6 +20,7 @@ const PORTAL_SPACES = [
   { ic: "🛠️", nm: "관리자 페이지 (지금 여기)", url: "/admin.html", who: "엉클데이 운영팀", how: "관리자 이메일 + 비밀번호", desc: "예약 · 채팅 · 고객 · 정산 · 업체 · 후기 · 유니버스 · 계정 · 백업" },
   { ic: "🏪", nm: "사장님 페이지", url: "/owner", who: "업체 사장님 · 카운터 직원", how: "전화번호 + 비밀번호 (업체 → 수정 → 👤 사장님 페이지 계정에서 만들어요)", desc: "예약 답하기 · 일정 · 현황판 · 근무표 · 기록 · 정산" },
   { ic: "👩", nm: "직원 화면", url: "/staff", who: "테라피스트 · 리셉션", how: "전화번호 + PIN 6자리 (사장님 또는 포털의 👩 직원 · PIN에서 만들어요)", desc: "내 근무 · 휴대폰 출퇴근 · 휴무/교대 요청 · 후기 · 보너스 · 경력 동의" },
+  { ic: "📝", nm: "엉클데이 블로그", url: "/blog/", who: "손님 (구글 · 네이버 · AI 검색으로 들어와요)", how: "로그인 없음 · 글은 포털 📝 블로그에서 만들고 게시", desc: "장소 근처 · 주제 · 시술 가격별 글 · 매시간 최신 업체 데이터로 다시 그려져요" },
 ];
 const PORTAL_MSG = {
   owner: { vi: "Uncle Day: Trang chủ cửa hàng www.uncleday.com/owner — đăng nhập bằng số điện thoại và mật khẩu tạm thời chúng tôi gửi. Lần đầu đăng nhập hãy đổi mật khẩu.", ko: "엉클데이: 사장님 페이지 www.uncleday.com/owner — 보내 드린 전화번호와 임시 비밀번호로 로그인하고, 처음 들어오면 비밀번호를 바꿔 주세요." },
@@ -57,11 +58,11 @@ function drawPortal(skip) {
   const stTxt = st => ({ before: "영업 전", open_auto: "영업 중", open_manual: "영업 중", after: "영업 종료", closed_manual: "마감", dayoff: "휴무일" })[(st || {}).status] || "-";
   const others = (typeof shops !== "undefined" ? shops : []).filter(s => !S.some(x => x.id === s.id));
   el.innerHTML = `
-    <div class="pt-hero"><div><h2>🏠 엉클데이 사내 포털</h2><p>오늘 처리할 일, 4개 공간, 매장 관리, 운영 가이드를 한곳에 모았어요.</p></div><button class="btn sm" data-pact="reload">↻ 새로고침</button></div>
+    <div class="pt-hero"><div><h2>🏠 엉클데이 사내 포털</h2><p>오늘 처리할 일, 공간 바로가기, 매장 관리, 운영 가이드를 한곳에 모았어요.</p></div><button class="btn sm" data-pact="reload">↻ 새로고침</button></div>
     ${PORTAL.err ? `<div class="uni-err">${esc(PORTAL.err)}</div>` : ""}
     <section class="pt-sec"><h3>✅ 오늘 할 일 <span class="hint">${todoN ? `${todoN}건` : "모두 처리했어요 🎉"}</span></h3>
       ${(() => { let k = -1; return G.map(([gn, items]) => `<h4 class="pt-gh">${gn} <span class="hint">${items.reduce((a, x) => a + (x[2] || 0), 0)}건</span></h4><div class="pt-todos">${items.map(([ic, l, n, go]) => { k++; return `<button class="pt-todo ${n ? "" : "zero"}" data-ptodo="${k}" ${go && n ? "" : "disabled"}><span class="ic">${ic}</span><span class="l">${esc(l)}</span><b>${n || 0}</b></button>`; }).join("")}</div>`).join(""); })()}</section>
-    <section class="pt-sec"><h3>🧭 4개 공간 바로가기</h3>
+    <section class="pt-sec"><h3>🧭 공간 바로가기</h3>
       <div class="pt-spaces">${PORTAL_SPACES.map(s => `<div class="pt-space"><div class="h"><span class="ic">${s.ic}</span><b>${esc(s.nm)}</b></div>
         <small><b>누가</b> ${esc(s.who)}</small><small><b>로그인</b> ${esc(s.how)}</small><small><b>하는 일</b> ${esc(s.desc)}</small>
         <div class="pt-row"><a class="btn sm main" href="${s.url}" target="_blank" rel="noopener">열기 ↗</a><button class="btn sm" data-pcopy="${esc("https://www.uncleday.com" + (s.url === "/" ? "" : s.url))}">주소 복사</button></div></div>`).join("")}</div>

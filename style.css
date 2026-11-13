@@ -699,7 +699,7 @@ html:not([lang="ko"]) .about-ud .about-en { font-size: 14px; color: inherit; }
 /* 🔎 예약 조회 입구 */
 .top-in > .btn.find-bk { background: #fff; border: 1.5px solid var(--line); color: inherit; display: inline-flex; gap: 4px; align-items: center; white-space: nowrap; }
 @media (max-width: 700px) { .top-in > .btn.find-bk .fb-t { display: none; } .top-in > .btn.find-bk { padding: 7px 10px; } }
-.foot-find { margin: 6px 0; font-size: 13.5px; } .foot-find a { font-weight: 700; }
+.foot-find, .foot-blog { margin: 6px 0; font-size: 13.5px; } .foot-find a, .foot-blog a { font-weight: 700; }
 .find-hint { margin: -4px 0 10px; font-size: 14px; color: var(--muted, #6b7280); } .find-hint a { font-weight: 700; }
 
 .about-ud .about-links a { color: inherit; font-weight: 700; }

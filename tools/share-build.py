@@ -301,7 +301,7 @@ def hub_page(cid, shops_c):
 <p class="lead"><b>{esc(lead)}</b></p><p class="en" lang="en">{esc(lead_en)}</p><p class="date">정보 확인: {upd} · 엉클데이(uncleday.com)</p>
 <a class="cta" data-cta="book" href="/?city={cid}">엉클데이에서 {esc(cko)} 업체 보기 · 예약하기</a>{f' <a class="cta" data-cta="guide" style="background:var(--green)" href="/c/{cid}/guide/">📘 {esc(cko)} 마사지 가이드 (가격 · 팁 · 고르는 법)</a>' if cid in GUIDES else ''}
 <style>{TOPIC_CSS}</style>{topic_chips(cid, shops_c)}
-{sec}{f'<p><a class="cta" style="background:var(--green)" href="/c/{cid}/price/">💰 {esc(tx(cities[cid]["name"]))} 시술별 가격 비교</a></p>' if TREATS.get(cid) else ''}{f'<p><a class="cta" style="background:#fff;color:var(--navy);border:1px solid var(--line)" href="/c/{cid}/more/">🗺️ 미입점 가게도 보기 ({len(UNC.get(cid, []))}곳) — 예약 문의 가능</a></p>' if UNC.get(cid) else ''}
+{sec}{(f'<h2>📝 {esc(tx(cities[cid]["name"]))} 관련 글</h2><div class="grid">' + "".join(f'<a class="card" href="/blog/{r[0]}/"><b>{esc(r[1])}</b><small>업체 {r[2]}곳 · 정보 확인 {r[3]}</small></a>' for r in sorted([r for r in BLOG_OUT if r[4] == cid], key=lambda r: r[3], reverse=True)[:6]) + f'</div><p><a href="/blog/">블로그 글 모두 보기 →</a></p>') if any(r[4] == cid for r in BLOG_OUT) else ''}{f'<p><a class="cta" style="background:var(--green)" href="/c/{cid}/price/">💰 {esc(tx(cities[cid]["name"]))} 시술별 가격 비교</a></p>' if TREATS.get(cid) else ''}{f'<p><a class="cta" style="background:#fff;color:var(--navy);border:1px solid var(--line)" href="/c/{cid}/more/">🗺️ 미입점 가게도 보기 ({len(UNC.get(cid, []))}곳) — 예약 문의 가능</a></p>' if UNC.get(cid) else ''}
 <h2>자주 묻는 질문</h2><dl>{"".join(f"<dt>{esc(q)}</dt><dd>{esc(a)}</dd>" for q, a in faq)}</dl></main>
 <footer class="wrap">엉클데이 Uncle Day — 베트남 마사지 · 스파 · 뷰티 한국어 예약 · <a href="/">홈</a></footer>{TRACK()}</body></html>
 """
@@ -1007,10 +1007,10 @@ def blog_index(items):
     nav = "".join(f'<a href="/c/{k}/">{esc(tx(cities[k]["name"]))}</a>' for k in hubs) + '<a class="on" href="/blog/">블로그</a>'
     return f"""<!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>엉클데이 블로그 — 베트남 마사지 · 스파 · 뷰티 고르는 법 | 엉클데이</title><meta name="description" content="엉클데이가 직접 확인한 업체 정보(위치 · 실제 가격 · 영업시간 · 한국어 응대)로 정리한 베트남 마사지 · 스파 · 뷰티 글."><link rel="canonical" href="{url}">
+<title>엉클데이 블로그 — 베트남 마사지 · 스파 · 뷰티 고르는 법 | 엉클데이</title>{'' if items else '<meta name="robots" content="noindex,follow">'}<meta name="description" content="엉클데이가 직접 확인한 업체 정보(위치 · 실제 가격 · 영업시간 · 한국어 응대)로 정리한 베트남 마사지 · 스파 · 뷰티 글."><link rel="canonical" href="{url}">
 <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png"><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"><style>{HUB_CSS}</style>
 </head><body><header class="hd"><div class="in"><a class="logo" href="/"><img src="/images/logo-full.webp" alt="엉클데이 Uncle Day" width="167" height="72"></a><nav>{nav}</nav>{HCTA}</div></header>
-<main class="wrap"><h1>엉클데이 블로그</h1><p class="lead">엉클데이가 직접 확인한 업체 정보로 정리한 글이에요. 가격 · 영업시간은 매시간 최신 정보로 다시 확인돼요.</p><div class="grid">{cards}</div></main>
+<main class="wrap"><h1>엉클데이 블로그</h1><p class="lead">엉클데이가 직접 확인한 업체 정보로 정리한 글이에요. 가격 · 영업시간은 매시간 최신 정보로 다시 확인돼요.</p>{f'<div class="grid">{cards}</div>' if items else '<p>첫 글을 준비하고 있어요. 그동안 도시별 업체 목록을 둘러보세요.</p><p class="chips">' + "".join(f'<a class="cta" href="/c/{k}/">{esc(tx(cities[k]["name"]))}</a>' for k in hubs) + '</p>'}</main>
 <footer class="wrap">엉클데이 Uncle Day · <a href="/">홈</a></footer>{TRACK()}</body></html>
 """
 def more_page(cid, us):
@@ -1030,6 +1030,13 @@ def more_page(cid, us):
 
 hubs = [c["id"] for c in d["cities"] if any(x.get("city") == c["id"] for x in live)]
 os.makedirs("c", exist_ok=True); os.makedirs("en/c", exist_ok=True); os.makedirs("p", exist_ok=True); UNC = {c: unclaimed(c) for c in hubs}; TREATS = {c: city_treats(c, [x for x in live if x.get("city") == c]) for c in hubs}
+os.makedirs("blog", exist_ok=True); keep_b = set(); BLOG_OUT = []
+BLOG_OUT_RX = re.compile(r"맛집|식당|음식|먹거리|카페|커피|베이커리|호텔|숙소|리조트|풀빌라|빌라|에어비앤비|가라오케|노래방|골프|렌트|렌터카|차량|택시|투어|술집|클럽|\bbar\b|\bpub\b|restaurant|food|cafe|coffee|hotel|villa|golf|karaoke", re.I)
+for b in BLOG:
+    if b.get("city") not in hubs or BLOG_OUT_RX.search(b.get("kw") or ""): continue   # 엉클데이 데이터가 없는 분야는 안 만들어요
+    sl, h, n, t, u = blog_page(b)
+    if n < 2 or sl in keep_b: continue   # 업체 2곳 미만이면 글을 안 만들어요
+    os.makedirs(f"blog/{sl}", exist_ok=True); open(f"blog/{sl}/index.html", "w").write(h); keep_b.add(sl); BLOG_OUT.append((sl, t, n, u, b["city"]))
 for cid in hubs:
     os.makedirs(f"c/{cid}", exist_ok=True)
     open(f"c/{cid}/index.html", "w").write(hub_page(cid, [x for x in live if x.get("city") == cid]))
@@ -1079,16 +1086,9 @@ for x in live:
     os.makedirs(f"en/s/{x['id']}", exist_ok=True); open(f"en/s/{x['id']}/index.html", "w").write(en_shop_page(x)); keep_en.add(x["id"])
 for f in os.listdir("en/s"):
     if f not in keep_en: shutil.rmtree(f"en/s/{f}", ignore_errors=True)
-os.makedirs("blog", exist_ok=True); keep_b = set(); BLOG_OUT = []
-BLOG_OUT_RX = re.compile(r"맛집|식당|음식|먹거리|카페|커피|베이커리|호텔|숙소|리조트|풀빌라|빌라|에어비앤비|가라오케|노래방|골프|렌트|렌터카|차량|택시|투어|술집|클럽|\bbar\b|\bpub\b|restaurant|food|cafe|coffee|hotel|villa|golf|karaoke", re.I)
-for b in BLOG:
-    if b.get("city") not in hubs or BLOG_OUT_RX.search(b.get("kw") or ""): continue   # 엉클데이 데이터가 없는 분야는 안 만들어요
-    sl, h, n, t, u = blog_page(b)
-    if n < 2 or sl in keep_b: continue   # 업체 2곳 미만이면 글을 안 만들어요
-    os.makedirs(f"blog/{sl}", exist_ok=True); open(f"blog/{sl}/index.html", "w").write(h); keep_b.add(sl); BLOG_OUT.append((sl, t, n, u, b["city"]))
-if BLOG_OUT: open("blog/index.html", "w").write(blog_index(sorted(BLOG_OUT, key=lambda r: r[3], reverse=True)))
+open("blog/index.html", "w").write(blog_index(sorted(BLOG_OUT, key=lambda r: r[3], reverse=True)))
 for f in os.listdir("blog"):
-    if f not in keep_b and not (f == "index.html" and BLOG_OUT): shutil.rmtree(f"blog/{f}", ignore_errors=True) if os.path.isdir(f"blog/{f}") else os.remove(f"blog/{f}")
+    if f not in keep_b and f != "index.html": shutil.rmtree(f"blog/{f}", ignore_errors=True) if os.path.isdir(f"blog/{f}") else os.remove(f"blog/{f}")
 
 # ---- llms.txt : AI에게 "엉클데이는 이런 곳이고 정보는 여기 있어요" 알려 주는 안내문 (llmstxt.org 형식) ----
 L = ["# 엉클데이 Uncle Day", "",
