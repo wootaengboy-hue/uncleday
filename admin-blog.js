@@ -83,7 +83,7 @@ function blogDraw() {
       return `<div class="crl-job ${b.status === "published" ? "published" : "done"} ${open ? "open" : ""}"><button class="crl-h" data-bopen="${b.id}"><span class="st">${b.status === "published" ? (BLG_OUT.test(b.kw) ? "⚠️ 게시됐지만 사이트에 안 나와요 (엉클데이 분야 아님)" : blgPreview(b).length < 2 ? "⚠️ 게시됐지만 업체가 2곳보다 적어 안 나와요" : "🌐 게시됨") : "📝 초안"}</span><b>${esc(b.title || b.kw)}</b><small>${esc(cond)} · ${dt(b.created_at)}</small></button>
         ${open ? `<div class="crl-body" data-bpost="${b.id}">
           <label>노리는 검색어<input data-bf="kw" value="${esc(b.kw)}"></label>
-          <label>제목 <small class="hint">비우면 "검색어 — 엉클데이 업체 N곳 (연도)"</small><input data-bf="title" value="${esc(b.title || "")}"></label>
+          <label>제목 <small class="hint">비우면 "검색어 — 가까운 순 · 실제 가격 정리 (연도)"처럼 자동</small><input data-bf="title" value="${esc(b.title || "")}"></label>
           <div class="crl-two"><label>도시<select data-bf="city">${cs.map(c => `<option value="${c.id}" ${c.id === b.city ? "selected" : ""}>${esc(c.name.ko)}</option>`).join("")}</select></label>
             <label>기준 장소 (가까운 순)<select data-bf="landmark">${opt(BLG_LM.filter(l => l.city === b.city).map(l => [l.id, l.ko]), b.landmark, "없음")}</select></label></div>
           <div class="crl-two"><label>주제<select data-bf="topic">${opt(BLG_TOPIC, b.topic, "없음")}</select></label><label>시술 가격<select data-bf="treat">${opt(BLG_TREAT, b.treat, "없음")}</select></label></div>

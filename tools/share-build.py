@@ -954,7 +954,7 @@ def blog_page(b):
     cid = b["city"]; cko = tx(cities.get(cid, {}).get("name")); sl = blog_slug(b); url = f"{SITE}/blog/{sl}/"; n = len(xs)
     upd = max([checked(x) for x in xs] + [b.get("updated") or BUILT]); pub = b.get("published") or upd
     dist = (lambda x: km((lm["lat"], lm["lon"]), x["geo"])) if lm else None
-    title = b.get("title") or f"{b['kw']} — 엉클데이 업체 {n}곳 ({YEAR})"
+    title = b.get("title") or (f"{b['kw']} — 가까운 순 · 실제 가격 정리 ({YEAR})" if lm else f"{b['kw']} — 가격 · 영업시간 · 위치 정리 ({YEAR})" if not b.get("treat") else f"{b['kw']} — 실제 메뉴 가격 비교 ({YEAR})")
     allp = sorted(p for x in xs for p in (mprices(x) or prices(x)))
     rows_tr = treat_rows(tr, xs) if tr else []
     summ = f"엉클데이가 확인한 {cko} 업체 중 '{b['kw']}'에 맞는 곳은 {n}곳이에요."
