@@ -182,7 +182,7 @@ def build_page(shop, sid, title, desc, url, img):
 <h1>{esc(name)}{f' <small>{esc(en)}</small>' if en and en != name else ''}</h1>
 <p class="seo-sum"><b>{esc(sum_ko)}</b></p>
 <p class="seo-sum" lang="en">{esc(sum_en)}</p>
-<p class="seo-date">정보 확인: {checked(shop)} · <a href="/c/{esc(shop.get('city') or '')}/">{esc(tx(city.get('name')))} 업체 모두 보기</a></p>
+<p class="seo-date">정보 확인: {checked(shop)} · <a href="/c/{esc(shop.get('city') or '')}/">{esc(tx(city.get('name')))} 업체 모두 보기</a> · <a href="/en/s/{esc(sid)}/" lang="en" hreflang="en">English</a></p>
 <p>{esc(tx(city.get('name')))} · {esc(tx(cat.get('name')))}{' · ' + ' · '.join('#' + esc(tx(t)) for t in (shop.get('tags') or [])) if shop.get('tags') else ''}</p>
 {f'<p>{esc(tx(shop.get("desc")))}</p>' if tx(shop.get("desc")) else ''}
 {f'<p><b>이런 분께 추천해요:</b> {esc(tx(shop.get("recommend")))}</p>' if tx(shop.get("recommend")) else ''}
@@ -194,7 +194,7 @@ def build_page(shop, sid, title, desc, url, img):
     h = h.replace('<meta charset="utf-8">', '<meta charset="utf-8">\n<base href="/">', 1)
     h = re.sub(r"<title>.*?</title>", f"<title>{esc(title)}</title>", h, count=1, flags=re.S)
     h = re.sub(r'<meta name="description" content="[^"]*">', f'<meta name="description" content="{esc(desc)}">', h, count=1)
-    h = re.sub(r'<link rel="canonical" href="[^"]*">', f'<link rel="canonical" href="{url}">', h, count=1)
+    h = re.sub(r'<link rel="canonical" href="[^"]*">', f'<link rel="canonical" href="{url}">\n<link rel="alternate" hreflang="ko" href="{url}"><link rel="alternate" hreflang="en" href="{SITE}/en/s/{sid}/"><link rel="alternate" hreflang="x-default" href="{url}">', h, count=1)
     h = re.sub(r'<meta property="og:title" content="[^"]*">', f'<meta property="og:title" content="{esc(title)}">', h, count=1)
     h = re.sub(r'<meta property="og:description" content="[^"]*">', f'<meta property="og:description" content="{esc(desc)}">', h, count=1)
     h = re.sub(r'<meta property="og:url" content="[^"]*">', f'<meta property="og:url" content="{url}">', h, count=1)
@@ -209,7 +209,7 @@ def build_page(shop, sid, title, desc, url, img):
     return h
 
 os.makedirs("og", exist_ok=True); os.makedirs("s", exist_ok=True)
-keep_og, keep_s = set(), set()
+keep_og, keep_s = set(), set(); OGIMG = {}
 order = {}
 for shop in d["shops"]:
     sid = shop.get("id")
@@ -225,7 +225,7 @@ for shop in d["shops"]:
     buf = io.BytesIO(); im.save(buf, "JPEG", quality=84, optimize=True, progressive=True); data = buf.getvalue()
     h = hashlib.md5(data).hexdigest()[:8]; fn = f"{sid}-{h}.jpg"   # 그림이 바뀌면 이름도 바뀌어서 카톡이 새 그림을 가져가요
     if not os.path.exists(f"og/{fn}"): open(f"og/{fn}", "wb").write(data)
-    keep_og.add(fn)
+    keep_og.add(fn); OGIMG[sid] = f"{SITE}/og/{fn}"
     cat = cats.get(shop.get("cat"), {}); city = cities.get(shop.get("city"), {})
     name = tx(shop.get("name")); desc = re.sub(r"\s+", " ", tx(shop.get("desc"))).strip()
     pre = " · ".join(x for x in [tx(city.get("name")), tx(cat.get("name"))] if x)
@@ -395,7 +395,7 @@ def en_facts(x):
     if "en" in (x.get("staffLangs") or []): s_ += " English-speaking staff."
     return s_ + " Book through Uncle Day at the shop’s own price — no extra fee."
 EN_CSS_FONT = '<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">'
-def en_shell(title, desc, url, ko_url, cid, lds, body, kind="website", upd=BUILT):
+def en_shell(title, desc, url, ko_url, cid, lds, body, kind="website", upd=BUILT, img=None):
     js = lambda o: json.dumps(o, ensure_ascii=False).replace("</", "<\\/")
     nav = "".join(f'<a href="/en/c/{k}/" class="{"on" if k == cid else ""}">{esc(ecity(k))}</a>' for k in hubs)
     css = HUB_CSS + """.box{background:#fff;border-radius:16px;padding:14px 18px;border:1px solid var(--line)}.box ul{padding-left:18px;margin:6px 0 0}.box li{margin:3px 0;font-size:14.5px}
@@ -405,7 +405,7 @@ h3{font-size:16px;margin:16px 0 4px}.muted{color:var(--sub);font-size:13px}.kind
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{esc(title)}</title><meta name="description" content="{esc(desc[:155])}"><link rel="canonical" href="{url}">
 <link rel="alternate" hreflang="en" href="{url}"><link rel="alternate" hreflang="ko" href="{ko_url}"><link rel="alternate" hreflang="x-default" href="{ko_url}">
-<meta property="og:type" content="{kind}"><meta property="og:site_name" content="Uncle Day"><meta property="og:title" content="{esc(title)}"><meta property="og:description" content="{esc(desc[:155])}"><meta property="og:url" content="{url}"><meta property="og:image" content="{SITE}/images/og-image.jpg"><meta property="og:locale" content="en_US">
+<meta property="og:type" content="{kind}"><meta property="og:site_name" content="Uncle Day"><meta property="og:title" content="{esc(title)}"><meta property="og:description" content="{esc(desc[:155])}"><meta property="og:url" content="{url}"><meta property="og:image" content="{img or SITE + '/images/og-image.jpg'}"><meta property="og:locale" content="en_US">
 {f'<meta property="article:modified_time" content="{upd}">' if kind == "article" else ""}<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png">{EN_CSS_FONT}
 <style>{css}</style>
 {"".join(f'<script type="application/ld+json">{js(o)}</script>' for o in lds)}
@@ -413,6 +413,65 @@ h3{font-size:16px;margin:16px 0 4px}.muted{color:var(--sub);font-size:13px}.kind
 <main class="wrap">{body}</main>
 <footer class="wrap">Uncle Day — book trusted massage, spa and beauty shops in Vietnam · <a href="/">Home</a></footer>{TRACK()}</body></html>
 """
+DAYS_EN_S = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+LANG_EN = {"ko": "Korean", "en": "English", "vi": "Vietnamese", "zh": "Chinese", "ja": "Japanese", "ru": "Russian"}
+def en_shop_page(x):
+    """업체 영어 페이지 en/s/<id>/ — 영어로 가게 이름을 검색하는 외국인 · AI 용 (업체 데이터의 영어 값만 사용)"""
+    sid = x["id"]; cid = x.get("city"); cen = ecity(cid); nm = ename(x); kind = SUB_EN.get(x.get("cat"), "beauty business"); kind2 = SUB_EN2.get(x.get("cat"), "Beauty")
+    url = f"{SITE}/en/s/{sid}/"; ko = f"{SITE}/s/{sid}/"; img = OGIMG.get(sid)
+    desc_en = re.sub(r"\s+", " ", lang(x.get("desc"), "en")).strip(); rec = lang(x.get("recommend"), "en")
+    tags = [lang(t, "en") for t in (x.get("tags") or []) if lang(t, "en")]
+    menu = [m for m in (x.get("menu") or []) if lang(m.get("name"), "en") or tx(m.get("name"))]
+    pr = prices(x); closed = x.get("closed") or []
+    addr_ko = tx(x.get("address")); addr = lang(x.get("address"), "en") or lang(x.get("address"), "vi")
+    addr_ok = bool(addr) and not re.search(r"확인 중|to be confirmed", (addr_ko or "") + addr, re.I)
+    hours = f"{x['open']} – {x.get('close', '')}" + (f" (closed {', '.join(DAYS_EN_S[d] for d in closed)})" if closed else " daily") if x.get("open") else ""
+    langs = [LANG_EN.get(l, l) for l in (x.get("staffLangs") or [])]
+    rv = [r for r in (x.get("userReviews") or []) if (r.get("text") or "").strip()]
+    avg = round(sum(r.get("stars", 0) for r in rv) / len(rv), 1) if rv else 0
+    summary = en_facts(x)
+    title = f"{nm} {cen} — {kind2} prices, reviews & booking | Uncle Day"
+    meta = f"{nm} in {cen}, Vietnam: " + (f"prices from {vnd(pr[0])}, " if pr else "") + (f"{len(rv)} guest review{'s' if len(rv) > 1 else ''}, " if rv else "") + "opening hours, location and booking with no extra fee."
+    ld = {"@context": "https://schema.org", "@type": SCHEMA_TYPE.get(x.get("cat"), "HealthAndBeautyBusiness"), "@id": url + "#shop", "name": nm, "url": url, "description": desc_en or summary}
+    if img: ld["image"] = img
+    if tx(x.get("name")) != nm: ld["alternateName"] = tx(x.get("name"))
+    if addr_ok: ld["address"] = {"@type": "PostalAddress", "streetAddress": addr, "addressLocality": cen, "addressCountry": "VN"}
+    if x.get("geo"): ld["geo"] = {"@type": "GeoCoordinates", "latitude": x["geo"][0], "longitude": x["geo"][1]}
+    if x.get("open") and x.get("close"): ld["openingHoursSpecification"] = [{"@type": "OpeningHoursSpecification", "dayOfWeek": [DAYS_EN[d] for d in range(7) if d not in closed], "opens": x["open"], "closes": x["close"]}]
+    if x.get("staffLangs"): ld["knowsLanguage"] = x["staffLangs"]
+    if pr: ld["priceRange"] = f"{pr[0]:,}–{pr[-1]:,} VND" if len(pr) > 1 else f"from {pr[0]:,} VND"
+    offers = [{"@type": "Offer", "name": lang(m["name"], "en") or tx(m["name"]), "price": int(m["price"]), "priceCurrency": "VND"} for m in menu if isinstance(m.get("price"), (int, float)) and m["price"] > 0]
+    if offers: ld["hasOfferCatalog"] = {"@type": "OfferCatalog", "name": "Menu", "itemListElement": offers}
+    if rv:   # 엉클데이에서 실제 방문 손님이 남긴 후기만 (구글 후기 아님)
+        ld["aggregateRating"] = {"@type": "AggregateRating", "ratingValue": avg, "reviewCount": len(rv), "bestRating": 5, "worstRating": 1}
+        ld["review"] = [{"@type": "Review", "reviewRating": {"@type": "Rating", "ratingValue": r.get("stars", 5), "bestRating": 5}, "author": {"@type": "Person", "name": r.get("name") or "Guest"}, "reviewBody": r["text"][:500], "inLanguage": "ko"} for r in rv[:5]]
+    faq = [(f"Can I book {nm} in English?", f"Yes. Send a message through Uncle Day (site chat or KakaoTalk) and we confirm the booking with the shop for you." + (f" Staff at the shop speak {', '.join(langs)}." if langs else "")),
+           (f"How much does {nm} cost?", ((f"Reference prices checked by Uncle Day start from {vnd(pr[0])}" + (f" up to {vnd(pr[-1])}" if len(pr) > 1 else "") + ".") if pr else "Prices depend on the menu — we tell you the exact price when you ask.") + " Booking through Uncle Day costs the same as the shop price, with no extra fee.")]
+    if hours: faq.append((f"What are {nm}'s opening hours?", f"Open {hours}."))
+    if addr_ok: faq.append((f"Where is {nm}?", f"{addr}." if cen.lower() in addr.lower() else f"{addr}, {cen}."))
+    faq.append(("How do I pay?", "You pay the shop directly after your treatment. Uncle Day charges you nothing."))
+    faq_ld = {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in faq]}
+    crumbs = {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
+        {"@type": "ListItem", "position": 1, "name": "Uncle Day", "item": SITE + "/"},
+        {"@type": "ListItem", "position": 2, "name": f"{cen} massage, spa & beauty", "item": f"{SITE}/en/c/{cid}/"},
+        {"@type": "ListItem", "position": 3, "name": nm, "item": url}]}
+    gmap = f"https://www.google.com/maps/search/?api=1&query={x['geo'][0]},{x['geo'][1]}" if x.get("geo") else (x.get("map") or "")
+    near = [y for y in live if y.get("city") == cid and y["id"] != sid and grp(y) == grp(x)][:3]
+    body = f"""<p class="date"><a href="/en/c/{cid}/">← {esc(cen)} massage, spa &amp; beauty</a></p>
+<h1>{esc(nm)} <small class="en">{esc(cen)} · {esc(kind2)}</small></h1>
+<p class="lead"><b>{esc(summary)}</b></p>
+{f'<p>{" ".join(f"<span class=chip>#{esc(t)}</span>" for t in tags)}</p>' if tags else ''}
+{f'<p>{esc(desc_en)}</p>' if desc_en else ''}
+{f'<p><b>Great for:</b> {esc(rec)}</p>' if rec else ''}
+<div class="box"><ul>{f'<li>📍 <b>Address:</b> {esc(addr)}</li>' if addr_ok else ''}{f'<li>🕒 <b>Hours:</b> {esc(hours)}</li>' if hours else ''}{f'<li>🗣️ <b>Staff languages:</b> {esc(", ".join(langs))}</li>' if langs else ''}<li>💳 <b>Payment:</b> pay the shop directly after your treatment — no booking fee</li>{f'<li>🗺️ <a data-cta="map" href="{esc(gmap)}" target="_blank" rel="noopener">Open in Google Maps</a></li>' if gmap else ''}</ul></div>
+<p><a class="cta" data-cta="book" href="/s/{sid}/?lang=en">Check availability &amp; book</a> <a class="cta" style="background:var(--green)" data-cta="kakao" href="{KAKAO}" target="_blank" rel="noopener">💬 Ask us</a></p>
+{('<h2>Menu &amp; prices</h2><table class="tb"><tr><th>Treatment</th><th>Price</th></tr>' + ''.join(f'<tr><td>{esc(lang(m["name"], "en") or tx(m["name"]))}</td><td>{vnd(int(m["price"])) if isinstance(m.get("price"), (int, float)) and m["price"] > 0 else "Ask us"}</td></tr>' for m in menu) + '</table><p class="muted">Reference prices checked by Uncle Day. Booking through Uncle Day costs the same as the shop price.</p>') if menu else ''}
+{(f'<h2>Guest reviews ({len(rv)}) · ★ {avg}</h2><p class="muted">Written on Uncle Day by guests who booked and visited (original language, mostly Korean).</p>' + ''.join(f'<div class="box" style="margin:8px 0"><b>{"★" * int(r.get("stars", 5))}</b> <small class="muted">{esc(r.get("name") or "Guest")}</small><p style="margin:4px 0 0" lang="ko">{esc(r["text"][:400])}</p></div>' for r in rv[:5])) if rv else ''}
+<h2>FAQ</h2><dl>{''.join(f'<dt>{esc(q)}</dt><dd>{esc(a)}</dd>' for q, a in faq)}</dl>
+{(f'<h2>Similar shops in {esc(cen)}</h2><div class="grid">' + ''.join(f'<a class="card" data-cta="shop" href="/en/s/{y["id"]}/"><b>{esc(ename(y))}</b><small>{esc(SUB_EN2.get(y.get("cat"), ""))}</small><p>{esc(en_facts(y)[:120])}…</p></a>' for y in near) + '</div>') if near else ''}
+<p class="date">Last checked: {checked(x)} · <a href="/s/{sid}/" lang="ko" hreflang="ko">한국어</a></p>"""
+    css_x = ".chip{display:inline-block;background:#fff;border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:13px;margin:0 4px 4px 0}"
+    return en_shell(title, meta, url, ko, cid, [ld, crumbs, faq_ld], f"<style>{css_x}</style>" + body, upd=checked(x), img=img)
 def en_hub_page(cid, shops_c):
     url = f"{SITE}/en/c/{cid}/"; cen = ecity(cid)
     by = {g: [x for x in shops_c if grp(x) == g] for g, _, _ in GROUPS}
@@ -429,7 +488,7 @@ def en_hub_page(cid, shops_c):
         if not by[g]: continue
         sec += f'<h2>{esc(cen)} {esc(le.lower())}</h2><div class="grid">'
         for x in by[g]:
-            u = f"/s/{x['id']}/"; pr = mprices(x) or prices(x)
+            u = f"/en/s/{x['id']}/"; pr = mprices(x) or prices(x)
             sec += f'<a class="card" href="{u}"><b>{esc(ename(x))}</b><small>{esc(SUB_EN2.get(x.get("cat"), ""))}{" · from " + vnd(pr[0]) if pr else ""}</small><p>{esc(en_facts(x))}</p></a>'
             items.append({"@type": "ListItem", "position": len(items) + 1, "url": SITE + u, "name": ename(x)})
         sec += "</div>"
@@ -444,7 +503,7 @@ def en_hub_page(cid, shops_c):
 def en_guide_page(cid, shops_c):
     G = GUIDES[cid]; E = GUIDES_EN[cid]; cen = ecity(cid); url = f"{SITE}/en/c/{cid}/guide/"
     sp = [x for x in shops_c if grp(x) == "spabody"]
-    link = lambda x: f'<a href="/s/{x["id"]}/">{esc(ename(x))}</a>'
+    link = lambda x: f'<a href="/en/s/{x["id"]}/">{esc(ename(x))}</a>'
     lst = lambda xs: ", ".join(link(x) for x in xs) if xs else "none yet"
     used = []
     def S(keys):
@@ -559,8 +618,8 @@ def en_topic_page(cid, t, xs, shops_c):
     upd = max([checked(x) for x in xs] or [BUILT])
     faq = [(f"Where can I find {name.lower()} in {cen}?", f"Shops listed on Uncle Day: {', '.join(ename(x) for x in xs)}."),
            ("Is it more expensive to book through Uncle Day?", "No. You pay the shop’s own price at the shop. Uncle Day charges guests nothing.")]
-    cards = "".join(f'<a class="card" data-cta="shop" href="/s/{x["id"]}/"><b>{esc(ename(x))}</b><small>{esc(SUB_EN2.get(x.get("cat"), ""))}{(" · from " + vnd((mprices(x) or prices(x))[0])) if (mprices(x) or prices(x)) else ""}{(" · until " + x["close"]) if t["id"] == "late" and x.get("close") else ""}</small><p>{esc(en_facts(x))}</p></a>' for x in xs)
-    items = [{"@type": "ListItem", "position": i + 1, "url": f"{SITE}/s/{x['id']}/", "name": ename(x)} for i, x in enumerate(xs)]
+    cards = "".join(f'<a class="card" data-cta="shop" href="/en/s/{x["id"]}/"><b>{esc(ename(x))}</b><small>{esc(SUB_EN2.get(x.get("cat"), ""))}{(" · from " + vnd((mprices(x) or prices(x))[0])) if (mprices(x) or prices(x)) else ""}{(" · until " + x["close"]) if t["id"] == "late" and x.get("close") else ""}</small><p>{esc(en_facts(x))}</p></a>' for x in xs)
+    items = [{"@type": "ListItem", "position": i + 1, "url": f"{SITE}/en/s/{x['id']}/", "name": ename(x)} for i, x in enumerate(xs)]
     lds = [{"@context": "https://schema.org", "@type": "CollectionPage", "name": title, "url": url, "inLanguage": "en", "dateModified": upd, "description": lead, "mainEntity": {"@type": "ItemList", "numberOfItems": n, "itemListElement": items}},
            {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in faq]}]
     body = f"""<h1>{esc(name)} in {esc(cen)} — {n} shops</h1><p class="lead"><b>{esc(lead)}</b></p><p class="date">Last checked: {upd} · Uncle Day (uncleday.com)</p>
@@ -756,6 +815,12 @@ for cid in hubs:
         os.makedirs(f"en/c/{cid}/guide", exist_ok=True); open(f"en/c/{cid}/guide/index.html", "w").write(en_guide_page(cid, sc))
 for f in os.listdir("en/c"):
     if f not in hubs: shutil.rmtree(f"en/c/{f}", ignore_errors=True)
+os.makedirs("en/s", exist_ok=True); keep_en = set()
+for x in live:
+    if x.get("city") not in hubs: continue
+    os.makedirs(f"en/s/{x['id']}", exist_ok=True); open(f"en/s/{x['id']}/index.html", "w").write(en_shop_page(x)); keep_en.add(x["id"])
+for f in os.listdir("en/s"):
+    if f not in keep_en: shutil.rmtree(f"en/s/{f}", ignore_errors=True)
 
 # ---- llms.txt : AI에게 "엉클데이는 이런 곳이고 정보는 여기 있어요" 알려 주는 안내문 (llmstxt.org 형식) ----
 L = ["# 엉클데이 Uncle Day", "",
@@ -785,6 +850,7 @@ open("llms.txt", "w").write("\n".join(L) + "\n")
 
 # 사이트맵: 검색엔진에 '이 페이지들이 있어요' + 언제 바뀌었는지(lastmod) 알려 주기
 mod = {f"{SITE}/s/{x['id']}/": checked(x) for x in live}
+mod.update({f"{SITE}/en/s/{x}/": mod.get(f"{SITE}/s/{x}/", BUILT) for x in keep_en})
 for cid in hubs: mod[f"{SITE}/c/{cid}/"] = max(checked(x) for x in live if x.get("city") == cid)
 for cid in hubs:
     if cid in GUIDES: mod[f"{SITE}/c/{cid}/guide/"] = max([GUIDES[cid]["checked"]] + [checked(x) for x in live if x.get("city") == cid])
@@ -801,7 +867,7 @@ for cid in hubs:
         topic_urls.append(f"{SITE}/c/{cid}/more/")
         topic_urls += [f"{SITE}/p/{cid}/{u['slug']}/{v}" for u in UNC[cid] if u["rich"] for v in ("", "vi/")]
 urls = [f"{SITE}/"] + [f"{SITE}/c/{c}/" for c in hubs] + topic_urls + [f"{SITE}/c/{c}/guide/" for c in hubs if c in GUIDES] \
-     + [f"{SITE}/en/c/{c}/" for c in hubs] + [f"{SITE}/en/c/{c}/guide/" for c in hubs if c in GUIDES_EN] + [f"{SITE}/s/{x}/" for x in sorted(keep_s)]
+     + [f"{SITE}/en/c/{c}/" for c in hubs] + [f"{SITE}/en/c/{c}/guide/" for c in hubs if c in GUIDES_EN] + [f"{SITE}/s/{x}/" for x in sorted(keep_s)] + [f"{SITE}/en/s/{x}/" for x in sorted(keep_en)]
 open("sitemap.xml", "w").write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
     + "".join(f"  <url><loc>{u}</loc><lastmod>{mod.get(u, BUILT)}</lastmod>{'<priority>1.0</priority>' if u == SITE + '/' else '<priority>0.8</priority>' if '/c/' in u else ''}</url>\n" for u in urls) + "</urlset>\n")
 print(len(keep_s), "곳 업체 페이지 ·", len(hubs), "개 도시 페이지 · llms.txt · 사이트맵 완료")
