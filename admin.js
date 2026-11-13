@@ -122,11 +122,23 @@ const TODO = [
 
 /* ===== 탭 ===== */
 let TAB = "home";
+// 브라우저 '뒤로 가기'가 관리자 페이지 안에서 움직이게: 탭 · 포털 앱마다 주소(#bk, #home/price …)를 남겨요
+let NAV_QUIET = true;   // 처음 열 때 · 뒤로 가기로 움직일 때는 기록을 새로 쌓지 않아요
+function navHash() { return TAB === "home" && typeof PORTAL !== "undefined" && PORTAL.view && PORTAL.view !== "home" ? "home/" + PORTAL.view : TAB; }
+function navSync() { const h = navHash(); if (location.hash.slice(1) === h) return; if (NAV_QUIET) history.replaceState(null, "", "#" + h); else history.pushState(null, "", "#" + h); }
+window.addEventListener("popstate", () => {
+  if (typeof TAB === "undefined" || $("app").hidden) return;
+  const [t, v] = location.hash.slice(1).split("/"); if (!t || /=/.test(t)) return;
+  NAV_QUIET = true;
+  try { if (t === "home") { PORTAL.view = v || "home"; if (TAB !== "home") showTab("home"); else portalGo(PORTAL.view, true); } else if (TABS_ALL.includes(t)) showTab(t); }
+  finally { NAV_QUIET = false; }
+});
+const TABS_ALL = ["home", "dash", "work", "bk", "chat", "crm", "settle", "shops", "rv", "uni", "acc"];
 function showTab(t) {
   TAB = t;
   document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
   document.querySelectorAll("[data-pane]").forEach(p => p.hidden = p.dataset.pane !== t);
-  if (location.hash.slice(1) !== t) history.replaceState(null, "", "#" + t);
+  navSync();
   ({ home: drawPortal, dash: drawDash, work: drawWork, bk: drawBookings, chat: drawChat, crm: drawCrm, settle: drawSettle, shops: drawList, rv: drawReviews, uni: drawUniverse, acc: drawAccount })[t]();
   drawCounts();
 }
@@ -1266,8 +1278,9 @@ async function afterLogin(session) {
   $("me").textContent = ME.email;
   initShops();
   document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => showTab(b.dataset.tab));
-  const h = location.hash.slice(1);
-  showTab(["home", "dash", "work", "bk", "chat", "crm", "settle", "shops", "rv", "uni", "acc"].includes(h) ? h : "home");
+  const [h, hv] = location.hash.slice(1).split("/");
+  if (h === "home" && hv) PORTAL.view = hv;
+  NAV_QUIET = true; showTab(TABS_ALL.includes(h) ? h : "home"); NAV_QUIET = false;
   offerMigration();
   checkImports();
   initNotis();

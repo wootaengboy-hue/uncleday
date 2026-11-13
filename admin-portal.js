@@ -78,6 +78,7 @@ function portalGo(k, quiet) {
   const el = $("tab-home"); if (!el) return;
   if (k !== "home" && !portalApp(k)) k = "home";
   PORTAL.view = k; try { sessionStorage.setItem("ptView", k); } catch (e) {}
+  if (typeof navSync === "function" && TAB === "home") { const q = NAV_QUIET; if (quiet) NAV_QUIET = true; navSync(); NAV_QUIET = q; }
   el.querySelectorAll("[data-pv]").forEach(s => s.hidden = !(s.dataset.pv === k || (s.dataset.pv === "sub" && k !== "home")));
   el.querySelectorAll(".pt-side [data-pgo]").forEach(b => b.classList.toggle("on", b.dataset.pgo === k));
   // 같은 묶음의 다른 앱으로 바로 가는 칩 (휴대폰에서 왼쪽 메뉴 대신)
