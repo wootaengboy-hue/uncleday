@@ -5,11 +5,11 @@
  * 아래 장소 · 주제 · 시술 목록은 tools/landmarks.py · topics.py · treatments.py 와 같아요.
  */
 const BLG_LM = [{"id": "han-market", "city": "danang", "ko": "한시장", "lat": 16.0682, "lon": 108.2242, "names": ["한시장", "한 시장", "han market", "chợ hàn", "cho han"]}, {"id": "my-khe", "city": "danang", "ko": "미케 비치", "lat": 16.0597, "lon": 108.2469, "names": ["미케", "미케비치", "미케 해변", "my khe", "mỹ khê"]}, {"id": "dragon-bridge", "city": "danang", "ko": "용다리", "lat": 16.0611, "lon": 108.2274, "names": ["용다리", "용 다리", "드래곤 브릿지", "dragon bridge", "cầu rồng"]}, {"id": "con-market", "city": "danang", "ko": "꼰시장", "lat": 16.0679, "lon": 108.2145, "names": ["꼰시장", "꼰 시장", "con market", "chợ cồn"]}, {"id": "an-thuong", "city": "danang", "ko": "안트엉", "lat": 16.049, "lon": 108.246, "names": ["안트엉", "안뜨엉", "an thuong", "an thượng"]}, {"id": "danang-airport", "city": "danang", "ko": "다낭 공항", "lat": 16.053, "lon": 108.202, "names": ["공항", "airport", "sân bay"]}, {"id": "lotte-danang", "city": "danang", "ko": "롯데마트 다낭", "lat": 16.0346, "lon": 108.2296, "names": ["롯데마트", "롯데 마트", "lotte mart"]}, {"id": "dam-market", "city": "nhatrang", "ko": "담시장", "lat": 12.2546, "lon": 109.1925, "names": ["담시장", "담 시장", "dam market", "chợ đầm"]}, {"id": "nhatrang-beach", "city": "nhatrang", "ko": "나트랑 해변 (쩐푸 거리)", "lat": 12.242, "lon": 109.1965, "names": ["나트랑 해변", "쩐푸", "tran phu", "trần phú", "해변"]}, {"id": "nhatrang-night-market", "city": "nhatrang", "ko": "나트랑 야시장", "lat": 12.2445, "lon": 109.1958, "names": ["야시장", "night market", "chợ đêm"]}, {"id": "stone-church", "city": "nhatrang", "ko": "나트랑 대성당 (돌성당)", "lat": 12.2466, "lon": 109.1883, "names": ["대성당", "돌성당", "cathedral", "nhà thờ núi"]}, {"id": "ben-thanh", "city": "hcm", "ko": "벤탄시장", "lat": 10.7725, "lon": 106.698, "names": ["벤탄", "벤탄시장", "ben thanh", "bến thành"]}, {"id": "bui-vien", "city": "hcm", "ko": "부이비엔 거리", "lat": 10.7675, "lon": 106.6932, "names": ["부이비엔", "여행자 거리", "bui vien", "bùi viện"]}, {"id": "notre-dame", "city": "hcm", "ko": "노트르담 성당", "lat": 10.7798, "lon": 106.699, "names": ["노트르담", "notre dame", "nhà thờ đức bà"]}, {"id": "thao-dien", "city": "hcm", "ko": "타오디엔 (2군)", "lat": 10.804, "lon": 106.736, "names": ["타오디엔", "2군", "thao dien", "thảo điền"]}, {"id": "phu-my-hung", "city": "hcm", "ko": "푸미흥 (7군)", "lat": 10.729, "lon": 106.719, "names": ["푸미흥", "7군", "phu my hung", "phú mỹ hưng"]}, {"id": "hoan-kiem", "city": "hanoi", "ko": "호안끼엠 호수", "lat": 21.0287, "lon": 105.8524, "names": ["호안끼엠", "호안 끼엠", "hoan kiem", "hoàn kiếm"]}, {"id": "old-quarter", "city": "hanoi", "ko": "하노이 구시가", "lat": 21.0347, "lon": 105.8502, "names": ["구시가", "올드쿼터", "old quarter", "phố cổ"]}, {"id": "west-lake", "city": "hanoi", "ko": "서호", "lat": 21.056, "lon": 105.823, "names": ["서호", "west lake", "hồ tây"]}, {"id": "lotte-hanoi", "city": "hanoi", "ko": "롯데센터 하노이", "lat": 21.0318, "lon": 105.8122, "names": ["롯데센터", "롯데 센터", "lotte center"]}];
-const BLG_TOPIC = [["korean", "한국어 되는 마사지"], ["late", "밤늦게 하는 마사지"], ["luggage", "짐 보관 되는 마사지"], ["pickup", "픽업 되는 마사지"], ["kids", "아이랑 받는 키즈 마사지"], ["pregnant", "임산부 마사지"], ["hotstone", "핫스톤 마사지"], ["fourhands", "포핸드 마사지"], ["thai", "타이 · 건식 마사지"], ["foot", "발 마사지"], ["sauna", "사우나 있는 스파"], ["tipfree", "팁 포함 마사지"], ["nail", "네일 · 속눈썹"], ["clinic", "한국어 상담 되는 성형 · 피부과"]];
+const BLG_TOPIC = [["korean", "한국어 되는 마사지"], ["late", "밤늦게 하는 마사지"], ["luggage", "짐 보관 되는 마사지"], ["pickup", "픽업 되는 마사지"], ["couple", "커플 마사지 (커플룸)"], ["family", "가족이 함께 받는 마사지"], ["kids", "아이랑 받는 키즈 마사지"], ["pregnant", "임산부 마사지"], ["hotstone", "핫스톤 마사지"], ["fourhands", "포핸드 마사지"], ["thai", "타이 · 건식 마사지"], ["foot", "발 마사지"], ["sauna", "사우나 있는 스파"], ["tipfree", "팁 포함 마사지"], ["nail", "네일 · 속눈썹"], ["clinic", "한국어 상담 되는 성형 · 피부과"]];
 const BLG_TREAT = [["massage", "마사지"], ["foot", "발 마사지"], ["facial", "페이셜 · 피부관리"], ["nail", "젤네일"], ["lash", "속눈썹 연장"], ["hair", "헤어 (커트 · 펌 · 염색)"], ["filler", "필러 · 보톡스"]];
 const BLG = { posts: null, err: "", open: null };
 const BLG_CITY = { "다낭": "danang", "danang": "danang", "나트랑": "nhatrang", "냐짱": "nhatrang", "호치민": "hcm", "호찌민": "hcm", "사이공": "hcm", "하노이": "hanoi" };
-const BLG_TRX = { korean: /한국어|한국인/, late: /밤늦게|늦게|24시|심야|야간|새벽/, luggage: /짐 ?보관/, pickup: /픽업|샌딩/, kids: /키즈|아이|아기|어린이/, pregnant: /임산부|임신/, hotstone: /핫스톤/, fourhands: /포핸드/, thai: /타이|건식/, foot: /발 ?마사지/, sauna: /사우나|찜질|자쿠지/, tipfree: /팁 ?포함|노팁/, nail: /네일|속눈썹/, clinic: /성형|피부과|병원|클리닉/ };
+const BLG_TRX = { couple: /커플|신혼|부부|연인|허니문/, family: /가족|부모님|효도|패밀리|단체/, korean: /한국어|한국인/, late: /밤늦게|늦게|24시|심야|야간|새벽/, luggage: /짐 ?보관/, pickup: /픽업|샌딩/, kids: /키즈|아이|아기|어린이/, pregnant: /임산부|임신/, hotstone: /핫스톤/, fourhands: /포핸드/, thai: /타이|건식/, foot: /발 ?마사지/, sauna: /사우나|찜질|자쿠지/, tipfree: /팁 ?포함|노팁/, nail: /네일|속눈썹/, clinic: /성형|피부과|병원|클리닉/ };
 const blgSlugTxt = t => (String(t || "").toLowerCase().replace(/đ/g, "d").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 50).replace(/-$/, "")) || "shop";
 const blgSlug = b => { if (b.slug) return b.slug; const s = blgSlugTxt(b.kw); return s.length >= 6 && s !== "shop" ? s : [b.city, b.landmark || b.topic || b.treat || "guide"].filter(Boolean).join("-") + "-" + b.id; };
 // 검색어 → 조건
@@ -17,7 +17,7 @@ function blgParse(kw) {
   const k = String(kw || "").toLowerCase(), r = { city: null, landmark: null, topic: null, treat: null, grp: null };
   for (const [w, c] of Object.entries(BLG_CITY)) if (k.includes(w)) { r.city = c; break; }
   const lm = BLG_LM.find(l => (!r.city || l.city === r.city) && l.names.some(n => k.includes(n.toLowerCase()))); if (lm) { r.landmark = lm.id; r.city = r.city || lm.city; }
-  for (const [id, rx] of Object.entries(BLG_TRX)) if (rx.test(k)) { r.topic = id; break; }
+  r.topics = Object.entries(BLG_TRX).filter(([, rx]) => rx.test(k)).map(([id]) => id); r.topic = r.topics[0] || null;
   if (/가격|요금|비용|얼마/.test(k)) r.treat = /네일|젤/.test(k) ? "nail" : /페이셜|피부관리|클렌징|스킨|케어|피부/.test(k) ? "facial" : /발/.test(k) ? "foot" : /헤어|커트|펌|이발/.test(k) ? "hair" : /속눈썹/.test(k) ? "lash" : /필러|보톡스/.test(k) ? "filler" : "massage";
   if (r.treat) r.topic = null;
   r.grp = /피부|스킨|케어|페이셜|에스테틱|클리닉|성형|네일|헤어|뷰티|속눈썹|이발|왁싱|skin|facial|nail|hair|beauty|clinic/.test(k) && !/마사지|massage|스파(?!.*(케어|스킨))/.test(k) ? "beauty" : "spabody";
@@ -26,6 +26,18 @@ function blgParse(kw) {
 }
 // 엉클데이 데이터에 없는 분야 (맛집 · 숙소 · 투어 …) — 이런 검색어로 마사지 목록을 내면 손님을 속이는 글이 돼요
 const BLG_OUT = /맛집|식당|음식|먹거리|카페|커피|베이커리|호텔|숙소|리조트|풀빌라|빌라|에어비앤비|가라오케|노래방|골프|렌트|렌터카|차량|택시|투어|술집|클럽|bar\b|pub\b|restaurant|food|cafe|coffee|hotel|villa|golf|karaoke/i;
+// 엉클데이 분야가 아닌 경쟁사 주제를 '같은 손님 · 같은 장소'로 우리 분야 검색어로 바꿔요 (예: 다낭 2룸 풀빌라 추천 – 커플 · 가족 여행 → 커플 · 가족 여행에 좋은 다낭 마사지 추천)
+function blgReframe(kw) {
+  const k = String(kw || ""), auds = [[/커플|신혼|부부|연인|허니문/, "커플"], [/가족|패밀리/, "가족"], [/부모님|효도/, "부모님과 함께"], [/아이|키즈|아기/, "아이와 함께"], [/친구|우정|여자끼리|남자끼리/, "친구끼리"], [/단체|모임|워크숍|회사/, "단체"], [/혼자|나홀로|1인/, "혼자"], [/골프/, "골프 후"], [/공항|출국|마지막 날/, "출국 전"]];
+  const a = [...new Set(auds.filter(([rx]) => rx.test(k)).map(([, l]) => l))].slice(0, 2);
+  const cityKo = (Object.entries({ "다낭": "다낭", "나트랑": "나트랑", "냐짱": "나트랑", "호치민": "호찌민", "호찌민": "호찌민", "하노이": "하노이" }).find(([w]) => k.includes(w)) || [, "다낭"])[1];
+  const lm = BLG_LM.find(l => l.names.some(n => k.toLowerCase().includes(n.toLowerCase())));
+  if (a.includes("출국 전")) return `출국 전 받기 좋은 ${cityKo} 마사지 (짐 보관 · 샤워)`;
+  if (a.includes("골프 후")) return `골프 후 받기 좋은 ${cityKo} 마사지 추천`;
+  if (a.length) return `${a.join(" · ")} 여행에 좋은 ${cityKo} 마사지 추천`;
+  if (lm) return `${cityKo} ${lm.ko} 근처 마사지 추천`;
+  return null;
+}
 const blgKm = (a, b) => { const R = 6371, t = Math.PI / 180, dl = (b[0] - a[0]) * t, dn = (b[1] - a[1]) * t, x = Math.sin(dl / 2) ** 2 + Math.cos(a[0] * t) * Math.cos(b[0] * t) * Math.sin(dn / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(x)); };
 // 미리보기: 대략 몇 곳이 나올지 (정확한 결과는 게시 후 사이트 페이지에서)
 function blgPreview(b) {
@@ -46,6 +58,8 @@ async function blogLoad() {
 }
 async function blogNew(kw, fromUrl) {
   const p = blgParse(kw);
+  if (p.topics.length > 1 && !p.treat) p.topic = p.topics.map(t => [t, blgPreview({ ...p, topic: t }).length]).sort((x, y) => y[1] - x[1])[0][0];   // 주제가 여럿이면 업체가 많이 나오는 쪽
+  delete p.topics;
   const r = await sb.from("blog_posts").insert({ kw, ...p, from_url: fromUrl || null }).select().single();
   if (r.error) { alert(/blog_posts/.test(r.error.message) ? "universe23.sql 을 먼저 실행해 주세요" : r.error.message); return null; }
   (BLG.posts = BLG.posts || []).unshift(r.data); BLG.open = r.data.id; blogDraw();
@@ -82,7 +96,7 @@ function blogDraw() {
   const collect = id => { const box = el.querySelector(`[data-bpost="${id}"]`), o = {}; box.querySelectorAll("[data-bf]").forEach(i => o[i.dataset.bf] = i.value.trim() || null); o.kw = o.kw || ""; return o; };
   const up = async (id, patch, msg) => { const r = await sb.from("blog_posts").update(patch).eq("id", id).select().single(); if (r.error) { alert(r.error.message); return; } BLG.posts[BLG.posts.findIndex(x => x.id === id)] = r.data; if (msg) toast(msg, 3500); blogDraw(); };
   el.querySelectorAll("[data-bnew]").forEach(b => b.onclick = async () => { const kw = document.getElementById("blgKw").value.trim(); if (kw.length < 2) { toast("검색어를 적어 주세요"); return; }
-    if (BLG_OUT.test(kw)) { alert("'" + kw + "' 는 엉클데이가 데이터를 가진 분야(마사지 · 스파 · 뷰티 · 피부 · 네일 · 헤어)가 아니라서 글을 만들 수 없어요.\n데이터 없이 만들면 내용이 틀린 글이 돼서 손님 신뢰와 검색 순위가 같이 떨어져요."); return; } b.disabled = true; await blogNew(kw); b.disabled = false; });
+    if (BLG_OUT.test(kw)) { const rf = blgReframe(kw); if (rf && confirm("'" + kw + "' 는 엉클데이 분야가 아니에요.\n같은 손님을 노리는 우리 분야 검색어로 바꿔 만들까요?\n\n→ " + rf)) { b.disabled = true; await blogNew(rf); b.disabled = false; } else if (!rf) alert("'" + kw + "' 는 엉클데이가 데이터를 가진 분야(마사지 · 스파 · 뷰티 · 피부 · 네일 · 헤어)가 아니라서 글을 만들 수 없어요."); return; } b.disabled = true; await blogNew(kw); b.disabled = false; });
   el.querySelectorAll("[data-bopen]").forEach(b => b.onclick = () => { const id = +b.dataset.bopen; BLG.open = BLG.open === id ? null : id; blogDraw(); });
   el.querySelectorAll("[data-bpost] [data-bf]").forEach(i => i.onchange = () => { const id = +i.closest("[data-bpost]").dataset.bpost, p = BLG.posts.find(x => x.id === id); Object.assign(p, collect(id)); if (i.dataset.bf === "city") p.landmark = null; blogDraw(); });
   el.querySelectorAll("[data-bsave]").forEach(b => b.onclick = () => up(+b.dataset.bsave, collect(+b.dataset.bsave), "저장했어요 · 1시간 안에 사이트에 반영돼요"));
