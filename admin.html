@@ -582,6 +582,17 @@ mark.cmark{background:#fff3b0;border-bottom:2px solid #f0b429;border-radius:2px;
 .gsc-t>div{display:grid;grid-template-columns:minmax(0,1fr) 50px 56px 52px 48px;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:13.5px}.gsc-t>div>span:nth-child(n+2){text-align:right}.gsc-t>div>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .gsc-t .th{font-size:12px;color:#8a94a3;font-weight:700}.gsc-t a{color:#0e2843;font-weight:700;text-decoration:none}.gsc-t small{display:block;color:#8a94a3;font-size:11px;overflow:hidden;text-overflow:ellipsis}
 @media(max-width:700px){.gsc-t>div{grid-template-columns:minmax(0,1fr) 38px 46px 40px;font-size:13px}.gsc-t>div>span:nth-child(4){display:none}}
+.prc-cities{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,170px),1fr));gap:8px;margin-bottom:10px}
+.prc-city{background:#fff;border:1px solid #e6e9ee;border-radius:12px;padding:9px 12px;text-align:left;font:inherit;cursor:pointer;display:grid;gap:4px}.prc-city.on{border-color:#116241;box-shadow:0 0 0 2px #116241 inset}
+.prc-city .bar{height:7px;background:#eef0f3;border-radius:4px;overflow:hidden}.prc-city .bar i{display:block;height:100%;background:#116241}.prc-city small{color:#586474;font-size:12px}
+.prc-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}.prc-bar input[type=text],.prc-bar #prcQ{flex:1 1 200px;border:1px solid #e3dccd;border-radius:10px;padding:9px 12px;font:inherit}
+.prc-list{display:grid;gap:8px}.prc-shop{background:#fff;border:1px solid #e6e9ee;border-radius:12px;overflow:hidden}.prc-shop.open{border-color:#116241}
+.prc-h{width:100%;display:flex;align-items:center;gap:10px;background:none;border:0;padding:12px 14px;font:inherit;text-align:left;cursor:pointer}.prc-h b{flex:none}.prc-h small{flex:1;color:#586474}.prc-h em{font-style:normal;color:#e25e00;font-weight:800}
+.prc-body{padding:0 14px 12px;display:grid;gap:6px}.prc-row{display:grid;grid-template-columns:minmax(0,1fr) 130px 110px;gap:8px;align-items:center;border-top:1px solid #f1f1f1;padding-top:6px}
+.prc-row .nm{font-size:14px}.prc-row .nm small{color:#8a94a3}.prc-row input,.prc-add input{border:1px solid #e3dccd;border-radius:9px;padding:9px 10px;font:inherit;font-size:15px;min-width:0;text-align:right}
+.prc-row .pv{font-size:12.5px;color:#116241}.prc-row .pv.bad{color:#b42318}.prc-add{display:grid;grid-template-columns:minmax(0,1fr) 60px 130px;gap:8px;margin-top:4px}.prc-add input:first-child{text-align:left}
+.prc-act{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}
+@media(max-width:600px){.prc-row{grid-template-columns:minmax(0,1fr) 110px}.prc-row .pv{grid-column:2;text-align:right;margin-top:-4px}.prc-add{grid-template-columns:1fr 70px}.prc-add input:first-child{grid-column:1/-1}}
 .seo-hide{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}.seo-hide input{border:1px solid #e3dccd;border-radius:8px;padding:7px 10px;font:inherit;font-size:13.5px;min-width:0}.seo-hide input:first-child{flex:2 1 260px}.seo-hide input:nth-child(2){flex:1 1 140px}
 .seo-hid>div{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;padding:7px 0;border-bottom:1px solid #f0f0f0}.seo-hid small{color:#8a94a3;flex:1}
 @media(max-width:700px){.seo-pages>div{grid-template-columns:minmax(0,1fr) repeat(3,40px);row-gap:4px}.seo-pages>div>span:nth-child(5),.seo-pages>div>span:nth-child(6){display:none}.seo-pages>div>span:last-child{grid-column:1/-1;justify-content:flex-start}.seo-pages .th span:last-child{display:none}.seo-src{grid-template-columns:84px 1fr 36px}}
@@ -751,7 +762,8 @@ mark.cmark{background:#fff3b0;border-bottom:2px solid #f0b429;border-radius:2px;
 <script src="admin-owner.js?v=20261111b"></script>
 <script src="owner-board.js?v=20261113e"></script>
 <script src="admin-universe.js?v=20261112b"></script>
-<script src="admin-portal.js?v=20261113a"></script>
+<script src="admin-portal.js?v=20261113b"></script>
+<script src="admin-price.js?v=20261113a"></script>
 <script src="admin-seo.js?v=20261113h"></script>
 <script src="admin-brand.js?v=20261112a"></script>
 <script src="admin.js?v=20261113a"></script>
