@@ -152,6 +152,7 @@ def facts(shop):
     if addr and not re.search(r"확인 중|to be confirmed", addr, re.I): faq.append(("위치는 어디예요?", f"{cko} {addr}에 있어요."))
     faq.append(("결제는 어떻게 하나요?", "시술을 받은 뒤 매장에서 직접 결제해요. 엉클데이에 따로 내는 돈은 없어요."))
     return ko, en_s, faq
+def norm_n(t): return re.sub(r"[^a-z0-9가-힣]", "", (t or "").lower())
 def build_page(shop, sid, title, desc, url, img):
     cat = cats.get(shop.get("cat"), {}); city = cities.get(shop.get("city"), {})
     name = tx(shop.get("name")); en = lang(shop.get("name"), "en")
@@ -239,7 +240,9 @@ for shop in d["shops"]:
     pre = " · ".join(x for x in [tx(city.get("name")), tx(cat.get("name"))] if x)
     desc = (f"{pre} | " if pre else "") + (desc[:90] + ("…" if len(desc) > 90 else "") if desc else "한국어로 상담하고 추가 요금 없이 예약하세요.")
     os.makedirs(f"s/{sid}", exist_ok=True)
-    title = f"{name} - {tx(city.get('name'))} {tx(cat.get('name'))} 한국어 예약 | 엉클데이"
+    en_n = lang(shop.get("name"), "en"); kind_ko = SUB_KO.get(shop.get("cat")) or tx(cat.get("name"))
+    # 제목에 한국어 이름 + 원래(영어) 이름을 같이 — '클로버 스파'로 찾든 'Clover Spa'로 찾든 걸리게
+    title = f"{name}{f' ({en_n})' if en_n and norm_n(en_n) != norm_n(name) else ''} - {tx(city.get('name'))} {kind_ko} 한국어 예약 | 엉클데이"
     page = build_page(shop, sid, title, desc, f"{SITE}/s/{sid}/", f"{SITE}/og/{fn}")
     open(f"s/{sid}/index.html", "w").write(page); keep_s.add(sid)
 for f in os.listdir("og"):

@@ -92,7 +92,9 @@ document.body.classList.remove("has-cta");
 if (!shop) {
   box.innerHTML = `<p class="empty">${ui("notFound")}</p><a href="${window.SPA ? "#" : "/"}">${ui("back")}</a>`;
 } else {
-  document.title = tx(shop.name) + " | " + tx(SITE.name);
+  // 미리 만든 업체 페이지(s/)의 한국어 제목은 그대로 두고(검색용), 다른 언어로 볼 땐 그 언어 이름 + 다른 이름을 같이
+  { const other = lang === "ko" ? (shop.name.en || "") : (shop.name.ko || ""), main = tx(shop.name);
+    if (!(window.SHOP_ID && lang === "ko")) document.title = main + (other && other.replace(/\s/g, "").toLowerCase() !== main.replace(/\s/g, "").toLowerCase() ? ` (${other})` : "") + " | " + tx(SITE.name); }
   const cat = catGroup(shop.cat);
   const img = shop.img ? `<img class="hero" src="${shop.img}" alt="" decoding="async" style="object-position:${shop.imgPos || "50% 50%"}">` : phCard(shop, true);
   const closed = shop.closed.length ? shop.closed.map(d => ui("days")[d]).join(", ") : ui("none");
