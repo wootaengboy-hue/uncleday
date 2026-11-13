@@ -8,6 +8,11 @@ on:
   schedule:
     - cron: "17 */3 * * *"
   workflow_dispatch:
+    inputs:
+      indexnow_all:
+        description: "사이트맵의 모든 페이지를 빙 · IndexNow 에 한 번에 알리기"
+        type: boolean
+        default: false
 permissions:
   contents: write
 concurrency: { group: share-previews, cancel-in-progress: false }
@@ -37,6 +42,11 @@ jobs:
         run: |
           git add -A s og c en p sitemap.xml llms.txt; [ -f data/osm.json ] && git add data/osm.json
           if git diff --cached --quiet; then echo "바뀐 것 없음"; exit 0; fi
+          git diff --cached --name-only > "$RUNNER_TEMP/changed.txt"
           git config user.name "uncleday-bot"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -q -m "공유 미리보기 자동 갱신"
           git pull -q --rebase origin main && git push -q origin HEAD:main
+      - name: 빙 · IndexNow 에 바뀐 페이지 알리기
+        run: |
+          if [ "${{ inputs.indexnow_all }}" = "true" ]; then sleep 60; python3 tools/indexnow.py --all; exit 0; fi
+          if [ -s "$RUNNER_TEMP/changed.txt" ]; then sleep 90; python3 tools/indexnow.py "$RUNNER_TEMP/changed.txt"; else echo "알릴 것 없음"; fi
