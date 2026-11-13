@@ -64,7 +64,7 @@ function blogDraw() {
     <div class="crl-list">${BLG.posts.length ? BLG.posts.map(b => {
       const open = BLG.open === b.id, pv = open ? blgPreview(b) : [], lm = BLG_LM.find(l => l.id === b.landmark);
       const cond = [cn(b.city), lm && "📍 " + lm.ko, b.topic && "🏷️ " + ((BLG_TOPIC.find(t => t[0] === b.topic) || [])[1] || b.topic), b.treat && "💰 " + ((BLG_TREAT.find(t => t[0] === b.treat) || [])[1] || b.treat) + " 가격"].filter(Boolean).join(" · ");
-      return `<div class="crl-job ${b.status === "published" ? "published" : "done"} ${open ? "open" : ""}"><button class="crl-h" data-bopen="${b.id}"><span class="st">${b.status === "published" ? "🌐 게시됨" : "📝 초안"}</span><b>${esc(b.title || b.kw)}</b><small>${esc(cond)} · ${dt(b.created_at)}</small></button>
+      return `<div class="crl-job ${b.status === "published" ? "published" : "done"} ${open ? "open" : ""}"><button class="crl-h" data-bopen="${b.id}"><span class="st">${b.status === "published" ? (BLG_OUT.test(b.kw) ? "⚠️ 게시됐지만 사이트에 안 나와요 (엉클데이 분야 아님)" : blgPreview(b).length < 2 ? "⚠️ 게시됐지만 업체가 2곳보다 적어 안 나와요" : "🌐 게시됨") : "📝 초안"}</span><b>${esc(b.title || b.kw)}</b><small>${esc(cond)} · ${dt(b.created_at)}</small></button>
         ${open ? `<div class="crl-body" data-bpost="${b.id}">
           <label>노리는 검색어<input data-bf="kw" value="${esc(b.kw)}"></label>
           <label>제목 <small class="hint">비우면 "검색어 — 엉클데이 업체 N곳 (연도)"</small><input data-bf="title" value="${esc(b.title || "")}"></label>
