@@ -86,7 +86,7 @@ const CMP = { open: null, tab: "gap" };
 const cmpNorm = s => String(s || "").replace(/\s+/g, "").toLowerCase();
 function cmpBlogOf(k, gap) {
   const P = (typeof BLG !== "undefined" && BLG.posts) || []; if (!P.length) return null;
-  const ks = [k.kw, typeof blgReframe === "function" ? blgReframe(k.kw) : ""].filter(Boolean).map(cmpNorm);
+  const ks = [k.kw, ...(typeof blgReframes === "function" && typeof BLG_OUT !== "undefined" && BLG_OUT.test(k.kw) ? blgReframes(k.kw).map(o => o.kw) : [])].filter(Boolean).map(cmpNorm);
   const solo = k.url && gap.filter(x => x.url === k.url).length === 1;
   const hit = P.filter(p => ks.includes(cmpNorm(p.kw)) || (solo && p.from_url && p.from_url === k.url));
   return hit.find(p => p.status === "published") || hit[0] || null;
@@ -105,7 +105,7 @@ function compDraw() {
         ${j.status === "error" ? `<p class="crl-err">${esc(j.err || "")}</p>` : ""}
         ${open && j.status === "done" ? `<div class="crl-body">
           <div class="br-cats">${[["gap", `➕ 빠진 검색어 ${gap.length}`], ["have", `✅ 있는 검색어 ${have.length}`], ["shops", `🏪 언급된 가게 ${S.length}`]].map(([k, l]) => `<button class="${CMP.tab === k ? "on" : ""}" data-cmptab="${k}">${l}</button>`).join("")}</div>
-          ${CMP.tab === "gap" ? (gap.length ? `<p class="hint">경쟁사는 노리는데 엉클데이에는 맞는 페이지가 없는 검색어예요. 여기 있는 말로 우리 데이터 페이지를 만들면 돼요.</p><div class="cmp-t">${gap.map(k => `<div><b>${esc(k.kw)}</b><small>글 ${k.n}개 · <a href="${esc(k.url)}" target="_blank" rel="noopener nofollow">경쟁사 글 ↗</a></small><button class="btn sm" data-cmpcopy="${esc(k.kw)}">복사</button>${bp(k) ? `<span class="uni-chip warn" title="아래 '📝 블로그'에서 게시하면 이 목록에서 빠져요">📝 초안 있음 · 게시 전</span>` : typeof BLG_OUT !== "undefined" && BLG_OUT.test(k.kw) ? (blgReframe(k.kw) ? `<button class="btn sm main" data-cmpblog="${esc(blgReframe(k.kw))}" data-u="${esc(k.url)}" title="경쟁사 주제를 같은 손님 대상의 우리 분야로 바꿔요">🔄 "${esc(blgReframe(k.kw))}"로 만들기</button>` : `<span class="hint">엉클데이 분야 아님</span>`) : `<button class="btn sm main" data-cmpblog="${esc(k.kw)}" data-u="${esc(k.url)}">📝 블로그 글 만들기</button>`}</div>`).join("")}</div><button class="btn sm" data-cmpcopyall="${j.id}">📋 빠진 검색어 전부 복사</button>` : `<p class="hint">🎉 빠진 검색어가 없어요.</p>`)
+          ${CMP.tab === "gap" ? (gap.length ? `<p class="hint">경쟁사는 노리는데 엉클데이에는 맞는 페이지가 없는 검색어예요. 여기 있는 말로 우리 데이터 페이지를 만들면 돼요.</p><div class="cmp-t">${gap.map(k => `<div><b>${esc(k.kw)}</b><small>글 ${k.n}개 · <a href="${esc(k.url)}" target="_blank" rel="noopener nofollow">경쟁사 글 ↗</a></small><button class="btn sm" data-cmpcopy="${esc(k.kw)}">복사</button>${bp(k) ? `<span class="uni-chip warn" title="아래 '📝 블로그'에서 게시하면 이 목록에서 빠져요">📝 초안 있음 · 게시 전</span>` : typeof BLG_OUT !== "undefined" && BLG_OUT.test(k.kw) ? blgFixHtml(blgReframes(k.kw), `data-cmpfix="${esc(k.kw)}" data-u="${esc(k.url)}"`) : `<button class="btn sm main" data-cmpblog="${esc(k.kw)}" data-u="${esc(k.url)}">📝 블로그 글 만들기</button>`}</div>`).join("")}</div><button class="btn sm" data-cmpcopyall="${j.id}">📋 빠진 검색어 전부 복사</button>` : `<p class="hint">🎉 빠진 검색어가 없어요.</p>`)
           : CMP.tab === "have" ? `<div class="cmp-t">${have.map(k => `<div><b>${esc(k.kw)}</b><small>→ <a href="${esc(k.ours)}" target="_blank" rel="noopener">${esc(k.ours_title || k.ours)}</a></small></div>`).join("") || `<p class="hint">없어요.</p>`}</div>`
           : `<p class="hint">경쟁사가 글에서 소개한 가게 = 한국인 손님이 많이 가는 가게일 가능성이 커요. '엉클데이에 없음'은 영업 1순위예요.</p><div class="cmp-t">${S.map((x, i) => `<div><b>${esc(x.name)}</b><small>${chip(x.status)} 글 ${x.n}개 · <a href="${esc(x.url)}" target="_blank" rel="noopener nofollow">경쟁사 글 ↗</a>${x.ours ? ` · <a href="${esc(x.ours)}" target="_blank" rel="noopener">우리 페이지</a>` : ""}</small>${x.status !== "partner" ? `<button class="btn sm" data-cmplead="${j.id}:${i}">🤝 영업 카드로</button>` : ""}</div>`).join("") || `<p class="hint">찾은 가게가 없어요.</p>`}</div>`}
         </div>` : ""}
@@ -115,6 +115,8 @@ function compDraw() {
   el.querySelectorAll("[data-cmpopen]").forEach(b => b.onclick = () => { const id = +b.dataset.cmpopen; CMP.open = CMP.open === id ? null : id; compDraw(); });
   el.querySelectorAll("[data-cmptab]").forEach(b => b.onclick = () => { CMP.tab = b.dataset.cmptab; compDraw(); });
   el.querySelectorAll("[data-cmpcopy]").forEach(b => b.onclick = () => portalCopy(b.dataset.cmpcopy));
+  el.querySelectorAll("[data-cmpfix]").forEach(b => b.onclick = async () => { const L = blgReframes(b.dataset.cmpfix), o = L[+b.parentNode.querySelector("[data-fixsel]").value]; if (!o) return; b.disabled = true;
+    if (await blogNewP(o, b.dataset.u)) toast("📝 '" + o.kw + "' 초안을 만들었어요. 아래 '📝 블로그'에서 확인 · 게시해 주세요", 4000); else b.disabled = false; });
   el.querySelectorAll("[data-cmpblog]").forEach(b => b.onclick = async () => { if (typeof blogNew !== "function") return; b.disabled = true; const r = await blogNew(b.dataset.cmpblog, b.dataset.u); if (r) { b.textContent = "✅ 초안 만듦"; toast("📝 블로그 초안을 만들었어요. 아래 '📝 블로그'에서 확인 · 게시해 주세요", 4000); } else b.disabled = false; });
   el.querySelectorAll("[data-cmpcopyall]").forEach(b => b.onclick = () => portalCopy(((job(b.dataset.cmpcopyall).result || {}).keywords || []).filter(k => !k.ours).map(k => k.kw).join("\n")));
   el.querySelectorAll("[data-cmpadd]").forEach(b => b.onclick = async () => {

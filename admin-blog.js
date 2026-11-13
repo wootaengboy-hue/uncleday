@@ -8,6 +8,7 @@ const BLG_LM = [{"id": "han-market", "city": "danang", "ko": "한시장", "lat":
 const BLG_TOPIC = [["korean", "한국어 되는 마사지"], ["late", "밤늦게 하는 마사지"], ["luggage", "짐 보관 되는 마사지"], ["pickup", "픽업 되는 마사지"], ["couple", "커플 마사지 (커플룸)"], ["family", "가족이 함께 받는 마사지"], ["kids", "아이랑 받는 키즈 마사지"], ["pregnant", "임산부 마사지"], ["hotstone", "핫스톤 마사지"], ["fourhands", "포핸드 마사지"], ["thai", "타이 · 건식 마사지"], ["foot", "발 마사지"], ["sauna", "사우나 있는 스파"], ["tipfree", "팁 포함 마사지"], ["nail", "네일 · 속눈썹"], ["clinic", "한국어 상담 되는 성형 · 피부과"]];
 const BLG_TREAT = [["massage", "마사지"], ["foot", "발 마사지"], ["facial", "페이셜 · 피부관리"], ["nail", "젤네일"], ["lash", "속눈썹 연장"], ["hair", "헤어 (커트 · 펌 · 염색)"], ["filler", "필러 · 보톡스"]];
 const BLG_TPAT = {"luggage": "짐 보관|짐보관|샤워", "pickup": "픽업|샌딩", "couple": "커플|2인실|부부|커플룸", "family": "가족|키즈|아이 |부모님|단체|패밀리|3인|4인", "kids": "키즈|아동|아이 ", "pregnant": "임산부|산전", "hotstone": "핫스톤|바잘트", "fourhands": "포핸드|four-hands", "thai": "건식|타이|태국|시아추", "foot": "발 마사지|발마사지|발 반사|발·|족욕", "sauna": "사우나|자쿠지|스팀|찜질", "tipfree": "팁 포함|노팁"};   // tools/topics.py 의 pat (미리보기용)
+const BLG_TRPAT = {"massage": ["마사지|massage|타이|건식|아로마|핫스톤|스웨디시", "발|foot|키즈|kids|얼굴|페이셜|facial|두피|head"], "foot": ["발 ?마사지|발 반사|foot", ""], "facial": ["페이셜|클렌징|관리|facial|cleans|hydra|derma|detox|acne|여드름|기미|모공|진정|리프팅|수분", "마사지|massage|네일|nail|필러|보톡스|filler|botox"], "nail": ["네일|젤|nail|gel|페디|pedi|매니", ""], "lash": ["속눈썹|lash", ""], "hair": ["커트|컷|펌|염색|헤어|드라이|cut|perm|color|hair", ""], "filler": ["필러|보톡스|주름|filler|botox|wrinkle", ""]};   // tools/treatments.py 의 pat · no (미리보기용)
 const BLG = { posts: null, err: "", open: null };
 const BLG_CITY = { "다낭": "danang", "danang": "danang", "나트랑": "nhatrang", "냐짱": "nhatrang", "호치민": "hcm", "호찌민": "hcm", "사이공": "hcm", "하노이": "hanoi" };
 const BLG_TRX = { couple: /커플|신혼|부부|연인|허니문/, family: /가족|부모님|효도|패밀리|단체/, korean: /한국어|한국인/, late: /밤늦게|늦게|24시|심야|야간|새벽/, luggage: /짐 ?보관/, pickup: /픽업|샌딩/, kids: /키즈|아이|아기|어린이/, pregnant: /임산부|임신/, hotstone: /핫스톤/, fourhands: /포핸드/, thai: /타이|건식/, foot: /발 ?마사지/, sauna: /사우나|찜질|자쿠지/, tipfree: /팁 ?포함|노팁/, nail: /네일|속눈썹/, clinic: /성형|피부과|병원|클리닉/ };
@@ -47,11 +48,47 @@ function blgPreview(b) {
   let xs = live;
   if (b.topic) { const rx = BLG_TPAT[b.topic] ? new RegExp(BLG_TPAT[b.topic]) : BLG_TRX[b.topic];
     xs = xs.filter(s => b.topic === "korean" ? (s.staffLangs || []).includes("ko") || /한국어|한국인/.test(blob(s)) : b.topic === "late" ? (s.close || "") >= "23:00" || /^24/.test(s.close || "") : b.topic === "nail" ? s.cat === "nail" || /네일|속눈썹/.test(blob(s)) : b.topic === "clinic" ? ["surgery", "derma", "skin", "dental"].includes(s.cat) : rx && rx.test(blob(s))); }
-  else if (b.treat) xs = xs.filter(s => (s.menu || []).some(m => +m.price > 0));
+  else if (b.treat) { const [pt, no] = BLG_TRPAT[b.treat] || ["."], rp = new RegExp(pt, "i"), rn = no ? new RegExp(no, "i") : null;
+    xs = xs.filter(s => (s.menu || []).some(m => { const t = [(m.name || {}).ko, (m.name || {}).en].join(" "); return +m.price > 0 && rp.test(t) && !(rn && rn.test(t)); })); }
   else { const gOf = cat => ((typeof CATEGORIES !== "undefined" ? CATEGORIES : []).find(c => c.id === cat || (c.members || []).includes(cat)) || {}).id || "beauty"; xs = xs.filter(s => gOf(s.cat) === (b.grp || "spabody")); }
   const lm = BLG_LM.find(l => l.id === b.landmark);
   if (lm) { xs = xs.filter(s => s.geo).map(s => ({ s, d: blgKm([lm.lat, lm.lon], s.geo) })).sort((a, c) => a.d - c.d); const near = xs.filter(x => x.d <= 5); xs = (near.length >= 2 ? near : xs.slice(0, 6)).map(x => ({ ...x.s, _d: x.d })); }
   return xs.slice(0, 10);
+}
+
+// 분야 밖 검색어(풀빌라 · 맛집 · 투어 …) → 같은 손님을 노리는 우리 분야 주제 여러 개
+//  마사지 · 스킨케어 · 네일 · 헤어 · 뷰티샵 · 피부과/성형 · 발 마사지 — 업체가 2곳 이상 나오는 것만, 많이 나오는 순
+function blgReframes(kw, title) {
+  const k = [kw, title].filter(Boolean).join(" ");
+  const auds = [[/커플|신혼|부부|연인|허니문/, "커플", "couple"], [/가족|패밀리/, "가족", "family"], [/부모님|효도/, "부모님과 함께", "family"], [/아이|키즈|아기/, "아이와 함께", "kids"], [/친구|우정|여자끼리|남자끼리/, "친구끼리", null], [/단체|모임|워크숍|회사/, "단체", "family"], [/혼자|나홀로|1인/, "혼자", null], [/골프/, "골프 후", null], [/공항|출국|마지막 날/, "출국 전", "luggage"]];
+  const A = auds.filter(([rx]) => rx.test(k)), al = [...new Set(A.map(a => a[1]))].slice(0, 2), at = (A.find(a => a[2]) || [])[2] || null;
+  const cityId = (Object.entries(BLG_CITY).find(([w]) => k.toLowerCase().includes(w)) || [, "danang"])[1];
+  const C = ((typeof CITIES !== "undefined" ? CITIES : []).find(c => c.id === cityId) || { name: { ko: { danang: "다낭", nhatrang: "나트랑", hcm: "호찌민", hanoi: "하노이" }[cityId] } }).name.ko;
+  const lm = BLG_LM.find(l => l.city === cityId && l.names.some(n => k.toLowerCase().includes(n.toLowerCase())));
+  const near = lm ? `${lm.ko} 근처 ` : "", trip = al.length ? (al.includes("출국 전") ? "출국 전 받기 좋은 " : al.includes("골프 후") ? "골프 후 받기 좋은 " : `${al.join(" · ")} 여행에 좋은 `) : "";
+  const base = { city: cityId, landmark: lm ? lm.id : null, topic: null, treat: null, grp: "spabody" };
+  const O = [
+    ["💆 마사지", `${trip}${C} ${near}마사지 추천`, { topic: at }],
+    ["✨ 스킨케어", `${trip}${C} ${near}스킨케어 · 피부관리 추천`, { treat: "facial", grp: "beauty" }],
+    ["💅 네일", `${C} ${near}네일 · 속눈썹 추천`, { topic: "nail", grp: "beauty" }],
+    ["💇 헤어", `${C} ${near}헤어샵 추천 (커트 · 펌 · 염색)`, { treat: "hair", grp: "beauty" }],
+    ["💄 뷰티샵", `${trip}${C} ${near}뷰티샵 추천 (피부 · 네일 · 헤어)`, { grp: "beauty" }],
+    ["🏥 피부과 · 성형", `${C} 한국어 상담 되는 피부과 · 성형 추천`, { topic: "clinic", grp: "beauty", landmark: null }],
+    ["🦶 발 마사지", `${C} ${near}발 마사지 추천`, { topic: "foot" }],
+  ].map(([lab, kw2, f]) => { const p = { ...base, ...f }; return { lab, kw: kw2.replace(/\s+/g, " ").trim(), p, n: blgPreview(p).length }; });
+  // 손님 정보(커플 등)가 있는데 그 주제로 업체가 모자라면 주제 없이 마사지 전체로
+  if (O[0].n < 2 && O[0].p.topic) { O[0].p = { ...O[0].p, topic: null }; O[0].n = blgPreview(O[0].p).length; }
+  return O.filter(o => o.n >= 2).sort((a, c) => c.n - a.n);
+}
+// 골라서 바꾸는 칸 (블로그 글 · 새 글 · 경쟁사 분석에서 같이 써요)
+function blgFixHtml(list, attrs) {
+  if (!list.length) return `<span class="hint">엉클데이 분야로 바꿀 주제를 찾지 못했어요</span>`;
+  return `<span class="blg-fix"><select data-fixsel>${list.map((o, i) => `<option value="${i}">${o.lab} · ${esc(o.kw)} (${o.n}곳)</option>`).join("")}</select><button class="btn sm main" ${attrs}>🔄 이 주제로 바꾸기</button></span>`;
+}
+async function blogNewP(o, fromUrl) {
+  const r = await sb.from("blog_posts").insert({ kw: o.kw, ...o.p, from_url: fromUrl || null }).select().single();
+  if (r.error) { alert(r.error.message); return null; }
+  (BLG.posts = BLG.posts || []).unshift(r.data); BLG.open = r.data.id; blogDraw(); return r.data;
 }
 async function blogLoad() {
   const r = await sb.from("blog_posts").select("*").order("created_at", { ascending: false }).limit(300);
@@ -59,7 +96,7 @@ async function blogLoad() {
   blogDraw();
 }
 // 분야 밖 검색어 → 같은 손님을 노리는 우리 분야 검색어 (검색어에 손님 정보가 없으면 제목에서도 찾아요)
-const blgFixKw = b => blgReframe(b.kw) || blgReframe([b.kw, b.title].filter(Boolean).join(" "));
+const blgFixKw = b => (blgReframes(b.kw, b.title)[0] || {}).kw || null;
 async function blogNew(kw, fromUrl) {
   const p = blgParse(kw);
   if (p.topics.length > 1 && !p.treat) p.topic = p.topics.map(t => [t, blgPreview({ ...p, topic: t }).length]).sort((x, y) => y[1] - x[1])[0][0];   // 주제가 여럿이면 업체가 많이 나오는 쪽
@@ -77,7 +114,7 @@ function blogDraw() {
   if (BLG.err) { el.innerHTML = `<div class="uni-err">${esc(BLG.err)}</div>`; return; }
   const cs = typeof CITIES !== "undefined" ? CITIES : [], cn = id => ((cs.find(c => c.id === id) || {}).name || {}).ko || id || "";
   const opt = (list, v, none) => `<option value="">${none}</option>` + list.map(([id, l]) => `<option value="${id}" ${id === v ? "selected" : ""}>${esc(l)}</option>`).join("");
-  el.innerHTML = `<div class="crl-add"><input id="blgKw" placeholder="검색어 (예: 한시장 근처 마사지 추천 · 다낭 키즈 마사지 · 나트랑 젤네일 가격)"><button class="btn sm main" data-bnew>📝 글 만들기</button></div>
+  el.innerHTML = `<div class="crl-add"><input id="blgKw" placeholder="검색어 (예: 한시장 근처 마사지 추천 · 다낭 키즈 마사지 · 나트랑 젤네일 가격)"><button class="btn sm main" data-bnew>📝 글 만들기</button></div><div id="blgFixNew"></div>
     <p class="hint">글은 <b>우리 업체 데이터</b>로만 만들어요 (가까운 순 · 실제 가격 · 영업시간 · 한국어 응대 · FAQ). 매시간 최신 정보로 다시 그려지고, 맞는 업체가 2곳보다 적으면 게시해도 페이지가 생기지 않아요.</p>
     <div class="crl-list">${BLG.posts.length ? BLG.posts.map(b => {
       const open = BLG.open === b.id, pv = open ? blgPreview(b) : [], lm = BLG_LM.find(l => l.id === b.landmark);
@@ -91,7 +128,7 @@ function blogDraw() {
           <div class="crl-two"><label>주제<select data-bf="topic">${opt(BLG_TOPIC, b.topic, "없음")}</select></label><label>시술 가격<select data-bf="treat">${opt(BLG_TREAT, b.treat, "없음")}</select></label></div>
           <label>업체 종류<select data-bf="grp">${opt([["spabody", "마사지 · 스파"], ["beauty", "피부 · 뷰티 · 성형"]], b.grp, "마사지 · 스파")}</select></label>
           <label>첫 문단 <small class="hint">비우면 자동 문장 · 사람이 쓴 한두 줄이 들어가면 더 좋아요</small><textarea data-bf="intro" rows="3">${esc(b.intro || "")}</textarea></label>
-          ${BLG_OUT.test(b.kw) ? `<p class="crl-err">⚠️ 이 검색어는 엉클데이 데이터가 없는 분야(맛집 · 숙소 · 투어 등)라 사이트에 글이 안 생겨요. 제목만 고쳐서는 안 되고 <b>검색어</b>를 바꿔야 해요.${blgFixKw(b) ? `<br><button class="btn sm main" data-bfix="${b.id}" style="margin-top:6px">🔄 "${esc(blgFixKw(b))}"(으)로 바꾸기</button>` : ""}</p>` : b.title && BLG_OUT.test(b.title) ? `<p class="crl-err">⚠️ 제목에 '${esc(b.title.match(BLG_OUT)[0])}'이(가) 들어 있어요. 글 내용은 마사지 · 뷰티 업체라 제목과 안 맞아요. 제목을 비우면 자동 제목이 붙어요.</p>` : ""}
+          ${BLG_OUT.test(b.kw) ? `<p class="crl-err">⚠️ 이 검색어는 엉클데이 데이터가 없는 분야(맛집 · 숙소 · 투어 등)라 사이트에 글이 안 생겨요. 제목만 고쳐서는 안 되고 <b>검색어</b>를 바꿔야 해요.<br>${blgFixHtml(blgReframes(b.kw, b.title), `data-bfix="${b.id}"`)}</p>` : b.title && BLG_OUT.test(b.title) ? `<p class="crl-err">⚠️ 제목에 '${esc(b.title.match(BLG_OUT)[0])}'이(가) 들어 있어요. 글 내용은 마사지 · 뷰티 업체라 제목과 안 맞아요. 제목을 비우면 자동 제목이 붙어요.</p>` : ""}
           <div class="blg-pv"><b>미리보기 (예상 ${pv.length}곳${pv.length < 2 ? " — ⚠️ 2곳보다 적어서 페이지가 안 생겨요. 장소 · 주제를 바꿔 보세요" : ""})</b><ol>${pv.map(s => `<li>${esc((s.name || {}).ko || s.id)}${s._d != null ? ` <small>약 ${s._d.toFixed(1)}km</small>` : ""}</li>`).join("")}</ol></div>
           <p class="hint">주소: <code>/blog/${esc(blgSlug(b))}/</code>${b.status === "published" ? ` · <a href="/blog/${esc(blgSlug(b))}/" target="_blank" rel="noopener">사이트에서 보기 ↗</a> (게시 후 1시간 안에 생겨요)` : ""}${b.from_url ? ` · 주제 얻은 곳: <a href="${esc(b.from_url)}" target="_blank" rel="noopener nofollow">경쟁사 글</a>` : ""}</p>
           <div class="crl-act">${b.status === "published" ? `<button class="btn sm main" data-bsave="${b.id}">고친 내용 저장</button><button class="btn sm" data-bunpub="${b.id}">게시 내리기</button><button class="btn sm" data-bnaver="${b.id}" style="background:#03c75a;color:#fff;border-color:#03c75a">📗 네이버 블로그 요약본</button>` : `<button class="btn sm main" data-bpub="${b.id}" ${BLG_OUT.test(b.kw) ? "disabled" : ""}>🌐 게시</button><button class="btn sm" data-bsave="${b.id}">저장만</button>`}<button class="btn sm danger" data-bdel="${b.id}">🗑️</button></div><div class="nv-box"></div>
@@ -100,13 +137,15 @@ function blogDraw() {
   const collect = id => { const box = el.querySelector(`[data-bpost="${id}"]`), o = {}; box.querySelectorAll("[data-bf]").forEach(i => o[i.dataset.bf] = i.value.trim() || null); o.kw = o.kw || ""; return o; };
   const up = async (id, patch, msg) => { const r = await sb.from("blog_posts").update(patch).eq("id", id).select().single(); if (r.error) { alert(r.error.message); return; } BLG.posts[BLG.posts.findIndex(x => x.id === id)] = r.data; if (msg) toast(msg, 3500); blogDraw(); };
   el.querySelectorAll("[data-bnew]").forEach(b => b.onclick = async () => { const kw = document.getElementById("blgKw").value.trim(); if (kw.length < 2) { toast("검색어를 적어 주세요"); return; }
-    if (BLG_OUT.test(kw)) { const rf = blgReframe(kw); if (rf && confirm("'" + kw + "' 는 엉클데이 분야가 아니에요.\n같은 손님을 노리는 우리 분야 검색어로 바꿔 만들까요?\n\n→ " + rf)) { b.disabled = true; await blogNew(rf); b.disabled = false; } else if (!rf) alert("'" + kw + "' 는 엉클데이가 데이터를 가진 분야(마사지 · 스파 · 뷰티 · 피부 · 네일 · 헤어)가 아니라서 글을 만들 수 없어요."); return; } b.disabled = true; await blogNew(kw); b.disabled = false; });
+    if (BLG_OUT.test(kw)) { const L = blgReframes(kw), box = document.getElementById("blgFixNew");
+      box.innerHTML = `<p class="crl-err">'${esc(kw)}' 는 엉클데이 분야(마사지 · 스파 · 뷰티 · 피부 · 네일 · 헤어)가 아니에요. 같은 손님을 노리는 우리 주제로 골라 만들어 주세요.<br>${blgFixHtml(L, "data-bfixnew")}</p>`;
+      const nb = box.querySelector("[data-bfixnew]"); if (nb) nb.onclick = async () => { nb.disabled = true; const c = L[+box.querySelector("[data-fixsel]").value]; if (c && await blogNewP(c)) toast("📝 '" + c.kw + "' 초안을 만들었어요", 3500); };
+      return; } b.disabled = true; await blogNew(kw); b.disabled = false; });
   el.querySelectorAll("[data-bopen]").forEach(b => b.onclick = () => { const id = +b.dataset.bopen; BLG.open = BLG.open === id ? null : id; blogDraw(); });
   el.querySelectorAll("[data-bpost] [data-bf]").forEach(i => i.onchange = () => { const id = +i.closest("[data-bpost]").dataset.bpost, p = BLG.posts.find(x => x.id === id); Object.assign(p, collect(id)); if (i.dataset.bf === "city") p.landmark = null; blogDraw(); });
   el.querySelectorAll("[data-bnaver]").forEach(x => x.onclick = () => naverOpen(BLG.posts.find(p => p.id === +x.dataset.bnaver)));
-  el.querySelectorAll("[data-bfix]").forEach(x => x.onclick = () => { const id = +x.dataset.bfix, o = BLG.posts.find(p => p.id === id), kw = blgFixKw(o), p = blgParse(kw);
-    if (p.topics.length > 1 && !p.treat) p.topic = p.topics.map(t => [t, blgPreview({ ...p, topic: t }).length]).sort((m, n) => n[1] - m[1])[0][0]; delete p.topics;
-    up(id, { kw, title: null, ...p }, "검색어를 우리 분야로 바꿨어요 · 게시 상태면 1시간 안에 사이트에 생겨요"); });
+  el.querySelectorAll("[data-bfix]").forEach(x => x.onclick = () => { const id = +x.dataset.bfix, o = BLG.posts.find(p => p.id === id), L = blgReframes(o.kw, o.title), c = L[+x.parentNode.querySelector("[data-fixsel]").value]; if (!c) return;
+    up(id, { kw: c.kw, title: null, ...c.p }, `'${c.kw}'(으)로 바꿨어요 · 게시 상태면 1시간 안에 사이트에 생겨요`); });
   el.querySelectorAll("[data-bsave]").forEach(b => b.onclick = () => up(+b.dataset.bsave, collect(+b.dataset.bsave), "저장했어요 · 1시간 안에 사이트에 반영돼요"));
   el.querySelectorAll("[data-bpub]").forEach(b => b.onclick = () => { const id = +b.dataset.bpub, o = collect(id); if (blgPreview({ ...BLG.posts.find(x => x.id === id), ...o }).length < 2 && !confirm("예상 업체가 2곳보다 적어서 페이지가 안 생길 수 있어요. 그래도 게시할까요?")) return; up(id, { ...o, status: "published" }, "🌐 게시했어요. 1시간 안에 블로그 페이지가 생겨요"); });
   el.querySelectorAll("[data-bunpub]").forEach(b => b.onclick = () => up(+b.dataset.bunpub, { status: "draft" }, "게시를 내렸어요. 1시간 안에 페이지가 사라져요"));
