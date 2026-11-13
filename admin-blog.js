@@ -92,7 +92,7 @@ function blogDraw() {
           ${BLG_OUT.test(b.kw) ? `<p class="crl-err">⚠️ 이 검색어는 엉클데이 데이터가 없는 분야(맛집 · 숙소 · 투어 등)라 게시할 수 없어요.</p>` : ""}
           <div class="blg-pv"><b>미리보기 (예상 ${pv.length}곳${pv.length < 2 ? " — ⚠️ 2곳보다 적어서 페이지가 안 생겨요. 장소 · 주제를 바꿔 보세요" : ""})</b><ol>${pv.map(s => `<li>${esc((s.name || {}).ko || s.id)}${s._d != null ? ` <small>약 ${s._d.toFixed(1)}km</small>` : ""}</li>`).join("")}</ol></div>
           <p class="hint">주소: <code>/blog/${esc(blgSlug(b))}/</code>${b.status === "published" ? ` · <a href="/blog/${esc(blgSlug(b))}/" target="_blank" rel="noopener">사이트에서 보기 ↗</a> (게시 후 1시간 안에 생겨요)` : ""}${b.from_url ? ` · 주제 얻은 곳: <a href="${esc(b.from_url)}" target="_blank" rel="noopener nofollow">경쟁사 글</a>` : ""}</p>
-          <div class="crl-act">${b.status === "published" ? `<button class="btn sm main" data-bsave="${b.id}">고친 내용 저장</button><button class="btn sm" data-bunpub="${b.id}">게시 내리기</button>` : `<button class="btn sm main" data-bpub="${b.id}" ${BLG_OUT.test(b.kw) ? "disabled" : ""}>🌐 게시</button><button class="btn sm" data-bsave="${b.id}">저장만</button>`}<button class="btn sm danger" data-bdel="${b.id}">🗑️</button></div>
+          <div class="crl-act">${b.status === "published" ? `<button class="btn sm main" data-bsave="${b.id}">고친 내용 저장</button><button class="btn sm" data-bunpub="${b.id}">게시 내리기</button><button class="btn sm" data-bnaver="${b.id}" style="background:#03c75a;color:#fff;border-color:#03c75a">📗 네이버 블로그 요약본</button>` : `<button class="btn sm main" data-bpub="${b.id}" ${BLG_OUT.test(b.kw) ? "disabled" : ""}>🌐 게시</button><button class="btn sm" data-bsave="${b.id}">저장만</button>`}<button class="btn sm danger" data-bdel="${b.id}">🗑️</button></div><div class="nv-box"></div>
         </div>` : ""}</div>`;
     }).join("") : `<p class="hint">아직 글이 없어요. 위에 검색어를 넣거나, 경쟁사 분석의 '빠진 검색어'에서 [📝 블로그 글 만들기]를 눌러 보세요.</p>`}</div>`;
   const collect = id => { const box = el.querySelector(`[data-bpost="${id}"]`), o = {}; box.querySelectorAll("[data-bf]").forEach(i => o[i.dataset.bf] = i.value.trim() || null); o.kw = o.kw || ""; return o; };
@@ -101,8 +101,70 @@ function blogDraw() {
     if (BLG_OUT.test(kw)) { const rf = blgReframe(kw); if (rf && confirm("'" + kw + "' 는 엉클데이 분야가 아니에요.\n같은 손님을 노리는 우리 분야 검색어로 바꿔 만들까요?\n\n→ " + rf)) { b.disabled = true; await blogNew(rf); b.disabled = false; } else if (!rf) alert("'" + kw + "' 는 엉클데이가 데이터를 가진 분야(마사지 · 스파 · 뷰티 · 피부 · 네일 · 헤어)가 아니라서 글을 만들 수 없어요."); return; } b.disabled = true; await blogNew(kw); b.disabled = false; });
   el.querySelectorAll("[data-bopen]").forEach(b => b.onclick = () => { const id = +b.dataset.bopen; BLG.open = BLG.open === id ? null : id; blogDraw(); });
   el.querySelectorAll("[data-bpost] [data-bf]").forEach(i => i.onchange = () => { const id = +i.closest("[data-bpost]").dataset.bpost, p = BLG.posts.find(x => x.id === id); Object.assign(p, collect(id)); if (i.dataset.bf === "city") p.landmark = null; blogDraw(); });
+  el.querySelectorAll("[data-bnaver]").forEach(x => x.onclick = () => naverOpen(BLG.posts.find(p => p.id === +x.dataset.bnaver)));
   el.querySelectorAll("[data-bsave]").forEach(b => b.onclick = () => up(+b.dataset.bsave, collect(+b.dataset.bsave), "저장했어요 · 1시간 안에 사이트에 반영돼요"));
   el.querySelectorAll("[data-bpub]").forEach(b => b.onclick = () => { const id = +b.dataset.bpub, o = collect(id); if (blgPreview({ ...BLG.posts.find(x => x.id === id), ...o }).length < 2 && !confirm("예상 업체가 2곳보다 적어서 페이지가 안 생길 수 있어요. 그래도 게시할까요?")) return; up(id, { ...o, status: "published" }, "🌐 게시했어요. 1시간 안에 블로그 페이지가 생겨요"); });
   el.querySelectorAll("[data-bunpub]").forEach(b => b.onclick = () => up(+b.dataset.bunpub, { status: "draft" }, "게시를 내렸어요. 1시간 안에 페이지가 사라져요"));
   el.querySelectorAll("[data-bdel]").forEach(b => b.onclick = async () => { if (!confirm("이 글을 지울까요?")) return; const r = await sb.from("blog_posts").delete().eq("id", +b.dataset.bdel); if (r.error) { alert(r.error.message); return; } BLG.posts = BLG.posts.filter(x => x.id !== +b.dataset.bdel); blogDraw(); });
+}
+
+/* 📗 네이버 블로그 요약본 — 사이트 글(blog/<주소>/naver.json)을 네이버 블로그 말투 · 형식으로 바꿔 줘요.
+ * 사이트 글과 문장이 똑같으면 네이버가 '유사 문서'로 봐서 노출이 떨어져요 → 짧게 요약하고 말투 · 구성을 다르게, 링크는 1~2개만.
+ */
+const won2 = n => n >= 1e6 ? (n / 1e6).toFixed(n % 1e6 ? 1 : 0) + "백만 동" : Math.round(n / 1000) + "k동";
+function naverPost(d) {
+  const where = d.landmark ? `${d.city} ${d.landmark} 근처` : d.city;
+  const what = d.treat ? d.treat : d.topic ? d.topic : "마사지 · 스파";
+  const titles = [
+    `${d.kw} | ${d.n}곳 가격 · 위치 정리`,
+    `${where}에서 ${what} 어디 갈까? ${d.n}곳 비교 (${new Date().getFullYear()})`,
+    `${d.kw} — 한국어 되는 곳 · 가격 · 영업시간 한눈에`,
+  ];
+  const top = d.shops.slice(0, 5);
+  const L = [];
+  L.push(`${d.city} 여행 가서 ${d.landmark ? d.landmark + " 근처에서 " : ""}${what} 받을 곳 찾는 분들 많으시죠? 😊`);
+  L.push(`엉클데이에 등록된 업체 정보로 가격 · 거리 · 영업시간을 한 번에 정리해 봤어요.`);
+  L.push("");
+  L.push(`✔️ 한눈에 요약`);
+  L.push(`· ${where} 업체 ${d.n}곳 비교`);
+  if (d.lo) L.push(`· 가격은 ${won2(d.lo)}${d.hi && d.hi !== d.lo ? "~" + won2(d.hi) : "부터"} (메뉴 · 시간에 따라 달라요)`);
+  if (d.kn) L.push(`· 한국어 응대 되는 곳 ${d.kn}곳`);
+  if (top[0] && top[0].dist != null) L.push(`· ${d.landmark}에서 제일 가까운 곳: ${top[0].name} (약 ${top[0].dist}km)`);
+  L.push("");
+  L.push(`📍 추천 리스트`);
+  top.forEach((s, i) => {
+    const bits = [s.dist != null ? `약 ${s.dist}km` : "", s.from ? `${won2(s.from)}부터` : "", s.hours ? `영업 ${s.hours}` : "", s.ko ? "한국어 OK" : ""].filter(Boolean).join(" · ");
+    L.push(`${i + 1}. ${s.name}${s.en && s.en !== s.name && !s.name.includes(s.en.split(" ")[0]) ? ` (${s.en})` : ""}`);
+    if (bits) L.push(`   ${bits}`);
+    if (s.tags.length) L.push(`   👉 ${s.tags.join(", ")}`);
+  });
+  if (d.tips.length) { L.push(""); L.push(`💡 가기 전에 알아 두면 좋은 것`); d.tips.forEach(([q, a]) => L.push(`· ${q} ${a.split(". ")[0]}.`)); }
+  L.push("");
+  L.push(`🔗 업체별 실제 가격 비교표 · 지도 · 예약은 여기서 볼 수 있어요`);
+  L.push(d.url);
+  L.push(`(한국어로 문의 · 예약할 수 있어요. 가격은 바뀔 수 있으니 가기 전에 한 번 더 확인하세요.)`);
+  L.push("");
+  const tag = s => "#" + s.replace(/[\s·()\-—|]/g, "");
+  const tags = [...new Set([tag(d.kw), tag(d.city + "마사지"), tag(d.city + "여행"), d.landmark && tag(d.city + d.landmark), d.topic && tag(d.city + d.topic.split(" ")[0]), tag(d.city + "스파"), "#베트남마사지", "#엉클데이"].filter(Boolean))].slice(0, 10);
+  L.push(tags.join(" "));
+  const text = L.join("\n");
+  const html = L.map(l => l === "" ? "<p><br></p>" : /^(✔️|📍|💡|🔗)/.test(l) ? `<p><b>${esc(l)}</b></p>` : /^https?:\/\//.test(l) ? `<p><a href="${esc(l)}">${esc(l)}</a></p>` : `<p>${esc(l).replace(/^ {3}/, "&nbsp;&nbsp;&nbsp;")}</p>`).join("");
+  return { titles, text, html, tags };
+}
+async function naverOpen(b) {
+  const box = document.querySelector(`[data-bpost="${b.id}"] .nv-box`); if (!box) return;
+  box.innerHTML = `<p class="hint">불러오는 중…</p>`;
+  let d; try { const r = await fetch(`/blog/${blgSlug(b)}/naver.json`, { cache: "no-store" }); if (!r.ok) throw 0; d = await r.json(); }
+  catch (e) { box.innerHTML = `<p class="crl-err">아직 사이트에 글이 만들어지기 전이에요. 게시 후 1시간 안에 생기면 다시 눌러 주세요.</p>`; return; }
+  const P = naverPost(d);
+  box.innerHTML = `<div class="nv"><b>📗 네이버 블로그 요약본</b><p class="hint">사이트 글과 문장 · 구성을 다르게 만든 짧은 요약이에요 (네이버 '유사 문서' 방지). 사진은 허락받은 업체 사진 2~3장을 같이 올리면 좋아요.</p>
+    <label>제목 고르기</label>${P.titles.map(t => `<div class="nv-t"><span>${esc(t)}</span><button class="btn sm" data-nvcopy="${esc(t)}">복사</button></div>`).join("")}
+    <label>본문</label><textarea rows="14" readonly>${esc(P.text)}</textarea>
+    <div class="crl-act"><button class="btn sm main" data-nvrich>📋 본문 복사 (굵은 글씨 · 링크 포함)</button><button class="btn sm" data-nvplain>글자만 복사</button><a class="btn sm" href="https://blog.naver.com/GoBlogWrite.naver" target="_blank" rel="noopener">네이버 블로그 글쓰기 ↗</a></div></div>`;
+  box.querySelectorAll("[data-nvcopy]").forEach(x => x.onclick = () => portalCopy(x.dataset.nvcopy));
+  box.querySelector("[data-nvplain]").onclick = () => portalCopy(P.text);
+  box.querySelector("[data-nvrich]").onclick = async () => {
+    try { await navigator.clipboard.write([new ClipboardItem({ "text/html": new Blob([P.html], { type: "text/html" }), "text/plain": new Blob([P.text], { type: "text/plain" }) })]); toast("📋 복사했어요. 네이버 블로그 글쓰기 화면에 붙여 넣으세요"); }
+    catch (e) { portalCopy(P.text); }
+  };
 }

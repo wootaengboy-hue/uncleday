@@ -7,6 +7,7 @@ Disallow: /partner.html
 Disallow: /owner.html
 Disallow: /staff.html
 Disallow: /imports/
+Disallow: /*/naver.json
 
 # AI 검색 · 답변 서비스 (명시적으로 허용)
 User-agent: GPTBot
@@ -27,6 +28,7 @@ Disallow: /partner.html
 Disallow: /owner.html
 Disallow: /staff.html
 Disallow: /imports/
+Disallow: /*/naver.json
 
 # AI용 사이트 안내: https://www.uncleday.com/llms.txt
 Sitemap: https://www.uncleday.com/sitemap.xml

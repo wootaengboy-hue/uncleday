@@ -94,7 +94,7 @@ LANGBAR = ("<script>(function(){try{var P=(document.documentElement.lang||'ko').
 def TRACK():
     if not _SU.get("url"): return LANGBAR
     auth = f',Authorization:"Bearer {_SU["key"]}"' if str(_SU.get("key", "")).startswith("eyJ") else ""
-    return LANGBAR + ("<script>(function(){var U=" + json.dumps(_SU["url"]) + ",K=" + json.dumps(_SU["key"]) + ";function S(){try{var v=new URLSearchParams(location.search).get('via');if(v&&/^(gbp|fb|zalo|ig|qr|kakao)$/.test(v))return v;var r=document.referrer;if(!r)return'direct';var h=new URL(r).hostname;"
+    return LANGBAR + ("<script>(function(){var U=" + json.dumps(_SU["url"]) + ",K=" + json.dumps(_SU["key"]) + ";function S(){try{var v=new URLSearchParams(location.search).get('via');if(v&&/^(gbp|fb|zalo|ig|qr|kakao|naver)$/.test(v))return v==='naver'?'naverblog':v;var r=document.referrer;if(!r)return'direct';var h=new URL(r).hostname;"
             "if(h==location.hostname)return'internal';var m=[['google','google'],['naver','naver'],['bing','bing'],['daum','daum'],['chatgpt','chatgpt'],['openai','chatgpt'],['perplexity','perplexity'],['claude','claude'],['gemini','gemini'],['kakao','kakao'],['facebook','facebook'],['instagram','instagram']];"
             "for(var i=0;i<m.length;i++)if(h.indexOf(m[i][0])>=0)return m[i][1];return'other'}catch(e){return'other'}}"
             "var src=S();window.UD_SRC=src;var BOT=navigator.webdriver||/bot|crawl|spider|slurp|preview|headless|lighthouse|google-inspectiontool/i.test(navigator.userAgent);window.udHit=function(k){if(BOT)return;try{fetch(U+'/rest/v1/rpc/seo_hit',{method:'POST',keepalive:true,headers:{apikey:K" + auth + ",'Content-Type':'application/json'},body:JSON.stringify({path:location.pathname,src:src,kind:k})}).catch(function(){})}catch(e){}};"
@@ -1012,6 +1012,22 @@ def blog_page(b):
 <h2>함께 보면 좋은 페이지</h2><p class="chips">{"".join(f'<a class="chip" href="{u}">{esc(l)}</a>' for u, l in rel)}</p></main>
 <footer class="wrap">엉클데이 Uncle Day — 베트남 마사지 · 스파 · 뷰티 한국어 예약 · <a href="/">홈</a> · <a href="/blog/">블로그</a></footer>{TRACK()}</body></html>
 """, n, title, upd
+def blog_naver(b, sl):
+    """네이버 블로그용 재료 (blog/<주소>/naver.json) — 포털 📝 블로그의 [네이버 요약본]이 이걸로 글을 만들어요. 검색엔진에는 안 보여요 (robots.txt)."""
+    xs, lm, t, tr = blog_pick(b)
+    cid = b["city"]; cko = tx(cities.get(cid, {}).get("name"))
+    dist = (lambda x: round(km((lm["lat"], lm["lon"]), x["geo"]), 1)) if lm else (lambda x: None)
+    g = GUIDES.get(cid) or {}
+    shops_ = []
+    for x in xs[:6]:
+        pr = mprices(x) or prices(x)
+        shops_.append({"name": tx(x.get("name")), "en": lang(x.get("name"), "en"), "kind": SUB_KO.get(x.get("cat"), ""), "dist": dist(x), "from": pr[0] if pr else 0,
+                       "hours": (f"{x['open']}~{x.get('close', '')}" if x.get("open") else ""), "ko": "ko" in (x.get("staffLangs") or []),
+                       "tags": [tx(tg) for tg in (x.get("tags") or [])[:3] if tx(tg)], "url": f"{SITE}/s/{x['id']}/?via=naver"})
+    allp = sorted(p for x in xs for p in (mprices(x) or prices(x)))
+    return {"kw": b["kw"], "city": cko, "landmark": lm["ko"] if lm else "", "topic": t["kw"] if t else "", "treat": tr["kw"] if tr else "", "n": len(xs),
+            "lo": allp[0] if allp else 0, "hi": allp[-1] if allp else 0, "kn": sum(1 for x in xs if "ko" in (x.get("staffLangs") or [])),
+            "shops": shops_, "tips": [[q, a] for q, a, _ in (g.get("tip") or [])[:2]], "url": f"{SITE}/blog/{sl}/?via=naver", "checked": max([checked(x) for x in xs] or [BUILT])}
 def blog_index(items):
     url = f"{SITE}/blog/"
     cards = "".join(f'<a class="card" href="/blog/{sl}/"><b>{esc(t)}</b><small>{esc(tx(cities.get(c, {}).get("name")))} · 업체 {n}곳 · {u}</small></a>' for sl, t, n, u, c in items)
@@ -1051,6 +1067,7 @@ for b in BLOG:
     if n < 2 or sl in keep_b: print(f"  건너뜀 (맞는 업체 {n}곳):", b.get("kw")); continue   # 업체 2곳 미만이면 글을 안 만들어요
     print(f"  ✅ /blog/{sl}/ 업체 {n}곳:", b.get("kw"))
     os.makedirs(f"blog/{sl}", exist_ok=True); open(f"blog/{sl}/index.html", "w").write(h); keep_b.add(sl); BLOG_OUT.append((sl, t, n, u, b["city"]))
+    json.dump(blog_naver(b, sl), open(f"blog/{sl}/naver.json", "w"), ensure_ascii=False)
 for cid in hubs:
     os.makedirs(f"c/{cid}", exist_ok=True)
     open(f"c/{cid}/index.html", "w").write(hub_page(cid, [x for x in live if x.get("city") == cid]))

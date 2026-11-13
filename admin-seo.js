@@ -44,7 +44,7 @@ function gscHtml() {
     ${d.pages.length ? `<h5>구글에 보인 페이지</h5>${tbl(d.pages, GSC.pn, "페이지", "page")}` : ""}`;
 }
 const SEO = { days: 30, rep: null, leads: null, err: "", loading: false, lf: "open", pf: "p" };
-const SEO_SRC = { gbp: "📍 구글 지도 예약 링크", fb: "가게 페이스북", zalo: "가게 잘로", ig: "가게 인스타", qr: "매장 QR", google: "구글", naver: "네이버", bing: "빙", daum: "다음", chatgpt: "ChatGPT", perplexity: "Perplexity", claude: "Claude", gemini: "Gemini", kakao: "카카오톡", facebook: "페이스북", instagram: "인스타그램", internal: "사이트 안에서", direct: "직접 · 앱", other: "기타" };
+const SEO_SRC = { naverblog: "📗 네이버 블로그", gbp: "📍 구글 지도 예약 링크", fb: "가게 페이스북", zalo: "가게 잘로", ig: "가게 인스타", qr: "매장 QR", google: "구글", naver: "네이버", bing: "빙", daum: "다음", chatgpt: "ChatGPT", perplexity: "Perplexity", claude: "Claude", gemini: "Gemini", kakao: "카카오톡", facebook: "페이스북", instagram: "인스타그램", internal: "사이트 안에서", direct: "직접 · 앱", other: "기타" };
 const SEO_AI = ["chatgpt", "perplexity", "claude", "gemini"], SEO_SEARCH = ["google", "naver", "bing", "daum"];
 const SEO_ST = [["new", "🆕 새 문의"], ["contacted", "📞 연락함"], ["won", "✅ 성사"], ["lost", "✖️ 안 됨"]];
 const seoDay = n => { const d = new Date(Date.now() + 7 * 3600e3 - n * 864e5); return d.toISOString().slice(0, 10); };
