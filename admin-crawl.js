@@ -20,6 +20,7 @@ async function crawlLoad() {
 function crawlDraw() {
   const el = document.getElementById("ptCrawl"); if (!el) return;
   if (!CRL.jobs) { el.innerHTML = `<p class="hint">불러오는 중…</p>`; crawlLoad(); return; }
+  if (typeof compDraw === "function") compDraw();
   if (CRL.err === "setup") { el.innerHTML = `<div class="uni-err">링크 가져오기를 쓰려면 Supabase SQL 편집기에서 <b>supabase/universe21.sql</b> 을 한 번 실행해 주세요.</div>`; return; }
   if (CRL.err) { el.innerHTML = `<div class="uni-err">${esc(CRL.err)}</div>`; return; }
   const cs = typeof CITIES !== "undefined" ? CITIES : [];
@@ -28,7 +29,7 @@ function crawlDraw() {
       <ol><li>깃허브 저장소 → <b>Settings → Secrets and variables → Actions</b></li><li><b>New repository secret</b> → Name: <code>CRAWL_TOKEN</code> → Secret: 위 열쇠 붙여넣기 → Add secret</li><li>끝! 매시간 자동으로 링크를 가져와요. 이 열쇠는 채팅 · 메일로 보내지 마세요.</li></ol></div>`
     : CRL.cfg ? `<p class="hint">🔑 수집 열쇠: ${dt(CRL.cfg.made_at)} ${esc(CRL.cfg.made_by || "")} 가 만듦 · 깃허브 Secrets 의 CRAWL_TOKEN 으로 쓰여요 <button class="btn sm" data-cnewkey>다시 만들기</button></p>`
     : `<div class="crl-key"><b>처음 한 번: 수집 열쇠 만들기</b><p class="hint">깃허브 자동 작업이 이 목록을 읽고 결과를 넣을 때 쓰는 열쇠예요.</p><button class="btn sm main" data-cnewkey>🔑 수집 열쇠 만들기</button></div>`;
-  const J = CRL.jobs;
+  const J = CRL.jobs.filter(j => (j.job || "shop") === "shop");
   el.innerHTML = `${keyBox}
     <div class="crl-add"><input id="crlUrl" placeholder="가게 홈페이지 · 가격표 · 블로그 링크 (https://…)"><select id="crlCity">${cs.map(c => `<option value="${c.id}">${esc(c.name.ko)}</option>`).join("")}</select><select id="crlKind">${CRL_KIND.map(k => `<option>${k}</option>`).join("")}</select><button class="btn sm main" data-cadd>가져오기</button></div>
     <p class="hint">사실 정보(이름 · 주소 · 영업시간 · 메뉴 가격)만 가져와요. 글 · 사진은 안 가져와요. robots.txt 가 막은 곳과 구글 지도 · 페이스북 · 인스타그램 · 네이버 카페 · 트립어드바이저 · 클룩 등은 약관상 가져오지 않아요.</p>
@@ -76,4 +77,49 @@ function crawlDraw() {
   el.querySelectorAll("[data-cretry]").forEach(b => b.onclick = () => up(+b.dataset.cretry, { status: "pending", err: null }, "⏳ 1시간 안에 다시 가져와요"));
   el.querySelectorAll("[data-crej]").forEach(b => b.onclick = () => up(+b.dataset.crej, { status: "rejected" }, "버렸어요"));
   el.querySelectorAll("[data-cdel]").forEach(b => b.onclick = async () => { if (!confirm("이 링크를 목록에서 지울까요?")) return; const r = await sb.from("crawl_jobs").delete().eq("id", +b.dataset.cdel); if (r.error) { alert(r.error.message); return; } CRL.jobs = CRL.jobs.filter(x => x.id !== +b.dataset.cdel); crawlDraw(); });
+}
+
+/* 🔍 경쟁사 분석 — 포털 안 (#ptComp) · universe22.sql (crawl_jobs.job = 'site')
+ * 경쟁 사이트의 글 목록 · 제목 · 소제목만 읽어서 ① 노리는 검색어 ② 엉클데이에 그 검색어 페이지가 있는지 ③ 글에 나온 가게가 엉클데이에 있는지 */
+const CMP = { open: null, tab: "gap" };
+function compDraw() {
+  const el = document.getElementById("ptComp"); if (!el || !CRL.jobs) return;
+  if (CRL.err === "setup") { el.innerHTML = `<div class="uni-err">경쟁사 분석을 쓰려면 <b>supabase/universe21.sql</b> · <b>universe22.sql</b> 을 차례로 실행해 주세요.</div>`; return; }
+  const J = CRL.jobs.filter(j => j.job === "site");
+  const ST = { pending: "⏳ 분석 중 (1시간 안)", done: "✅ 분석 완료", error: "⚠️ 실패", rejected: "보관" };
+  const chip = st => st === "partner" ? `<span class="uni-chip ok">✅ 입점</span>` : st === "unclaimed" ? `<span class="uni-chip">🗺️ 미입점 페이지 있음</span>` : `<span class="uni-chip warn">➕ 엉클데이에 없음</span>`;
+  el.innerHTML = `<div class="crl-add"><input id="cmpUrl" placeholder="경쟁 사이트 주소 (예: https://xinchaodanang43.com/)"><button class="btn sm main" data-cmpadd>분석하기</button></div>
+    <p class="hint">글 목록(사이트맵) · 글 제목 · 소제목만 읽어요. 글 내용은 저장 · 복사하지 않아요. 빠진 검색어는 <b>우리 업체 데이터로</b> 페이지를 만들 때 써요.</p>
+    <div class="crl-list">${J.length ? J.map(j => {
+      const r = j.result || {}, K = r.keywords || [], S = r.shops || [], gap = K.filter(k => !k.ours), have = K.filter(k => k.ours), open = CMP.open === j.id;
+      return `<div class="crl-job ${j.status} ${open ? "open" : ""}"><button class="crl-h" data-cmpopen="${j.id}"><span class="st">${ST[j.status] || j.status}</span><b>${esc(r.name || j.url)}</b><small>${j.status === "done" ? `글 ${r.posts || 0}개 · 빠진 검색어 <b>${gap.length}</b> · 있는 검색어 ${have.length} · 언급된 가게 ${S.length}곳 (엉클데이에 없음 ${S.filter(x => x.status === "none").length})` : ""} · ${dt(j.created_at)}</small></button>
+        ${j.status === "error" ? `<p class="crl-err">${esc(j.err || "")}</p>` : ""}
+        ${open && j.status === "done" ? `<div class="crl-body">
+          <div class="br-cats">${[["gap", `➕ 빠진 검색어 ${gap.length}`], ["have", `✅ 있는 검색어 ${have.length}`], ["shops", `🏪 언급된 가게 ${S.length}`]].map(([k, l]) => `<button class="${CMP.tab === k ? "on" : ""}" data-cmptab="${k}">${l}</button>`).join("")}</div>
+          ${CMP.tab === "gap" ? (gap.length ? `<p class="hint">경쟁사는 노리는데 엉클데이에는 맞는 페이지가 없는 검색어예요. 여기 있는 말로 우리 데이터 페이지를 만들면 돼요.</p><div class="cmp-t">${gap.map(k => `<div><b>${esc(k.kw)}</b><small>글 ${k.n}개 · <a href="${esc(k.url)}" target="_blank" rel="noopener nofollow">경쟁사 글 ↗</a></small><button class="btn sm" data-cmpcopy="${esc(k.kw)}">복사</button></div>`).join("")}</div><button class="btn sm" data-cmpcopyall="${j.id}">📋 빠진 검색어 전부 복사</button>` : `<p class="hint">🎉 빠진 검색어가 없어요.</p>`)
+          : CMP.tab === "have" ? `<div class="cmp-t">${have.map(k => `<div><b>${esc(k.kw)}</b><small>→ <a href="${esc(k.ours)}" target="_blank" rel="noopener">${esc(k.ours_title || k.ours)}</a></small></div>`).join("") || `<p class="hint">없어요.</p>`}</div>`
+          : `<p class="hint">경쟁사가 글에서 소개한 가게 = 한국인 손님이 많이 가는 가게일 가능성이 커요. '엉클데이에 없음'은 영업 1순위예요.</p><div class="cmp-t">${S.map((x, i) => `<div><b>${esc(x.name)}</b><small>${chip(x.status)} 글 ${x.n}개 · <a href="${esc(x.url)}" target="_blank" rel="noopener nofollow">경쟁사 글 ↗</a>${x.ours ? ` · <a href="${esc(x.ours)}" target="_blank" rel="noopener">우리 페이지</a>` : ""}</small>${x.status !== "partner" ? `<button class="btn sm" data-cmplead="${j.id}:${i}">🤝 영업 카드로</button>` : ""}</div>`).join("") || `<p class="hint">찾은 가게가 없어요.</p>`}</div>`}
+        </div>` : ""}
+        ${open ? `<div class="crl-act" style="padding:0 14px 12px"><button class="btn sm" data-cmpretry="${j.id}">↻ 다시 분석</button><button class="btn sm danger" data-cmpdel="${j.id}">🗑️</button></div>` : ""}</div>`;
+    }).join("") : `<p class="hint">아직 분석한 사이트가 없어요.</p>`}</div>`;
+  const job = id => CRL.jobs.find(x => x.id === +id);
+  el.querySelectorAll("[data-cmpopen]").forEach(b => b.onclick = () => { const id = +b.dataset.cmpopen; CMP.open = CMP.open === id ? null : id; compDraw(); });
+  el.querySelectorAll("[data-cmptab]").forEach(b => b.onclick = () => { CMP.tab = b.dataset.cmptab; compDraw(); });
+  el.querySelectorAll("[data-cmpcopy]").forEach(b => b.onclick = () => portalCopy(b.dataset.cmpcopy));
+  el.querySelectorAll("[data-cmpcopyall]").forEach(b => b.onclick = () => portalCopy(((job(b.dataset.cmpcopyall).result || {}).keywords || []).filter(k => !k.ours).map(k => k.kw).join("\n")));
+  el.querySelectorAll("[data-cmpadd]").forEach(b => b.onclick = async () => {
+    let url = document.getElementById("cmpUrl").value.trim(); if (!/^https?:\/\/\S+$/i.test(url)) { toast("http:// 또는 https:// 로 시작하는 주소를 넣어 주세요"); return; }
+    b.disabled = true; const r = await sb.from("crawl_jobs").insert({ url, job: "site" }).select().single(); b.disabled = false;
+    if (r.error) { alert(/job/.test(r.error.message) ? "universe22.sql 을 먼저 실행해 주세요" : r.error.message); return; } CRL.jobs.unshift(r.data); toast("⏳ 넣었어요. 1시간 안에 분석해요", 3500); compDraw();
+  });
+  el.querySelectorAll("[data-cmpretry]").forEach(b => b.onclick = async () => { const r = await sb.from("crawl_jobs").update({ status: "pending", err: null }).eq("id", +b.dataset.cmpretry).select().single(); if (r.error) { alert(r.error.message); return; } CRL.jobs[CRL.jobs.findIndex(x => x.id === r.data.id)] = r.data; toast("⏳ 1시간 안에 다시 분석해요"); compDraw(); });
+  el.querySelectorAll("[data-cmpdel]").forEach(b => b.onclick = async () => { if (!confirm("이 분석을 지울까요?")) return; const r = await sb.from("crawl_jobs").delete().eq("id", +b.dataset.cmpdel); if (r.error) { alert(r.error.message); return; } CRL.jobs = CRL.jobs.filter(x => x.id !== +b.dataset.cmpdel); compDraw(); });
+  el.querySelectorAll("[data-cmplead]").forEach(b => b.onclick = async () => {
+    const [jid, i] = b.dataset.cmplead.split(":"), j = job(jid), x = ((j.result || {}).shops || [])[+i]; if (!x) return;
+    b.disabled = true;
+    const r = await sb.from("leads").insert({ name: x.name, stage: "found", assignee: (typeof ME !== "undefined" && ME && ME.email) || null, next_action: "가게 찾아서 첫 연락",
+      memo: `<p>🔍 경쟁사 ${esc((j.result || {}).name || j.url)} 글 ${x.n}개에 소개된 가게</p><p><a href="${esc(x.url)}">${esc(x.url)}</a></p>` }).select().single();
+    if (r.error) { b.disabled = false; alert(r.error.message); return; }
+    b.textContent = "✅ 카드 만듦"; toast("🤝 낙서장 '영업'에 카드를 만들었어요");
+  });
 }

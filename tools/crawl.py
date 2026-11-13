@@ -183,6 +183,122 @@ def crawl(job):
     if not res["name"] and not res["menu"]: return res, "가게 정보를 찾지 못했어요 (글자가 아닌 그림으로 된 페이지일 수 있어요)"
     return res, None
 
+# ---- 🔍 경쟁사 분석 (job = 'site') : 사이트맵 · 글 제목 · 소제목만 읽어요. 글 내용은 저장하지 않아요 ----
+import glob, time, xml.etree.ElementTree as ET
+CITY_W = {"다낭": "danang", "danang": "danang", "나트랑": "nhatrang", "냐짱": "nhatrang", "nhatrang": "nhatrang", "호치민": "hcm", "호찌민": "hcm", "사이공": "hcm", "hcm": "hcm", "하노이": "hanoi", "hanoi": "hanoi", "호이안": "hoian", "hoian": "hoian"}
+STOP = set("추천 총정리 정리 가이드 후기 베스트 best top 비교 안내 방법 꿀팁 팁 리뷰 소개 완벽 필수 모음 확인 예약 정보 최신 업데이트 버전 완전 꼭 가볼만한 the in of and for with 리스트 순위 장점 단점 실제 이용 솔직 내돈내산 및 및 및".split())
+GENERIC = set("다낭 나트랑 냐짱 호치민 호찌민 하노이 호이안 베트남 발 전신 타이 아로마 핫스톤 커플 로컬 저렴한 고급 추천 한국인 한국어 가성비 호텔 마사지 스파 키즈 임산부 포핸드 건식 오일 스톤 두피 얼굴 바디 24시 시내 공항 근처 신상 최고의 인기 남자 여자 가족 풀빌라 리조트 1인 2인 단체 프리미엄 고급스러운 the best top cheap luxury local thai foot body oil hot stone couple danang hanoi saigon".split())
+def kw_of(title):
+    t = html.unescape(title or ""); t = re.split(r"\s[|·–—-]\s|\s:\s", t)[0]
+    t = re.sub(r"\[[^\]]*\]|\([^)]*\)|20\d\d년?|TOP\s?\d+|\d+\s?(?:선|곳|가지|개)|[^\w\s가-힣]", " ", t, flags=re.I)
+    return re.sub(r"\s+", " ", t).strip()
+def toks(s): return [w for w in re.findall(r"[가-힣]+|[a-z]+", (s or "").lower()) if w not in STOP and len(w) > 1]
+def city_of(ws): return next((CITY_W[w] for w in ws if w in CITY_W), None)
+def our_pages():
+    out = []
+    for f in glob.glob("c/**/index.html", recursive=True) + glob.glob("s/*/index.html") + glob.glob("en/s/*/index.html") + glob.glob("p/*/*/index.html"):
+        if "/vi/" in f: continue
+        try: h = open(f, encoding="utf-8").read(3000)
+        except Exception: continue
+        m = re.search(r"<title>(.*?)</title>", h, re.S)
+        if m: t = html.unescape(m.group(1)).split(" | ")[0]; out.append({"url": "/" + f[:-len("index.html")], "title": t, "toks": set(toks(t)), "city": (f.split("/")[1] if f.startswith(("c/", "p/")) else None) or city_of(toks(t))})
+    return out
+def norm(t): return re.sub(r"[^a-z0-9가-힣]", "", (t or "").lower().replace("đ", "d"))
+SHOP_RX = [re.compile(r"([A-Z][A-Za-z0-9&'.]*(?:\s[A-Z0-9][A-Za-z0-9&'.]*){0,3}\s(?:Spa|SPA|Massage|MASSAGE|Nail|Nails|Salon|Beauty|Palace))\b"),
+           re.compile(r"([가-힣A-Za-z]{2,10}\s?(?:스파|마사지|네일|살롱))")]
+def shop_names(s):
+    out = set()
+    for rx in SHOP_RX:
+        for m in rx.finditer(s or ""):
+            n = m.group(1).strip(); ws = n.lower().split()
+            first = re.sub(r"(스파|마사지|네일|살롱)$", "", ws[0]) if ws else ""
+            if not first or first in GENERIC or ws[0] in GENERIC or len(norm(n)) < 4: continue
+            if re.fullmatch(r"[가-힣]{1,3}", ws[0]) and re.search(r"(는|은|을|를|의|에서)$", ws[0]) and len(ws) > 1: continue   # '하는 마사지' 같은 말
+            out.add(n)
+    return out
+def sitemaps(base):
+    found = []
+    try:
+        req = urllib.request.Request(base + "/robots.txt", headers={"User-Agent": UA})
+        with urllib.request.urlopen(req, timeout=15) as r: found += re.findall(r"(?im)^sitemap:\s*(\S+)", r.read(200_000).decode("utf-8", "ignore"))
+    except Exception: pass
+    return found + [base + p for p in ("/sitemap.xml", "/sitemap_index.xml", "/wp-sitemap.xml", "/post-sitemap.xml")]
+def read_sitemap(u, seen, urls, depth=0):
+    if u in seen or depth > 2 or len(seen) > 12 or not robots_ok(u): return
+    seen.add(u)
+    try:
+        req = urllib.request.Request(u, headers={"User-Agent": UA})
+        with urllib.request.urlopen(req, timeout=20) as r: x = r.read(5_000_000)
+        root = ET.fromstring(x)
+    except Exception: return
+    for el in root.iter():
+        if el.tag.endswith("loc") and el.text:
+            v = el.text.strip()
+            if re.search(r"sitemap[^/]*\.xml", v): read_sitemap(v, seen, urls, depth + 1)
+            elif len(urls) < 400: urls.append(v)
+def analyze_site(job):
+    u = job["url"]; why = host_ok(u)
+    if why: return None, why
+    p = urllib.parse.urlparse(u); base = f"{p.scheme}://{p.netloc}"
+    if not robots_ok(base + "/"): return None, "이 사이트의 robots.txt 가 자동 수집을 막아 두어서 분석하지 않았어요"
+    urls, seen = [], set()
+    for sm in sitemaps(base):
+        read_sitemap(sm, seen, urls)
+        if urls: break
+    urls = [v for v in dict.fromkeys(urls) if urllib.parse.urlparse(v).netloc == p.netloc and not re.search(r"/(category|tag|author|page)/|\.(jpg|png|webp|pdf)$", v)]
+    if not urls: return None, "사이트맵(글 목록)을 찾지 못했어요"
+    posts = []
+    for v in urls:
+        slug = urllib.parse.unquote(urllib.parse.urlparse(v).path.strip("/").split("/")[-1] or "")
+        posts.append({"url": v, "title": slug.replace("-", " ") if re.search(r"[가-힣]", slug) else "", "heads": []})
+    # 제목 · 소제목 (마사지 · 스파 관련 글 먼저, 40개까지, 1초 간격)
+    pri = sorted(posts, key=lambda x: 0 if re.search(r"마사지|스파|massage|spa|nail|네일|이발|barber", urllib.parse.unquote(x["url"]), re.I) else 1)[:40]
+    for x in pri:
+        if not robots_ok(x["url"]): continue
+        try:
+            h, _ = fetch(x["url"]); pg = Page(); pg.feed(h)
+            x["title"] = html.unescape(pg.meta.get("og:title") or pg.title or x["title"]).strip()[:150]
+            x["heads"] = [re.sub(r"\s+", " ", l).strip()[:80] for l in re.findall(r"<h[23][^>]*>(.*?)</h[23]>", re.sub(r"<(script|style)[\s\S]*?</\1>", "", h), re.S | re.I)][:30]
+            x["heads"] = [html.unescape(re.sub(r"<[^>]+>", "", t)).strip() for t in x["heads"] if t]
+        except Exception: pass
+        time.sleep(1)
+    ours = our_pages()
+    kws = {}
+    for x in posts:
+        k = kw_of(x["title"])
+        if not k or len(toks(k)) < 2: continue
+        kws.setdefault(k, []).append(x["url"])
+    kw_out = []
+    INTENT = {"가격", "요금", "비용", "price", "prices", "cost"}
+    COMMON = {"한국어", "예약", "곳", "마사지", "스파", "피부관리", "뷰티", "시술별", "여행", "가이드", "가격", "업체", "정보", "massage", "spa", "beauty", "shops", "trusted", "guide", "prices", "booking"}
+    cpages = [o for o in ours if o["url"].startswith(("/c/", "/en/c/"))]   # 검색어 페이지(도시 · 주제 · 가격 · 가이드)만 비교
+    for k, us in kws.items():
+        t = set(toks(k)); c = city_of(t); core = {w for w in t if w not in CITY_W and w not in INTENT} or t; best, sc = None, 0
+        for o in cpages:
+            if c and o["city"] != c: continue
+            if not c and o["city"]: pass
+            extra = o["toks"] - core - COMMON - set(CITY_W)
+            s_ = len(core & o["toks"]) / max(1, len(core)) - 0.05 * len(extra)
+            if s_ > sc: best, sc = o, s_
+        kw_out.append({"kw": k, "n": len(us), "url": us[0], "city": c, "ours": best["url"] if best and sc >= 0.55 else None, "ours_title": best["title"] if best and sc >= 0.55 else None, "score": round(sc, 2)})
+    kw_out.sort(key=lambda r: (r["ours"] is not None, -r["n"], r["kw"]))
+    partners = {norm(re.split(r" - | — ", o["title"])[0]): o for o in ours if o["url"].startswith(("/s/", "/en/s/"))}
+    for o in [o for o in ours if o["url"].startswith("/en/s/")]: partners[norm(re.split(r" — ", o["title"])[0].rsplit(" ", 2)[0])] = o
+    unclaimed = {norm(re.split(r" — ", o["title"])[0]): o for o in ours if o["url"].startswith("/p/")}
+    shops = {}
+    for x in posts:
+        for n in shop_names(" \n".join([x["title"]] + x["heads"])): shops.setdefault(n, set()).add(x["url"])
+    sh_out = []
+    for n, us in shops.items():
+        full = norm(n); k = norm(re.sub(r"\s*(스파|마사지|네일|살롱|spa|massage|nail|salon)$", "", n, flags=re.I)) or full
+        m_ = lambda kk: kk and (full == kk or (len(full) >= 5 and (kk.startswith(full) or full.startswith(kk))) or (len(k) >= 2 and kk.startswith(k) and len(kk) - len(k) <= (2 if re.search(r"[가-힣]", k) else 4) and (len(k) >= 3 or re.search(r"[가-힣]", k))))
+        hit = next((o for kk, o in partners.items() if m_(kk)), None)
+        hu = None if hit else next((o for kk, o in unclaimed.items() if m_(kk)), None)
+        sh_out.append({"name": n, "n": len(us), "url": sorted(us)[0], "status": "partner" if hit else "unclaimed" if hu else "none", "ours": (hit or hu or {}).get("url")})
+    sh_out.sort(key=lambda r: ({"none": 0, "unclaimed": 1, "partner": 2}[r["status"]], -r["n"]))
+    res = {"site": base, "posts": len(posts), "read": len([x for x in pri if x["heads"] or x["title"]]), "keywords": kw_out[:300], "shops": sh_out[:150], "name": p.netloc}
+    return res, None
+
 if __name__ == "__main__":
     tok = os.environ.get("CRAWL_TOKEN", "").strip()
     if not tok: print("CRAWL_TOKEN 이 없어서 링크 가져오기를 건너뛰어요"); sys.exit(0)
@@ -190,8 +306,8 @@ if __name__ == "__main__":
     except Exception as e: print("링크 목록을 못 읽었어요 (universe21.sql · 수집 열쇠 확인):", e); sys.exit(0)
     print("가져올 링크", len(jobs), "개")
     for j in jobs:
-        try: res, err = crawl(j)
+        try: res, err = analyze_site(j) if j.get("job") == "site" else crawl(j)
         except Exception as e: res, err = None, f"알 수 없는 오류: {e}"
         try: rpc("crawl_result", {"tok": tok, "job": j["id"], "res": res, "error": err or ""})
         except Exception as e: print("결과 저장 실패", j["id"], e)
-        print(j["id"], j["url"], "→", err or f"{res.get('name')} · 메뉴 {len(res.get('menu') or [])}개")
+        print(j["id"], j["url"], "→", err or (f"글 {res.get('posts')}개 · 검색어 {len(res.get('keywords') or [])}개 · 가게 {len(res.get('shops') or [])}곳" if j.get("job") == "site" else f"{res.get('name')} · 메뉴 {len(res.get('menu') or [])}개"))

@@ -71,6 +71,7 @@ function drawPortal(skip) {
         <div class="pt-row">${[["vi", "🇻🇳 베트남어"], ["ko", "🇰🇷 한국어"]].map(([l, ln]) => `<a class="btn sm ${l === s.def ? "main" : ""}" href="/demo.html?role=${s.role}&lang=${l}" target="_blank" rel="noopener">${ln} ↗</a>`).join("")}<button class="btn sm" data-pcopy="https://www.uncleday.com/demo.html?role=${s.role}&lang=${s.def}">주소 복사</button></div></div>`).join("")}</div></section>
     <section class="pt-sec" id="ptPriceSec"><h3>💰 가격 채우기 <span class="hint">업체 메뉴 가격 — 채울수록 검색 · AI 에 강해져요 · 영업 현장에서 휴대폰으로</span></h3><div id="ptPrice"></div></section>
     <section class="pt-sec" id="ptCrawlSec"><h3>🔗 링크로 가게 가져오기 <span class="hint">가게 홈페이지 · 가격표 링크를 넣으면 정보를 뽑아 와서 검색 페이지로 만들어요</span></h3><div id="ptCrawl"></div></section>
+    <section class="pt-sec" id="ptCompSec"><h3>🔍 경쟁사 분석 <span class="hint">경쟁 사이트가 노리는 검색어 중 엉클데이에 없는 것 · 경쟁사가 소개한 가게 중 엉클데이에 없는 곳</span></h3><div id="ptComp"></div></section>
     <section class="pt-sec" id="ptSeoSec"><h3>🔎 검색 유입 · 리드 <span class="hint">구글 · 네이버 · AI 에서 들어온 손님 수 · 미입점 가게 문의 · 영업용 조회수</span></h3><div id="ptSeo"></div></section>
     <section class="pt-sec"><h3>🎨 브랜드 자료실 (CI) <span class="hint">명함 · 홍보물 · 자료 만들 때 쓰는 로고 · 색 · 글꼴 · 원본 파일</span></h3><div id="ptBrand"></div></section>
     <section class="pt-sec"><h3>🏪 매장별 관리 <span class="hint">현황판 쓰는 매장 ${S.length}곳</span></h3>

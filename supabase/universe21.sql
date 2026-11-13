@@ -84,7 +84,7 @@ begin
   if not crawl_tok_ok(tok) then raise exception 'Bad token'; end if;
   update crawl_jobs set status = case when error is null or error = '' then 'done' else 'error' end,
     result = res, data = coalesce(data, res), err = nullif(left(error, 500), ''), crawled_at = now()
-  where id = job and status = 'pending';
+  where id = crawl_result.job and status = 'pending';
 end $$;
 revoke all on function public.crawl_result(text, bigint, jsonb, text) from public;
 grant execute on function public.crawl_result(text, bigint, jsonb, text) to anon, authenticated;
