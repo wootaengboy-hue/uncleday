@@ -18,12 +18,14 @@ function blgParse(kw) {
   for (const [w, c] of Object.entries(BLG_CITY)) if (k.includes(w)) { r.city = c; break; }
   const lm = BLG_LM.find(l => (!r.city || l.city === r.city) && l.names.some(n => k.includes(n.toLowerCase()))); if (lm) { r.landmark = lm.id; r.city = r.city || lm.city; }
   for (const [id, rx] of Object.entries(BLG_TRX)) if (rx.test(k)) { r.topic = id; break; }
-  if (/가격|요금|비용|얼마/.test(k)) r.treat = /네일|젤/.test(k) ? "nail" : /페이셜|피부관리|클렌징/.test(k) ? "facial" : /발/.test(k) ? "foot" : /헤어|커트|펌|이발/.test(k) ? "hair" : /속눈썹/.test(k) ? "lash" : /필러|보톡스/.test(k) ? "filler" : "massage";
+  if (/가격|요금|비용|얼마/.test(k)) r.treat = /네일|젤/.test(k) ? "nail" : /페이셜|피부관리|클렌징|스킨|케어|피부/.test(k) ? "facial" : /발/.test(k) ? "foot" : /헤어|커트|펌|이발/.test(k) ? "hair" : /속눈썹/.test(k) ? "lash" : /필러|보톡스/.test(k) ? "filler" : "massage";
   if (r.treat) r.topic = null;
-  r.grp = /피부|성형|네일|헤어|뷰티|속눈썹|이발/.test(k) ? "beauty" : "spabody";
+  r.grp = /피부|스킨|케어|페이셜|에스테틱|클리닉|성형|네일|헤어|뷰티|속눈썹|이발|왁싱|skin|facial|nail|hair|beauty|clinic/.test(k) && !/마사지|massage|스파(?!.*(케어|스킨))/.test(k) ? "beauty" : "spabody";
   r.city = r.city || "danang";
   return r;
 }
+// 엉클데이 데이터에 없는 분야 (맛집 · 숙소 · 투어 …) — 이런 검색어로 마사지 목록을 내면 손님을 속이는 글이 돼요
+const BLG_OUT = /맛집|식당|음식|먹거리|카페|커피|베이커리|호텔|숙소|리조트|풀빌라|빌라|에어비앤비|가라오케|노래방|골프|렌트|렌터카|차량|택시|투어|술집|클럽|bar\b|pub\b|restaurant|food|cafe|coffee|hotel|villa|golf|karaoke/i;
 const blgKm = (a, b) => { const R = 6371, t = Math.PI / 180, dl = (b[0] - a[0]) * t, dn = (b[1] - a[1]) * t, x = Math.sin(dl / 2) ** 2 + Math.cos(a[0] * t) * Math.cos(b[0] * t) * Math.sin(dn / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(x)); };
 // 미리보기: 대략 몇 곳이 나올지 (정확한 결과는 게시 후 사이트 페이지에서)
 function blgPreview(b) {
@@ -71,14 +73,16 @@ function blogDraw() {
           <div class="crl-two"><label>주제<select data-bf="topic">${opt(BLG_TOPIC, b.topic, "없음")}</select></label><label>시술 가격<select data-bf="treat">${opt(BLG_TREAT, b.treat, "없음")}</select></label></div>
           <label>업체 종류<select data-bf="grp">${opt([["spabody", "마사지 · 스파"], ["beauty", "피부 · 뷰티 · 성형"]], b.grp, "마사지 · 스파")}</select></label>
           <label>첫 문단 <small class="hint">비우면 자동 문장 · 사람이 쓴 한두 줄이 들어가면 더 좋아요</small><textarea data-bf="intro" rows="3">${esc(b.intro || "")}</textarea></label>
+          ${BLG_OUT.test(b.kw) ? `<p class="crl-err">⚠️ 이 검색어는 엉클데이 데이터가 없는 분야(맛집 · 숙소 · 투어 등)라 게시할 수 없어요.</p>` : ""}
           <div class="blg-pv"><b>미리보기 (예상 ${pv.length}곳${pv.length < 2 ? " — ⚠️ 2곳보다 적어서 페이지가 안 생겨요. 장소 · 주제를 바꿔 보세요" : ""})</b><ol>${pv.map(s => `<li>${esc((s.name || {}).ko || s.id)}${s._d != null ? ` <small>약 ${s._d.toFixed(1)}km</small>` : ""}</li>`).join("")}</ol></div>
           <p class="hint">주소: <code>/blog/${esc(blgSlug(b))}/</code>${b.status === "published" ? ` · <a href="/blog/${esc(blgSlug(b))}/" target="_blank" rel="noopener">사이트에서 보기 ↗</a> (게시 후 1시간 안에 생겨요)` : ""}${b.from_url ? ` · 주제 얻은 곳: <a href="${esc(b.from_url)}" target="_blank" rel="noopener nofollow">경쟁사 글</a>` : ""}</p>
-          <div class="crl-act">${b.status === "published" ? `<button class="btn sm main" data-bsave="${b.id}">고친 내용 저장</button><button class="btn sm" data-bunpub="${b.id}">게시 내리기</button>` : `<button class="btn sm main" data-bpub="${b.id}">🌐 게시</button><button class="btn sm" data-bsave="${b.id}">저장만</button>`}<button class="btn sm danger" data-bdel="${b.id}">🗑️</button></div>
+          <div class="crl-act">${b.status === "published" ? `<button class="btn sm main" data-bsave="${b.id}">고친 내용 저장</button><button class="btn sm" data-bunpub="${b.id}">게시 내리기</button>` : `<button class="btn sm main" data-bpub="${b.id}" ${BLG_OUT.test(b.kw) ? "disabled" : ""}>🌐 게시</button><button class="btn sm" data-bsave="${b.id}">저장만</button>`}<button class="btn sm danger" data-bdel="${b.id}">🗑️</button></div>
         </div>` : ""}</div>`;
     }).join("") : `<p class="hint">아직 글이 없어요. 위에 검색어를 넣거나, 경쟁사 분석의 '빠진 검색어'에서 [📝 블로그 글 만들기]를 눌러 보세요.</p>`}</div>`;
   const collect = id => { const box = el.querySelector(`[data-bpost="${id}"]`), o = {}; box.querySelectorAll("[data-bf]").forEach(i => o[i.dataset.bf] = i.value.trim() || null); o.kw = o.kw || ""; return o; };
   const up = async (id, patch, msg) => { const r = await sb.from("blog_posts").update(patch).eq("id", id).select().single(); if (r.error) { alert(r.error.message); return; } BLG.posts[BLG.posts.findIndex(x => x.id === id)] = r.data; if (msg) toast(msg, 3500); blogDraw(); };
-  el.querySelectorAll("[data-bnew]").forEach(b => b.onclick = async () => { const kw = document.getElementById("blgKw").value.trim(); if (kw.length < 2) { toast("검색어를 적어 주세요"); return; } b.disabled = true; await blogNew(kw); b.disabled = false; });
+  el.querySelectorAll("[data-bnew]").forEach(b => b.onclick = async () => { const kw = document.getElementById("blgKw").value.trim(); if (kw.length < 2) { toast("검색어를 적어 주세요"); return; }
+    if (BLG_OUT.test(kw)) { alert("'" + kw + "' 는 엉클데이가 데이터를 가진 분야(마사지 · 스파 · 뷰티 · 피부 · 네일 · 헤어)가 아니라서 글을 만들 수 없어요.\n데이터 없이 만들면 내용이 틀린 글이 돼서 손님 신뢰와 검색 순위가 같이 떨어져요."); return; } b.disabled = true; await blogNew(kw); b.disabled = false; });
   el.querySelectorAll("[data-bopen]").forEach(b => b.onclick = () => { const id = +b.dataset.bopen; BLG.open = BLG.open === id ? null : id; blogDraw(); });
   el.querySelectorAll("[data-bpost] [data-bf]").forEach(i => i.onchange = () => { const id = +i.closest("[data-bpost]").dataset.bpost, p = BLG.posts.find(x => x.id === id); Object.assign(p, collect(id)); if (i.dataset.bf === "city") p.landmark = null; blogDraw(); });
   el.querySelectorAll("[data-bsave]").forEach(b => b.onclick = () => up(+b.dataset.bsave, collect(+b.dataset.bsave), "저장했어요 · 1시간 안에 사이트에 반영돼요"));
