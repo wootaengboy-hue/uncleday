@@ -6,7 +6,7 @@
  */
 /* 🔍 구글 서치 콘솔 (Edge Function "gsc") — 구글 검색 결과 화면에서 보인 수 · 눌린 수 · 순위 · 검색어 */
 const GSC = { data: null, days: 0, loading: false, qn: 15, pn: 15 };
-const GSC_CC = { kor: "🇰🇷 한국", vnm: "🇻🇳 베트남", usa: "🇺🇸 미국", jpn: "🇯🇵 일본", chn: "🇨🇳 중국", twn: "🇹🇼 대만", aus: "🇦🇺 호주", sgp: "🇸🇬 싱가포르", can: "🇨🇦 캐나다", rus: "🇷🇺 러시아", tha: "🇹🇭 태국", hkg: "🇭🇰 홍콩", deu: "🇩🇪 독일", gbr: "🇬🇧 영국", fra: "🇫🇷 프랑스" };
+const GSC_CC = { kor: "한국", vnm: "베트남", usa: "미국", jpn: "일본", chn: "중국", twn: "대만", aus: "호주", sgp: "싱가포르", can: "캐나다", rus: "러시아", tha: "태국", hkg: "홍콩", deu: "독일", gbr: "영국", fra: "프랑스", bel: "벨기에", bra: "브라질", che: "스위스", esp: "스페인", ita: "이탈리아", nld: "네덜란드", ind: "인도", idn: "인도네시아", mys: "말레이시아", phl: "필리핀", nzl: "뉴질랜드", khm: "캄보디아", lao: "라오스", mng: "몽골", kaz: "카자흐스탄", uzb: "우즈베키스탄", are: "아랍에미리트" };
 async function gscLoad() {
   if (GSC.loading) return; GSC.loading = true; GSC.days = SEO.days;
   let d;
@@ -39,7 +39,7 @@ function gscHtml() {
   return `<p class="hint" style="margin-top:0">${esc(d.start)} ~ ${esc(d.end)} · 구글은 2~3일 늦게 알려 줘요 · ${esc(d.site)}</p>
     <div class="seo-kpi"><div><small>👁️ 구글 검색에 보인 수 (노출)</small><b>${imp.toLocaleString()}</b></div><div><small>👆 눌린 수 (클릭)</small><b>${clk.toLocaleString()}</b></div><div><small>클릭률 (CTR)</small><b>${imp ? pct(clk / imp) : "-"}</b></div><div><small>평균 순위</small><b>${imp ? p1(pos) + "위" : "-"}</b></div></div>
     ${d.byDate.length ? `<div class="seo-days gsc-days">${d.byDate.map(r => `<i title="${r.keys[0]} · 노출 ${r.impressions} · 클릭 ${r.clicks}" style="height:${Math.max(4, r.impressions / mx * 100)}%">${r.clicks ? `<em style="height:${Math.max(8, r.clicks / Math.max(1, r.impressions) * 100)}%"></em>` : ""}</i>`).join("")}</div><div class="seo-dl"><span>${d.byDate[0].keys[0].slice(5)}</span><span>막대: 노출 · 진한 부분: 클릭</span><span>${d.byDate[d.byDate.length - 1].keys[0].slice(5)}</span></div>` : `<p class="hint">아직 구글 검색에 보인 기록이 없어요. 색인이 되면 며칠 안에 숫자가 생겨요.</p>`}
-    ${d.countries.length ? `<div class="gsc-cc">${d.countries.map(r => `<span>${esc(GSC_CC[r.keys[0]] || r.keys[0].toUpperCase())} <b>${r.impressions}</b></span>`).join("")}${d.devices.map(r => `<span>${r.keys[0] === "MOBILE" ? "📱 휴대폰" : r.keys[0] === "DESKTOP" ? "💻 PC" : "📟 태블릿"} <b>${r.impressions}</b></span>`).join("")}</div>` : ""}
+    ${d.countries.length ? `<div class="gsc-cc">${d.countries.slice().sort((x, y) => y.impressions - x.impressions).map(r => `<span>${esc(GSC_CC[r.keys[0]] || r.keys[0].toUpperCase())} <b>${r.impressions}</b></span>`).join("")}${d.devices.map(r => `<span>${r.keys[0] === "MOBILE" ? "휴대폰" : r.keys[0] === "DESKTOP" ? "PC" : "태블릿"} <b>${r.impressions}</b></span>`).join("")}</div>` : ""}
     ${d.queries.length ? `<h5>사람들이 검색한 말</h5>${tbl(d.queries, GSC.qn, "검색어", "query")}` : ""}
     ${d.pages.length ? `<h5>구글에 보인 페이지</h5>${tbl(d.pages, GSC.pn, "페이지", "page")}` : ""}`;
 }
