@@ -31,8 +31,15 @@ eval(read("config.js") + read("data.js") + read("shops.js") + read("catimgs.js")
     const r = await fetch(`${SUPA.url}/rest/v1/rpc/crawl_published`, { method: "POST", headers: h, body: "{}" });
     if (r.ok) crawled = await r.json() || []; else console.error("링크 가져오기 목록 없음 (universe21.sql 실행 전?)", r.status);
   } catch (e) { console.error("링크 가져오기 목록 읽기 실패:", e.message); }
+  // 📝 블로그 글 조건 (universe23.sql)
+  let blog = [];
+  try {
+    const h = { apikey: SUPA.key, "Content-Type": "application/json" }; if (/^eyJ/.test(SUPA.key)) h.Authorization = "Bearer " + SUPA.key;
+    const r = await fetch(`${SUPA.url}/rest/v1/rpc/blog_published`, { method: "POST", headers: h, body: "{}" });
+    if (r.ok) blog = await r.json() || []; else console.error("블로그 목록 없음 (universe23.sql 실행 전?)", r.status);
+  } catch (e) { console.error("블로그 목록 읽기 실패:", e.message); }
   const common = read("common.js"); const m = common.match(/(?:const|var) PH_IMGS = (\{[^\n]*\});/);
   const ph = m ? eval("(" + m[1] + ")") : {};
-  fs.writeFileSync(process.argv[2] || "share.json", JSON.stringify({ src, supa: { url: SUPA.url, key: SUPA.key }, hidden, crawled, kakao: (typeof SITE !== "undefined" && SITE.kakao) || "", shops, categories: CATEGORIES, cities: CITIES, catImgs: cat, phImgs: ph }));
+  fs.writeFileSync(process.argv[2] || "share.json", JSON.stringify({ src, supa: { url: SUPA.url, key: SUPA.key }, hidden, crawled, blog, kakao: (typeof SITE !== "undefined" && SITE.kakao) || "", shops, categories: CATEGORIES, cities: CITIES, catImgs: cat, phImgs: ph }));
   console.log(src, shops.length, "곳");
 })();

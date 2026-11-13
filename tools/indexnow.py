@@ -19,7 +19,7 @@ if "--all" in sys.argv:
     urls = re.findall(r"<loc>([^<]+)</loc>", open("sitemap.xml").read())
 else:
     files = open(sys.argv[1]).read().split() if len(sys.argv) > 1 and os.path.exists(sys.argv[1]) else []
-    paths = sorted({"/" + f[:-len("index.html")] for f in files if f.endswith("index.html") and re.match(r"^(s|c|en|p)/", f)})
+    paths = sorted({"/" + f[:-len("index.html")] for f in files if f.endswith("index.html") and re.match(r"^(s|c|en|p|blog)/", f)})
     urls = [SITE + p for p in paths if indexable(p)]
     if any(f == "sitemap.xml" for f in files): urls.append(SITE + "/sitemap.xml")
 if not urls: print("IndexNow: 알릴 페이지 없음"); sys.exit(0)

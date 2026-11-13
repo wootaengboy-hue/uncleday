@@ -919,6 +919,100 @@ def unclaimed_vi_page(cid, u):
 <p class="osm">Thông tin cửa hàng: {f'trang công khai <a href="{esc(u["srcurl"])}" target="_blank" rel="noopener nofollow">{esc(src_host(u))}</a> ({u.get("checked")})' if crawl else '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors (ODbL)'}. Thông tin sai hoặc muốn gỡ trang này? Hãy để lại số điện thoại ở biểu mẫu trên và ghi “gỡ thông tin” — chúng tôi sẽ gỡ.</p>
 </main><footer class="wrap">Uncle Day — đặt chỗ massage · spa · làm đẹp bằng tiếng Hàn tại Việt Nam · <a href="/">Trang chủ</a></footer>{TRACK()}{lead_js(cid, ("crawl:" if crawl else "osm:") + u["id"], u["name"])}{views_js(ko)}</body></html>
 """
+# ---- 📝 블로그 blog/<주소>/ : 관리자가 정한 '조건'(도시 · 장소 · 주제 · 시술)으로 최신 업체 데이터에서 매번 다시 그려요 (universe23) ----
+from landmarks import LANDMARKS
+LMAP = {l["id"]: l for l in LANDMARKS}
+BLOG = d.get("blog") or []
+def blog_slug(b):
+    if b.get("slug"): return b["slug"]
+    s_ = slug(b.get("kw"))
+    return s_ if len(s_) >= 6 and s_ != "shop" else "-".join(x for x in [b.get("city"), b.get("landmark") or b.get("topic") or b.get("treat") or "guide"] if x) + f"-{b['id']}"
+def blog_pick(b):
+    xs = [x for x in live if x.get("city") == b.get("city")]
+    t = next((t for t in TOPICS if t["id"] == b.get("topic")), None); tr = TMAP.get(b.get("treat") or "")
+    if t: xs = topic_shops(t, xs)
+    elif tr: ids = {x["id"] for x, _ in treat_rows(tr, xs)}; xs = [x for x in xs if x["id"] in ids]
+    else: xs = [x for x in xs if grp(x) == (b.get("grp") or "spabody")]
+    lm = LMAP.get(b.get("landmark") or "")
+    if lm:
+        xs = sorted([x for x in xs if x.get("geo")], key=lambda x: km((lm["lat"], lm["lon"]), x["geo"]))
+        near = [x for x in xs if km((lm["lat"], lm["lon"]), x["geo"]) <= 5]
+        xs = near if len(near) >= 2 else xs[:6]
+    else:
+        xs = sorted(xs, key=lambda x: (-(len(mprices(x) or prices(x)) > 0), "ko" not in (x.get("staffLangs") or []), tx(x.get("name"))))
+    return xs[:10], lm, t, tr
+def blog_page(b):
+    xs, lm, t, tr = blog_pick(b)
+    cid = b["city"]; cko = tx(cities.get(cid, {}).get("name")); sl = blog_slug(b); url = f"{SITE}/blog/{sl}/"; n = len(xs)
+    upd = max([checked(x) for x in xs] + [b.get("updated") or BUILT]); pub = b.get("published") or upd
+    dist = (lambda x: km((lm["lat"], lm["lon"]), x["geo"])) if lm else None
+    title = b.get("title") or f"{b['kw']} — 엉클데이 업체 {n}곳 ({YEAR})"
+    allp = sorted(p for x in xs for p in (mprices(x) or prices(x)))
+    rows_tr = treat_rows(tr, xs) if tr else []
+    summ = f"엉클데이가 확인한 {cko} 업체 중 '{b['kw']}'에 맞는 곳은 {n}곳이에요."
+    if lm: summ += f" {lm['ko']}에서 가장 가까운 곳은 {tx(xs[0].get('name'))}(약 {dist(xs[0]):.1f}km)예요."
+    if rows_tr: summ += " " + price_summary(cko, tr, rows_tr)
+    elif allp: summ += f" 엉클데이 확인 참고가는 {won(allp[0])}부터예요."
+    kn = sum(1 for x in xs if "ko" in (x.get("staffLangs") or []) or has(x, "한국어|한국인"))
+    if kn: summ += f" 그중 {kn}곳은 한국어 응대가 돼요."
+    intro = (b.get("intro") or "").strip() or (f"{lm['ko']} 근처에서 " if lm else f"{cko}에서 ") + (t["why"] if t else tr["why"] if tr else "어디로 갈지 고민된다면, 엉클데이가 직접 확인한 업체 정보(위치 · 가격 · 영업시간 · 한국어 응대)로 비교해 보세요.") + " 모든 업체는 엉클데이에서 한국어로 상담하고 매장 가격 그대로 예약할 수 있어요."
+    def card(i, x):
+        pr = mprices(x) or prices(x); f0 = facts(x)[0]; hrs = f"{x['open']}~{x.get('close', '')}" if x.get("open") else ""
+        meta = " · ".join(v for v in [SUB_KO.get(x.get("cat"), ""), (f"{lm['ko']}에서 약 {dist(x):.1f}km" if lm else ""), (won(pr[0]) + "부터" if pr else ""), (hrs and "영업 " + hrs), ("한국어 응대" if "ko" in (x.get("staffLangs") or []) else "")] if v)
+        tags = " ".join(f"<span class=chip>#{esc(tx(tg))}</span>" for tg in (x.get("tags") or [])[:4] if tx(tg))
+        return f'<section class="bp"><h2>{i}. {esc(tx(x.get("name")))}</h2><p class="date">{esc(meta)}</p><p>{esc(f0)}</p>{f"<p>{tags}</p>" if tags else ""}<p><a class="cta" data-cta="shop" href="/s/{x["id"]}/">{esc(tx(x.get("name")))} 자세히 · 예약</a></p></section>'
+    table = "".join(f'<tr><td><a data-cta="shop" href="/s/{x["id"]}/">{esc(tx(x.get("name")))}</a></td>{f"<td class=n>{dist(x):.1f}km</td>" if lm else ""}<td class="n">{won((mprices(x) or prices(x))[0]) if (mprices(x) or prices(x)) else "상담"}</td><td style="white-space:nowrap;font-size:13px">{esc((x.get("open") or "") + ("~" + x["close"] if x.get("close") else ""))}</td><td>{"✅" if "ko" in (x.get("staffLangs") or []) else "-"}</td></tr>' for x in xs)
+    g = GUIDES.get(cid) or {}; tips = (g.get("tip") or [])[:3]; srcs = []
+    for _, _, ks in tips:
+        for k in ks:
+            if k in SOURCES and k not in srcs: srcs.append(k)
+    faq = [(f"{b['kw']} 어디가 좋아요?", summ + " 업체마다 엉클데이에서 한국어로 상담하고 예약할 수 있어요."),
+           ("엉클데이로 예약하면 더 비싼가요?", "아니요. 매장 가격 그대로이고 손님이 엉클데이에 따로 내는 돈은 없어요. 결제는 시술 후 매장에서 직접 해요.")]
+    if lm: faq.insert(1, (f"{lm['ko']}에서 얼마나 걸려요?", "거리는 지도상 직선거리라 실제 이동 거리는 조금 더 길어요. " + ", ".join(f"{tx(x.get('name'))} 약 {dist(x):.1f}km" for x in xs[:3]) + ". 짧은 거리는 그랩(Grab) 바이크 · 택시로 5~10분 정도예요."))
+    rel = [(f"/c/{cid}/", f"{cko} 업체 모두 보기")] + ([(f"/c/{cid}/{t['id']}/", f"{cko} {t['kw']}")] if t else []) + ([(f"/c/{cid}/price/{tr['id']}/", f"{cko} {tr['kw']} 가격 비교")] if tr and any(tt["id"] == tr["id"] for tt, _ in TREATS.get(cid, [])) else []) + ([(f"/c/{cid}/price/", f"{cko} 시술별 가격")] if TREATS.get(cid) and not tr else []) + ([(f"/c/{cid}/guide/", f"{cko} 마사지 가이드")] if cid in GUIDES else [])
+    js = lambda o: json.dumps(o, ensure_ascii=False).replace("</", "<\\\\/")
+    lds = [{"@context": "https://schema.org", "@type": "Article", "headline": title[:110], "url": url, "inLanguage": "ko", "datePublished": pub, "dateModified": upd, "description": summ[:300],
+            "author": {"@type": "Organization", "name": "엉클데이 Uncle Day", "url": SITE + "/"}, "publisher": {"@type": "Organization", "name": "엉클데이 Uncle Day", "logo": {"@type": "ImageObject", "url": SITE + "/images/logo-full.webp"}},
+            "image": OGIMG.get(xs[0]["id"]) if xs else SITE + "/images/og-image.jpg", "mainEntityOfPage": url,
+            "about": {"@type": "ItemList", "numberOfItems": n, "itemListElement": [{"@type": "ListItem", "position": i + 1, "url": f"{SITE}/s/{x['id']}/", "name": tx(x.get("name"))} for i, x in enumerate(xs)]}},
+           {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in faq]},
+           {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "엉클데이", "item": SITE + "/"}, {"@type": "ListItem", "position": 2, "name": "블로그", "item": f"{SITE}/blog/"}, {"@type": "ListItem", "position": 3, "name": title[:60], "item": url}]}]
+    nav = "".join(f'<a href="/c/{k}/" class="{"on" if k == cid else ""}">{esc(tx(cities[k]["name"]))}</a>' for k in hubs) + '<a href="/blog/">블로그</a>'
+    return sl, f"""<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{esc(title)} | 엉클데이</title><meta name="description" content="{esc(summ[:155])}"><link rel="canonical" href="{url}">
+<meta property="og:type" content="article"><meta property="og:site_name" content="엉클데이 Uncle Day"><meta property="og:title" content="{esc(title)}"><meta property="og:description" content="{esc(summ[:155])}"><meta property="og:url" content="{url}"><meta property="og:image" content="{(OGIMG.get(xs[0]['id']) if xs else '') or SITE + '/images/og-image.jpg'}">
+<meta property="article:published_time" content="{pub}"><meta property="article:modified_time" content="{upd}">
+<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png"><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>{HUB_CSS}{TOPIC_CSS}{PRICE_CSS}.bp{{background:#fff;border:1px solid var(--line);border-radius:16px;padding:6px 18px 12px;margin:14px 0}}.bp h2{{margin:12px 0 2px;font-size:20px}}.chip{{display:inline-block;margin:0 4px 4px 0;padding:3px 10px;font-size:13px}}.tips li{{margin:8px 0}}.src{{font-size:13px;color:var(--sub)}}</style>
+{"".join(f'<script type="application/ld+json">{js(o)}</script>' for o in lds)}
+</head><body><header class="hd"><div class="in"><a class="logo" href="/"><img src="/images/logo-full.webp" alt="엉클데이 Uncle Day" width="167" height="72"></a><nav>{nav}</nav>{HCTA}</div></header>
+<main class="wrap"><p class="date"><a href="/blog/">← 엉클데이 블로그</a></p>
+<h1>{esc(title)}</h1><p class="date">작성 {pub} · 정보 확인 {upd} · 엉클데이(uncleday.com)</p>
+<div class="qa"><div class="who">엉클데이 요약</div><b>{esc(summ)}</b></div>
+<p class="lead">{esc(intro)}</p>
+<h2>한눈에 비교</h2><table class="tb"><tr><th>업체</th>{"<th>거리</th>" if lm else ""}<th>가격(부터)</th><th>영업</th><th>한국어</th></tr>{table}</table>
+<p class="date">{f"거리는 {esc(lm['ko'])} 중심에서 지도상 직선거리예요 · " if lm else ""}가격은 엉클데이 확인 참고가 · 예약해도 매장 가격 그대로</p>
+{"".join(card(i + 1, x) for i, x in enumerate(xs))}
+{('<h2>' + esc(tr['kw']) + ' 실제 메뉴 가격</h2><table class="tb"><tr><th>업체</th><th>메뉴</th><th>가격</th></tr>' + "".join(f'<tr><td>{esc(tx(x.get("name")))}</td><td>{esc(tx(m.get("name")))}</td><td class="n">{won(int(m["price"]))}</td></tr>' for x, m in rows_tr[:20]) + '</table>') if rows_tr else ''}
+{('<h2>' + esc(cko) + ' 마사지 받기 전에 알아 두면 좋은 것</h2><ul class="tips">' + "".join(f"<li><b>{esc(q)}</b> {esc(a)}</li>" for q, a, _ in tips) + '</ul><p class="src">참고: ' + " · ".join(f'<a href="{esc(SOURCES[k][1])}" target="_blank" rel="noopener nofollow">{esc(SOURCES[k][0])}</a>' for k in srcs) + '</p>') if tips else ''}
+<p><a class="cta" data-cta="kakao" href="{KAKAO}" target="_blank" rel="noopener">💬 한국어로 바로 상담하기</a></p>
+<h2>자주 묻는 질문</h2><dl>{"".join(f"<dt>{esc(q)}</dt><dd>{esc(a)}</dd>" for q, a in faq)}</dl>
+<h2>함께 보면 좋은 페이지</h2><p class="chips">{"".join(f'<a class="chip" href="{u}">{esc(l)}</a>' for u, l in rel)}</p></main>
+<footer class="wrap">엉클데이 Uncle Day — 베트남 마사지 · 스파 · 뷰티 한국어 예약 · <a href="/">홈</a> · <a href="/blog/">블로그</a></footer>{TRACK()}</body></html>
+""", n, title, upd
+def blog_index(items):
+    url = f"{SITE}/blog/"
+    cards = "".join(f'<a class="card" href="/blog/{sl}/"><b>{esc(t)}</b><small>{esc(tx(cities.get(c, {}).get("name")))} · 업체 {n}곳 · {u}</small></a>' for sl, t, n, u, c in items)
+    nav = "".join(f'<a href="/c/{k}/">{esc(tx(cities[k]["name"]))}</a>' for k in hubs) + '<a class="on" href="/blog/">블로그</a>'
+    return f"""<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>엉클데이 블로그 — 베트남 마사지 · 스파 · 뷰티 고르는 법 | 엉클데이</title><meta name="description" content="엉클데이가 직접 확인한 업체 정보(위치 · 실제 가격 · 영업시간 · 한국어 응대)로 정리한 베트남 마사지 · 스파 · 뷰티 글."><link rel="canonical" href="{url}">
+<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png"><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"><style>{HUB_CSS}</style>
+</head><body><header class="hd"><div class="in"><a class="logo" href="/"><img src="/images/logo-full.webp" alt="엉클데이 Uncle Day" width="167" height="72"></a><nav>{nav}</nav>{HCTA}</div></header>
+<main class="wrap"><h1>엉클데이 블로그</h1><p class="lead">엉클데이가 직접 확인한 업체 정보로 정리한 글이에요. 가격 · 영업시간은 매시간 최신 정보로 다시 확인돼요.</p><div class="grid">{cards}</div></main>
+<footer class="wrap">엉클데이 Uncle Day · <a href="/">홈</a></footer>{TRACK()}</body></html>
+"""
 def more_page(cid, us):
     city = cities.get(cid, {}); cko = tx(city.get("name")); url = f"{SITE}/c/{cid}/more/"
     title = f"{cko} 마사지 · 스파 · 네일 가게 {len(us)}곳 더 보기 (미입점 · 공개 지도 정보) | 엉클데이"
@@ -985,6 +1079,15 @@ for x in live:
     os.makedirs(f"en/s/{x['id']}", exist_ok=True); open(f"en/s/{x['id']}/index.html", "w").write(en_shop_page(x)); keep_en.add(x["id"])
 for f in os.listdir("en/s"):
     if f not in keep_en: shutil.rmtree(f"en/s/{f}", ignore_errors=True)
+os.makedirs("blog", exist_ok=True); keep_b = set(); BLOG_OUT = []
+for b in BLOG:
+    if b.get("city") not in hubs: continue
+    sl, h, n, t, u = blog_page(b)
+    if n < 2 or sl in keep_b: continue   # 업체 2곳 미만이면 글을 안 만들어요
+    os.makedirs(f"blog/{sl}", exist_ok=True); open(f"blog/{sl}/index.html", "w").write(h); keep_b.add(sl); BLOG_OUT.append((sl, t, n, u, b["city"]))
+if BLOG_OUT: open("blog/index.html", "w").write(blog_index(sorted(BLOG_OUT, key=lambda r: r[3], reverse=True)))
+for f in os.listdir("blog"):
+    if f not in keep_b and not (f == "index.html" and BLOG_OUT): shutil.rmtree(f"blog/{f}", ignore_errors=True) if os.path.isdir(f"blog/{f}") else os.remove(f"blog/{f}")
 
 # ---- llms.txt : AI에게 "엉클데이는 이런 곳이고 정보는 여기 있어요" 알려 주는 안내문 (llmstxt.org 형식) ----
 L = ["# 엉클데이 Uncle Day", "",
@@ -1011,6 +1114,7 @@ L += ["", "## 안내", f"- [엉클데이 홈]({SITE}/): 업체 검색 · 예약"
 L += ["", "## English", "Uncle Day also has English city pages and massage guides for international travelers:"]
 for cid in hubs:
     L.append(f"- [{ecity(cid)}: shops]({SITE}/en/c/{cid}/)" + (f" · [{GUIDES_EN[cid]['title']}]({SITE}/en/c/{cid}/guide/)" if cid in GUIDES_EN else ""))
+if BLOG_OUT: L += ["", "## 블로그 (엉클데이 업체 데이터로 쓴 글)"] + [f"- [{t}]({SITE}/blog/{sl}/): 업체 {n}곳 · 정보 확인 {u}" for sl, t, n, u, _ in BLOG_OUT]
 open("llms.txt", "w").write("\n".join(L) + "\n")
 
 # 사이트맵: 검색엔진에 '이 페이지들이 있어요' + 언제 바뀌었는지(lastmod) 알려 주기
@@ -1033,6 +1137,8 @@ for cid in hubs:
     if UNC.get(cid):
         topic_urls.append(f"{SITE}/c/{cid}/more/")
         topic_urls += [f"{SITE}/p/{cid}/{u['slug']}/{v}" for u in UNC[cid] if u["rich"] for v in ("", "vi/")]
+if BLOG_OUT: topic_urls += [f"{SITE}/blog/"] + [f"{SITE}/blog/{r[0]}/" for r in BLOG_OUT]
+for r in BLOG_OUT: mod[f"{SITE}/blog/{r[0]}/"] = r[3]
 urls = [f"{SITE}/"] + [f"{SITE}/c/{c}/" for c in hubs] + topic_urls + [f"{SITE}/c/{c}/guide/" for c in hubs if c in GUIDES] \
      + [f"{SITE}/en/c/{c}/" for c in hubs] + [f"{SITE}/en/c/{c}/guide/" for c in hubs if c in GUIDES_EN] + [f"{SITE}/s/{x}/" for x in sorted(keep_s)] + [f"{SITE}/en/s/{x}/" for x in sorted(keep_en)]
 open("sitemap.xml", "w").write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
