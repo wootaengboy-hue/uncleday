@@ -83,10 +83,18 @@ _SU = d.get("supa") or {}
 KAKAO = d.get("kakao") or "https://pf.kakao.com/_xgkuxeX/chat"
 HCTA = f'<a class="hcta" data-cta="kakao" href="{KAKAO}" target="_blank" rel="noopener">💬 상담하기</a>'
 HCTA_EN = f'<a class="hcta" data-cta="kakao" href="{KAKAO}" target="_blank" rel="noopener">💬 Chat with us</a>'
+# 🌐 언어 안내: 브라우저 언어와 페이지 언어가 다르고, 같은 내용의 다른 언어 페이지(hreflang)가 있으면 맨 위에 "영어로 보기" 띠를 보여 줘요.
+#    자동으로 넘기지(리다이렉트) 않아요 — 구글 로봇은 미국 · 영어로 들어와서, 자동으로 넘기면 한국어 페이지를 못 보고 검색에서 빠져요.
+LANGBAR = ("<script>(function(){try{var P=(document.documentElement.lang||'ko').slice(0,2),B=((navigator.languages&&navigator.languages[0])||navigator.language||'').slice(0,2).toLowerCase();"
+           "if(!B||B===P)return;var want=B==='ko'?'ko':B==='vi'?'vi':'en';if(want===P)return;var a=document.querySelector('link[rel=alternate][hreflang='+want+']')||(want==='vi'?document.querySelector('link[rel=alternate][hreflang=en]'):null);"
+           "if(!a||a.href===location.href)return;try{if(sessionStorage.getItem('udlb'))return}catch(e){}var L=a.getAttribute('hreflang'),T={en:'🌐 This page is in Korean. View it in English',vi:'🌐 Trang này bằng tiếng Hàn. Xem bằng tiếng Việt',ko:'🌐 한국어 페이지로 보기'};"
+           "var d=document.createElement('div');d.style.cssText='background:#0E2843;color:#fff;padding:10px 16px;font-size:14.5px;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;position:relative;z-index:20';"
+           "d.innerHTML='<a style=\"color:#fff;font-weight:700;text-decoration:underline\" href=\"'+a.href+'\">'+(T[L]||T.en)+' →</a><button aria-label=close style=\"background:none;border:0;color:#fff;font-size:18px;cursor:pointer\">×</button>';"
+           "d.querySelector('button').onclick=function(){d.remove();try{sessionStorage.setItem('udlb','1')}catch(e){}};document.body.insertBefore(d,document.body.firstChild)}catch(e){}})()</script>")
 def TRACK():
-    if not _SU.get("url"): return ""
+    if not _SU.get("url"): return LANGBAR
     auth = f',Authorization:"Bearer {_SU["key"]}"' if str(_SU.get("key", "")).startswith("eyJ") else ""
-    return ("<script>(function(){var U=" + json.dumps(_SU["url"]) + ",K=" + json.dumps(_SU["key"]) + ";function S(){try{var r=document.referrer;if(!r)return'direct';var h=new URL(r).hostname;"
+    return LANGBAR + ("<script>(function(){var U=" + json.dumps(_SU["url"]) + ",K=" + json.dumps(_SU["key"]) + ";function S(){try{var r=document.referrer;if(!r)return'direct';var h=new URL(r).hostname;"
             "if(h==location.hostname)return'internal';var m=[['google','google'],['naver','naver'],['bing','bing'],['daum','daum'],['chatgpt','chatgpt'],['openai','chatgpt'],['perplexity','perplexity'],['claude','claude'],['gemini','gemini'],['kakao','kakao'],['facebook','facebook'],['instagram','instagram']];"
             "for(var i=0;i<m.length;i++)if(h.indexOf(m[i][0])>=0)return m[i][1];return'other'}catch(e){return'other'}}"
             "var src=S();window.UD_SRC=src;var BOT=navigator.webdriver||/bot|crawl|spider|slurp|preview|headless|lighthouse|google-inspectiontool/i.test(navigator.userAgent);window.udHit=function(k){if(BOT)return;try{fetch(U+'/rest/v1/rpc/seo_hit',{method:'POST',keepalive:true,headers:{apikey:K" + auth + ",'Content-Type':'application/json'},body:JSON.stringify({path:location.pathname,src:src,kind:k})}).catch(function(){})}catch(e){}};"
