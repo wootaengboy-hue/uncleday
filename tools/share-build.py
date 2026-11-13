@@ -301,7 +301,7 @@ def hub_page(cid, shops_c):
 <p class="lead"><b>{esc(lead)}</b></p><p class="en" lang="en">{esc(lead_en)}</p><p class="date">정보 확인: {upd} · 엉클데이(uncleday.com)</p>
 <a class="cta" data-cta="book" href="/?city={cid}">엉클데이에서 {esc(cko)} 업체 보기 · 예약하기</a>{f' <a class="cta" data-cta="guide" style="background:var(--green)" href="/c/{cid}/guide/">📘 {esc(cko)} 마사지 가이드 (가격 · 팁 · 고르는 법)</a>' if cid in GUIDES else ''}
 <style>{TOPIC_CSS}</style>{topic_chips(cid, shops_c)}
-{sec}{f'<p><a class="cta" style="background:#fff;color:var(--navy);border:1px solid var(--line)" href="/c/{cid}/more/">🗺️ 미입점 가게도 보기 ({len(UNC.get(cid, []))}곳) — 예약 문의 가능</a></p>' if UNC.get(cid) else ''}
+{sec}{f'<p><a class="cta" style="background:var(--green)" href="/c/{cid}/price/">💰 {esc(tx(cities[cid]["name"]))} 시술별 가격 비교</a></p>' if TREATS.get(cid) else ''}{f'<p><a class="cta" style="background:#fff;color:var(--navy);border:1px solid var(--line)" href="/c/{cid}/more/">🗺️ 미입점 가게도 보기 ({len(UNC.get(cid, []))}곳) — 예약 문의 가능</a></p>' if UNC.get(cid) else ''}
 <h2>자주 묻는 질문</h2><dl>{"".join(f"<dt>{esc(q)}</dt><dd>{esc(a)}</dd>" for q, a in faq)}</dl></main>
 <footer class="wrap">엉클데이 Uncle Day — 베트남 마사지 · 스파 · 뷰티 한국어 예약 · <a href="/">홈</a></footer>{TRACK()}</body></html>
 """
@@ -628,6 +628,129 @@ def en_topic_page(cid, t, xs, shops_c):
 <h2>FAQ</h2><dl>{"".join(f"<dt>{esc(q)}</dt><dd>{esc(a)}</dd>" for q, a in faq)}</dl>"""
     return en_shell(title, lead, url, f"{SITE}/c/{cid}/{t['id']}/", cid, lds, body, upd=upd)
 
+# ---- 💰 시술 × 도시 가격 페이지 c/<도시>/price/<시술>/ (tools/treatments.py) — 캐시바이 '제품 번호 → 페이지'의 엉클데이판 ----
+from treatments import TREATMENTS, MIN as TREAT_MIN
+TMAP = {t["id"]: t for t in TREATMENTS}
+def treat_rows(t, xs):
+    out = []
+    for x in xs:
+        for m in (x.get("menu") or []):
+            if not (isinstance(m.get("price"), (int, float)) and m["price"] > 0): continue
+            nm = tx(m.get("name")) + " " + lang(m.get("name"), "en")
+            if re.search(t["pat"], nm, re.I) and not (t["no"] and re.search(t["no"], nm, re.I)): out.append((x, m))
+    return sorted(out, key=lambda r: r[1]["price"])
+def city_treats(cid, xs):
+    return [(t, rs) for t in TREATMENTS for rs in [treat_rows(t, xs)] if len({r[0]["id"] for r in rs}) >= TREAT_MIN]
+def med(v): v = sorted(v); n = len(v); return v[n // 2] if n % 2 else (v[n // 2 - 1] + v[n // 2]) // 2
+def dur_of(m):
+    if isinstance(m.get("min"), (int, float)) and m["min"] > 0: return int(m["min"])
+    g = re.search(r"(\d{2,3})\s*(?:분|min)", tx(m.get("name")) + " " + lang(m.get("name"), "en")); return int(g.group(1)) if g else 0
+def by_dur(rows):
+    g = {}
+    for x, m in rows:
+        dd = dur_of(m)
+        if dd: g.setdefault(dd, []).append(int(m["price"]))
+    return {k: v for k, v in sorted(g.items()) if len(v) >= 2}
+def price_summary(cko, t, rows, en=False):
+    ps = [int(m["price"]) for _, m in rows]; ns = len({x["id"] for x, _ in rows}); bd = by_dur(rows)
+    if en:
+        s_ = f"Based on {len(ps)} menu items from {ns} Uncle Day shops in {cko}, {t['en'].lower()} costs {vnd(ps[0])}" + (f" to {vnd(ps[-1])} (median {vnd(med(ps))})" if len(ps) > 1 else "") + "."
+        if bd: s_ += " By duration: " + ", ".join(f"{k} min {vnd(min(v))}–{vnd(max(v))}" for k, v in bd.items()) + "."
+        return s_
+    s_ = f"엉클데이가 확인한 {cko} 업체 {ns}곳 · 메뉴 {len(ps)}개 기준으로 {t['kw']} 가격은 {won(ps[0])}" + (f"부터 {won(ps[-1])}까지예요 (가운데 값 {won(med(ps))})." if len(ps) > 1 else "이에요.")
+    if bd: s_ += " 시간별로는 " + ", ".join(f"{k}분 {won(min(v))}~{won(max(v))}" for k, v in bd.items()) + "예요."
+    return s_
+PRICE_CSS = ".tb{border-collapse:collapse;width:100%;background:#fff;border-radius:14px;overflow:hidden;border:1px solid var(--line)}.tb th,.tb td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;font-size:14.5px;vertical-align:top}.tb th{background:var(--sand);font-size:13px}.tb td.n{text-align:right;white-space:nowrap;font-weight:700}.tb small{color:var(--sub);display:block;font-size:12.5px}.qa{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 18px;margin:12px 0}.qa .who{font-size:12.5px;font-weight:700;color:var(--green);margin-bottom:4px}@media(max-width:560px){.tb th:nth-child(3),.tb td:nth-child(3){display:none}}"
+def price_page(cid, t, rows, all_t):
+    city = cities.get(cid, {}); cko = tx(city.get("name")); url = f"{SITE}/c/{cid}/price/{t['id']}/"
+    ps = [int(m["price"]) for _, m in rows]; ns = len({x["id"] for x, _ in rows}); upd = max(checked(x) for x, _ in rows)
+    summ = price_summary(cko, t, rows)
+    title = f"{cko} {t['kw']} 가격 ({YEAR}) — 업체 {ns}곳 실제 메뉴 비교 | 엉클데이"
+    q = f"{cko} {t['kw']} 가격은 얼마예요?"
+    trs = "".join(f'<tr><td><a data-cta="shop" href="/s/{x["id"]}/">{esc(tx(x.get("name")))}</a><small>{esc(SUB_KO.get(x.get("cat"), ""))}</small></td><td>{esc(tx(m.get("name")))}</td><td>{(str(dur_of(m)) + "분") if dur_of(m) else "-"}</td><td class="n">{won(int(m["price"]))}</td></tr>' for x, m in rows)
+    faq = [(q, summ + " 매장 가격 그대로이고 엉클데이로 예약해도 추가 요금은 없어요."),
+           ("가격이 바뀔 수도 있나요?", f"이 가격은 엉클데이가 {upd}까지 확인한 참고가예요. 매장 사정으로 바뀔 수 있어서 예약할 때 엉클데이가 다시 확인해 드려요."),
+           ("어떻게 예약해요?", "업체 이름을 눌러 엉클데이 사이트에서 예약 요청을 보내거나, 카카오톡으로 한국어 상담을 받으면 돼요. 결제는 시술 후 매장에서 직접 해요.")]
+    others = "".join(f'<a class="chip{" on" if tt["id"] == t["id"] else ""}" href="/c/{cid}/price/{tt["id"]}/">{esc(tt["kw"])} <span>{len({r[0]["id"] for r in rr})}곳</span></a>' for tt, rr in all_t)
+    js = lambda o: json.dumps(o, ensure_ascii=False).replace("</", "<\\/")
+    lds = [{"@context": "https://schema.org", "@type": "WebPage", "name": title, "url": url, "inLanguage": "ko", "dateModified": upd, "description": summ,
+            "mainEntity": {"@type": "ItemList", "numberOfItems": len(rows), "itemListElement": [{"@type": "ListItem", "position": i + 1, "name": f"{tx(x.get('name'))} — {tx(m.get('name'))} {int(m['price']):,} VND", "url": f"{SITE}/s/{x['id']}/"} for i, (x, m) in enumerate(rows[:50])]}},
+           {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": a, "acceptedAnswer": {"@type": "Answer", "text": b}} for a, b in faq]},
+           {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "엉클데이", "item": SITE + "/"}, {"@type": "ListItem", "position": 2, "name": cko, "item": f"{SITE}/c/{cid}/"}, {"@type": "ListItem", "position": 3, "name": f"{cko} 시술별 가격", "item": f"{SITE}/c/{cid}/price/"}, {"@type": "ListItem", "position": 4, "name": t["kw"], "item": url}]}]
+    nav = "".join(f'<a href="/c/{k}/" class="{"on" if k == cid else ""}">{esc(tx(cities[k]["name"]))}</a>' for k in hubs)
+    return f"""<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{esc(title)}</title><meta name="description" content="{esc(summ[:155])}"><link rel="canonical" href="{url}">
+<link rel="alternate" hreflang="ko" href="{url}"><link rel="alternate" hreflang="en" href="{SITE}/en/c/{cid}/price/{t['id']}/"><link rel="alternate" hreflang="x-default" href="{url}">
+<meta property="og:type" content="website"><meta property="og:site_name" content="엉클데이 Uncle Day"><meta property="og:title" content="{esc(title)}"><meta property="og:description" content="{esc(summ[:155])}"><meta property="og:url" content="{url}"><meta property="og:image" content="{SITE}/images/og-image.jpg">
+<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png"><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>{HUB_CSS}{TOPIC_CSS}{PRICE_CSS}</style>
+{"".join(f'<script type="application/ld+json">{js(o)}</script>' for o in lds)}
+</head><body><header class="hd"><div class="in"><a class="logo" href="/"><img src="/images/logo-full.webp" alt="엉클데이 Uncle Day" width="167" height="72"></a><nav>{nav}<a href="/en/c/{cid}/price/{t['id']}/" lang="en">EN</a></nav>{HCTA}</div></header>
+<main class="wrap"><p class="date"><a href="/c/{cid}/price/">← {esc(cko)} 시술별 가격</a></p>
+<h1>{esc(q)}</h1>
+<div class="qa"><div class="who">엉클데이 요약</div><b>{esc(summ)}</b><p style="margin:6px 0 0">{esc(t['why'])} 아래 표는 엉클데이 업체의 실제 메뉴 가격이고, 엉클데이로 예약해도 매장 가격 그대로예요.</p></div>
+<table class="tb"><tr><th>업체</th><th>메뉴</th><th>시간</th><th>가격</th></tr>{trs}</table>
+<p class="date">참고가 · 정보 확인 {upd} · 가격은 매장 사정으로 바뀔 수 있어요</p>
+<p><a class="cta" data-cta="kakao" href="{KAKAO}" target="_blank" rel="noopener">💬 가능 여부 · 가격 한국어로 문의하기</a> <a class="cta" style="background:var(--green)" data-cta="book" href="/c/{cid}/">{esc(cko)} 업체 모두 보기</a></p>
+<h2>다른 시술 가격</h2><p class="chips">{others}</p>
+<h2>자주 묻는 질문</h2><dl>{"".join(f"<dt>{esc(a)}</dt><dd>{esc(b)}</dd>" for a, b in faq)}</dl></main>
+<footer class="wrap">엉클데이 Uncle Day — 베트남 마사지 · 스파 · 뷰티 한국어 예약 · <a href="/">홈</a> · <a href="/c/{cid}/">{esc(cko)} 업체</a></footer>{TRACK()}</body></html>
+"""
+def price_index_page(cid, all_t):
+    city = cities.get(cid, {}); cko = tx(city.get("name")); url = f"{SITE}/c/{cid}/price/"
+    upd = max(checked(x) for _, rr in all_t for x, _ in rr)
+    title = f"{cko} 마사지 · 스파 · 뷰티 시술별 가격 ({YEAR}) | 엉클데이"
+    lead = f"엉클데이 업체의 실제 메뉴 가격으로 정리한 {cko} 시술별 가격이에요. " + " ".join(f"{t['kw']} {won(rr[0][1]['price'])}~{won(rr[-1][1]['price'])}." for t, rr in all_t[:3])
+    rows_h = "".join(f'<tr><td><a href="/c/{cid}/price/{t["id"]}/"><b>{esc(t["kw"])}</b></a><small>업체 {len({r[0]["id"] for r in rr})}곳 · 메뉴 {len(rr)}개</small></td><td class="n">{won(int(rr[0][1]["price"]))} ~ {won(int(rr[-1][1]["price"]))}</td></tr>' for t, rr in all_t)
+    nav = "".join(f'<a href="/c/{k}/" class="{"on" if k == cid else ""}">{esc(tx(cities[k]["name"]))}</a>' for k in hubs)
+    js = lambda o: json.dumps(o, ensure_ascii=False).replace("</", "<\\/")
+    ld = {"@context": "https://schema.org", "@type": "CollectionPage", "name": title, "url": url, "inLanguage": "ko", "dateModified": upd, "description": lead,
+          "mainEntity": {"@type": "ItemList", "itemListElement": [{"@type": "ListItem", "position": i + 1, "name": f"{cko} {t['kw']} 가격", "url": f"{SITE}/c/{cid}/price/{t['id']}/"} for i, (t, _) in enumerate(all_t)]}}
+    return f"""<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{esc(title)}</title><meta name="description" content="{esc(lead[:155])}"><link rel="canonical" href="{url}">
+<link rel="alternate" hreflang="ko" href="{url}"><link rel="alternate" hreflang="en" href="{SITE}/en/c/{cid}/price/">
+<meta property="og:type" content="website"><meta property="og:site_name" content="엉클데이 Uncle Day"><meta property="og:title" content="{esc(title)}"><meta property="og:description" content="{esc(lead[:155])}"><meta property="og:url" content="{url}"><meta property="og:image" content="{SITE}/images/og-image.jpg">
+<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png"><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>{HUB_CSS}{PRICE_CSS}</style><script type="application/ld+json">{js(ld)}</script>
+</head><body><header class="hd"><div class="in"><a class="logo" href="/"><img src="/images/logo-full.webp" alt="엉클데이 Uncle Day" width="167" height="72"></a><nav>{nav}<a href="/en/c/{cid}/price/" lang="en">EN</a></nav>{HCTA}</div></header>
+<main class="wrap"><h1>{esc(cko)} 시술별 가격</h1><p class="lead">{esc(lead)}</p>
+<table class="tb"><tr><th>시술</th><th>가격대</th></tr>{rows_h}</table><p class="date">참고가 · 정보 확인 {upd} · 엉클데이로 예약해도 매장 가격 그대로예요</p>
+<p><a class="cta" href="/c/{cid}/">{esc(cko)} 업체 모두 보기</a></p></main>
+<footer class="wrap">엉클데이 Uncle Day · <a href="/">홈</a></footer>{TRACK()}</body></html>
+"""
+def en_price_page(cid, t, rows, all_t):
+    cen = ecity(cid); url = f"{SITE}/en/c/{cid}/price/{t['id']}/"; upd = max(checked(x) for x, _ in rows); ns = len({x["id"] for x, _ in rows})
+    summ = price_summary(cen, t, rows, en=True); q = f"How much does {t['en'].lower()} cost in {cen}?"
+    title = f"{t['en']} prices in {cen} ({YEAR}) — {ns} shops compared | Uncle Day"
+    trs = "".join(f'<tr><td><a data-cta="shop" href="/en/s/{x["id"]}/">{esc(ename(x))}</a><small>{esc(SUB_EN2.get(x.get("cat"), ""))}</small></td><td>{esc(lang(m.get("name"), "en") or tx(m.get("name")))}</td><td>{(str(dur_of(m)) + " min") if dur_of(m) else "-"}</td><td class="n">{vnd(int(m["price"]))}</td></tr>' for x, m in rows)
+    others = "".join(f'<a class="chip{" on" if tt["id"] == t["id"] else ""}" href="/en/c/{cid}/price/{tt["id"]}/">{esc(tt["en"])}</a>' for tt, _ in all_t)
+    faq = [(q, summ + " Booking through Uncle Day costs the same as the shop price."), ("Can prices change?", f"These are reference prices checked by Uncle Day up to {upd}. We re-check with the shop when you book.")]
+    lds = [{"@context": "https://schema.org", "@type": "WebPage", "name": title, "url": url, "inLanguage": "en", "dateModified": upd, "description": summ},
+           {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": a, "acceptedAnswer": {"@type": "Answer", "text": b}} for a, b in faq]}]
+    body = f"""<p class="date"><a href="/en/c/{cid}/price/">← {esc(cen)} prices</a></p><h1>{esc(q)}</h1>
+<div class="qa"><div class="who">Uncle Day summary</div><b>{esc(summ)}</b></div>
+<style>{TOPIC_CSS}{PRICE_CSS}</style><table class="tb"><tr><th>Shop</th><th>Menu</th><th>Time</th><th>Price</th></tr>{trs}</table>
+<p class="date">Reference prices · last checked {upd}</p><p><a class="cta" data-cta="kakao" href="{KAKAO}" target="_blank" rel="noopener">💬 Ask us</a> <a class="cta" style="background:var(--green)" href="/en/c/{cid}/">All shops in {esc(cen)}</a></p>
+<h2>Other treatments</h2><p class="chips">{others}</p><h2>FAQ</h2><dl>{"".join(f"<dt>{esc(a)}</dt><dd>{esc(b)}</dd>" for a, b in faq)}</dl>"""
+    return en_shell(title, summ, url, f"{SITE}/c/{cid}/price/{t['id']}/", cid, lds, body, upd=upd)
+def en_price_index(cid, all_t):
+    cen = ecity(cid); url = f"{SITE}/en/c/{cid}/price/"; upd = max(checked(x) for _, rr in all_t for x, _ in rr)
+    title = f"{cen} massage, spa & beauty prices ({YEAR}) | Uncle Day"; lead = f"Real menu prices from Uncle Day shops in {cen}, by treatment."
+    rows_h = "".join(f'<tr><td><a href="/en/c/{cid}/price/{t["id"]}/"><b>{esc(t["en"])}</b></a><small>{len({r[0]["id"] for r in rr})} shops · {len(rr)} menu items</small></td><td class="n">{vnd(int(rr[0][1]["price"]))} – {vnd(int(rr[-1][1]["price"]))}</td></tr>' for t, rr in all_t)
+    body = f"""<h1>{esc(cen)} prices by treatment</h1><p class="lead">{esc(lead)}</p><style>{PRICE_CSS}</style><table class="tb"><tr><th>Treatment</th><th>Price range</th></tr>{rows_h}</table><p class="date">Reference prices · last checked {upd}</p>"""
+    return en_shell(title, lead, url, f"{SITE}/c/{cid}/price/", cid, [{"@context": "https://schema.org", "@type": "CollectionPage", "name": title, "url": url, "inLanguage": "en", "dateModified": upd}], body, upd=upd)
+# 미입점 가게의 '이 근처 가격': 반경 2km 안 엉클데이 업체의 실제 메뉴 가격
+KIND_T = {"마사지": "massage", "스파 · 사우나": "massage", "네일 · 뷰티": "nail", "뷰티": "facial"}
+def near_prices(u, cid, radius=2.0):
+    t = TMAP.get(KIND_T.get(u["kind"], "massage"))
+    xs = [x for x in live if x.get("city") == cid and x.get("geo") and km((u["lat"], u["lon"]), x["geo"]) <= radius]
+    rows = treat_rows(t, xs)
+    if not rows: return None
+    ps = [int(m["price"]) for _, m in rows]
+    return {"t": t, "n": len({x["id"] for x, _ in rows}), "lo": ps[0], "hi": ps[-1], "bd": by_dur(rows) or {k: v for k, v in {dur_of(m): [int(m["price"])] for _, m in rows}.items() if k}, "r": radius}
+
 # ---- ② 미입점 업체 p/<도시>/<id>/ : 오픈스트리트맵 공개 정보(이름 · 주소 · 영업시간 · 위치)만 + 근처 엉클데이 업체 + 문의 · 입점 신청 ----
 import math, unicodedata
 HIDDEN = set(d.get("hidden") or [])
@@ -658,13 +781,16 @@ def unclaimed(cid):
         if dup: continue
         seen.add(key)
         rows.append({**r, "name": nm, "en": tg.get("name:en") or tg.get("name"), "kind": OSM_KIND(tg), "addr": osm_addr(tg), "hours": tg.get("opening_hours", ""),
-                     "slug": f"{slug(tg.get('name'))}-{r['id']}", "rich": bool(osm_addr(tg) or tg.get("opening_hours"))})
+                     "slug": f"{slug(tg.get('name'))}-{r['id']}", "rich": bool(osm_addr(tg) or tg.get("opening_hours")),
+                     "hood": tg.get("addr:suburb") or tg.get("addr:subdistrict") or tg.get("addr:district") or ""})
     return rows
 UNC_CSS = """.badge{display:inline-block;background:var(--sand);color:var(--navy);border-radius:999px;padding:3px 10px;font-size:12.5px;font-weight:700}
 .facts{background:#fff;border-radius:16px;padding:12px 16px;border:1px solid var(--line)}.facts div{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--line)}.facts div:last-child{border:0}.facts span{color:var(--sub);min-width:70px}
 .lead-box{background:#fff;border-radius:16px;padding:16px;border:2px solid var(--green);margin-top:16px}.lead-box.own{border-color:var(--navy)}
 .lead-box form{display:grid;gap:8px}.lead-box input,.lead-box textarea,.lead-box select{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--navy);padding:10px;font:inherit}
 .lead-box button{border:0;border-radius:12px;background:var(--orange);color:#fff;font-weight:800;padding:13px;font-size:15.5px;cursor:pointer}.lead-box.own button{background:var(--navy)}
+.qa{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 18px;margin:12px 0;font-size:15.5px}.qa .who{font-size:12.5px;font-weight:700;color:var(--green);margin-bottom:4px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-size:14px;color:var(--navy)!important;text-decoration:none;font-weight:600}.chip span{color:var(--sub);font-weight:500;font-size:12.5px}
 .vi-link{background:#fff;border:1px solid var(--line);text-decoration:none;color:var(--green)!important}.views{display:flex;gap:12px;align-items:center;background:var(--navy);color:#fff;border-radius:16px;padding:14px 18px;margin:14px 0}.views b{font-size:30px;line-height:1}.views span{font-size:14.5px;line-height:1.45}
 .why{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:10px;padding:0;list-style:none}.why li{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 16px}.why li b{display:block;font-size:16px;margin-bottom:4px}.why li span{font-size:14px;color:#3a4656}
 .ok{background:var(--green-t);color:var(--green);border-radius:10px;padding:10px;font-weight:700}.osm{color:var(--sub);font-size:12px}.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.row3{display:grid;grid-template-columns:1.3fr 1fr .8fr;gap:8px}.row3 label{display:grid;gap:3px;font-size:12.5px;color:var(--sub);font-weight:600}.row3 input,.row3 select{min-width:0;height:44px}@media(max-width:420px){.row3{grid-template-columns:1fr 1fr}.row3 label:first-child{grid-column:1/-1}}"""
@@ -679,7 +805,7 @@ def lead_js(cid, ref, nm):
 def unclaimed_page(cid, u):
     city = cities.get(cid, {}); cko = tx(city.get("name")); url = f"{SITE}/p/{cid}/{u['slug']}/"
     near = sorted([x for x in live if x.get("city") == cid and x.get("geo")], key=lambda x: (grp(x) != "spabody", km((u["lat"], u["lon"]), x["geo"])))[:3]
-    title = f"{u['name']} — {cko} {u['kind']} 정보 · 한국어 예약 문의 | 엉클데이"
+    title = f"{u['name']} — {cko} {u['kind']} 위치 · 영업시간{' · 근처 가격' if near_prices(u, cid) else ''} · 한국어 예약 문의 | 엉클데이"
     desc = f"{u['name']}은(는) {cko}의 {u['kind']} 가게예요." if False else f"{cko}의 {u['kind']} 가게 {u['name']} 정보 (주소 · 영업시간 · 지도). 엉클데이에 남기면 한국어로 확인해 드려요."
     gmap = f"https://www.google.com/maps/search/?api=1&query={u['lat']},{u['lon']}"
     ld = {"@context": "https://schema.org", "@type": "HealthAndBeautyBusiness", "name": u["name"], "geo": {"@type": "GeoCoordinates", "latitude": u["lat"], "longitude": u["lon"]}, "url": url}
@@ -687,6 +813,13 @@ def unclaimed_page(cid, u):
     if u["hours"]: ld["openingHours"] = u["hours"]
     js = lambda o: json.dumps(o, ensure_ascii=False).replace("</", "<\\/")
     nearh = "".join(f'<a class="card" data-cta="shop" href="/s/{x["id"]}/"><b>{esc(tx(x.get("name")))}</b><small>엉클데이 인증 · {SUB_KO.get(x.get("cat"), "")} · 약 {km((u["lat"], u["lon"]), x["geo"]):.1f}km</small><p>{esc(facts(x)[0][:110])}…</p></a>' for x in near)
+    np_ = near_prices(u, cid); hood = u.get("hood") or ""
+    pr_txt = (f"반경 {np_['r']:.0f}km 안 엉클데이 업체 {np_['n']}곳의 {np_['t']['kw']} 가격은 {won(np_['lo'])}" + (f"~{won(np_['hi'])}" if np_['hi'] != np_['lo'] else "") + "이에요" + ((" (" + ", ".join(f"{k}분 {won(min(v))}" + (f"~{won(max(v))}" if max(v) != min(v) else "") for k, v in list(np_['bd'].items())[:3]) + ")") if np_['bd'] else "") + ".") if np_ else ""
+    summ = f"{cko}{(' ' + hood) if hood else ''}에 있는 {u['kind']} 가게예요." + (f" 영업시간은 {hours_ko(u['hours'])}이에요." if u['hours'] else "") + (" " + pr_txt if pr_txt else "") + " 아직 엉클데이 입점 전이라 이 가게의 가격 · 한국어 응대는 확인되지 않았어요. 문의를 남기면 엉클데이가 가게에 확인해서 한국어로 알려 드려요."
+    sib = sorted([v for v in UNC.get(cid, []) if v["id"] != u["id"] and km((u["lat"], u["lon"]), (v["lat"], v["lon"])) <= 1.5], key=lambda v: km((u["lat"], u["lon"]), (v["lat"], v["lon"])))[:8]
+    sibh = "".join(f'<a class="chip" href="/p/{cid}/{v["slug"]}/">{esc(v["name"])} <span>{km((u["lat"], u["lon"]), (v["lat"], v["lon"])) * 1000:.0f}m</span></a>' for v in sib)
+    pid = np_["t"]["id"] if np_ else ""
+    has_price_pg = np_ and any(t["id"] == np_["t"]["id"] for t, _ in TREATS.get(cid, []))
     return f"""<!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{esc(title)}</title><meta name="description" content="{esc(desc)}"><link rel="canonical" href="{url}">{'' if u['rich'] else '<meta name="robots" content="noindex,follow">'}
@@ -696,10 +829,10 @@ def unclaimed_page(cid, u):
 <style>{HUB_CSS}{UNC_CSS}</style><script type="application/ld+json">{js(ld)}</script>
 </head><body><header class="hd"><div class="in"><a class="logo" href="/"><img src="/images/logo-full.webp" alt="엉클데이 Uncle Day" width="167" height="72"></a><nav><a href="/c/{cid}/">{esc(cko)} 업체</a></nav>{HCTA}</div></header>
 <main class="wrap"><p><span class="badge">엉클데이 미입점 업체 · 공개 지도 정보</span> <a class="badge vi-link" href="vi/" lang="vi">🇻🇳 Tiếng Việt · Dành cho chủ cửa hàng</a></p>
-<h1>{esc(u['name'])}{f' <small class="en">{esc(u["en"])}</small>' if u['en'] and u['en'] != u['name'] else ''}</h1>
-<p class="lead">{esc(cko)}에 있는 {esc(u['kind'])} 가게예요. 아직 엉클데이에 입점하지 않은 곳이라 가격 · 한국어 응대는 확인되지 않았어요. 아래에 예약 문의를 남기면 엉클데이가 가게에 확인해서 한국어로 알려 드려요.</p>
-<div class="facts"><div><span>종류</span><b>{esc(u['kind'])}</b></div>{f'<div><span>주소</span><b>{esc(u["addr"])}</b></div>' if u['addr'] else ''}{f'<div><span>영업시간</span><b>{esc(hours_ko(u["hours"]))}</b></div>' if u['hours'] else ''}
-<div><span>위치</span><b><a data-cta="map" href="{gmap}" target="_blank" rel="noopener">지도에서 보기</a></b></div></div>
+<h1>{esc(u['name'])} — 어떤 곳인가요?{f' <small class="en">{esc(u["en"])}</small>' if u['en'] and u['en'] != u['name'] else ''}</h1>
+<div class="qa"><div class="who">엉클데이 요약</div>{esc(summ)}</div>
+<div class="facts"><div><span>종류</span><b>{esc(u['kind'])}</b></div>{f'<div><span>동네</span><b>{esc(hood)}</b></div>' if hood else ''}{f'<div><span>주소</span><b>{esc(u["addr"])}</b></div>' if u['addr'] else ''}{f'<div><span>영업시간</span><b>{esc(hours_ko(u["hours"]))}</b></div>' if u['hours'] else ''}
+<div><span>위치</span><b><a data-cta="map" href="{gmap}" target="_blank" rel="noopener">지도에서 보기</a></b></div>{f'<div><span>이 근처 가격</span><b>{won(np_["lo"])}{("~" + won(np_["hi"])) if np_["hi"] != np_["lo"] else ""} <small class="muted">({esc(np_["t"]["kw"])} · 반경 {np_["r"]:.0f}km 엉클데이 업체 {np_["n"]}곳){f" · <a href=/c/{cid}/price/{pid}/>가격 비교</a>" if has_price_pg else ""}</small></b></div>' if np_ else ''}</div>
 <div class="lead-box"><h2 style="margin-top:0">💬 이 가게 예약 문의</h2><p class="muted">엉클데이가 가게에 가능 여부 · 가격을 확인해서 한국어로 연락드려요. 연락처는 엉클데이만 봐요.</p>
 <form data-lead="guest" data-ok="문의를 받았어요. 확인되는 대로 연락드릴게요 🙏" data-err="잠시 후 다시 시도해 주세요.">
 <input name="name" placeholder="이름 (예: 김민지)" maxlength="60"><input name="contact" required placeholder="연락처 — 카카오톡 ID 또는 전화번호" maxlength="120">
@@ -707,6 +840,7 @@ def unclaimed_page(cid, u):
 <textarea name="msg" rows="2" placeholder="원하는 코스 · 요청 사항 (선택)" maxlength="1000"></textarea><button type="submit">문의 남기기</button></form>
 <p class="muted">바로 상담하고 싶다면 <a data-cta="kakao" href="{KAKAO}" target="_blank" rel="noopener">엉클데이 카카오톡</a>으로 이 페이지 주소를 보내 주세요.</p></div>
 {f'<h2>근처의 엉클데이 인증 업체</h2><p class="muted">한국어로 상담하고 매장 가격 그대로 바로 예약할 수 있어요.</p><div class="grid">{nearh}</div>' if near else ''}
+{f'<h2>이 근처의 다른 가게</h2><p class="chips">{sibh}</p>' if sib else ''}<p class="muted"><a href="/c/{cid}/more/">{esc(cko)} 가게 전체 목록</a>{f' · <a href="/c/{cid}/price/">{esc(cko)} 시술별 가격</a>' if TREATS.get(cid) else ''}</p>
 <div class="lead-box own" lang="vi"><h2 style="margin-top:0">🏪 Bạn là chủ cửa hàng này? · 이 가게 사장님이세요?</h2>
 <p class="muted">Đăng ký miễn phí trên Uncle Day để nhận khách Hàn Quốc. Không phí đăng ký, không phí hàng tháng — chỉ trả hoa hồng khi khách đến và thanh toán.<br>엉클데이에 무료로 입점하면 한국인 손님을 받을 수 있어요. 입점비 · 월 고정비 없이 손님이 와서 결제했을 때만 수수료.</p>
 <form data-lead="owner" data-ok="Cảm ơn! Uncle Day sẽ liên hệ sớm. · 고마워요! 곧 연락드릴게요." data-err="Vui lòng thử lại sau. · 잠시 후 다시 시도해 주세요.">
@@ -778,7 +912,7 @@ def more_page(cid, us):
 """
 
 hubs = [c["id"] for c in d["cities"] if any(x.get("city") == c["id"] for x in live)]
-os.makedirs("c", exist_ok=True); os.makedirs("en/c", exist_ok=True); os.makedirs("p", exist_ok=True); UNC = {c: unclaimed(c) for c in hubs}
+os.makedirs("c", exist_ok=True); os.makedirs("en/c", exist_ok=True); os.makedirs("p", exist_ok=True); UNC = {c: unclaimed(c) for c in hubs}; TREATS = {c: city_treats(c, [x for x in live if x.get("city") == c]) for c in hubs}
 for cid in hubs:
     os.makedirs(f"c/{cid}", exist_ok=True)
     open(f"c/{cid}/index.html", "w").write(hub_page(cid, [x for x in live if x.get("city") == cid]))
@@ -786,7 +920,14 @@ for cid in hubs:
         os.makedirs(f"c/{cid}/guide", exist_ok=True)
         open(f"c/{cid}/guide/index.html", "w").write(guide_page(cid, [x for x in live if x.get("city") == cid]))
     elif os.path.isdir(f"c/{cid}/guide"): shutil.rmtree(f"c/{cid}/guide", ignore_errors=True)
-    sc = [x for x in live if x.get("city") == cid]; tk = {"guide", "index.html", "more"}
+    sc = [x for x in live if x.get("city") == cid]; tk = {"guide", "index.html", "more", "price"}
+    shutil.rmtree(f"c/{cid}/price", ignore_errors=True); shutil.rmtree(f"en/c/{cid}/price", ignore_errors=True)
+    if TREATS[cid]:
+        os.makedirs(f"c/{cid}/price", exist_ok=True); open(f"c/{cid}/price/index.html", "w").write(price_index_page(cid, TREATS[cid]))
+        os.makedirs(f"en/c/{cid}/price", exist_ok=True); open(f"en/c/{cid}/price/index.html", "w").write(en_price_index(cid, TREATS[cid]))
+        for t, rs in TREATS[cid]:
+            os.makedirs(f"c/{cid}/price/{t['id']}", exist_ok=True); open(f"c/{cid}/price/{t['id']}/index.html", "w").write(price_page(cid, t, rs, TREATS[cid]))
+            os.makedirs(f"en/c/{cid}/price/{t['id']}", exist_ok=True); open(f"en/c/{cid}/price/{t['id']}/index.html", "w").write(en_price_page(cid, t, rs, TREATS[cid]))
     us = UNC[cid]
     if us:
         os.makedirs(f"c/{cid}/more", exist_ok=True); open(f"c/{cid}/more/index.html", "w").write(more_page(cid, us))
@@ -838,6 +979,7 @@ for cid in hubs:
 for cid in hubs:
     ts = city_topics(cid, [x for x in live if x.get("city") == cid])
     if ts: L.append(f"- {tx(cities[cid]['name'])} 주제별: " + " · ".join(f"[{t['kw']} {len(xs)}곳]({SITE}/c/{cid}/{t['id']}/)" for t, xs in ts))
+    if TREATS.get(cid): L.append(f"- {tx(cities[cid]['name'])} 시술별 가격 (엉클데이 업체 실제 메뉴): " + " · ".join(f"[{t['kw']} {won(rr[0][1]['price'])}~{won(rr[-1][1]['price'])}]({SITE}/c/{cid}/price/{t['id']}/)" for t, rr in TREATS[cid]))
 for cid in hubs:
     L += ["", f"## {tx(cities[cid]['name'])} 업체"]
     for x in [y for y in live if y.get("city") == cid]:
@@ -863,6 +1005,8 @@ for cid in hubs:
         for pre in ("", "/en"):
             u = f"{SITE}{pre}/c/{cid}/{t['id']}/"; mod[u] = max(checked(x) for x in xs); topic_urls.append(u)
 for cid in hubs:
+    for pre in ("", "/en"):
+        if TREATS.get(cid): topic_urls += [f"{SITE}{pre}/c/{cid}/price/"] + [f"{SITE}{pre}/c/{cid}/price/{t['id']}/" for t, _ in TREATS[cid]]
     if UNC.get(cid):
         topic_urls.append(f"{SITE}/c/{cid}/more/")
         topic_urls += [f"{SITE}/p/{cid}/{u['slug']}/{v}" for u in UNC[cid] if u["rich"] for v in ("", "vi/")]
