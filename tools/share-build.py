@@ -94,7 +94,7 @@ LANGBAR = ("<script>(function(){try{var P=(document.documentElement.lang||'ko').
 def TRACK():
     if not _SU.get("url"): return LANGBAR
     auth = f',Authorization:"Bearer {_SU["key"]}"' if str(_SU.get("key", "")).startswith("eyJ") else ""
-    return LANGBAR + ("<script>(function(){var U=" + json.dumps(_SU["url"]) + ",K=" + json.dumps(_SU["key"]) + ";function S(){try{var r=document.referrer;if(!r)return'direct';var h=new URL(r).hostname;"
+    return LANGBAR + ("<script>(function(){var U=" + json.dumps(_SU["url"]) + ",K=" + json.dumps(_SU["key"]) + ";function S(){try{var v=new URLSearchParams(location.search).get('via');if(v&&/^(gbp|fb|zalo|ig|qr|kakao)$/.test(v))return v;var r=document.referrer;if(!r)return'direct';var h=new URL(r).hostname;"
             "if(h==location.hostname)return'internal';var m=[['google','google'],['naver','naver'],['bing','bing'],['daum','daum'],['chatgpt','chatgpt'],['openai','chatgpt'],['perplexity','perplexity'],['claude','claude'],['gemini','gemini'],['kakao','kakao'],['facebook','facebook'],['instagram','instagram']];"
             "for(var i=0;i<m.length;i++)if(h.indexOf(m[i][0])>=0)return m[i][1];return'other'}catch(e){return'other'}}"
             "var src=S();window.UD_SRC=src;var BOT=navigator.webdriver||/bot|crawl|spider|slurp|preview|headless|lighthouse|google-inspectiontool/i.test(navigator.userAgent);window.udHit=function(k){if(BOT)return;try{fetch(U+'/rest/v1/rpc/seo_hit',{method:'POST',keepalive:true,headers:{apikey:K" + auth + ",'Content-Type':'application/json'},body:JSON.stringify({path:location.pathname,src:src,kind:k})}).catch(function(){})}catch(e){}};"

@@ -70,6 +70,7 @@ function drawPortal(skip) {
     <section class="pt-sec"><h3>🎬 운영 시뮬레이션 <span class="hint">입점 영업 · 직원 교육용 · 가짜 데이터라 아무것도 저장되지 않아요</span></h3>
       <div class="pt-spaces">${PORTAL_SIMS.map(s => `<div class="pt-space"><div class="h"><span class="ic">${s.ic}</span><b>${esc(s.nm)}</b></div><small>${esc(s.desc)}</small>
         <div class="pt-row">${[["vi", "🇻🇳 베트남어"], ["ko", "🇰🇷 한국어"]].map(([l, ln]) => `<a class="btn sm ${l === s.def ? "main" : ""}" href="/demo.html?role=${s.role}&lang=${l}" target="_blank" rel="noopener">${ln} ↗</a>`).join("")}<button class="btn sm" data-pcopy="https://www.uncleday.com/demo.html?role=${s.role}&lang=${s.def}">주소 복사</button></div></div>`).join("")}</div></section>
+    <section class="pt-sec" id="ptLinksSec"><h3>🔗 가게에 엉클데이 링크 달기 <span class="hint">구글 지도 예약 링크 · 페이스북 · 잘로 · 인스타 · 매장 QR — 검색 노출 1순위</span></h3><div id="ptLinks"></div></section>
     <section class="pt-sec" id="ptPriceSec"><h3>💰 가격 채우기 <span class="hint">업체 메뉴 가격 — 채울수록 검색 · AI 에 강해져요 · 영업 현장에서 휴대폰으로</span></h3><div id="ptPrice"></div></section>
     <section class="pt-sec" id="ptCrawlSec"><h3>🔗 링크로 가게 가져오기 <span class="hint">가게 홈페이지 · 가격표 링크를 넣으면 정보를 뽑아 와서 검색 페이지로 만들어요</span></h3><div id="ptCrawl"></div></section>
     <section class="pt-sec" id="ptCompSec"><h3>🔍 경쟁사 분석 <span class="hint">경쟁 사이트가 노리는 검색어 중 엉클데이에 없는 것 · 경쟁사가 소개한 가게 중 엉클데이에 없는 곳</span></h3><div id="ptComp"></div></section>
@@ -80,7 +81,7 @@ function drawPortal(skip) {
     <section class="pt-sec"><h3>🏪 매장별 관리 <span class="hint">현황판 쓰는 매장 ${S.length}곳</span></h3>
       ${S.length ? `<div class="pt-shops">${S.map(s => `<div class="pt-shop"><div class="h"><b>${esc(s.name)}</b><span class="uni-chip ${(s.state || {}).is_open ? "ok" : ""}">${stTxt(s.state)}</span></div>
         <div class="nums"><span>출근 <b>${s.in_now}/${s.staff}</b></span><span>시술 중 <b>${s.working}</b></span><span>대기 <b>${s.waiting}</b></span><span>오늘 <b>${s.done_today}</b> · ${vnd(s.rev_today)}</span>${s.pending_req ? `<span class="warn">요청 대기 <b>${s.pending_req}</b></span>` : ""}<span>📱 ${s.app}명</span></div>
-        <div class="pt-row"><button class="btn sm" data-pboard="${esc(s.id)}" data-nm="${esc(s.name)}">🗺️ 보기</button><button class="btn sm" data-pedit="${esc(s.id)}" data-nm="${esc(s.name)}">✏️ 대신 수정</button><button class="btn sm" data-pstaff="${esc(s.id)}" data-nm="${esc(s.name)}">👩 직원 · PIN</button><button class="btn sm" data-pacc="${esc(s.id)}">🔑 사장님 계정</button></div></div>`).join("")}</div>` : `<div class="uni-empty">아직 현황판을 쓰는 매장이 없어요.</div>`}
+        <div class="pt-row"><button class="btn sm" data-pboard="${esc(s.id)}" data-nm="${esc(s.name)}">🗺️ 보기</button><button class="btn sm" data-pedit="${esc(s.id)}" data-nm="${esc(s.name)}">✏️ 대신 수정</button><button class="btn sm" data-pstaff="${esc(s.id)}" data-nm="${esc(s.name)}">👩 직원 · PIN</button><button class="btn sm" data-pacc="${esc(s.id)}">🔑 사장님 계정</button><button class="btn sm" data-plinks="${esc(s.id)}">🔗 링크 · QR</button></div></div>`).join("")}</div>` : `<div class="uni-empty">아직 현황판을 쓰는 매장이 없어요.</div>`}
       ${others.length ? `<div class="pt-start"><span>현황판을 아직 안 쓰는 업체를 대신 설정해 주기:</span><select id="ptOther">${others.map(s => `<option value="${esc(s.id)}">${esc((s.name && (s.name.ko || s.name.en || s.name.vi)) || s.id)}</option>`).join("")}</select><button class="btn sm main" data-pact="start">✏️ 대신 설정 시작</button></div>` : ""}
     </section>
     <section class="pt-sec"><h3>🛠️ 최근 대신 수정 기록 <span class="hint">사장님 화면 '오늘'에도 똑같이 보여요</span></h3>
@@ -93,6 +94,7 @@ function drawPortal(skip) {
   if (typeof brandDraw === "function") brandDraw();
   if (typeof seoDraw === "function") seoDraw();
   if (typeof priceDraw === "function") priceDraw();
+  if (typeof linksDraw === "function") linksDraw();
   if (typeof crawlDraw === "function") crawlDraw();
   if (typeof blogDraw === "function") blogDraw();
   if (typeof conDraw === "function") conDraw();
@@ -113,6 +115,7 @@ function portalBind(el) {
   el.querySelectorAll("[data-pboard]").forEach(b => b.onclick = () => uniOpenBoard(b.dataset.pboard, b.dataset.nm));
   el.querySelectorAll("[data-pedit]").forEach(b => b.onclick = () => uniOpenBoard(b.dataset.pedit, b.dataset.nm, true));
   el.querySelectorAll("[data-pstaff]").forEach(b => b.onclick = () => portalStaff(b.dataset.pstaff, b.dataset.nm));
+  el.querySelectorAll("[data-plinks]").forEach(b => b.onclick = () => { if (typeof LNK === "undefined") return; LNK.id = b.dataset.plinks; LNK.q = ""; linksDraw(); const s = document.getElementById("ptLinksSec"); if (s) s.scrollIntoView({ behavior: "smooth", block: "start" }); });
   el.querySelectorAll("[data-pacc]").forEach(b => b.onclick = () => { if (typeof openEditor === "function") openEditor(b.dataset.pacc); });
   el.querySelectorAll("[data-pact]").forEach(b => b.onclick = () => {
     const a = b.dataset.pact;
