@@ -1,6 +1,6 @@
 /* 💰 가격 채우기 — 포털 안 (#ptPrice)
  * 업체 메뉴 중 가격이 비어 있는(0 = 상담 시 안내) 것을 모아서 휴대폰에서 바로 숫자만 넣고 저장해요.
- * 가격이 채워지면 3시간 안에 자동으로: 시술별 가격 페이지 · 미입점 가게 '이 근처 가격' · 업체 영어 페이지 · AI 안내문에 반영돼요.
+ * 가격이 채워지면 1시간 안에 자동으로: 시술별 가격 페이지 · 미입점 가게 '이 근처 가격' · 업체 영어 페이지 · AI 안내문에 반영돼요.
  * 저장은 업체 편집 창과 같은 dbSaveShop 을 써요.
  */
 const PRC = { city: "", only: true, open: null, q: "", n: 12 };
@@ -35,7 +35,7 @@ function priceDraw() {
   if (PRC.only) list = list.filter(s => missing(s) > 0 || !(s.menu || []).length);
   list.sort((a, b) => missing(b) - missing(a) || prcName(a.name).localeCompare(prcName(b.name)));
   el.innerHTML = `
-    <p class="hint" style="margin-top:0">가격을 채우면 3시간 안에 <b>시술별 가격 페이지 · 미입점 가게 '이 근처 가격' · 영어 페이지</b>에 자동으로 들어가요. 숫자는 <b>450</b> · <b>45만</b> · <b>450k</b> · <b>450,000</b> 모두 450,000₫로 읽어요.</p>
+    <p class="hint" style="margin-top:0">가격을 채우면 1시간 안에 <b>시술별 가격 페이지 · 미입점 가게 '이 근처 가격' · 영어 페이지</b>에 자동으로 들어가요. 숫자는 <b>450</b> · <b>45만</b> · <b>450k</b> · <b>450,000</b> 모두 450,000₫로 읽어요.</p>
     <div class="prc-cities"><button class="prc-city ${!PRC.city ? "on" : ""}" data-pcity=""><b>전체</b>${(() => { const st = prcStat(live); const pct = st.items ? Math.round(st.ok / st.items * 100) : 0; return `<span class="bar"><i style="width:${pct}%"></i></span><small>메뉴 ${st.ok}/${st.items} (${pct}%) · 업체 ${st.shopsOk}/${st.shops}</small>`; })()}</button>${statRow}</div>
     <div class="prc-bar"><input id="prcQ" placeholder="업체 이름 찾기" value="${esc(PRC.q)}"><label><input type="checkbox" id="prcOnly" ${PRC.only ? "checked" : ""}> 가격 빈 곳만</label><span class="hint">${list.length}곳</span></div>
     <div class="prc-list">${list.slice(0, PRC.n).map(s => {
@@ -68,7 +68,7 @@ function priceDraw() {
       c.menu.push({ name: { ko: nn, en: "", vi: "" }, min: +box.querySelector('[data-pnew="min"]').value || 0, price: pr });
     }
     b.disabled = true; b.textContent = "저장 중…";
-    try { await dbSaveShop(c, null); shops[shops.indexOf(s)] = c; toast(`💰 ${prcName(c.name)} 가격을 저장했어요 · 3시간 안에 검색 페이지에도 반영돼요`, 3500);
+    try { await dbSaveShop(c, null); shops[shops.indexOf(s)] = c; toast(`💰 ${prcName(c.name)} 가격을 저장했어요 · 1시간 안에 검색 페이지에도 반영돼요`, 3500);
       if (PRC.only && !c.menu.some(m => prcName(m.name) && !(+m.price > 0))) PRC.open = null; priceDraw(); }
     catch (e) { b.disabled = false; b.textContent = "저장"; dbErr(e, "가격 저장"); }
   });

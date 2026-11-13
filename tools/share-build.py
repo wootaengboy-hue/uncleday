@@ -745,15 +745,18 @@ def en_price_index(cid, all_t):
 KIND_T = {"마사지": "massage", "스파 · 사우나": "massage", "네일 · 뷰티": "nail", "뷰티": "facial"}
 def near_prices(u, cid, radius=2.0):
     t = TMAP.get(KIND_T.get(u["kind"], "massage"))
-    xs = [x for x in live if x.get("city") == cid and x.get("geo") and km((u["lat"], u["lon"]), x["geo"]) <= radius]
+    if not hasgeo(u): radius = 0
+    xs = [x for x in live if x.get("city") == cid and (not radius or (x.get("geo") and km((u["lat"], u["lon"]), x["geo"]) <= radius))]
     rows = treat_rows(t, xs)
     if not rows: return None
     ps = [int(m["price"]) for _, m in rows]
     return {"t": t, "n": len({x["id"] for x, _ in rows}), "lo": ps[0], "hi": ps[-1], "bd": by_dur(rows) or {k: v for k, v in {dur_of(m): [int(m["price"])] for _, m in rows}.items() if k}, "r": radius}
 
 # ---- ② 미입점 업체 p/<도시>/<id>/ : 오픈스트리트맵 공개 정보(이름 · 주소 · 영업시간 · 위치)만 + 근처 엉클데이 업체 + 문의 · 입점 신청 ----
-import math, unicodedata
-HIDDEN = set(d.get("hidden") or [])
+import math, unicodedata, urllib.parse
+HIDDEN = set(d.get("hidden") or []); CRAWLED = d.get("crawled") or []
+def hasgeo(u): return u.get("lat") is not None and u.get("lon") is not None
+def src_host(u): return urllib.parse.urlparse(u.get("srcurl") or "").netloc.replace("www.", "")
 OSM = json.load(open("data/osm.json")) if os.path.exists("data/osm.json") else {"cities": {}}
 def km(a, b):
     la1, lo1, la2, lo2 = map(math.radians, [a[0], a[1], b[0], b[1]])
@@ -783,12 +786,24 @@ def unclaimed(cid):
         rows.append({**r, "name": nm, "en": tg.get("name:en") or tg.get("name"), "kind": OSM_KIND(tg), "addr": osm_addr(tg), "hours": tg.get("opening_hours", ""),
                      "slug": f"{slug(tg.get('name'))}-{r['id']}", "rich": bool(osm_addr(tg) or tg.get("opening_hours")),
                      "hood": tg.get("addr:suburb") or tg.get("addr:subdistrict") or tg.get("addr:district") or ""})
+    # 🔗 포털에서 링크로 가져와 게시한 가게 (universe21 crawl_published)
+    for c in CRAWLED:
+        dd = c.get("data") or {}; nm = (dd.get("name") or "").strip()
+        if c.get("city") != cid or not nm: continue
+        key = norm(nm)
+        if key in seen or any(key and (key in norm(lang(x.get("name"), "en")) or key in norm(lang(x.get("name"), "vi"))) for x in live if x.get("city") == cid): continue
+        seen.add(key); g = dd.get("geo") if isinstance(dd.get("geo"), list) and len(dd["geo"]) == 2 else None
+        menu = [{"name": str(m.get("name"))[:80], "price": int(m.get("price") or 0), "min": int(m.get("min") or 0)} for m in (dd.get("menu") or []) if m.get("name") and int(m.get("price") or 0) > 0][:40]
+        kind = c.get("kind") or ("네일 · 뷰티" if any(re.search(r"nail|gel|móng|네일", m["name"], re.I) for m in menu) else "마사지")
+        rows.append({"id": f"u{c['id']}", "lat": g[0] if g else None, "lon": g[1] if g else None, "name": nm, "en": nm, "kind": kind, "addr": (dd.get("address") or "")[:150], "hours": (dd.get("hours") or "")[:80],
+                     "slug": f"{slug(nm)}-u{c['id']}", "rich": True, "hood": "", "menu": menu, "src": "crawl", "srcurl": c.get("url") or dd.get("source") or "", "checked": c.get("checked") or BUILT})
     return rows
 UNC_CSS = """.badge{display:inline-block;background:var(--sand);color:var(--navy);border-radius:999px;padding:3px 10px;font-size:12.5px;font-weight:700}
 .facts{background:#fff;border-radius:16px;padding:12px 16px;border:1px solid var(--line)}.facts div{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--line)}.facts div:last-child{border:0}.facts span{color:var(--sub);min-width:70px}
 .lead-box{background:#fff;border-radius:16px;padding:16px;border:2px solid var(--green);margin-top:16px}.lead-box.own{border-color:var(--navy)}
 .lead-box form{display:grid;gap:8px}.lead-box input,.lead-box textarea,.lead-box select{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--navy);padding:10px;font:inherit}
 .lead-box button{border:0;border-radius:12px;background:var(--orange);color:#fff;font-weight:800;padding:13px;font-size:15.5px;cursor:pointer}.lead-box.own button{background:var(--navy)}
+.tb{border-collapse:collapse;width:100%;background:#fff;border-radius:14px;overflow:hidden;border:1px solid var(--line)}.tb th,.tb td{padding:9px 12px;border-bottom:1px solid var(--line);text-align:left;font-size:14.5px}.tb th{background:var(--sand);font-size:13px}.tb td.n{text-align:right;white-space:nowrap;font-weight:700}.tb td:nth-child(2){white-space:nowrap}
 .qa{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 18px;margin:12px 0;font-size:15.5px}.qa .who{font-size:12.5px;font-weight:700;color:var(--green);margin-bottom:4px}
 .chips{display:flex;flex-wrap:wrap;gap:6px}.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-size:14px;color:var(--navy)!important;text-decoration:none;font-weight:600}.chip span{color:var(--sub);font-weight:500;font-size:12.5px}
 .vi-link{background:#fff;border:1px solid var(--line);text-decoration:none;color:var(--green)!important}.views{display:flex;gap:12px;align-items:center;background:var(--navy);color:#fff;border-radius:16px;padding:14px 18px;margin:14px 0}.views b{font-size:30px;line-height:1}.views span{font-size:14.5px;line-height:1.45}
@@ -804,19 +819,24 @@ def lead_js(cid, ref, nm):
             ".then(function(r){if(!r.ok)throw 0;f.outerHTML='<p class=\"ok\">'+f.getAttribute('data-ok')+'</p>'}).catch(function(){b.disabled=false;alert(f.getAttribute('data-err'))})})})</script>")
 def unclaimed_page(cid, u):
     city = cities.get(cid, {}); cko = tx(city.get("name")); url = f"{SITE}/p/{cid}/{u['slug']}/"
-    near = sorted([x for x in live if x.get("city") == cid and x.get("geo")], key=lambda x: (grp(x) != "spabody", km((u["lat"], u["lon"]), x["geo"])))[:3]
-    title = f"{u['name']} — {cko} {u['kind']} 위치 · 영업시간{' · 근처 가격' if near_prices(u, cid) else ''} · 한국어 예약 문의 | 엉클데이"
+    G = hasgeo(u); crawl = u.get("src") == "crawl"; um = u.get("menu") or []
+    near = sorted([x for x in live if x.get("city") == cid and (x.get("geo") or not G)], key=lambda x: (grp(x) != "spabody", km((u["lat"], u["lon"]), x["geo"]) if G else 0))[:3]
+    title = f"{u['name']} — {cko} {u['kind']} {'가격 · ' if um else ''}위치 · 영업시간{' · 근처 가격' if near_prices(u, cid) else ''} · 한국어 예약 문의 | 엉클데이"
     desc = f"{u['name']}은(는) {cko}의 {u['kind']} 가게예요." if False else f"{cko}의 {u['kind']} 가게 {u['name']} 정보 (주소 · 영업시간 · 지도). 엉클데이에 남기면 한국어로 확인해 드려요."
-    gmap = f"https://www.google.com/maps/search/?api=1&query={u['lat']},{u['lon']}"
-    ld = {"@context": "https://schema.org", "@type": "HealthAndBeautyBusiness", "name": u["name"], "geo": {"@type": "GeoCoordinates", "latitude": u["lat"], "longitude": u["lon"]}, "url": url}
+    gmap = f"https://www.google.com/maps/search/?api=1&query={u['lat']},{u['lon']}" if G else "https://www.google.com/maps/search/?api=1&query=" + urllib.parse.quote(f"{u['name']} {u['addr'] or CITY_EN.get(cid, '')}")
+    ld = {"@context": "https://schema.org", "@type": "HealthAndBeautyBusiness", "name": u["name"], "url": url}
+    if G: ld["geo"] = {"@type": "GeoCoordinates", "latitude": u["lat"], "longitude": u["lon"]}
+    if um: ld["hasOfferCatalog"] = {"@type": "OfferCatalog", "name": "Menu", "itemListElement": [{"@type": "Offer", "name": m["name"], "price": m["price"], "priceCurrency": "VND"} for m in um]}
     if u["addr"]: ld["address"] = {"@type": "PostalAddress", "streetAddress": u["addr"], "addressLocality": CITY_EN.get(cid, ""), "addressCountry": "VN"}
     if u["hours"]: ld["openingHours"] = u["hours"]
     js = lambda o: json.dumps(o, ensure_ascii=False).replace("</", "<\\/")
-    nearh = "".join(f'<a class="card" data-cta="shop" href="/s/{x["id"]}/"><b>{esc(tx(x.get("name")))}</b><small>엉클데이 인증 · {SUB_KO.get(x.get("cat"), "")} · 약 {km((u["lat"], u["lon"]), x["geo"]):.1f}km</small><p>{esc(facts(x)[0][:110])}…</p></a>' for x in near)
+    nearh = "".join(f'<a class="card" data-cta="shop" href="/s/{x["id"]}/"><b>{esc(tx(x.get("name")))}</b><small>엉클데이 인증 · {SUB_KO.get(x.get("cat"), "")}{f" · 약 {km((u['lat'], u['lon']), x['geo']):.1f}km" if G else ""}</small><p>{esc(facts(x)[0][:110])}…</p></a>' for x in near)
     np_ = near_prices(u, cid); hood = u.get("hood") or ""
-    pr_txt = (f"반경 {np_['r']:.0f}km 안 엉클데이 업체 {np_['n']}곳의 {np_['t']['kw']} 가격은 {won(np_['lo'])}" + (f"~{won(np_['hi'])}" if np_['hi'] != np_['lo'] else "") + "이에요" + ((" (" + ", ".join(f"{k}분 {won(min(v))}" + (f"~{won(max(v))}" if max(v) != min(v) else "") for k, v in list(np_['bd'].items())[:3]) + ")") if np_['bd'] else "") + ".") if np_ else ""
-    summ = f"{cko}{(' ' + hood) if hood else ''}에 있는 {u['kind']} 가게예요." + (f" 영업시간은 {hours_ko(u['hours'])}이에요." if u['hours'] else "") + (" " + pr_txt if pr_txt else "") + " 아직 엉클데이 입점 전이라 이 가게의 가격 · 한국어 응대는 확인되지 않았어요. 문의를 남기면 엉클데이가 가게에 확인해서 한국어로 알려 드려요."
-    sib = sorted([v for v in UNC.get(cid, []) if v["id"] != u["id"] and km((u["lat"], u["lon"]), (v["lat"], v["lon"])) <= 1.5], key=lambda v: km((u["lat"], u["lon"]), (v["lat"], v["lon"])))[:8]
+    where = lambda r: f"반경 {r:.0f}km 안" if r else f"{cko}"
+    own_txt = (f" 가게가 공개한 가격은 {won(min(m['price'] for m in um))}" + (f"~{won(max(m['price'] for m in um))}" if len({m['price'] for m in um}) > 1 else "") + f"이에요 ({src_host(u)} 기준, {u.get('checked')} 확인).") if um else ""
+    pr_txt = (f"{where(np_['r'])} 엉클데이 업체 {np_['n']}곳의 {np_['t']['kw']} 가격은 {won(np_['lo'])}" + (f"~{won(np_['hi'])}" if np_['hi'] != np_['lo'] else "") + "이에요" + ((" (" + ", ".join(f"{k}분 {won(min(v))}" + (f"~{won(max(v))}" if max(v) != min(v) else "") for k, v in list(np_['bd'].items())[:3]) + ")") if np_['bd'] else "") + ".") if np_ else ""
+    summ = f"{cko}{(' ' + hood) if hood else ''}에 있는 {u['kind']} 가게예요." + (f" 영업시간은 {hours_ko(u['hours'])}이에요." if u['hours'] else "") + own_txt + (" 비교하자면 " + pr_txt if pr_txt and um else (" " + pr_txt if pr_txt else "")) + (" 아직 엉클데이 입점 전이라 실제 가격 · 한국어 응대는 확인 전이에요." if um else " 아직 엉클데이 입점 전이라 이 가게의 가격 · 한국어 응대는 확인되지 않았어요.") + " 문의를 남기면 엉클데이가 가게에 확인해서 한국어로 알려 드려요."
+    sib = sorted([v for v in UNC.get(cid, []) if v["id"] != u["id"] and G and hasgeo(v) and km((u["lat"], u["lon"]), (v["lat"], v["lon"])) <= 1.5], key=lambda v: km((u["lat"], u["lon"]), (v["lat"], v["lon"])))[:8]
     sibh = "".join(f'<a class="chip" href="/p/{cid}/{v["slug"]}/">{esc(v["name"])} <span>{km((u["lat"], u["lon"]), (v["lat"], v["lon"])) * 1000:.0f}m</span></a>' for v in sib)
     pid = np_["t"]["id"] if np_ else ""
     has_price_pg = np_ and any(t["id"] == np_["t"]["id"] for t, _ in TREATS.get(cid, []))
@@ -828,18 +848,19 @@ def unclaimed_page(cid, u):
 <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png"><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>{HUB_CSS}{UNC_CSS}</style><script type="application/ld+json">{js(ld)}</script>
 </head><body><header class="hd"><div class="in"><a class="logo" href="/"><img src="/images/logo-full.webp" alt="엉클데이 Uncle Day" width="167" height="72"></a><nav><a href="/c/{cid}/">{esc(cko)} 업체</a></nav>{HCTA}</div></header>
-<main class="wrap"><p><span class="badge">엉클데이 미입점 업체 · 공개 지도 정보</span> <a class="badge vi-link" href="vi/" lang="vi">🇻🇳 Tiếng Việt · Dành cho chủ cửa hàng</a></p>
+<main class="wrap"><p><span class="badge">엉클데이 미입점 업체 · {'가게 공개 정보' if crawl else '공개 지도 정보'}</span> <a class="badge vi-link" href="vi/" lang="vi">🇻🇳 Tiếng Việt · Dành cho chủ cửa hàng</a></p>
 <h1>{esc(u['name'])} — 어떤 곳인가요?{f' <small class="en">{esc(u["en"])}</small>' if u['en'] and u['en'] != u['name'] else ''}</h1>
 <div class="qa"><div class="who">엉클데이 요약</div>{esc(summ)}</div>
 <div class="facts"><div><span>종류</span><b>{esc(u['kind'])}</b></div>{f'<div><span>동네</span><b>{esc(hood)}</b></div>' if hood else ''}{f'<div><span>주소</span><b>{esc(u["addr"])}</b></div>' if u['addr'] else ''}{f'<div><span>영업시간</span><b>{esc(hours_ko(u["hours"]))}</b></div>' if u['hours'] else ''}
-<div><span>위치</span><b><a data-cta="map" href="{gmap}" target="_blank" rel="noopener">지도에서 보기</a></b></div>{f'<div><span>이 근처 가격</span><b>{won(np_["lo"])}{("~" + won(np_["hi"])) if np_["hi"] != np_["lo"] else ""} <small class="muted">({esc(np_["t"]["kw"])} · 반경 {np_["r"]:.0f}km 엉클데이 업체 {np_["n"]}곳){f" · <a href=/c/{cid}/price/{pid}/>가격 비교</a>" if has_price_pg else ""}</small></b></div>' if np_ else ''}</div>
+<div><span>위치</span><b><a data-cta="map" href="{gmap}" target="_blank" rel="noopener">지도에서 보기</a></b></div>{f'<div><span>{"이 근처 가격" if np_["r"] else esc(cko) + " 가격"}</span><b>{won(np_["lo"])}{("~" + won(np_["hi"])) if np_["hi"] != np_["lo"] else ""} <small class="muted">({esc(np_["t"]["kw"])} · {where(np_["r"])} 엉클데이 업체 {np_["n"]}곳){f" · <a href=/c/{cid}/price/{pid}/>가격 비교</a>" if has_price_pg else ""}</small></b></div>' if np_ else ''}</div>
+{('<h2>가게가 공개한 가격</h2><table class="tb"><tr><th>메뉴</th><th>시간</th><th>가격</th></tr>' + "".join(f'<tr><td>{esc(m["name"])}</td><td>{(str(m["min"]) + "분") if m["min"] else "-"}</td><td class="n">{won(m["price"])}</td></tr>' for m in um) + f'</table><p class="muted">출처: <a href="{esc(u["srcurl"])}" target="_blank" rel="noopener nofollow">{esc(src_host(u))}</a> · {u.get("checked")} 확인 · 가게 사정으로 바뀔 수 있어서 예약할 때 엉클데이가 다시 확인해 드려요.</p>') if um else ''}
 <div class="lead-box"><h2 style="margin-top:0">💬 이 가게 예약 문의</h2><p class="muted">엉클데이가 가게에 가능 여부 · 가격을 확인해서 한국어로 연락드려요. 연락처는 엉클데이만 봐요.</p>
 <form data-lead="guest" data-ok="문의를 받았어요. 확인되는 대로 연락드릴게요 🙏" data-err="잠시 후 다시 시도해 주세요.">
 <input name="name" placeholder="이름 (예: 김민지)" maxlength="60"><input name="contact" required placeholder="연락처 — 카카오톡 ID 또는 전화번호" maxlength="120">
 <div class="row3"><label>방문 날짜<input type="date" name="vday" required></label><label>시간<select name="vtime"><option value="">시간 미정</option><option value="09:00">오전 9:00</option><option value="09:30">오전 9:30</option><option value="10:00">오전 10:00</option><option value="10:30">오전 10:30</option><option value="11:00">오전 11:00</option><option value="11:30">오전 11:30</option><option value="12:00">오후 12:00</option><option value="12:30">오후 12:30</option><option value="13:00">오후 1:00</option><option value="13:30">오후 1:30</option><option value="14:00">오후 2:00</option><option value="14:30">오후 2:30</option><option value="15:00">오후 3:00</option><option value="15:30">오후 3:30</option><option value="16:00">오후 4:00</option><option value="16:30">오후 4:30</option><option value="17:00">오후 5:00</option><option value="17:30">오후 5:30</option><option value="18:00">오후 6:00</option><option value="18:30">오후 6:30</option><option value="19:00">오후 7:00</option><option value="19:30">오후 7:30</option><option value="20:00">오후 8:00</option><option value="20:30">오후 8:30</option><option value="21:00">오후 9:00</option><option value="21:30">오후 9:30</option><option value="22:00">오후 10:00</option><option value="22:30">오후 10:30</option><option value="23:00">오후 11:00</option><option value="23:30">오후 11:30</option></select></label><label>인원<select name="people">{"".join(f'<option value="{i}">{i}명</option>' for i in range(1, 9))}</select></label></div>
 <textarea name="msg" rows="2" placeholder="원하는 코스 · 요청 사항 (선택)" maxlength="1000"></textarea><button type="submit">문의 남기기</button></form>
 <p class="muted">바로 상담하고 싶다면 <a data-cta="kakao" href="{KAKAO}" target="_blank" rel="noopener">엉클데이 카카오톡</a>으로 이 페이지 주소를 보내 주세요.</p></div>
-{f'<h2>근처의 엉클데이 인증 업체</h2><p class="muted">한국어로 상담하고 매장 가격 그대로 바로 예약할 수 있어요.</p><div class="grid">{nearh}</div>' if near else ''}
+{f'<h2>{"근처의" if G else esc(cko) + "의"} 엉클데이 인증 업체</h2><p class="muted">한국어로 상담하고 매장 가격 그대로 바로 예약할 수 있어요.</p><div class="grid">{nearh}</div>' if near else ''}
 {f'<h2>이 근처의 다른 가게</h2><p class="chips">{sibh}</p>' if sib else ''}<p class="muted"><a href="/c/{cid}/more/">{esc(cko)} 가게 전체 목록</a>{f' · <a href="/c/{cid}/price/">{esc(cko)} 시술별 가격</a>' if TREATS.get(cid) else ''}</p>
 <div class="lead-box own" lang="vi"><h2 style="margin-top:0">🏪 Bạn là chủ cửa hàng này? · 이 가게 사장님이세요?</h2>
 <p class="muted">Đăng ký miễn phí trên Uncle Day để nhận khách Hàn Quốc. Không phí đăng ký, không phí hàng tháng — chỉ trả hoa hồng khi khách đến và thanh toán.<br>엉클데이에 무료로 입점하면 한국인 손님을 받을 수 있어요. 입점비 · 월 고정비 없이 손님이 와서 결제했을 때만 수수료.</p>
@@ -847,8 +868,8 @@ def unclaimed_page(cid, u):
 <input name="name" placeholder="Tên của bạn · 이름" maxlength="60"><input name="contact" required placeholder="Số điện thoại / Zalo · 전화 · 잘로" maxlength="120">
 <textarea name="msg" rows="2" placeholder="Lời nhắn (không bắt buộc) · 남길 말 (선택)" maxlength="1000"></textarea><button type="submit">Đăng ký miễn phí · 무료 입점 신청</button></form>
 <p class="muted"><a href="vi/">Xem trang này bằng tiếng Việt · 베트남어로 보기 →</a> · <a href="/demo.html?role=owner&lang=vi" target="_blank" rel="noopener">Xem thử trang quản lý cửa hàng · 사장님 페이지 체험해 보기 ↗</a></p></div>
-<p class="osm">가게 정보: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors (ODbL). 정보가 틀렸거나 내리고 싶다면 <a href="{KAKAO}" target="_blank" rel="noopener">엉클데이에 알려 주세요</a>.</p>
-</main><footer class="wrap">엉클데이 Uncle Day — 베트남 마사지 · 스파 · 뷰티 한국어 예약 · <a href="/">홈</a></footer>{TRACK()}{lead_js(cid, "osm:" + u["id"], u["name"])}</body></html>
+<p class="osm">가게 정보: {f'가게가 공개한 페이지 <a href="{esc(u["srcurl"])}" target="_blank" rel="noopener nofollow">{esc(src_host(u))}</a> ({u.get("checked")} 확인)' if crawl else '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors (ODbL)'}. 정보가 틀렸거나 내리고 싶다면 <a href="{KAKAO}" target="_blank" rel="noopener">엉클데이에 알려 주세요</a>.</p>
+</main><footer class="wrap">엉클데이 Uncle Day — 베트남 마사지 · 스파 · 뷰티 한국어 예약 · <a href="/">홈</a></footer>{TRACK()}{lead_js(cid, ("crawl:" if crawl else "osm:") + u["id"], u["name"])}</body></html>
 """
 DAY_VI = {"Mo": "T2", "Tu": "T3", "We": "T4", "Th": "T5", "Fr": "T6", "Sa": "T7", "Su": "CN", "PH": "Ngày lễ", "off": "nghỉ"}
 def hours_vi(h): return re.sub(r"\b(Mo|Tu|We|Th|Fr|Sa|Su|PH|off)\b", lambda m: DAY_VI[m.group(1)], h or "")
@@ -863,7 +884,8 @@ def unclaimed_vi_page(cid, u):
     kvi = OSM_KIND_VI.get(u["kind"], "Làm đẹp"); n_city = sum(1 for x in live if x.get("city") == cid)
     title = f"{u['name']} — {kvi} tại {cvi} | Uncle Day"
     desc = f"{u['name']} ({kvi}, {cvi}) trên Uncle Day — nền tảng đặt chỗ bằng tiếng Hàn cho du khách Hàn Quốc. Chủ cửa hàng đăng ký miễn phí để nhận khách."
-    gmap = f"https://www.google.com/maps/search/?api=1&query={u['lat']},{u['lon']}"
+    gmap = f"https://www.google.com/maps/search/?api=1&query={u['lat']},{u['lon']}" if hasgeo(u) else "https://www.google.com/maps/search/?api=1&query=" + urllib.parse.quote(f"{u['name']} {u['addr'] or CITY_EN.get(cid, '')}")
+    crawl = u.get("src") == "crawl"
     return f"""<!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{esc(title)}</title><meta name="description" content="{esc(desc)}"><link rel="canonical" href="{url}">{'' if u['rich'] else '<meta name="robots" content="noindex,follow">'}
@@ -872,13 +894,14 @@ def unclaimed_vi_page(cid, u):
 <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png"><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>{HUB_CSS}{UNC_CSS}</style>
 </head><body><header class="hd"><div class="in"><a class="logo" href="/"><img src="/images/logo-full.webp" alt="Uncle Day" width="167" height="72"></a><nav><a href="{ko}" lang="ko">한국어</a></nav><a class="hcta" href="#dk">Đăng ký miễn phí</a></div></header>
-<main class="wrap"><p><span class="badge">Chưa đăng ký Uncle Day · Thông tin bản đồ công khai</span></p>
+<main class="wrap"><p><span class="badge">Chưa đăng ký Uncle Day · {'Thông tin công khai của cửa hàng' if crawl else 'Thông tin bản đồ công khai'}</span></p>
 <h1>{esc(u['name'])}</h1>
 <p class="lead">Đây là trang của cửa hàng bạn trên <b>Uncle Day</b> — trang web đặt chỗ massage · spa · làm đẹp <b>bằng tiếng Hàn</b> cho du khách Hàn Quốc tại Việt Nam. Khách Hàn Quốc tìm trên Google · Naver sẽ thấy <a href="{ko}" lang="ko">trang tiếng Hàn này</a>.</p>
 <div class="views" id="views" hidden><b>0</b><span>lượt xem trang của cửa hàng bạn<br>trong 30 ngày qua</span></div>
 <div class="facts"><div><span>Loại</span><b>{esc(kvi)}</b></div>{f'<div><span>Địa chỉ</span><b>{esc(u["addr"])}</b></div>' if u['addr'] else ''}{f'<div><span>Giờ mở cửa</span><b>{esc(hours_vi(u["hours"]))}</b></div>' if u['hours'] else ''}
 <div><span>Vị trí</span><b><a data-cta="map" href="{gmap}" target="_blank" rel="noopener">Xem bản đồ</a></b></div></div>
 <p class="muted">Cửa hàng chưa đăng ký nên Uncle Day chưa thể gửi khách Hàn Quốc đến. Khi khách để lại yêu cầu đặt chỗ, chúng tôi sẽ liên hệ cửa hàng.</p>
+{('<h2>Bảng giá công khai của cửa hàng</h2><table class="tb"><tr><th>Dịch vụ</th><th>Giá</th></tr>' + "".join(f'<tr><td>{esc(m["name"])}</td><td class="n">{m["price"]:,}₫</td></tr>' for m in (u.get("menu") or [])) + '</table>') if u.get("menu") else ''}
 <h2>Đăng ký Uncle Day được gì?</h2>
 <ul class="why">
 <li><b>🇰🇷 Khách Hàn Quốc</b><span>Khách tìm và đặt chỗ bằng tiếng Hàn. Uncle Day xác nhận đặt chỗ và gửi khách đến cửa hàng.</span></li>
@@ -893,8 +916,8 @@ def unclaimed_vi_page(cid, u):
 <form data-lead="owner" data-ok="Cảm ơn! Uncle Day sẽ liên hệ sớm." data-err="Vui lòng thử lại sau.">
 <input name="name" placeholder="Tên của bạn" maxlength="60"><input name="contact" required placeholder="Số điện thoại / Zalo" maxlength="120">
 <textarea name="msg" rows="2" placeholder="Lời nhắn (không bắt buộc)" maxlength="1000"></textarea><button type="submit">Đăng ký miễn phí</button></form></div>
-<p class="osm">Thông tin cửa hàng: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors (ODbL). Thông tin sai hoặc muốn gỡ trang này? Hãy để lại số điện thoại ở biểu mẫu trên và ghi “gỡ thông tin” — chúng tôi sẽ gỡ.</p>
-</main><footer class="wrap">Uncle Day — đặt chỗ massage · spa · làm đẹp bằng tiếng Hàn tại Việt Nam · <a href="/">Trang chủ</a></footer>{TRACK()}{lead_js(cid, "osm:" + u["id"], u["name"])}{views_js(ko)}</body></html>
+<p class="osm">Thông tin cửa hàng: {f'trang công khai <a href="{esc(u["srcurl"])}" target="_blank" rel="noopener nofollow">{esc(src_host(u))}</a> ({u.get("checked")})' if crawl else '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors (ODbL)'}. Thông tin sai hoặc muốn gỡ trang này? Hãy để lại số điện thoại ở biểu mẫu trên và ghi “gỡ thông tin” — chúng tôi sẽ gỡ.</p>
+</main><footer class="wrap">Uncle Day — đặt chỗ massage · spa · làm đẹp bằng tiếng Hàn tại Việt Nam · <a href="/">Trang chủ</a></footer>{TRACK()}{lead_js(cid, ("crawl:" if crawl else "osm:") + u["id"], u["name"])}{views_js(ko)}</body></html>
 """
 def more_page(cid, us):
     city = cities.get(cid, {}); cko = tx(city.get("name")); url = f"{SITE}/c/{cid}/more/"
