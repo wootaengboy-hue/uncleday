@@ -177,6 +177,9 @@ def crawl(job):
             h2, f2 = fetch(v); p2 = Page(); p2.feed(h2); add = menu_from_text(p2.lines)
             if add: res["menu"] = (res["menu"] + add)[:40]; res["pages"].append(f2)
         except Exception: pass
+    blob = (res.get("address") or "") + " " + (res.get("title") or "") + " " + final
+    for cid, pat in (("danang", r"Đà Nẵng|Da Nang|Danang|Ngũ Hành Sơn|Sơn Trà|Hải Châu"), ("nhatrang", r"Nha Trang|Khánh Hòa|Khanh Hoa"), ("hcm", r"Hồ Chí Minh|Ho Chi Minh|HCM|Sài Gòn|Saigon|Quận \d|District \d"), ("hanoi", r"Hà Nội|Ha Noi|Hanoi|Hoàn Kiếm|Ba Đình|Tây Hồ")):
+        if re.search(pat, blob, re.I): res["city_guess"] = cid; break
     if not res["name"] and not res["menu"]: return res, "가게 정보를 찾지 못했어요 (글자가 아닌 그림으로 된 페이지일 수 있어요)"
     return res, None
 

@@ -742,7 +742,7 @@ def en_price_index(cid, all_t):
     body = f"""<h1>{esc(cen)} prices by treatment</h1><p class="lead">{esc(lead)}</p><style>{PRICE_CSS}</style><table class="tb"><tr><th>Treatment</th><th>Price range</th></tr>{rows_h}</table><p class="date">Reference prices · last checked {upd}</p>"""
     return en_shell(title, lead, url, f"{SITE}/c/{cid}/price/", cid, [{"@context": "https://schema.org", "@type": "CollectionPage", "name": title, "url": url, "inLanguage": "en", "dateModified": upd}], body, upd=upd)
 # 미입점 가게의 '이 근처 가격': 반경 2km 안 엉클데이 업체의 실제 메뉴 가격
-KIND_T = {"마사지": "massage", "스파 · 사우나": "massage", "네일 · 뷰티": "nail", "뷰티": "facial"}
+KIND_T = {"마사지": "massage", "스파 · 사우나": "massage", "네일 · 뷰티": "nail", "피부 · 클리닉": "facial", "뷰티": "facial"}
 def near_prices(u, cid, radius=2.0):
     t = TMAP.get(KIND_T.get(u["kind"], "massage"))
     if not hasgeo(u): radius = 0
@@ -764,7 +764,7 @@ def km(a, b):
 def norm(t): return re.sub(r"[^a-z0-9]", "", unicodedata.normalize("NFD", (t or "").lower().replace("đ", "d")).encode("ascii", "ignore").decode())
 def slug(t): return re.sub(r"-+", "-", re.sub(r"[^a-z0-9]+", "-", unicodedata.normalize("NFD", (t or "").lower().replace("đ", "d")).encode("ascii", "ignore").decode())).strip("-")[:50] or "shop"
 OSM_KIND = lambda tg: "네일 · 뷰티" if tg.get("beauty") in ("nails",) or "nail" in (tg.get("name", "").lower()) else "마사지" if tg.get("shop") == "massage" or tg.get("amenity") == "massage" else "스파 · 사우나" if tg.get("leisure") in ("spa", "sauna") or tg.get("amenity") == "spa" else "뷰티"
-OSM_KIND_VI = {"네일 · 뷰티": "Nail · làm đẹp", "마사지": "Massage", "스파 · 사우나": "Spa · xông hơi", "뷰티": "Làm đẹp"}
+OSM_KIND_VI = {"네일 · 뷰티": "Nail · làm đẹp", "마사지": "Massage", "스파 · 사우나": "Spa · xông hơi", "피부 · 클리닉": "Chăm sóc da · thẩm mỹ", "뷰티": "Làm đẹp"}
 DAYMAP = {"Mo": "월", "Tu": "화", "We": "수", "Th": "목", "Fr": "금", "Sa": "토", "Su": "일", "PH": "공휴일", "off": "휴무"}
 def hours_ko(h): return re.sub(r"\b(Mo|Tu|We|Th|Fr|Sa|Su|PH|off)\b", lambda m: DAYMAP[m.group(1)], h or "").replace("-", "~", 0) if h else ""
 def osm_addr(tg): return ", ".join(x for x in [" ".join(v for v in [tg.get("addr:housenumber"), tg.get("addr:street")] if v), tg.get("addr:subdistrict") or tg.get("addr:suburb"), tg.get("addr:district"), tg.get("addr:city")] if x)

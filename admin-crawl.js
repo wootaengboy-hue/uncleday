@@ -4,9 +4,11 @@
  * 서버: supabase/universe21.sql · 수집기: tools/crawl.py
  */
 const CRL = { jobs: null, cfg: null, err: "", open: null, token: "" };
-const CRL_KIND = ["마사지", "스파 · 사우나", "네일 · 뷰티", "뷰티"];
+const CRL_KIND = ["마사지", "스파 · 사우나", "네일 · 뷰티", "피부 · 클리닉", "뷰티"];
 const CRL_ST = { pending: ["⏳ 가져오는 중", "1시간 안에 가져와요"], done: ["✅ 확인 필요", "내용을 확인하고 게시해 주세요"], error: ["⚠️ 실패", ""], published: ["🌐 게시됨", ""], rejected: ["✖️ 버림", ""] };
 const crlSlug = t => (String(t || "").toLowerCase().replace(/đ/g, "d").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 50).replace(/-$/, "")) || "shop";
+const crlDup = nm => { const k = String(nm || "").toLowerCase().replace(/đ/g, "d").normalize("NFD").replace(/[^a-z0-9]/g, ""); if (k.length < 4) return null;
+  return (typeof shops !== "undefined" ? shops : []).find(s => [s.name.en, s.name.vi, s.name.ko, s.id].some(v => { const t = String(v || "").toLowerCase().replace(/đ/g, "d").normalize("NFD").replace(/[^a-z0-9]/g, ""); return t.length >= 4 && (t.includes(k) || k.includes(t)); })) || null; };
 const crlPage = j => `/p/${j.city}/${crlSlug((j.data || {}).name)}-u${j.id}/`;
 
 async function crawlLoad() {
@@ -37,6 +39,8 @@ function crawlDraw() {
         ${open ? `<div class="crl-body" data-cjob="${j.id}">
           <p class="hint"><a href="${esc(j.url)}" target="_blank" rel="noopener">${esc(j.url)}</a>${j.status === "published" ? ` · 사이트 페이지: <a href="${crlPage(j)}" target="_blank" rel="noopener">${crlPage(j)}</a> (게시 후 1시간 안에 생겨요)` : ""}</p>
           ${j.status === "pending" ? `<p class="hint">${st[1]}</p>` : `
+          ${(() => { const dup = crlDup(d.name); const g = (j.result || {}).city_guess; return (dup ? `<p class="crl-err">⚠️ 이미 엉클데이 업체예요: <b>${esc(dup.name.ko || dup.id)}</b> (${esc(cn(dup.city))}) — 게시해도 중복이라 페이지가 만들어지지 않아요. 버리기를 권해요.</p>` : "") + (g && g !== j.city ? `<p class="crl-err">📍 주소를 보면 <b>${esc(cn(g))}</b> 가게 같아요. 아래에서 지역을 확인해 주세요.</p>` : ""); })()}
+          <div class="crl-two"><label>지역<select data-cj="city">${cs.map(c => `<option value="${c.id}" ${c.id === j.city ? "selected" : ""}>${esc(c.name.ko)}</option>`).join("")}</select></label><label>종류<select data-cj="kind">${CRL_KIND.map(k => `<option ${k === j.kind ? "selected" : ""}>${k}</option>`).join("")}</select></label></div>
           <label>가게 이름<input data-cf="name" value="${esc(d.name || "")}"></label>
           <label>주소<input data-cf="address" value="${esc(d.address || "")}"></label>
           <label>영업시간<input data-cf="hours" value="${esc(d.hours || "")}" placeholder="예: 09:00-23:00"></label>
@@ -65,8 +69,9 @@ function crawlDraw() {
     if (r.error) { alert(r.error.message); return; } CRL.jobs.unshift(r.data); toast("⏳ 넣었어요. 1시간 안에 가져와요", 3500); crawlDraw();
   });
   el.querySelectorAll("[data-cmdel]").forEach(b => b.onclick = () => b.closest(".crl-m").remove());
-  el.querySelectorAll("[data-csave]").forEach(b => b.onclick = () => up(+b.dataset.csave, { data: collect(+b.dataset.csave) }, "저장했어요"));
-  el.querySelectorAll("[data-cpub]").forEach(b => b.onclick = () => { const d = collect(+b.dataset.cpub); if (!d.name) { toast("가게 이름을 넣어 주세요"); return; } up(+b.dataset.cpub, { data: d, status: "published" }, "🌐 게시했어요. 1시간 안에 사이트 페이지가 생겨요"); });
+  const ck = id => { const box = el.querySelector(`[data-cjob="${id}"]`); return { city: box.querySelector('[data-cj="city"]').value, kind: box.querySelector('[data-cj="kind"]').value }; };
+  el.querySelectorAll("[data-csave]").forEach(b => b.onclick = () => up(+b.dataset.csave, { data: collect(+b.dataset.csave), ...ck(+b.dataset.csave) }, "저장했어요"));
+  el.querySelectorAll("[data-cpub]").forEach(b => b.onclick = () => { const id = +b.dataset.cpub, d = collect(id); if (!d.name) { toast("가게 이름을 넣어 주세요"); return; } if (crlDup(d.name) && !confirm("이미 엉클데이 업체와 이름이 같아요. 그래도 게시할까요? (중복이면 페이지가 안 만들어져요)")) return; up(id, { data: d, status: "published", ...ck(id) }, "🌐 게시했어요. 1시간 안에 사이트 페이지가 생겨요"); });
   el.querySelectorAll("[data-cunpub]").forEach(b => b.onclick = () => up(+b.dataset.cunpub, { status: "done" }, "게시를 내렸어요. 1시간 안에 페이지가 사라져요"));
   el.querySelectorAll("[data-cretry]").forEach(b => b.onclick = () => up(+b.dataset.cretry, { status: "pending", err: null }, "⏳ 1시간 안에 다시 가져와요"));
   el.querySelectorAll("[data-crej]").forEach(b => b.onclick = () => up(+b.dataset.crej, { status: "rejected" }, "버렸어요"));
