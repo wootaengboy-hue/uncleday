@@ -117,8 +117,8 @@ function compDraw() {
   el.querySelectorAll("[data-cmpcopy]").forEach(b => b.onclick = () => portalCopy(b.dataset.cmpcopy));
   el.querySelectorAll("[data-cmpfixall]").forEach(b => b.onclick = async () => { b.disabled = true; if (!(await blogBulk(blgReframes(b.dataset.cmpfixall), { fromUrl: b.dataset.u }))) b.disabled = false; });
   el.querySelectorAll("[data-cmpfix]").forEach(b => b.onclick = async () => { const L = blgReframes(b.dataset.cmpfix), o = L[+b.parentNode.querySelector("[data-fixsel]").value]; if (!o) return; b.disabled = true;
-    if (await blogNewP(o, b.dataset.u)) toast("📝 '" + o.kw + "' 초안을 만들었어요. 아래 '📝 블로그'에서 확인 · 게시해 주세요", 4000); else b.disabled = false; });
-  el.querySelectorAll("[data-cmpblog]").forEach(b => b.onclick = async () => { if (typeof blogNew !== "function") return; b.disabled = true; const r = await blogNew(b.dataset.cmpblog, b.dataset.u); if (r) { b.textContent = "✅ 초안 만듦"; toast("📝 블로그 초안을 만들었어요. 아래 '📝 블로그'에서 확인 · 게시해 주세요", 4000); } else b.disabled = false; });
+    if (await blogNewP(o, b.dataset.u)) toast("📝 '" + o.kw + "' 초안을 만들었어요. '📝 블로그'에서 확인 · 게시해 주세요", 4000); else b.disabled = false; });
+  el.querySelectorAll("[data-cmpblog]").forEach(b => b.onclick = async () => { if (typeof blogNew !== "function") return; b.disabled = true; const r = await blogNew(b.dataset.cmpblog, b.dataset.u); if (r) { b.textContent = "✅ 초안 만듦"; toast("📝 블로그 초안을 만들었어요. '📝 블로그'에서 확인 · 게시해 주세요", 4000); } else b.disabled = false; });
   el.querySelectorAll("[data-cmpcopyall]").forEach(b => b.onclick = () => portalCopy(((job(b.dataset.cmpcopyall).result || {}).keywords || []).filter(k => !k.ours).map(k => k.kw).join("\n")));
   el.querySelectorAll("[data-cmpadd]").forEach(b => b.onclick = async () => {
     let url = document.getElementById("cmpUrl").value.trim(); if (!/^https?:\/\/\S+$/i.test(url)) { toast("http:// 또는 https:// 로 시작하는 주소를 넣어 주세요"); return; }

@@ -95,7 +95,7 @@ function fillDraw() {
   el.querySelectorAll("[data-fcopy]").forEach(b => b.onclick = () => portalCopy(b.closest(".fil-shop").querySelector(".fil-msg").value));
   el.querySelectorAll("[data-ffix]").forEach(b => b.onclick = () => {
     const id = b.dataset.id, w = b.dataset.ffix;
-    if (w === "price" && typeof priceDraw === "function") { PRC.open = id; PRC.only = false; PRC.city = ""; PRC.q = filName(shops.find(x => x.id === id) || {}); priceDraw(); document.getElementById("ptPriceSec").scrollIntoView({ behavior: "smooth" }); return; }
+    if (w === "price" && typeof priceDraw === "function") { PRC.open = id; PRC.only = false; PRC.city = ""; PRC.q = filName(shops.find(x => x.id === id) || {}); priceDraw(); portalGo("price"); return; }
     if (w === "review") { FIL.rq = true; fillDraw(); document.querySelector(".fil-rv").scrollIntoView({ behavior: "smooth", block: "center" }); return; }
     if (typeof openEditor === "function") openEditor(id);
   });

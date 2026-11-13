@@ -3,7 +3,7 @@
    - 오늘 할 일 모음 · 4개 공간 바로가기 · 매장별 관리 카드 · 대신 수정 기록 · 운영 가이드
    매장 관련 서버 함수는 universe10 · universe11.sql 에 있어요.
    ========================================================= */
-let PORTAL = { shops: null, bonus: null, audit: null, err: null, loading: false, guide: false };
+let PORTAL = { shops: null, bonus: null, audit: null, err: null, loading: false, guide: false, view: (() => { try { return sessionStorage.getItem("ptView"); } catch (e) { return null; } })() || "home" };
 
 async function portalLoad() {
   if (PORTAL.loading) return; PORTAL.loading = true;
@@ -36,7 +36,7 @@ function portalTodos() {
     ["💬", "답 안 한 채팅", typeof chatCount === "function" ? chatCount() : 0, () => showTab("chat")],
     ["⭐", "게시를 기다리는 손님 후기", RVS.filter(x => x.status === "pending").length, () => showTab("rv")],
     ["💌", "승인할 테라피스트 보너스", +B.pending || 0, () => { UNI.seg = "bonus"; UNI.bst = "pending"; UNI.bonus = null; showTab("uni"); }],
-    ["📨", "검색 문의 · 입점 신청 (새 것)", typeof SEO !== "undefined" && SEO.leads ? SEO.leads.filter(x => x.status === "new").length : 0, () => { const t = document.getElementById("ptSeoSec"); if (t) t.scrollIntoView({ behavior: "smooth" }); }],
+    ["📨", "검색 문의 · 입점 신청 (새 것)", typeof SEO !== "undefined" && SEO.leads ? SEO.leads.filter(x => x.status === "new").length : 0, () => portalGo("seo")],
     ["🙋", "사장님 승인 기다리는 직원 요청 (매장 카드에서 보기)", shops.reduce((a, s) => a + (+s.pending_req || 0), 0), null],
   ];
   return [["📅 예약 · 손님", bk], ["🌌 매장 · 직원 · 후기", etc], ["📝 팀 일 (낙서장)", team]];
@@ -49,6 +49,42 @@ const PORTAL_SIMS = [
   { role: "owner", ic: "🏪", nm: "업체 사장님 입장", def: "vi", desc: "예약 수락 → 현황판 도착 · 배정 · 끝내기 → 워크인 → 근무표 요청 승인 → 정산. 입점 영업 때 보여 주기 좋아요." },
   { role: "staff", ic: "💆", nm: "테라피스트 입장", def: "vi", desc: "휴대폰 출근 → 지금 시술 확인 → 후기 · 보너스 → 휴무 · 근무 변경 요청 → 경력 프로필(본인 동의)." },
 ];
+
+// 🧩 사내 앱 — 포털을 목적별로 나눠서, 하나씩 열어 봐요 (한 화면에 다 펼치면 스크롤이 너무 길어서)
+const PORTAL_APPS = [
+  ["🧭 운영", [["spaces", "🧭", "공간 바로가기", "손님 사이트 · 사장님 · 직원 화면 주소 · 안내 문구"], ["shops", "🏪", "매장별 관리", "현황판 · 대신 수정 · 직원 PIN · 사장님 계정"], ["audit", "🛠️", "대신 수정 기록", "사장님 화면 '오늘'에도 보여요"], ["sim", "🎬", "운영 시뮬레이션", "입점 영업 · 직원 교육용 데모"]]],
+  ["🏪 가게 정보", [["fill", "📋", "가게 정보 채우기", "업체별 검색 점수 · 빈 칸 · 후기 요청"], ["price", "💰", "가격 채우기", "메뉴 가격을 휴대폰으로 바로"], ["links", "🔗", "가게에 링크 달기", "구글 지도 · 페북 · 잘로 · QR"], ["crawl", "📥", "링크로 가게 가져오기", "홈페이지 · 가격표 링크로 페이지 만들기"]]],
+  ["🔎 검색 · 마케팅", [["blog", "📝", "블로그", "검색어로 글 만들기 · 네이버 요약본"], ["comp", "🔍", "경쟁사 분석", "빠진 검색어 · 소개된 가게"], ["con", "📈", "엉클데이 서치 콘솔", "구글 색인 상태 · URL 검사"], ["seo", "📨", "검색 유입 · 리드", "어디서 왔는지 · 미입점 문의"]]],
+  ["📚 자료", [["guide", "📘", "운영 가이드", "팀원용 설명서 · 자주 묻는 질문"], ["brand", "🎨", "브랜드 자료실 (CI)", "로고 · 색 · 글꼴 · 원본"]]],
+];
+const portalApp = k => PORTAL_APPS.flatMap(g => g[1]).find(a => a[0] === k);
+function portalBadge(k) {
+  try {
+    if (k === "seo" && typeof SEO !== "undefined" && SEO.leads) return SEO.leads.filter(x => x.status === "new").length;
+    if (k === "fill" && typeof filRvTargets === "function") return filRvTargets().length;
+    if (k === "shops") return (PORTAL.shops || []).reduce((a, s) => a + (+s.pending_req || 0), 0);
+  } catch (e) {}
+  return 0;
+}
+function portalApps() {
+  return PORTAL_APPS.map(([g, A]) => `<h4 class="pt-gh">${g}</h4><div class="pt-apps">${A.map(([k, ic, nm, d]) => { const n = portalBadge(k);
+    return `<button class="pt-app" data-pgo="${k}"><span class="ic">${ic}</span><span class="t"><b>${esc(nm)}${n ? ` <em>${n}</em>` : ""}</b><small>${esc(d)}</small></span></button>`; }).join("")}</div>`).join("");
+}
+function portalNav() {
+  return `<button data-pgo="home"><span>🏠</span>포털 홈</button>` + PORTAL_APPS.map(([g, A]) => `<small>${g}</small>${A.map(([k, ic, nm]) => { const n = portalBadge(k); return `<button data-pgo="${k}"><span>${ic}</span>${esc(nm)}${n ? `<em>${n}</em>` : ""}</button>`; }).join("")}`).join("");
+}
+// 화면 바꾸기: 섹션은 모두 그려 두고 지금 고른 것만 보여요 (입력 중인 내용이 안 날아가요)
+function portalGo(k, quiet) {
+  const el = $("tab-home"); if (!el) return;
+  if (k !== "home" && !portalApp(k)) k = "home";
+  PORTAL.view = k; try { sessionStorage.setItem("ptView", k); } catch (e) {}
+  el.querySelectorAll("[data-pv]").forEach(s => s.hidden = !(s.dataset.pv === k || (s.dataset.pv === "sub" && k !== "home")));
+  el.querySelectorAll(".pt-side [data-pgo]").forEach(b => b.classList.toggle("on", b.dataset.pgo === k));
+  // 같은 묶음의 다른 앱으로 바로 가는 칩 (휴대폰에서 왼쪽 메뉴 대신)
+  const g = PORTAL_APPS.find(x => x[1].some(a => a[0] === k)), cur = el.querySelector("#ptCur");
+  if (cur) { cur.innerHTML = g ? g[1].map(([id, ic, nm]) => `<button class="${id === k ? "on" : ""}" data-pgo="${id}">${ic} ${esc(nm)}</button>`).join("") : ""; cur.querySelectorAll("[data-pgo]").forEach(x => x.onclick = () => portalGo(x.dataset.pgo)); }
+  if (!quiet) { const m = el.querySelector(".pt-main"); if (m) window.scrollTo({ top: Math.max(0, m.getBoundingClientRect().top + window.scrollY - 70), behavior: "smooth" }); }
+}
 function drawPortal(skip) {
   const el = $("tab-home"); if (!el) return;
   if (!skip && !PORTAL.loading) portalLoad();
@@ -57,41 +93,44 @@ function drawPortal(skip) {
   const vnd = n => "₫" + Math.round(+n || 0).toLocaleString("en-US");
   const stTxt = st => ({ before: "영업 전", open_auto: "영업 중", open_manual: "영업 중", after: "영업 종료", closed_manual: "마감", dayoff: "휴무일" })[(st || {}).status] || "-";
   const others = (typeof shops !== "undefined" ? shops : []).filter(s => !S.some(x => x.id === s.id));
-  el.innerHTML = `
-    <div class="pt-hero"><div><h2>🏠 엉클데이 사내 포털</h2><p>오늘 처리할 일, 공간 바로가기, 매장 관리, 운영 가이드를 한곳에 모았어요.</p></div><button class="btn sm" data-pact="reload">↻ 새로고침</button></div>
+  el.innerHTML = `<div class="pt-wrap"><nav class="pt-side">${portalNav()}</nav><div class="pt-main">
+    <div class="pt-back" data-pv="sub"><button class="btn sm" data-pgo="home">← 포털 홈</button><div class="pt-chips" id="ptCur"></div></div>
+    <div class="pt-hero" data-pv="home"><div><h2>🏠 엉클데이 사내 포털</h2><p>오늘 처리할 일, 공간 바로가기, 매장 관리, 운영 가이드를 한곳에 모았어요.</p></div><button class="btn sm" data-pact="reload">↻ 새로고침</button></div>
     ${PORTAL.err ? `<div class="uni-err">${esc(PORTAL.err)}</div>` : ""}
-    <section class="pt-sec"><h3>✅ 오늘 할 일 <span class="hint">${todoN ? `${todoN}건` : "모두 처리했어요 🎉"}</span></h3>
+    <section class="pt-sec" data-pv="home"><h3>🧩 사내 앱 <span class="hint">눌러서 들어가요 · 큰 화면은 왼쪽 메뉴로도 이동</span></h3>${portalApps()}</section>
+    <section class="pt-sec" data-pv="home"><h3>✅ 오늘 할 일 <span class="hint">${todoN ? `${todoN}건` : "모두 처리했어요 🎉"}</span></h3>
       ${(() => { let k = -1; return G.map(([gn, items]) => `<h4 class="pt-gh">${gn} <span class="hint">${items.reduce((a, x) => a + (x[2] || 0), 0)}건</span></h4><div class="pt-todos">${items.map(([ic, l, n, go]) => { k++; return `<button class="pt-todo ${n ? "" : "zero"}" data-ptodo="${k}" ${go && n ? "" : "disabled"}><span class="ic">${ic}</span><span class="l">${esc(l)}</span><b>${n || 0}</b></button>`; }).join("")}</div>`).join(""); })()}</section>
-    <section class="pt-sec"><h3>🧭 공간 바로가기</h3>
+    <section class="pt-sec" data-pv="spaces"><h3>🧭 공간 바로가기</h3>
       <div class="pt-spaces">${PORTAL_SPACES.map(s => `<div class="pt-space"><div class="h"><span class="ic">${s.ic}</span><b>${esc(s.nm)}</b></div>
         <small><b>누가</b> ${esc(s.who)}</small><small><b>로그인</b> ${esc(s.how)}</small><small><b>하는 일</b> ${esc(s.desc)}</small>
         <div class="pt-row"><a class="btn sm main" href="${s.url}" target="_blank" rel="noopener">열기 ↗</a><button class="btn sm" data-pcopy="${esc("https://www.uncleday.com" + (s.url === "/" ? "" : s.url))}">주소 복사</button></div></div>`).join("")}</div>
       <div class="pt-msgs"><b>📋 보낼 안내 문구</b>${[["owner", "사장님께"], ["staff", "직원에게"]].map(([k, l]) => `<div class="pt-msg"><span>${l}</span><button class="btn sm" data-pmsg="${k}" data-l="vi">베트남어 복사</button><button class="btn sm" data-pmsg="${k}" data-l="ko">한국어 복사</button></div>`).join("")}</div></section>
-    <section class="pt-sec"><h3>🎬 운영 시뮬레이션 <span class="hint">입점 영업 · 직원 교육용 · 가짜 데이터라 아무것도 저장되지 않아요</span></h3>
+    <section class="pt-sec" data-pv="sim"><h3>🎬 운영 시뮬레이션 <span class="hint">입점 영업 · 직원 교육용 · 가짜 데이터라 아무것도 저장되지 않아요</span></h3>
       <div class="pt-spaces">${PORTAL_SIMS.map(s => `<div class="pt-space"><div class="h"><span class="ic">${s.ic}</span><b>${esc(s.nm)}</b></div><small>${esc(s.desc)}</small>
         <div class="pt-row">${[["vi", "🇻🇳 베트남어"], ["ko", "🇰🇷 한국어"]].map(([l, ln]) => `<a class="btn sm ${l === s.def ? "main" : ""}" href="/demo.html?role=${s.role}&lang=${l}" target="_blank" rel="noopener">${ln} ↗</a>`).join("")}<button class="btn sm" data-pcopy="https://www.uncleday.com/demo.html?role=${s.role}&lang=${s.def}">주소 복사</button></div></div>`).join("")}</div></section>
-    <section class="pt-sec" id="ptLinksSec"><h3>🔗 가게에 엉클데이 링크 달기 <span class="hint">구글 지도 예약 링크 · 페이스북 · 잘로 · 인스타 · 매장 QR — 검색 노출 1순위</span></h3><div id="ptLinks"></div></section>
-    <section class="pt-sec" id="ptFillSec"><h3>📋 가게 정보 채우기 <span class="hint">업체별 검색 점수 100점 만점 — 사진 · 가격 · 후기 · 소개 · 위치 빈 칸 찾기 · 사장님께 요청 · 후기 요청</span></h3><div id="ptFill"></div></section>
-    <section class="pt-sec" id="ptPriceSec"><h3>💰 가격 채우기 <span class="hint">업체 메뉴 가격 — 채울수록 검색 · AI 에 강해져요 · 영업 현장에서 휴대폰으로</span></h3><div id="ptPrice"></div></section>
-    <section class="pt-sec" id="ptCrawlSec"><h3>🔗 링크로 가게 가져오기 <span class="hint">가게 홈페이지 · 가격표 링크를 넣으면 정보를 뽑아 와서 검색 페이지로 만들어요</span></h3><div id="ptCrawl"></div></section>
-    <section class="pt-sec" id="ptCompSec"><h3>🔍 경쟁사 분석 <span class="hint">경쟁 사이트가 노리는 검색어 중 엉클데이에 없는 것 · 경쟁사가 소개한 가게 중 엉클데이에 없는 곳</span></h3><div id="ptComp"></div></section>
-    <section class="pt-sec" id="ptBlogSec"><h3>📝 블로그 <span class="hint">검색어 하나로 우리 데이터 글 만들기 — 가까운 순 · 실제 가격 · 영업시간 · FAQ, 매시간 최신으로</span></h3><div id="ptBlog"></div></section>
-    <section class="pt-sec" id="ptConSec"><h3>🔎 엉클데이 서치 콘솔 <span class="hint">사이트의 모든 페이지가 구글에 색인됐는지 — 종류별 · URL 검사 · 사이트맵</span></h3><div id="ptCon"></div></section>
-    <section class="pt-sec" id="ptSeoSec"><h3>🔎 검색 유입 · 리드 <span class="hint">구글 · 네이버 · AI 에서 들어온 손님 수 · 미입점 가게 문의 · 영업용 조회수</span></h3><div id="ptSeo"></div></section>
-    <section class="pt-sec"><h3>🎨 브랜드 자료실 (CI) <span class="hint">명함 · 홍보물 · 자료 만들 때 쓰는 로고 · 색 · 글꼴 · 원본 파일</span></h3><div id="ptBrand"></div></section>
-    <section class="pt-sec"><h3>🏪 매장별 관리 <span class="hint">현황판 쓰는 매장 ${S.length}곳</span></h3>
+    <section class="pt-sec" data-pv="links" id="ptLinksSec"><h3>🔗 가게에 엉클데이 링크 달기 <span class="hint">구글 지도 예약 링크 · 페이스북 · 잘로 · 인스타 · 매장 QR — 검색 노출 1순위</span></h3><div id="ptLinks"></div></section>
+    <section class="pt-sec" data-pv="fill" id="ptFillSec"><h3>📋 가게 정보 채우기 <span class="hint">업체별 검색 점수 100점 만점 — 사진 · 가격 · 후기 · 소개 · 위치 빈 칸 찾기 · 사장님께 요청 · 후기 요청</span></h3><div id="ptFill"></div></section>
+    <section class="pt-sec" data-pv="price" id="ptPriceSec"><h3>💰 가격 채우기 <span class="hint">업체 메뉴 가격 — 채울수록 검색 · AI 에 강해져요 · 영업 현장에서 휴대폰으로</span></h3><div id="ptPrice"></div></section>
+    <section class="pt-sec" data-pv="crawl" id="ptCrawlSec"><h3>🔗 링크로 가게 가져오기 <span class="hint">가게 홈페이지 · 가격표 링크를 넣으면 정보를 뽑아 와서 검색 페이지로 만들어요</span></h3><div id="ptCrawl"></div></section>
+    <section class="pt-sec" data-pv="comp" id="ptCompSec"><h3>🔍 경쟁사 분석 <span class="hint">경쟁 사이트가 노리는 검색어 중 엉클데이에 없는 것 · 경쟁사가 소개한 가게 중 엉클데이에 없는 곳</span></h3><div id="ptComp"></div></section>
+    <section class="pt-sec" data-pv="blog" id="ptBlogSec"><h3>📝 블로그 <span class="hint">검색어 하나로 우리 데이터 글 만들기 — 가까운 순 · 실제 가격 · 영업시간 · FAQ, 매시간 최신으로</span></h3><div id="ptBlog"></div></section>
+    <section class="pt-sec" data-pv="con" id="ptConSec"><h3>🔎 엉클데이 서치 콘솔 <span class="hint">사이트의 모든 페이지가 구글에 색인됐는지 — 종류별 · URL 검사 · 사이트맵</span></h3><div id="ptCon"></div></section>
+    <section class="pt-sec" data-pv="seo" id="ptSeoSec"><h3>🔎 검색 유입 · 리드 <span class="hint">구글 · 네이버 · AI 에서 들어온 손님 수 · 미입점 가게 문의 · 영업용 조회수</span></h3><div id="ptSeo"></div></section>
+    <section class="pt-sec" data-pv="brand"><h3>🎨 브랜드 자료실 (CI) <span class="hint">명함 · 홍보물 · 자료 만들 때 쓰는 로고 · 색 · 글꼴 · 원본 파일</span></h3><div id="ptBrand"></div></section>
+    <section class="pt-sec" data-pv="shops"><h3>🏪 매장별 관리 <span class="hint">현황판 쓰는 매장 ${S.length}곳</span></h3>
       ${S.length ? `<div class="pt-shops">${S.map(s => `<div class="pt-shop"><div class="h"><b>${esc(s.name)}</b><span class="uni-chip ${(s.state || {}).is_open ? "ok" : ""}">${stTxt(s.state)}</span></div>
         <div class="nums"><span>출근 <b>${s.in_now}/${s.staff}</b></span><span>시술 중 <b>${s.working}</b></span><span>대기 <b>${s.waiting}</b></span><span>오늘 <b>${s.done_today}</b> · ${vnd(s.rev_today)}</span>${s.pending_req ? `<span class="warn">요청 대기 <b>${s.pending_req}</b></span>` : ""}<span>📱 ${s.app}명</span></div>
         <div class="pt-row"><button class="btn sm" data-pboard="${esc(s.id)}" data-nm="${esc(s.name)}">🗺️ 보기</button><button class="btn sm" data-pedit="${esc(s.id)}" data-nm="${esc(s.name)}">✏️ 대신 수정</button><button class="btn sm" data-pstaff="${esc(s.id)}" data-nm="${esc(s.name)}">👩 직원 · PIN</button><button class="btn sm" data-pacc="${esc(s.id)}">🔑 사장님 계정</button><button class="btn sm" data-plinks="${esc(s.id)}">🔗 링크 · QR</button></div></div>`).join("")}</div>` : `<div class="uni-empty">아직 현황판을 쓰는 매장이 없어요.</div>`}
       ${others.length ? `<div class="pt-start"><span>현황판을 아직 안 쓰는 업체를 대신 설정해 주기:</span><select id="ptOther">${others.map(s => `<option value="${esc(s.id)}">${esc((s.name && (s.name.ko || s.name.en || s.name.vi)) || s.id)}</option>`).join("")}</select><button class="btn sm main" data-pact="start">✏️ 대신 설정 시작</button></div>` : ""}
     </section>
-    <section class="pt-sec"><h3>🛠️ 최근 대신 수정 기록 <span class="hint">사장님 화면 '오늘'에도 똑같이 보여요</span></h3>
+    <section class="pt-sec" data-pv="audit"><h3>🛠️ 최근 대신 수정 기록 <span class="hint">사장님 화면 '오늘'에도 똑같이 보여요</span></h3>
       ${(PORTAL.audit || []).length ? `<div class="pt-audit">${PORTAL.audit.map(a => `<div><span>${esc(new Date(a.at).toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Ho_Chi_Minh" }))}</span><b>${esc(a.shop || a.shop_id)}</b> ${esc(a.summary || "")} <small>${esc(a.who || "")}</small></div>`).join("")}</div>` : `<p class="hint">아직 대신 수정한 기록이 없어요.</p>`}</section>
-    <section class="pt-sec" id="ptGuide"><h3>📘 운영 가이드 · 매뉴얼 <span class="hint">내용은 📘 사용 안내 한 곳에서만 고쳐요</span></h3>
+    <section class="pt-sec" data-pv="guide" id="ptGuide"><h3>📘 운영 가이드 · 매뉴얼 <span class="hint">내용은 📘 사용 안내 한 곳에서만 고쳐요</span></h3>
       ${PORTAL.guide ? `<button class="btn sm" data-pact="guideclose">← 포털 요약으로</button><div id="ptGuideBox" style="margin-top:10px"></div>` : `<div class="pt-guide">
         <div><b>📘 전체 사용 안내</b><small>예약 처리 · 업체 관리 · 채팅 · 백업 · 사장님 페이지 · 유니버스까지 팀원용 설명서 (검색 가능)</small><button class="btn sm main" data-pact="guide">열기</button></div>
-        ${portalFaq().map(it => `<div><b>${it.ic || "❓"} ${esc(it.t)}</b><small>${it.b}</small></div>`).join("")}</div>`}</section>`;
+        ${portalFaq().map(it => `<div><b>${it.ic || "❓"} ${esc(it.t)}</b><small>${it.b}</small></div>`).join("")}</div>`}</section></div></div>`;
   portalBind(el);
+  portalGo(PORTAL.view || "home", true);
   if (typeof brandDraw === "function") brandDraw();
   if (typeof seoDraw === "function") seoDraw();
   if (typeof priceDraw === "function") priceDraw();
@@ -112,17 +151,18 @@ function portalFaq() {
 function portalBind(el) {
   const T = portalTodos().flatMap(g => g[1]);
   el.querySelectorAll("[data-ptodo]").forEach(b => b.onclick = () => { const go = T[+b.dataset.ptodo][3]; if (go) go(); });
+  el.querySelectorAll("[data-pgo]").forEach(b => b.onclick = () => portalGo(b.dataset.pgo));
   el.querySelectorAll("[data-pcopy]").forEach(b => b.onclick = () => portalCopy(b.dataset.pcopy));
   el.querySelectorAll("[data-pmsg]").forEach(b => b.onclick = () => portalCopy(PORTAL_MSG[b.dataset.pmsg][b.dataset.l]));
   el.querySelectorAll("[data-pboard]").forEach(b => b.onclick = () => uniOpenBoard(b.dataset.pboard, b.dataset.nm));
   el.querySelectorAll("[data-pedit]").forEach(b => b.onclick = () => uniOpenBoard(b.dataset.pedit, b.dataset.nm, true));
   el.querySelectorAll("[data-pstaff]").forEach(b => b.onclick = () => portalStaff(b.dataset.pstaff, b.dataset.nm));
-  el.querySelectorAll("[data-plinks]").forEach(b => b.onclick = () => { if (typeof LNK === "undefined") return; LNK.id = b.dataset.plinks; LNK.q = ""; linksDraw(); const s = document.getElementById("ptLinksSec"); if (s) s.scrollIntoView({ behavior: "smooth", block: "start" }); });
+  el.querySelectorAll("[data-plinks]").forEach(b => b.onclick = () => { if (typeof LNK === "undefined") return; LNK.id = b.dataset.plinks; LNK.q = ""; linksDraw(); portalGo("links"); });
   el.querySelectorAll("[data-pacc]").forEach(b => b.onclick = () => { if (typeof openEditor === "function") openEditor(b.dataset.pacc); });
   el.querySelectorAll("[data-pact]").forEach(b => b.onclick = () => {
     const a = b.dataset.pact;
     if (a === "reload") { PORTAL.shops = null; return drawPortal(); }
-    if (a === "guide") { PORTAL.guide = true; drawPortal(true); const g = $("ptGuide"); if (g) g.scrollIntoView({ behavior: "smooth" }); return; }
+    if (a === "guide") { PORTAL.guide = true; drawPortal(true); return; }
     if (a === "guideclose") { PORTAL.guide = false; return drawPortal(true); }
     if (a === "start") { const s = el.querySelector("#ptOther"); if (!s) return; uniOpenBoard(s.value, s.options[s.selectedIndex].text, true); }
   });
