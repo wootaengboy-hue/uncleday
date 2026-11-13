@@ -100,8 +100,9 @@ function drawPortal(skip) {
 }
 // 포털 요약에 보여 줄 질문: 📘 사용 안내의 '🌌 유니버스 · 포털' 묶음에서 가져와요 (따로 쓰지 않아요)
 function portalFaq() {
-  const sec = (typeof GUIDE !== "undefined" ? GUIDE : []).find(s => /유니버스/.test(s.sec));
-  return sec ? sec.items : [];
+  const G = typeof GUIDE !== "undefined" ? GUIDE : [];
+  const srch = G.find(s => /검색 노출/.test(s.sec)), sec = G.find(s => /유니버스/.test(s.sec));   // 🔎 검색 노출(중요)을 맨 앞에
+  return [...(srch ? srch.items : []), ...(sec ? sec.items : [])];
 }
 
 function portalBind(el) {
