@@ -115,6 +115,7 @@ function compDraw() {
   el.querySelectorAll("[data-cmpopen]").forEach(b => b.onclick = () => { const id = +b.dataset.cmpopen; CMP.open = CMP.open === id ? null : id; compDraw(); });
   el.querySelectorAll("[data-cmptab]").forEach(b => b.onclick = () => { CMP.tab = b.dataset.cmptab; compDraw(); });
   el.querySelectorAll("[data-cmpcopy]").forEach(b => b.onclick = () => portalCopy(b.dataset.cmpcopy));
+  el.querySelectorAll("[data-cmpfixall]").forEach(b => b.onclick = async () => { b.disabled = true; if (!(await blogBulk(blgReframes(b.dataset.cmpfixall), { fromUrl: b.dataset.u }))) b.disabled = false; });
   el.querySelectorAll("[data-cmpfix]").forEach(b => b.onclick = async () => { const L = blgReframes(b.dataset.cmpfix), o = L[+b.parentNode.querySelector("[data-fixsel]").value]; if (!o) return; b.disabled = true;
     if (await blogNewP(o, b.dataset.u)) toast("📝 '" + o.kw + "' 초안을 만들었어요. 아래 '📝 블로그'에서 확인 · 게시해 주세요", 4000); else b.disabled = false; });
   el.querySelectorAll("[data-cmpblog]").forEach(b => b.onclick = async () => { if (typeof blogNew !== "function") return; b.disabled = true; const r = await blogNew(b.dataset.cmpblog, b.dataset.u); if (r) { b.textContent = "✅ 초안 만듦"; toast("📝 블로그 초안을 만들었어요. 아래 '📝 블로그'에서 확인 · 게시해 주세요", 4000); } else b.disabled = false; });
