@@ -58,6 +58,8 @@ async function blogLoad() {
   if (r.error) { BLG.err = /blog_posts|42P01|PGRST20/.test((r.error.message || "") + (r.error.code || "")) ? "setup" : r.error.message; BLG.posts = []; } else { BLG.err = ""; BLG.posts = r.data || []; }
   blogDraw();
 }
+// 분야 밖 검색어 → 같은 손님을 노리는 우리 분야 검색어 (검색어에 손님 정보가 없으면 제목에서도 찾아요)
+const blgFixKw = b => blgReframe(b.kw) || blgReframe([b.kw, b.title].filter(Boolean).join(" "));
 async function blogNew(kw, fromUrl) {
   const p = blgParse(kw);
   if (p.topics.length > 1 && !p.treat) p.topic = p.topics.map(t => [t, blgPreview({ ...p, topic: t }).length]).sort((x, y) => y[1] - x[1])[0][0];   // 주제가 여럿이면 업체가 많이 나오는 쪽
@@ -89,7 +91,7 @@ function blogDraw() {
           <div class="crl-two"><label>주제<select data-bf="topic">${opt(BLG_TOPIC, b.topic, "없음")}</select></label><label>시술 가격<select data-bf="treat">${opt(BLG_TREAT, b.treat, "없음")}</select></label></div>
           <label>업체 종류<select data-bf="grp">${opt([["spabody", "마사지 · 스파"], ["beauty", "피부 · 뷰티 · 성형"]], b.grp, "마사지 · 스파")}</select></label>
           <label>첫 문단 <small class="hint">비우면 자동 문장 · 사람이 쓴 한두 줄이 들어가면 더 좋아요</small><textarea data-bf="intro" rows="3">${esc(b.intro || "")}</textarea></label>
-          ${BLG_OUT.test(b.kw) ? `<p class="crl-err">⚠️ 이 검색어는 엉클데이 데이터가 없는 분야(맛집 · 숙소 · 투어 등)라 게시할 수 없어요.</p>` : ""}
+          ${BLG_OUT.test(b.kw) ? `<p class="crl-err">⚠️ 이 검색어는 엉클데이 데이터가 없는 분야(맛집 · 숙소 · 투어 등)라 사이트에 글이 안 생겨요. 제목만 고쳐서는 안 되고 <b>검색어</b>를 바꿔야 해요.${blgFixKw(b) ? `<br><button class="btn sm main" data-bfix="${b.id}" style="margin-top:6px">🔄 "${esc(blgFixKw(b))}"(으)로 바꾸기</button>` : ""}</p>` : b.title && BLG_OUT.test(b.title) ? `<p class="crl-err">⚠️ 제목에 '${esc(b.title.match(BLG_OUT)[0])}'이(가) 들어 있어요. 글 내용은 마사지 · 뷰티 업체라 제목과 안 맞아요. 제목을 비우면 자동 제목이 붙어요.</p>` : ""}
           <div class="blg-pv"><b>미리보기 (예상 ${pv.length}곳${pv.length < 2 ? " — ⚠️ 2곳보다 적어서 페이지가 안 생겨요. 장소 · 주제를 바꿔 보세요" : ""})</b><ol>${pv.map(s => `<li>${esc((s.name || {}).ko || s.id)}${s._d != null ? ` <small>약 ${s._d.toFixed(1)}km</small>` : ""}</li>`).join("")}</ol></div>
           <p class="hint">주소: <code>/blog/${esc(blgSlug(b))}/</code>${b.status === "published" ? ` · <a href="/blog/${esc(blgSlug(b))}/" target="_blank" rel="noopener">사이트에서 보기 ↗</a> (게시 후 1시간 안에 생겨요)` : ""}${b.from_url ? ` · 주제 얻은 곳: <a href="${esc(b.from_url)}" target="_blank" rel="noopener nofollow">경쟁사 글</a>` : ""}</p>
           <div class="crl-act">${b.status === "published" ? `<button class="btn sm main" data-bsave="${b.id}">고친 내용 저장</button><button class="btn sm" data-bunpub="${b.id}">게시 내리기</button><button class="btn sm" data-bnaver="${b.id}" style="background:#03c75a;color:#fff;border-color:#03c75a">📗 네이버 블로그 요약본</button>` : `<button class="btn sm main" data-bpub="${b.id}" ${BLG_OUT.test(b.kw) ? "disabled" : ""}>🌐 게시</button><button class="btn sm" data-bsave="${b.id}">저장만</button>`}<button class="btn sm danger" data-bdel="${b.id}">🗑️</button></div><div class="nv-box"></div>
@@ -102,6 +104,9 @@ function blogDraw() {
   el.querySelectorAll("[data-bopen]").forEach(b => b.onclick = () => { const id = +b.dataset.bopen; BLG.open = BLG.open === id ? null : id; blogDraw(); });
   el.querySelectorAll("[data-bpost] [data-bf]").forEach(i => i.onchange = () => { const id = +i.closest("[data-bpost]").dataset.bpost, p = BLG.posts.find(x => x.id === id); Object.assign(p, collect(id)); if (i.dataset.bf === "city") p.landmark = null; blogDraw(); });
   el.querySelectorAll("[data-bnaver]").forEach(x => x.onclick = () => naverOpen(BLG.posts.find(p => p.id === +x.dataset.bnaver)));
+  el.querySelectorAll("[data-bfix]").forEach(x => x.onclick = () => { const id = +x.dataset.bfix, o = BLG.posts.find(p => p.id === id), kw = blgFixKw(o), p = blgParse(kw);
+    if (p.topics.length > 1 && !p.treat) p.topic = p.topics.map(t => [t, blgPreview({ ...p, topic: t }).length]).sort((m, n) => n[1] - m[1])[0][0]; delete p.topics;
+    up(id, { kw, title: null, ...p }, "검색어를 우리 분야로 바꿨어요 · 게시 상태면 1시간 안에 사이트에 생겨요"); });
   el.querySelectorAll("[data-bsave]").forEach(b => b.onclick = () => up(+b.dataset.bsave, collect(+b.dataset.bsave), "저장했어요 · 1시간 안에 사이트에 반영돼요"));
   el.querySelectorAll("[data-bpub]").forEach(b => b.onclick = () => { const id = +b.dataset.bpub, o = collect(id); if (blgPreview({ ...BLG.posts.find(x => x.id === id), ...o }).length < 2 && !confirm("예상 업체가 2곳보다 적어서 페이지가 안 생길 수 있어요. 그래도 게시할까요?")) return; up(id, { ...o, status: "published" }, "🌐 게시했어요. 1시간 안에 블로그 페이지가 생겨요"); });
   el.querySelectorAll("[data-bunpub]").forEach(b => b.onclick = () => up(+b.dataset.bunpub, { status: "draft" }, "게시를 내렸어요. 1시간 안에 페이지가 사라져요"));
