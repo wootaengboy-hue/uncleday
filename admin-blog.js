@@ -31,10 +31,10 @@ function blgParse(kw) {
 //  · 표현 · 정보형 (예: '수건 좀 주세요 베트남어', '다낭 관광지 이용가이드') → 업체 목록 글과 안 맞아요 (가이드 페이지 몫)
 //  · 업종 말이 없는 검색어 (예: '씬짜오 다낭', '다낭 공항 정보') → 우리 분야 주제로 바꿔서만
 const BLG_DOM = /마사지|맛사지|스파|발\s*관리|풋|네일|젤|패디|속눈썹|래쉬|연장|헤어|미용|이발|바버|커트|컷|펌|염색|두피|샴푸|피부|스킨|에스테틱|관리|왁싱|제모|성형|클리닉|필러|보톡스|리프팅|뷰티|찜질|사우나|massage|spa|nail|hair|salon|beauty|facial|lash|clinic|barber|wax|skin/i;
-const BLG_PHRASE = /베트남어|회화|한마디|표현|뜻|발음|이용\s*가이드|관광지|환전|유심|날씨|비자|입국|팁은|얼마인가요|해주세요|주세요|할 수 있나요|되나요|아파요/i;
+const BLG_PHRASE = /베트남어|회화|한마디|발음|뜻|이용\s*가이드|팁은|얼마인가요|해주세요|주세요|할 수 있나요|되나요|아파요/i;
 const blgPhrase = kw => BLG_PHRASE.test(kw || "");
 const blgViet = kw => blgPhrase(kw) && /베트남어/.test(kw || "");   // → 📘 /blog/vietnamese-for-spa/ 가이드 한 곳으로 모아요
-const blgOut = kw => (BLG_OUT.test(kw || "") || !BLG_DOM.test(kw || "") || blgPhrase(kw)) && !/베트남어/.test(kw || "");   // 주제를 바꿔야 올라가는 검색어
+const blgOut = kw => (!BLG_DOM.test(kw || "") || blgPhrase(kw)) && !/베트남어/.test(kw || "");   // 주제를 바꿔야 올라가는 검색어
 const BLG_OUT = /맛집|식당|음식|먹거리|카페|커피|베이커리|호텔|숙소|리조트|풀빌라|빌라|에어비앤비|가라오케|노래방|골프|렌트|렌터카|차량|택시|투어|술집|클럽|bar\b|pub\b|restaurant|food|cafe|coffee|hotel|villa|golf|karaoke/i;
 // 엉클데이 분야가 아닌 경쟁사 주제를 '같은 손님 · 같은 장소'로 우리 분야 검색어로 바꿔요 (예: 다낭 2룸 풀빌라 추천 – 커플 · 가족 여행 → 커플 · 가족 여행에 좋은 다낭 마사지 추천)
 function blgReframe(kw) {

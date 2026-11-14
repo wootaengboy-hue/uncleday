@@ -1105,13 +1105,13 @@ hubs = [c["id"] for c in d["cities"] if any(x.get("city") == c["id"] for x in li
 os.makedirs("c", exist_ok=True); os.makedirs("en/c", exist_ok=True); os.makedirs("p", exist_ok=True); UNC = {c: unclaimed(c) for c in hubs}; TREATS = {c: city_treats(c, [x for x in live if x.get("city") == c]) for c in hubs}
 os.makedirs("blog", exist_ok=True); keep_b = set(); BLOG_OUT = []
 BLOG_DOM_RX = re.compile(r"마사지|맛사지|스파|발\s*관리|풋|네일|젤|패디|속눈썹|래쉬|연장|헤어|미용|이발|바버|커트|컷|펌|염색|두피|샴푸|피부|스킨|에스테틱|관리|왁싱|제모|성형|클리닉|필러|보톡스|리프팅|뷰티|찜질|사우나|massage|spa|nail|hair|salon|beauty|facial|lash|clinic|barber|wax|skin", re.I)   # 업종 말 (admin-blog.js BLG_DOM 과 같게)
-BLOG_PHRASE_RX = re.compile(r"베트남어|회화|한마디|표현|뜻|발음|이용\s*가이드|관광지|환전|유심|날씨|비자|입국|팁은|얼마인가요|해주세요|주세요|할 수 있나요|되나요|아파요", re.I)   # 표현 · 정보 검색어 (admin-blog.js BLG_PHRASE 와 같게)
+BLOG_PHRASE_RX = re.compile(r"베트남어|회화|한마디|발음|뜻|이용\s*가이드|팁은|얼마인가요|해주세요|주세요|할 수 있나요|되나요|아파요", re.I)   # 표현 · 정보 검색어 (admin-blog.js BLG_PHRASE 와 같게)
 BLOG_OUT_RX = re.compile(r"맛집|식당|음식|먹거리|카페|커피|베이커리|호텔|숙소|리조트|풀빌라|빌라|에어비앤비|가라오케|노래방|골프|렌트|렌터카|차량|택시|투어|술집|클럽|\bbar\b|\bpub\b|restaurant|food|cafe|coffee|hotel|villa|golf|karaoke", re.I)
 print("블로그 게시 글", len(BLOG), "개")
 for b in BLOG:
     if b.get("city") not in hubs: print("  건너뜀 (도시에 업체 없음):", b.get("kw"), b.get("city")); continue
     if BLOG_PHRASE_RX.search(b.get("kw") or ""): print("  → 📘 베트남어 가이드로 모음:" if "베트남어" in (b.get("kw") or "") else "  건너뜀 (표현 · 정보 검색어 — 업체 목록 글과 안 맞음):", b.get("kw")); continue
-    if BLOG_OUT_RX.search(b.get("kw") or "") or not BLOG_DOM_RX.search(b.get("kw") or ""): print("  건너뜀 (엉클데이 업종 말이 없음):", b.get("kw")); continue   # 검색어와 업체 목록이 맞는 글만 만들어요
+    if not BLOG_DOM_RX.search(b.get("kw") or ""): print("  건너뜀 (엉클데이 업종 말이 없음):", b.get("kw")); continue   # 검색어와 업체 목록이 맞는 글만 만들어요
     sl, h, n, t, u = blog_page(b)
     if n < 2 or sl in keep_b: print(f"  건너뜀 (맞는 업체 {n}곳):", b.get("kw")); continue   # 업체 2곳 미만이면 글을 안 만들어요
     print(f"  ✅ /blog/{sl}/ 업체 {n}곳:", b.get("kw"))
