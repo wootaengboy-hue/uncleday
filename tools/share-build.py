@@ -981,6 +981,7 @@ def blog_page(b):
            ("엉클데이로 예약하면 더 비싼가요?", "아니요. 매장 가격 그대로이고 손님이 엉클데이에 따로 내는 돈은 없어요. 결제는 시술 후 매장에서 직접 해요.")]
     if lm: faq.insert(1, (f"{lm['ko']}에서 얼마나 걸려요?", "거리는 지도상 직선거리라 실제 이동 거리는 조금 더 길어요. " + ", ".join(f"{tx(x.get('name'))} 약 {dist(x):.1f}km" for x in xs[:3]) + ". 짧은 거리는 그랩(Grab) 바이크 · 택시로 5~10분 정도예요."))
     rel = [(f"/c/{cid}/", f"{cko} 업체 모두 보기")] + ([(f"/c/{cid}/{t['id']}/", f"{cko} {t['kw']}")] if t else []) + ([(f"/c/{cid}/price/{tr['id']}/", f"{cko} {tr['kw']} 가격 비교")] if tr and any(tt["id"] == tr["id"] for tt, _ in TREATS.get(cid, [])) else []) + ([(f"/c/{cid}/price/", f"{cko} 시술별 가격")] if TREATS.get(cid) and not tr else []) + ([(f"/c/{cid}/guide/", f"{cko} 마사지 가이드")] if cid in GUIDES else [])
+    rel.append(("/blog/vietnamese-for-spa/", "마사지 · 스파에서 쓰는 베트남어 (보여 주기 카드)"))
     js = lambda o: json.dumps(o, ensure_ascii=False).replace("</", "<\\\\/")
     lds = [{"@context": "https://schema.org", "@type": "Article", "headline": title[:110], "url": url, "inLanguage": "ko", "datePublished": pub, "dateModified": upd, "description": summ[:300],
             "author": {"@type": "Organization", "name": "엉클데이 Uncle Day", "url": SITE + "/"}, "publisher": {"@type": "Organization", "name": "엉클데이 Uncle Day", "logo": {"@type": "ImageObject", "url": SITE + "/images/logo-full.webp"}},
@@ -1030,14 +1031,14 @@ def blog_naver(b, sl):
             "shops": shops_, "tips": [[q, a] for q, a, _ in (g.get("tip") or [])[:2]], "url": f"{SITE}/blog/{sl}/?via=naver", "checked": max([checked(x) for x in xs] or [BUILT])}
 def blog_index(items):
     url = f"{SITE}/blog/"
-    cards = "".join(f'<a class="card" href="/blog/{sl}/"><b>{esc(t)}</b><small>{esc(tx(cities.get(c, {}).get("name")))} · 업체 {n}곳 · {u}</small></a>' for sl, t, n, u, c in items)
+    cards = (f'<a class="card" href="/blog/{PH_SL}/"><b>📘 마사지 · 스파에서 쓰는 베트남어 — 직원에게 보여 주는 카드</b><small>세기 조절 · 아픈 곳 · 수건 · 결제</small></a>' if os.path.isfile(f"blog/{PH_SL}/index.html") else "") + "".join(f'<a class="card" href="/blog/{sl}/"><b>{esc(t)}</b><small>{esc(tx(cities.get(c, {}).get("name")))} · 업체 {n}곳 · {u}</small></a>' for sl, t, n, u, c in items)
     nav = "".join(f'<a href="/c/{k}/">{esc(tx(cities[k]["name"]))}</a>' for k in hubs) + '<a class="on" href="/blog/">블로그</a>'
     return f"""<!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>엉클데이 블로그 — 베트남 마사지 · 스파 · 뷰티 고르는 법 | 엉클데이</title>{'' if items else '<meta name="robots" content="noindex,follow">'}<meta name="description" content="엉클데이가 직접 확인한 업체 정보(위치 · 실제 가격 · 영업시간 · 한국어 응대)로 정리한 베트남 마사지 · 스파 · 뷰티 글."><link rel="canonical" href="{url}">
+<title>엉클데이 블로그 — 베트남 마사지 · 스파 · 뷰티 고르는 법 | 엉클데이</title>{'' if items or os.path.isfile(f"blog/{PH_SL}/index.html") else '<meta name="robots" content="noindex,follow">'}<meta name="description" content="엉클데이가 직접 확인한 업체 정보(위치 · 실제 가격 · 영업시간 · 한국어 응대)로 정리한 베트남 마사지 · 스파 · 뷰티 글."><link rel="canonical" href="{url}">
 <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png"><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"><style>{HUB_CSS}</style>
 </head><body><header class="hd"><div class="in"><a class="logo" href="/"><img src="/images/logo-full.webp" alt="엉클데이 Uncle Day" width="167" height="72"></a><nav>{nav}</nav>{HCTA}</div></header>
-<main class="wrap"><h1>엉클데이 블로그</h1><p class="lead">엉클데이가 직접 확인한 업체 정보로 정리한 글이에요. 가격 · 영업시간은 매시간 최신 정보로 다시 확인돼요.</p>{f'<div class="grid">{cards}</div>' if items else '<p>첫 글을 준비하고 있어요. 그동안 도시별 업체 목록을 둘러보세요.</p><p class="chips">' + "".join(f'<a class="cta" href="/c/{k}/">{esc(tx(cities[k]["name"]))}</a>' for k in hubs) + '</p>'}</main>
+<main class="wrap"><h1>엉클데이 블로그</h1><p class="lead">엉클데이가 직접 확인한 업체 정보로 정리한 글이에요. 가격 · 영업시간은 매시간 최신 정보로 다시 확인돼요.</p>{f'<div class="grid">{cards}</div>' if cards else '<p>첫 글을 준비하고 있어요. 그동안 도시별 업체 목록을 둘러보세요.</p><p class="chips">' + "".join(f'<a class="cta" href="/c/{k}/">{esc(tx(cities[k]["name"]))}</a>' for k in hubs) + '</p>'}</main>
 <footer class="wrap">엉클데이 Uncle Day · <a href="/">홈</a></footer>{TRACK()}</body></html>
 """
 def more_page(cid, us):
@@ -1055,6 +1056,51 @@ def more_page(cid, us):
 <footer class="wrap">엉클데이 Uncle Day · <a href="/">홈</a></footer>{TRACK()}</body></html>
 """
 
+# 📘 마사지 · 스파에서 쓰는 베트남어 — '○○ 베트남어' 검색어 글을 하나로 모은 가이드 (tools/phrases.py)
+from phrases import PHRASE_GROUPS
+PH_SL = "vietnamese-for-spa"
+def phrase_page(asked):
+    url = f"{SITE}/blog/{PH_SL}/"; nph = sum(len(g[1]) for g in PHRASE_GROUPS)
+    title = f"마사지 · 스파에서 쓰는 베트남어 {nph}가지 — 읽는 법 · 직원에게 보여 주는 카드 ({YEAR})"
+    hot = lambda p: any(k in a for a in asked for k in p["kw"])
+    summ = f"베트남 마사지 · 스파에서 바로 쓰는 베트남어 {nph}가지를 상황별로 모았어요. 세기 조절 · 아픈 곳 · 수건 · 샤워 · 결제까지, 문장을 누르면 크게 보여서 직원에게 화면을 보여 주면 돼요."
+    secs = "".join(f'<h2>{esc(g)}</h2><div class="ph">' + "".join(
+        f'<button class="pc{" hot" if hot(p) else ""}" data-vi="{esc(p["vi"])}" data-ko="{esc(p["ko"])}"><b>{esc(p["ko"])}{" <em>많이 찾아요</em>" if hot(p) else ""}</b><span lang="vi">{esc(p["vi"])}</span><small>읽는 법: {esc(p["rd"])}</small></button>' for p in ps) + "</div>" for g, ps in PHRASE_GROUPS)
+    ko_shops = []
+    for cid in hubs:
+        sp = [x for x in live if x.get("city") == cid and ("ko" in (x.get("staffLangs") or []) or has(x, "한국어|한국인"))][:4]
+        if sp: ko_shops.append((cid, sp))
+    shops = "".join(f'<h3>{esc(tx(cities[cid]["name"]))}</h3><div class="grid">' + "".join(f'<a class="card" data-cta="shop" href="/s/{x["id"]}/"><b>{esc(tx(x.get("name")))}</b><small>한국어 응대 · {esc(SUB_KO.get(x.get("cat"), ""))}</small></a>' for x in sp) + f'</div><p><a href="/c/{cid}/">{esc(tx(cities[cid]["name"]))} 업체 모두 보기 →</a></p>' for cid, sp in ko_shops)
+    faq = [("마사지 받을 때 가장 많이 쓰는 베트남어는?", "세기 조절이에요. 더 세게는 'Mạnh hơn một chút(마잉 헌 못 쭛)', 약하게는 'Nhẹ thôi(녜 토이)', 아플 때는 'Đau quá(다우 꽈)'라고 하면 돼요."),
+           ("발음이 어려우면 어떻게 해요?", "베트남어는 성조가 있어서 한국어로 적은 읽는 법은 대략이에요. 이 페이지에서 문장을 눌러 크게 띄운 뒤 직원에게 화면을 보여 주는 게 가장 정확해요."),
+           ("한국어가 되는 마사지 가게도 있나요?", "있어요. 엉클데이에서 한국어 응대가 되는 가게를 고르면 말이 안 통할 걱정이 줄어요. 예약 상담도 한국어로 해요.")]
+    js = lambda o: json.dumps(o, ensure_ascii=False).replace("</", "<\\/")
+    lds = [{"@context": "https://schema.org", "@type": "Article", "headline": title[:110], "url": url, "inLanguage": "ko", "datePublished": "2026-11-14", "dateModified": BUILT, "description": summ[:300],
+            "author": {"@type": "Organization", "name": "엉클데이 Uncle Day", "url": SITE + "/"}, "publisher": {"@type": "Organization", "name": "엉클데이 Uncle Day", "logo": {"@type": "ImageObject", "url": SITE + "/images/logo-full.webp"}}, "image": SITE + "/images/og-image.jpg", "mainEntityOfPage": url},
+           {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in faq]},
+           {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "엉클데이", "item": SITE + "/"}, {"@type": "ListItem", "position": 2, "name": "블로그", "item": f"{SITE}/blog/"}, {"@type": "ListItem", "position": 3, "name": "마사지 · 스파 베트남어", "item": url}]}]
+    nav = "".join(f'<a href="/c/{k}/">{esc(tx(cities[k]["name"]))}</a>' for k in hubs) + '<a href="/blog/">블로그</a>'
+    css = ".ph{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:10px;margin:8px 0 18px}.pc{all:unset;box-sizing:border-box;cursor:pointer;display:grid;gap:4px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px}.pc:hover{border-color:var(--orange,#FD6A00)}.pc b{font-size:15px}.pc b em{font-style:normal;font-size:11.5px;background:#fff1e6;color:#c24f00;border-radius:999px;padding:1px 7px;margin-left:4px;vertical-align:2px}.pc span{font-size:20px;font-weight:700;color:var(--navy,#0E2843)}.pc small{color:var(--sub,#6b7584);font-size:13px}.pc.hot{border-color:#f5c9a3}#big{position:fixed;inset:0;background:#0E2843;color:#fff;display:none;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:24px;z-index:99;gap:18px}#big.on{display:flex}#big span{font-size:clamp(34px,9vw,72px);font-weight:800;line-height:1.25}#big small{font-size:18px;opacity:.8}#big button{all:unset;cursor:pointer;border:1px solid rgba(255,255,255,.5);border-radius:999px;padding:8px 18px;font-size:16px}"
+    return f"""<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{esc(title)} | 엉클데이</title><meta name="description" content="{esc(summ[:155])}"><link rel="canonical" href="{url}">
+<meta property="og:type" content="article"><meta property="og:site_name" content="엉클데이 Uncle Day"><meta property="og:title" content="{esc(title)}"><meta property="og:description" content="{esc(summ[:155])}"><meta property="og:url" content="{url}"><meta property="og:image" content="{SITE}/images/og-image.jpg">
+<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png"><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>{HUB_CSS}{TOPIC_CSS}{css}</style>
+{"".join(f'<script type="application/ld+json">{js(o)}</script>' for o in lds)}
+</head><body><header class="hd"><div class="in"><a class="logo" href="/"><img src="/images/logo-full.webp" alt="엉클데이 Uncle Day" width="167" height="72"></a><nav>{nav}</nav>{HCTA}</div></header>
+<main class="wrap"><p class="date"><a href="/blog/">← 엉클데이 블로그</a></p>
+<h1>{esc(title)}</h1><p class="date">정보 확인 {BUILT} · 엉클데이(uncleday.com)</p>
+<div class="qa"><div class="who">엉클데이 요약</div><b>{esc(summ)}</b></div>
+<p class="lead">말이 안 통해서 세기를 못 바꾸거나, 아픈 곳을 설명하지 못한 적 있으신가요? 아래 문장을 <b>누르면 화면 가득 크게</b> 보여요. 직원에게 그대로 보여 주세요. 한국어로 적은 읽는 법은 대략이에요 (베트남어는 성조가 있어요).</p>
+{secs}
+<h2>🇰🇷 한국어가 되는 가게라면 더 편해요</h2><p>엉클데이에서 한국어 응대가 확인된 가게예요. 예약 상담도 한국어로 해요.</p>{shops}
+<h2>자주 묻는 질문</h2>{"".join(f'<div class="qa"><div class="who">{esc(q)}</div>{esc(a)}</div>' for q, a in faq)}
+</main><div id="big" role="dialog" aria-modal="true"><small id="bigKo"></small><span id="bigVi" lang="vi"></span><button id="bigX">닫기 · Đóng</button></div>
+<script>document.querySelectorAll(".pc").forEach(function(b){{b.onclick=function(){{document.getElementById("bigVi").textContent=b.dataset.vi;document.getElementById("bigKo").textContent=b.dataset.ko;document.getElementById("big").classList.add("on")}}}});document.getElementById("bigX").onclick=function(){{document.getElementById("big").classList.remove("on")}};</script>
+<footer class="wrap">엉클데이 Uncle Day — 베트남 마사지 · 스파 · 뷰티 한국어 예약 · <a href="/">홈</a> · <a href="/blog/">블로그</a></footer>{TRACK()}</body></html>
+"""
+
 hubs = [c["id"] for c in d["cities"] if any(x.get("city") == c["id"] for x in live)]
 os.makedirs("c", exist_ok=True); os.makedirs("en/c", exist_ok=True); os.makedirs("p", exist_ok=True); UNC = {c: unclaimed(c) for c in hubs}; TREATS = {c: city_treats(c, [x for x in live if x.get("city") == c]) for c in hubs}
 os.makedirs("blog", exist_ok=True); keep_b = set(); BLOG_OUT = []
@@ -1064,13 +1110,17 @@ BLOG_OUT_RX = re.compile(r"맛집|식당|음식|먹거리|카페|커피|베이�
 print("블로그 게시 글", len(BLOG), "개")
 for b in BLOG:
     if b.get("city") not in hubs: print("  건너뜀 (도시에 업체 없음):", b.get("kw"), b.get("city")); continue
-    if BLOG_PHRASE_RX.search(b.get("kw") or ""): print("  건너뜀 (표현 · 정보 검색어 — 업체 목록 글과 안 맞음):", b.get("kw")); continue
+    if BLOG_PHRASE_RX.search(b.get("kw") or ""): print("  → 📘 베트남어 가이드로 모음:" if "베트남어" in (b.get("kw") or "") else "  건너뜀 (표현 · 정보 검색어 — 업체 목록 글과 안 맞음):", b.get("kw")); continue
     if BLOG_OUT_RX.search(b.get("kw") or "") or not BLOG_DOM_RX.search(b.get("kw") or ""): print("  건너뜀 (엉클데이 업종 말이 없음):", b.get("kw")); continue   # 검색어와 업체 목록이 맞는 글만 만들어요
     sl, h, n, t, u = blog_page(b)
     if n < 2 or sl in keep_b: print(f"  건너뜀 (맞는 업체 {n}곳):", b.get("kw")); continue   # 업체 2곳 미만이면 글을 안 만들어요
     print(f"  ✅ /blog/{sl}/ 업체 {n}곳:", b.get("kw"))
     os.makedirs(f"blog/{sl}", exist_ok=True); open(f"blog/{sl}/index.html", "w").write(h); keep_b.add(sl); BLOG_OUT.append((sl, t, n, u, b["city"]))
     json.dump(blog_naver(b, sl), open(f"blog/{sl}/naver.json", "w"), ensure_ascii=False)
+PH_ASKED = [b.get("kw") or "" for b in BLOG if "베트남어" in (b.get("kw") or "")]
+if hubs:   # '○○ 베트남어' 검색어 글은 이 가이드 하나로 모여요
+    os.makedirs(f"blog/{PH_SL}", exist_ok=True); open(f"blog/{PH_SL}/index.html", "w").write(phrase_page(PH_ASKED)); keep_b.add(PH_SL)
+    print(f"  📘 /blog/{PH_SL}/ 베트남어 가이드 (많이 찾는 표현 검색어 {len(PH_ASKED)}개 반영)")
 for cid in hubs:
     os.makedirs(f"c/{cid}", exist_ok=True)
     open(f"c/{cid}/index.html", "w").write(hub_page(cid, [x for x in live if x.get("city") == cid]))
@@ -1149,7 +1199,7 @@ L += ["", "## 안내", f"- [엉클데이 홈]({SITE}/): 업체 검색 · 예약"
 L += ["", "## English", "Uncle Day also has English city pages and massage guides for international travelers:"]
 for cid in hubs:
     L.append(f"- [{ecity(cid)}: shops]({SITE}/en/c/{cid}/)" + (f" · [{GUIDES_EN[cid]['title']}]({SITE}/en/c/{cid}/guide/)" if cid in GUIDES_EN else ""))
-if BLOG_OUT: L += ["", "## 블로그 (엉클데이 업체 데이터로 쓴 글)"] + [f"- [{t}]({SITE}/blog/{sl}/): 업체 {n}곳 · 정보 확인 {u}" for sl, t, n, u, _ in BLOG_OUT]
+if BLOG_OUT or PH_SL in keep_b: L += ["", "## 블로그 (엉클데이 업체 데이터로 쓴 글)"] + ([f"- [마사지 · 스파에서 쓰는 베트남어]({SITE}/blog/{PH_SL}/): 세기 조절 · 아픈 곳 · 수건 · 결제 표현과 읽는 법"] if PH_SL in keep_b else []) + [f"- [{t}]({SITE}/blog/{sl}/): 업체 {n}곳 · 정보 확인 {u}" for sl, t, n, u, _ in BLOG_OUT]
 open("llms.txt", "w").write("\n".join(L) + "\n")
 
 # 사이트맵: 검색엔진에 '이 페이지들이 있어요' + 언제 바뀌었는지(lastmod) 알려 주기
@@ -1172,7 +1222,7 @@ for cid in hubs:
     if UNC.get(cid):
         topic_urls.append(f"{SITE}/c/{cid}/more/")
         topic_urls += [f"{SITE}/p/{cid}/{u['slug']}/{v}" for u in UNC[cid] if u["rich"] for v in ("", "vi/")]
-if BLOG_OUT: topic_urls += [f"{SITE}/blog/"] + [f"{SITE}/blog/{r[0]}/" for r in BLOG_OUT]
+if BLOG_OUT or PH_SL in keep_b: topic_urls += [f"{SITE}/blog/"] + ([f"{SITE}/blog/{PH_SL}/"] if PH_SL in keep_b else []) + [f"{SITE}/blog/{r[0]}/" for r in BLOG_OUT]
 for r in BLOG_OUT: mod[f"{SITE}/blog/{r[0]}/"] = r[3]
 urls = [f"{SITE}/"] + [f"{SITE}/c/{c}/" for c in hubs] + topic_urls + [f"{SITE}/c/{c}/guide/" for c in hubs if c in GUIDES] \
      + [f"{SITE}/en/c/{c}/" for c in hubs] + [f"{SITE}/en/c/{c}/guide/" for c in hubs if c in GUIDES_EN] + [f"{SITE}/s/{x}/" for x in sorted(keep_s)] + [f"{SITE}/en/s/{x}/" for x in sorted(keep_en)]
