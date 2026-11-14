@@ -130,7 +130,7 @@ function blgFixHtml(list, attrs, keepKw) {
 // 여러 주제를 한 번에 게시 (첫 번째는 basePost 를 바꾸고, 나머지는 새 글)
 async function blogBulk(list, { basePost = null, fromUrl = null } = {}) {
   const P = blgBulkPlan(list, basePost && basePost.kw); if (!P.go.length) return 0;
-  if (!confirm(`아래 ${P.go.length}개 글을 바로 게시할까요? (1시간 안에 사이트에 생겨요)\n\n${P.go.map(o => "· " + o.kw + " (" + o.n + "곳)").join("\n")}${P.skip.length ? "\n\n빼는 것:\n" + P.skip.map(([o, w]) => "· " + o.lab + " — " + w).join("\n") : ""}`)) return 0;
+  if (!(await blgModal({ title: `${P.go.length}개 주제로 한 번에 올려요`, sub: "확인하면 바로 게시되고, 1시간 안에 사이트에 생겨요.", items: P.go.map(o => ({ to: o.kw, n: o.n, lab: o.lab })), skips: P.skip.map(([o, w]) => ({ kw: o.lab + " · " + o.kw, why: w })), yes: `✅ ${P.go.length}개 게시하기` }))) return 0;
   let n = 0;
   for (const [i, o] of P.go.entries()) {
     if (i === 0 && basePost) { const r = await sb.from("blog_posts").update({ kw: o.kw, title: null, ...o.p, status: "published" }).eq("id", basePost.id).select().single(); if (!r.error) { BLG.posts[BLG.posts.findIndex(x => x.id === basePost.id)] = r.data; n++; } continue; }
@@ -167,8 +167,9 @@ function blgAutoPlan(srcs, keepIds = []) {
 }
 async function blgAutoRun(srcs, { inPlace = false } = {}) {
   const P = blgAutoPlan(srcs, inPlace ? srcs.map(s => s.id) : []);
-  if (!P.go.length) { alert("바꿀 수 있는 검색어가 없어요.\n\n" + P.skip.slice(0, 15).map(x => "· " + x.s.kw + " — " + x.why).join("\n")); return 0; }
-  if (!confirm(`${P.go.length}개 글을 엉클데이 주제로 바꿔 바로 게시할까요? (1시간 안에 사이트에 생겨요)\n\n${P.go.slice(0, 25).map(x => "· " + x.s.kw + "\n   → " + x.o.kw + " (" + x.o.n + "곳)").join("\n")}${P.go.length > 25 ? "\n…" : ""}${P.skip.length ? `\n\n빼는 것 ${P.skip.length}개:\n` + P.skip.slice(0, 12).map(x => "· " + x.s.kw + " — " + x.why).join("\n") : ""}`)) return 0;
+  const ok = await blgModal(P.go.length ? { title: `${P.go.length}개 글을 엉클데이 주제로 바꿔 올려요`, sub: "확인하면 바로 게시되고, 1시간 안에 사이트에 생겨요.", items: P.go.map(x => ({ from: x.s.kw, to: x.o.kw, n: x.o.n, lab: x.o.lab })), skips: P.skip.map(x => ({ kw: x.s.kw, why: x.why })), yes: `✅ ${P.go.length}개 게시하기` }
+    : { title: "바꿔 올릴 수 있는 검색어가 없어요", sub: "모두 이미 비슷한 글이 있거나, 맞는 업체가 부족해요.", skips: P.skip.map(x => ({ kw: x.s.kw, why: x.why })) });
+  if (!ok) return 0;
   let n = 0;
   for (const { s, o } of P.go) {
     const r = inPlace ? await sb.from("blog_posts").update({ kw: o.kw, title: null, ...o.p, status: "published" }).eq("id", s.id).select().single()
@@ -177,6 +178,22 @@ async function blgAutoRun(srcs, { inPlace = false } = {}) {
     if (inPlace) BLG.posts[BLG.posts.findIndex(x => x.id === s.id)] = r.data; else (BLG.posts = BLG.posts || []).unshift(r.data);
   }
   blogDraw(); toast(`🔄 ${n}개 글을 우리 주제로 바꿔 게시했어요 · 1시간 안에 사이트에 생겨요`, 5000); return n;
+}
+
+// 게시 미리보기 창 (브라우저 기본 경고창 대신) — 원래 검색어 → 바뀐 제목을 카드로 보여 주고, 빼는 것은 접어 둬요
+function blgModal({ title, sub = "", items = [], skips = [], yes = "" }) {
+  return new Promise(done => {
+    const d = document.createElement("div"); d.className = "overlay center"; d.style.zIndex = 70;
+    d.innerHTML = `<div class="modal blg-m"><div class="blg-mh"><span>${items.length ? "📝" : "ℹ️"}</span><div><h2>${esc(title)}</h2>${sub ? `<p>${esc(sub)}</p>` : ""}</div></div>
+      <div class="blg-ml">${items.map(x => `<div class="blg-mi">${x.from ? `<small><s>${esc(x.from)}</s> →</small>` : ""}<b>${esc(x.to)}</b><span>${x.lab ? esc(x.lab) + " · " : ""}업체 ${x.n}곳</span></div>`).join("")}
+      ${skips.length ? `<details class="blg-ms" ${items.length ? "" : "open"}><summary>빼는 것 ${skips.length}개 · 이유 보기</summary>${skips.map(x => `<div><b>${esc(x.kw)}</b><small>${esc(x.why)}</small></div>`).join("")}</details>` : ""}</div>
+      <div class="btns">${items.length ? `<button class="btn" data-no>취소</button><button class="btn main blg-my" data-yes>${esc(yes)}</button>` : `<button class="btn main" data-no>확인</button>`}</div></div>`;
+    document.body.appendChild(d);
+    const close = v => { d.remove(); done(v); };
+    d.querySelector("[data-no]").onclick = () => close(false);
+    const y = d.querySelector("[data-yes]"); if (y) y.onclick = () => close(true);
+    d.addEventListener("click", e => { if (e.target === d) close(false); });
+  });
 }
 async function blogLoad() {
   const r = await sb.from("blog_posts").select("*").order("created_at", { ascending: false }).limit(300);
