@@ -52,7 +52,7 @@ const PORTAL_SIMS = [
 
 // 🧩 사내 앱 — 포털을 목적별로 나눠서, 하나씩 열어 봐요 (한 화면에 다 펼치면 스크롤이 너무 길어서)
 const PORTAL_APPS = [
-  ["🧭 운영", [["spaces", "🧭", "공간 바로가기", "손님 사이트 · 사장님 · 직원 화면 주소 · 안내 문구"], ["shops", "🏪", "매장별 관리", "현황판 · 대신 수정 · 직원 PIN · 사장님 계정"], ["audit", "🛠️", "대신 수정 기록", "사장님 화면 '오늘'에도 보여요"], ["sim", "🎬", "운영 시뮬레이션", "입점 영업 · 직원 교육용 데모"]]],
+  ["🧭 운영", [["spaces", "🧭", "공간 바로가기", "손님 사이트 · 사장님 · 직원 화면 주소 · 안내 문구"], ["field", "📒", "현장 영업 매뉴얼", "베트남 영업 담당자용 · 베/한 · 잘로로 보내기 · 인쇄"], ["shops", "🏪", "매장별 관리", "현황판 · 대신 수정 · 직원 PIN · 사장님 계정"], ["audit", "🛠️", "대신 수정 기록", "사장님 화면 '오늘'에도 보여요"], ["sim", "🎬", "운영 시뮬레이션", "입점 영업 · 직원 교육용 데모"]]],
   ["🏪 가게 정보", [["fill", "📋", "가게 정보 채우기", "업체별 검색 점수 · 빈 칸 · 후기 요청"], ["price", "💰", "가격 채우기", "메뉴 가격을 휴대폰으로 바로"], ["links", "🔗", "가게에 링크 달기", "구글 지도 · 페북 · 잘로 · QR"], ["crawl", "📥", "링크로 가게 가져오기", "홈페이지 · 가격표 링크로 페이지 만들기"]]],
   ["🔎 검색 · 마케팅", [["blog", "📝", "블로그", "검색어로 글 만들기 · 네이버 요약본"], ["comp", "🔍", "경쟁사 분석", "빠진 검색어 · 소개된 가게"], ["con", "📈", "엉클데이 서치 콘솔", "구글 색인 상태 · URL 검사"], ["seo", "📨", "검색 유입 · 리드", "어디서 왔는지 · 미입점 문의"]]],
   ["📚 자료", [["guide", "📘", "운영 가이드", "팀원용 설명서 · 자주 묻는 질문"], ["brand", "🎨", "브랜드 자료실 (CI)", "로고 · 색 · 글꼴 · 원본"]]],
@@ -110,6 +110,7 @@ function drawPortal(skip) {
       <div class="pt-spaces">${PORTAL_SIMS.map(s => `<div class="pt-space"><div class="h"><span class="ic">${s.ic}</span><b>${esc(s.nm)}</b></div><small>${esc(s.desc)}</small>
         <div class="pt-row">${[["vi", "🇻🇳 베트남어"], ["ko", "🇰🇷 한국어"]].map(([l, ln]) => `<a class="btn sm ${l === s.def ? "main" : ""}" href="/demo.html?role=${s.role}&lang=${l}" target="_blank" rel="noopener">${ln} ↗</a>`).join("")}<button class="btn sm" data-pcopy="https://www.uncleday.com/demo.html?role=${s.role}&lang=${s.def}">주소 복사</button></div></div>`).join("")}</div></section>
     <section class="pt-sec" data-pv="links" id="ptLinksSec"><h3>🔗 가게에 엉클데이 링크 달기 <span class="hint">구글 지도 예약 링크 · 페이스북 · 잘로 · 인스타 · 매장 QR — 검색 노출 1순위</span></h3><div id="ptLinks"></div></section>
+    <section class="pt-sec" data-pv="field" id="ptFieldSec"><h3>📒 현장 영업 매뉴얼 <span class="hint">베트남 현지 영업 담당자용 · 베트남어 / 한국어</span></h3><div id="ptField"></div></section>
     <section class="pt-sec" data-pv="fill" id="ptFillSec"><h3>📋 가게 정보 채우기 <span class="hint">업체별 검색 점수 100점 만점 — 사진 · 가격 · 후기 · 소개 · 위치 빈 칸 찾기 · 사장님께 요청 · 후기 요청</span></h3><div id="ptFill"></div></section>
     <section class="pt-sec" data-pv="price" id="ptPriceSec"><h3>💰 가격 채우기 <span class="hint">업체 메뉴 가격 — 채울수록 검색 · AI 에 강해져요 · 영업 현장에서 휴대폰으로</span></h3><div id="ptPrice"></div></section>
     <section class="pt-sec" data-pv="crawl" id="ptCrawlSec"><h3>🔗 링크로 가게 가져오기 <span class="hint">가게 홈페이지 · 가격표 링크를 넣으면 정보를 뽑아 와서 검색 페이지로 만들어요</span></h3><div id="ptCrawl"></div></section>
@@ -136,6 +137,7 @@ function drawPortal(skip) {
   if (typeof seoDraw === "function") seoDraw();
   if (typeof priceDraw === "function") priceDraw();
   if (typeof fillDraw === "function") fillDraw();
+  if (typeof fieldDraw === "function") fieldDraw();
   if (typeof linksDraw === "function") linksDraw();
   if (typeof crawlDraw === "function") crawlDraw();
   if (typeof blogDraw === "function") blogDraw();
