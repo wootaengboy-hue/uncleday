@@ -10,7 +10,7 @@ const LNK_CH = [
   ["fb", "📘 페이스북 페이지 버튼", "페이지의 '지금 예약' 버튼에 넣어요."],
   ["zalo", "💬 잘로 소개", "잘로 공식 계정 · 프로필 소개에 넣어요."],
   ["ig", "📸 인스타그램 소개", "프로필의 링크 칸에 넣어요."],
-  ["qr", "🧾 매장 QR (카운터 · 입구)", "한국 손님이 휴대폰으로 찍으면 한국어 예약 화면이 열려요."],
+  ["qr", "🧾 매장 QR (메뉴판 옆 · 입구)", "한국 손님이 찍으면 한국어 메뉴 · 가격이 바로 열려요. 다음 방문 예약 · 일행 공유에도 써요."],
 ];
 const lnkUrl = (id, via) => `https://www.uncleday.com/s/${id}/?via=${via}`;
 const lnkName = s => (s && s.name && (s.name.vi || s.name.en || s.name.ko)) || (s && s.id) || "";
@@ -28,14 +28,14 @@ ${L("fb")}
 Zalo: ${L("zalo")}
 Instagram: ${L("ig")}
 
-4) Mã QR: Uncle Day gửi ảnh QR — in ra và đặt ở quầy để khách Hàn Quốc quét.
+4) Mã QR: Uncle Day gửi ảnh QR — in ra và đặt cạnh menu / ở cửa. Khách Hàn quét để xem menu và giá bằng tiếng Hàn (không cần nói tiếng Việt), và đặt lịch cho lần sau.
 
 Cảm ơn anh/chị! 🙏`;
   const ko = `[엉클데이] ${lnkName(s)} 예약 링크 안내 — 한국 손님이 한국어로 가격을 보고 예약해요. 비용 없음.
 1) 구글 지도(가장 중요): 구글의 가게 프로필 → 프로필 수정 → 연락처 → 예약 링크 → ${L("gbp")}
 2) 페이스북 '지금 예약' 버튼: ${L("fb")}
 3) 잘로 · 인스타 소개: ${L("zalo")} / ${L("ig")}
-4) 매장 QR: 이미지로 보내 드려요 (카운터에 두기)`;
+4) 매장 QR: 이미지로 보내 드려요 (메뉴판 옆 · 입구에 두기 — 한국 손님이 한국어 메뉴 · 가격을 보고, 다음 방문도 예약해요)`;
   return { vi, ko };
 }
 function lnkQrCanvas(text, size) {
@@ -54,8 +54,8 @@ async function lnkCard(s) {
   try { const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = "/images/logo-full.webp"; });
     const h = 150, w = img.width * h / img.height; x.fillStyle = "#FAF3E0"; x.beginPath(); x.roundRect((W - w) / 2 - 24, 30, w + 48, h, 30); x.fill(); x.drawImage(img, (W - w) / 2, 30, w, h); } catch (e) {}
   x.textAlign = "center"; x.fillStyle = "#0E2843";
-  x.font = "800 64px 'Pretendard Variable', 'Noto Sans KR', sans-serif"; x.fillText("한국어로 예약하기", W / 2, 320);
-  x.font = "600 40px 'Pretendard Variable', sans-serif"; x.fillStyle = "#5b6676"; x.fillText("Đặt lịch bằng tiếng Hàn · Book in Korean", W / 2, 380);
+  x.font = "800 64px 'Pretendard Variable', 'Noto Sans KR', sans-serif"; x.fillText("한국어 메뉴 · 가격 보기", W / 2, 300);
+  x.font = "600 38px 'Pretendard Variable', sans-serif"; x.fillStyle = "#5b6676"; x.fillText("다음 방문 예약 · 일행에게 공유도 여기서", W / 2, 358); x.font = "500 30px 'Pretendard Variable', sans-serif"; x.fillText("Menu & giá bằng tiếng Hàn · Korean menu & prices", W / 2, 404);
   const q = lnkQrCanvas(lnkUrl(s.id, "qr"), 640); x.fillStyle = "#fff"; x.beginPath(); x.roundRect(W / 2 - 350, 430, 700, 700, 40); x.fill(); x.drawImage(q, W / 2 - 320, 460);
   x.fillStyle = "#0E2843"; x.font = "800 52px 'Pretendard Variable', sans-serif"; x.fillText(lnkName(s).slice(0, 30), W / 2, 1210);
   x.fillStyle = "#FD6A00"; x.font = "700 40px 'Pretendard Variable', sans-serif"; x.fillText("www.uncleday.com", W / 2, 1280);
@@ -74,7 +74,7 @@ async function linksDraw() {
     <div class="crl-add"><input id="lnkQ" placeholder="가게 찾기" value="${esc(LNK.q)}"><select id="lnkSel">${opts.map(x => `<option value="${esc(x.id)}" ${x.id === LNK.id ? "selected" : ""}>${esc(x.name.ko || x.name.en || x.id)}${x.name.en && x.name.en !== x.name.ko ? " · " + esc(x.name.en) : ""}</option>`).join("")}</select></div>
     ${s ? `<div class="lnk-wrap"><div class="lnk-list">${LNK_CH.map(([v, l, h]) => `<div class="lnk-row"><b>${l}</b><small>${h}</small><code>${esc(lnkUrl(s.id, v))}</code><button class="btn sm" data-lcopy="${esc(lnkUrl(s.id, v))}">복사</button></div>`).join("")}
         <div class="lnk-stat" id="lnkStat"><small>불러오는 중…</small></div></div>
-      <div class="lnk-qr"><div id="lnkQr"></div><button class="btn sm main" data-lcard>🧾 QR 카드 내려받기 (인쇄용)</button><small class="hint">카운터 · 입구에 세워 두면 한국 손님이 찍어서 한국어로 예약해요</small></div></div>
+      <div class="lnk-qr"><div id="lnkQr"></div><button class="btn sm main" data-lcard>🧾 QR 카드 내려받기 (인쇄용)</button><small class="hint">메뉴판 옆 · 입구에 두면 한국 손님이 찍어서 한국어 메뉴 · 가격을 보고, 다음 방문도 예약해요</small></div></div>
       <h4 style="margin:14px 0 6px">사장님께 보낼 안내문</h4>
       <div class="br-cats" style="margin-bottom:6px"><button class="on" data-lmsg="vi">🇻🇳 베트남어</button><button data-lmsg="ko">🇰🇷 한국어</button></div>
       <textarea id="lnkMsg" rows="9" readonly>${esc(m.vi)}</textarea>

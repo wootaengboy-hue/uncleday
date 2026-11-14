@@ -69,6 +69,7 @@ const LIVE = (() => {
   }
   const SRC = srcOf();
   // 주소창에 붙은 공유 꼬리표(?via=share&ref=…)는 지워요
+  try { window.UD_VIA = (location.search.match(/[?&]via=([a-z]+)/) || [])[1] || ""; } catch (e) {}   // 지우기 전에 기억 (가게 QR → 메뉴로 내려가기 등)
   try { if (/[?&](via|ref)=/.test(location.search)) history.replaceState(null, "", location.pathname + location.hash); } catch (e) {}
   function once(store, key) { try { if (store.getItem(key)) return false; store.setItem(key, "1"); } catch (e) {} return true; }
   const today = new Date().toISOString().slice(0, 10);

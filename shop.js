@@ -83,6 +83,7 @@ function openRide(shop) {
 }
 
 function renderShop(id) {
+  if (window.UD_VIA === "qr" || /[?&]via=qr\b/.test(location.search)) qrToMenu();   // 가게 QR로 들어오면 한국어 메뉴 · 가격으로 (가게 안 손님의 한국어 메뉴판)
 const shop = SHOPS.find(s => s.id === id);
 const box = $("detail");
 if (shop && typeof LIVE !== "undefined") LIVE.view(shop.id);
@@ -455,6 +456,12 @@ ${f.text}
   };
   }
 }
+}
+
+function qrToMenu() {
+  if (qrToMenu.done) return; qrToMenu.done = true;
+  setTimeout(() => { const m = $("menuList"); if (!m) return; const t = m.previousElementSibling || m, hd = document.querySelector("header");
+    window.scrollTo({ top: Math.max(0, t.getBoundingClientRect().top + scrollY - (hd ? hd.getBoundingClientRect().height : 0) - 12), behavior: "smooth" }); }, 600);
 }
 
 // 브라우저 알림창 대신 쓰는 짧은 안내
