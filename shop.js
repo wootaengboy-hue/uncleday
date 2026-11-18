@@ -118,9 +118,10 @@ if (!shop) {
     ["🕒", ui("hours"), shop.open ? `${hoursText}<br><small>${ui("closedDays")}: ${closedText}</small>` : ui("tbd"), !!shop.open],
     ["🗣️", ui("staffLangs"), staff, shop.staffLangs.length > 0]
   ];
-  // 비슷한 업체: 같은 카테고리 (같은 도시 우선) 최대 3곳
-  const similar = SHOPS.filter(s => s.id !== shop.id && s.cat === shop.cat)
-    .sort((a, b) => (b.city === shop.city) - (a.city === shop.city)).slice(0, 3);
+  // 비슷한 업체: 같은 도시 업체만 (다낭 업체면 다낭만) · 같은 업종 → 같은 큰 분류 → 나머지 순 · 최대 3곳
+  const simRank = s => s.cat === shop.cat ? 0 : catGroup(s.cat) === catGroup(shop.cat) ? 1 : 2;
+  const similar = SHOPS.filter(s => s.id !== shop.id && s.city === shop.city)
+    .sort((a, b) => simRank(a) - simRank(b) || (!!b.best - !!a.best)).slice(0, 3);
 
   box.innerHTML = `
     <a href="${window.SPA ? "#" : "/"}" class="back">${ui("back")}</a>
