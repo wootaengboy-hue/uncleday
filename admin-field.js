@@ -6,6 +6,7 @@
  */
 const FLD = { lang: "vi", open: 0 };
 const FLD_DEMO = "https://www.uncleday.com/demo.html?role=owner&lang=vi";
+const FLD_INTRO = "https://www.uncleday.com/gioi-thieu.html";   // 사장님께 보여 주는 소개 자료 (베트남어 · 한국어 전환)
 const FLD_SECS = [
   { ic: "🧭", go: null,
     vi: ["Uncle Day là gì? (giới thiệu 1 phút)", [
@@ -25,12 +26,14 @@ const FLD_SECS = [
   { ic: "🎒", go: null,
     vi: ["Trước khi đi", [
       "Nhận danh sách cửa hàng cần đến hôm nay từ quản lý (qua Zalo).",
+      "Mở sẵn tài liệu giới thiệu để cho chủ tiệm xem (lướt từng trang): " + FLD_INTRO,
       "Mở sẵn trang dùng thử trên điện thoại để cho chủ tiệm xem: " + FLD_DEMO,
       "Nếu cửa hàng đã có trang trên Uncle Day, quản lý sẽ gửi link — cho chủ tiệm xem “Cửa hàng của anh/chị đã có trên Uncle Day”.",
       "Pin điện thoại đầy · mặc gọn gàng · đi vào giờ vắng khách (thường 10–14 giờ).",
     ]],
     ko: ["가기 전에", [
       "오늘 갈 가게 목록을 관리자에게 잘로로 받아요.",
+      "사장님께 보여 줄 소개 자료를 휴대폰에 미리 열어 둬요 (한 장씩 넘겨 보기): " + FLD_INTRO,
       "사장님께 보여 줄 체험판을 휴대폰에 미리 열어 둬요: " + FLD_DEMO,
       "이미 엉클데이에 올라가 있는 가게(미입점 페이지)라면 관리자가 그 링크를 보내 줘요 — '사장님 가게가 벌써 엉클데이에 있어요'라고 보여 주기.",
       "휴대폰 충전 · 단정한 옷차림 · 손님 적은 시간(보통 10~14시)에 방문",
@@ -202,6 +205,7 @@ function fieldDraw() {
   el.innerHTML = `<p class="hint" style="margin-top:0">베트남 현지 영업 담당자가 가게를 돌 때 보는 설명서예요. 담당자는 관리자 페이지에 들어오지 않으니 <b>[📋 잘로로 보낼 글 복사]</b>나 <b>[🖨️ 인쇄 · PDF]</b>로 보내 주세요. 회색 '관리자 할 일'은 담당자가 받아 온 자료로 우리가 포털에서 하는 일이에요 (보낼 글에는 안 들어가요).</p>
     <div class="fld-bar"><div class="br-cats"><button class="${l === "vi" ? "on" : ""}" data-flang="vi">🇻🇳 베트남어</button><button class="${l === "ko" ? "on" : ""}" data-flang="ko">🇰🇷 한국어</button></div>
       <span class="fld-act"><button class="btn sm main" data-fcopyall>📋 잘로로 보낼 글 복사</button><button class="btn sm" data-fprint>🖨️ 인쇄 · PDF</button><button class="btn sm" data-freport>✉️ 보고 양식 복사</button><a class="btn sm" href="${FLD_DEMO}" target="_blank" rel="noopener">체험판 열기 ↗</a></span></div>
+    <div class="fld-intro"><span>📊 <b>사장님 소개 자료</b> <small>가게에서 휴대폰으로 넘겨 보여 주는 10장 · 베트남어/한국어 · 사장님께 링크로 보내도 돼요</small></span><span class="fld-act"><a class="btn sm main" href="${FLD_INTRO}?lang=${l}" target="_blank" rel="noopener">소개 자료 열기 ↗</a><button class="btn sm" data-fintro>🔗 링크 복사 (잘로로 보내기)</button></span></div>
     <div class="fld-list">${FLD_SECS.map((s, i) => `<div class="fld-s ${FLD.open === i ? "open" : ""}"><button class="fld-h" data-fopen="${i}"><span class="ic">${s.ic}</span><span><b>${i + 1}. ${esc(s[l][0])}</b><small>${esc(s[o][0])}</small></span><i>${FLD.open === i ? "▲" : "▼"}</i></button>
       ${FLD.open === i ? `<div class="fld-b"><ul>${s[l][1].map(x => `<li class="${x.startsWith("☐") ? "ck" : ""}">${esc(x)}</li>`).join("")}</ul>
         ${s.admin ? `<p class="fld-ad">🛠️ ${esc(s.admin)}${s.go ? ` <button class="btn sm" data-fgo="${s.go}">${esc(portalApp(s.go)[1] + " " + portalApp(s.go)[2])} 열기 →</button>` : ""}</p>` : ""}</div>` : ""}</div>`).join("")}</div>`;
@@ -211,4 +215,5 @@ function fieldDraw() {
   el.querySelector("[data-fcopyall]").onclick = () => portalCopy(fldText(FLD.lang));
   el.querySelector("[data-freport]").onclick = () => portalCopy(FLD_REPORT[FLD.lang]);
   el.querySelector("[data-fprint]").onclick = () => fldPrint(FLD.lang);
+  el.querySelector("[data-fintro]").onclick = () => portalCopy(FLD.lang === "vi" ? `Uncle Day — giới thiệu cho cửa hàng 👉 ${FLD_INTRO}` : `엉클데이 입점 소개 자료 👉 ${FLD_INTRO}?lang=ko`);
 }
