@@ -74,6 +74,12 @@ const LIVE = (() => {
   function once(store, key) { try { if (store.getItem(key)) return false; store.setItem(key, "1"); } catch (e) {} return true; }
   const today = new Date().toISOString().slice(0, 10);
   if (once(localStorage, "ud-visit-" + today)) { track("visit"); trackSrc(); }
+  // 네이버 · 다음 · 빙 검색 결과에서 들어왔으면 무슨 말로 검색했는지만 세요 (검색어 · 페이지 · 날짜 · 횟수만, 개인 정보 없음)
+  try {
+    const r = new URL(document.referrer), h = r.hostname, se = /search\.naver\.com$/.test(h) ? "naver" : /search\.daum\.net$/.test(h) ? "daum" : /bing\.com$/.test(h) ? "bing" : "";
+    const kw = se && r.searchParams.get(se === "naver" ? "query" : "q");
+    if (on && !bot && kw) fetch(`${SUPA.url}/rest/v1/rpc/seo_kw_hit`, { method: "POST", keepalive: true, headers: { ...headers, "Content-Type": "application/json" }, body: JSON.stringify({ q: kw, src: se, path: location.pathname }) }).catch(() => {});
+  } catch (e) {}
   track("hit");
   const curShop = () => { if (window.SHOP_ID) return window.SHOP_ID; const m = location.hash.match(/^#\/shop\/(.+)$/); if (m) return decodeURIComponent(m[1]); if (/shop\.html$/.test(location.pathname)) return decodeURIComponent(location.hash.slice(1)); return null; };
   const view = id => { if (id && once(sessionStorage, "ud-view-" + id)) track("view", id); };

@@ -98,7 +98,8 @@ def TRACK():
             "if(h==location.hostname)return'internal';var m=[['google','google'],['naver','naver'],['bing','bing'],['daum','daum'],['chatgpt','chatgpt'],['openai','chatgpt'],['perplexity','perplexity'],['claude','claude'],['gemini','gemini'],['kakao','kakao'],['facebook','facebook'],['instagram','instagram']];"
             "for(var i=0;i<m.length;i++)if(h.indexOf(m[i][0])>=0)return m[i][1];return'other'}catch(e){return'other'}}"
             "var src=S();window.UD_SRC=src;var BOT=navigator.webdriver||/bot|crawl|spider|slurp|preview|headless|lighthouse|google-inspectiontool/i.test(navigator.userAgent);window.udHit=function(k){if(BOT)return;try{fetch(U+'/rest/v1/rpc/seo_hit',{method:'POST',keepalive:true,headers:{apikey:K" + auth + ",'Content-Type':'application/json'},body:JSON.stringify({path:location.pathname,src:src,kind:k})}).catch(function(){})}catch(e){}};"
-            "udHit('view');document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('[data-cta]');if(a)udHit(a.getAttribute('data-cta'))})})()</script>")
+            "udHit('view');if(!BOT&&/^(naver|daum|bing)$/.test(src)){try{var R=new URL(document.referrer),Q=R.searchParams.get(src==='naver'?'query':'q');if(Q)fetch(U+'/rest/v1/rpc/seo_kw_hit',{method:'POST',keepalive:true,headers:{apikey:K" + auth + ",'Content-Type':'application/json'},body:JSON.stringify({q:Q,src:src,path:location.pathname})}).catch(function(){})}catch(e){}}"
+            "document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('[data-cta]');if(a)udHit(a.getAttribute('data-cta'))})})()</script>")
 # 업체 페이지 틀: shop.html 을 그대로 가져와서 업체별 제목·설명·구조화 데이터·본문을 채워요 (검색엔진용)
 TPL = open("shop.html", encoding="utf-8").read()
 SCHEMA_TYPE = {"massage": "DaySpa", "spa": "DaySpa", "skin": "BeautySalon", "hair": "HairSalon", "nail": "NailSalon",

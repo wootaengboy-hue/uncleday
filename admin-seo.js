@@ -5,7 +5,8 @@
  * 서버 함수는 supabase/universe18.sql
  */
 /* 🔍 구글 서치 콘솔 (Edge Function "gsc") — 구글 검색 결과 화면에서 보인 수 · 눌린 수 · 순위 · 검색어 */
-const GSC = { data: null, days: 0, loading: false, qn: 15, pn: 15 };
+const GSC = { data: null, days: 0, loading: false, qn: 15, pn: 15, ko: false };
+const SEO_KO = /[가-힣ㄱ-ㅎ]/;   // 한국어 검색어
 const GSC_CC = { kor: "한국", vnm: "베트남", usa: "미국", jpn: "일본", chn: "중국", twn: "대만", aus: "호주", sgp: "싱가포르", can: "캐나다", rus: "러시아", tha: "태국", hkg: "홍콩", deu: "독일", gbr: "영국", fra: "프랑스", bel: "벨기에", bra: "브라질", che: "스위스", esp: "스페인", ita: "이탈리아", nld: "네덜란드", ind: "인도", idn: "인도네시아", mys: "말레이시아", phl: "필리핀", nzl: "뉴질랜드", khm: "캄보디아", lao: "라오스", mng: "몽골", kaz: "카자흐스탄", uzb: "우즈베키스탄", are: "아랍에미리트" };
 async function gscLoad() {
   if (GSC.loading) return; GSC.loading = true; GSC.days = SEO.days;
@@ -41,7 +42,12 @@ function gscHtml() {
     ${d.byDate.length ? `<div class="seo-days gsc-days">${d.byDate.map(r => `<i title="${r.keys[0]} · 노출 ${r.impressions} · 클릭 ${r.clicks}" style="height:${Math.max(4, r.impressions / mx * 100)}%">${r.clicks ? `<em style="height:${Math.max(8, r.clicks / Math.max(1, r.impressions) * 100)}%"></em>` : ""}</i>`).join("")}</div><div class="seo-dl"><span>${d.byDate[0].keys[0].slice(5)}</span><span>막대: 노출 · 진한 부분: 클릭</span><span>${d.byDate[d.byDate.length - 1].keys[0].slice(5)}</span></div>` : `<p class="hint">아직 구글 검색에 보인 기록이 없어요. 색인이 되면 며칠 안에 숫자가 생겨요.</p>`}
     ${d.byDate.length ? `<button class="btn sm" data-gday style="margin:6px 0">${SEO.gday ? "▲ 날짜별 표 접기" : "▼ 날짜별 숫자 보기 (노출 · 클릭 · 순위)"}</button>${SEO.gday ? `<div class="gsc-t gsc-dt"><div class="th"><span>날짜</span><span>클릭</span><span>노출</span><span>CTR</span><span>순위</span></div>${d.byDate.slice().reverse().map(r => `<div><span>${seoDayLab(r.keys[0])}</span><span>${r.clicks}</span><span>${r.impressions}</span><span>${r.impressions ? pct(r.clicks / r.impressions) : "-"}</span><span>${p1(r.position)}</span></div>`).join("")}</div>` : ""}` : ""}
     ${d.countries.length ? `<div class="gsc-cc">${d.countries.slice().sort((x, y) => y.impressions - x.impressions).map(r => `<span>${esc(GSC_CC[r.keys[0]] || r.keys[0].toUpperCase())} <b>${r.impressions}</b></span>`).join("")}${d.devices.map(r => `<span>${r.keys[0] === "MOBILE" ? "휴대폰" : r.keys[0] === "DESKTOP" ? "PC" : "태블릿"} <b>${r.impressions}</b></span>`).join("")}</div>` : ""}
-    ${d.queries.length ? `<h5>사람들이 검색한 말</h5>${tbl(d.queries, GSC.qn, "검색어", "query")}` : ""}
+    ${d.queries.length ? (() => { const ko = d.queries.filter(r => SEO_KO.test(r.keys[0])), ki = sum(ko, "impressions"), kc = sum(ko, "clicks"), ai = sum(d.queries, "impressions");
+      return `<h5>사람들이 검색한 말</h5>
+      <div class="gsc-ko"><div class="br-cats"><button class="${GSC.ko ? "" : "on"}" data-gko="0">전체 <span>${d.queries.length}</span></button><button class="${GSC.ko ? "on" : ""}" data-gko="1">🇰🇷 한국어만 <span>${ko.length}</span></button></div>
+        <span>🇰🇷 한국어 검색어 노출 <b>${ki.toLocaleString()}</b> / 검색어 전체 ${ai.toLocaleString()} (${ai ? pct(ki / ai) : "-"}) · 클릭 <b>${kc}</b></span></div>
+      ${GSC.ko && !ko.length ? `<p class="hint">이 기간에 한국어로 검색해서 보인 적이 아직 없어요.</p>` : tbl(GSC.ko ? ko : d.queries, GSC.qn, "검색어", "query")}
+      <p class="hint" style="margin-top:4px">구글은 검색어를 많이 나온 순서로 최대 100개까지만 알려 주고, 아주 드문 검색어는 숨겨요.</p>`; })() : ""}
     ${d.pages.length ? `<h5>구글에 보인 페이지</h5>${tbl(d.pages, GSC.pn, "페이지", "page")}` : ""}`;
 }
 const SEO = { day: null, dayList: null, gday: false, days: 30, rep: null, leads: null, err: "", loading: false, lf: "open", pf: "p" };
@@ -62,6 +68,8 @@ async function seoLoad() {
   else { SEO.err = ""; SEO.rep = r.data || { by_src: {}, by_day: [], pages: [] }; SEO.leads = l.data || []; }
   // 날짜별 표: 기간 안의 모든 날을 0 포함해서 (하루만 볼 때는 직전 기간 표를 그대로 둬요)
   if (!SEO.day) { const m = {}; (SEO.rep.by_day || []).forEach(x => m[x.day] = +x.n || 0); SEO.dayList = Array.from({ length: SEO.days }, (_, i) => seoDay(i)).map(d => ({ day: d, n: m[d] || 0 })); }
+  const kw = await sb.from("seo_kw").select("*").gte("day", seoRange()[0]).lte("day", seoRange()[1]).limit(5000);
+  SEO.kw = kw.error ? null : (kw.data || []);   // null = universe30.sql 실행 전
   const hd = await sb.from("osm_hidden").select("*").order("created_at", { ascending: false });
   SEO.hidden = hd.error ? null : (hd.data || []);   // null = universe20.sql 실행 전
   if (typeof TAB !== "undefined" && TAB === "home" && typeof drawPortal === "function") drawPortal(true); else seoDraw();   // '오늘 할 일'의 새 문의 숫자도 같이
@@ -86,6 +94,16 @@ function seoPitch(pg, l) {
     : `사장님, ${SEO.day ? (SEO.day === seoDay(0) ? "오늘" : seoDayLab(SEO.day) + "에") : `지난 ${SEO.days}일 동안`} 엉클데이(uncleday.com)에서 "${nm}" 페이지(한국인 여행객용 한국어 페이지)가 ${v}번 조회됐어요${s ? ` (그중 구글 · 네이버 · AI 검색으로 ${s}번)` : ""}${pg.leads ? `. 예약 문의도 ${pg.leads}건 들어왔어요` : ""}. 아직 입점 전이라 손님을 보내 드리지 못하고 있어요. 입점비 · 월 고정비 없이 손님이 와서 결제했을 때만 수수료예요. 페이지 보기: https://www.uncleday.com${pg.path}`;
 }
 
+function seoKwHtml() {
+  if (SEO.kw === null) return `<div class="uni-err">네이버 검색어를 세려면 Supabase SQL 편집기에서 <b>supabase/universe30.sql</b> 을 한 번 실행해 주세요.</div>`;
+  const m = {};
+  (SEO.kw || []).forEach(r => { const x = m[r.q] || (m[r.q] = { q: r.q, naver: 0, daum: 0, bing: 0, n: 0, pages: {} }); x[r.src] = (x[r.src] || 0) + r.n; x.n += r.n; x.pages[r.path] = (x.pages[r.path] || 0) + r.n; });
+  const rows = Object.values(m).sort((a, b) => b.n - a.n);
+  if (!rows.length) return `<p class="hint">아직 잡힌 검색어가 없어요. 손님이 네이버 · 다음 · 빙에서 검색해 우리 페이지를 눌러 들어오면 여기에 쌓여요 (검색엔진이 검색어를 넘겨줄 때만 잡혀요).</p>`;
+  const top = x => Object.entries(x.pages).sort((a, b) => b[1] - a[1])[0][0];
+  return `<div class="seo-kw"><div class="th"><span>검색어</span><span>네이버</span><span>다음</span><span>빙</span><span>합계</span><span>들어온 페이지</span></div>${rows.slice(0, SEO.kwn || 30).map(x => `<div><span>${SEO_KO.test(x.q) ? "🇰🇷 " : ""}${esc(x.q)}</span><span>${x.naver || ""}</span><span>${x.daum || ""}</span><span>${x.bing || ""}</span><b>${x.n}</b><span><a href="${esc(top(x))}" target="_blank" rel="noopener">${esc(seoName(top(x)))}</a></span></div>`).join("")}</div>
+    ${rows.length > (SEO.kwn || 30) ? `<button class="btn sm" data-skwmore style="margin-top:6px">더 보기 (${rows.length})</button>` : ""}`;
+}
 function seoDaysHtml() {
   const L = SEO.dayList || [], mx = Math.max(1, ...L.map(x => x.n));
   if (!L.length) return `<p class="hint">아직 기록이 없어요.</p>`;
@@ -117,6 +135,7 @@ function seoDraw() {
       <div class="br-box"><h4>날짜별 조회 <span class="hint">날짜를 누르면 그날만 봐요</span></h4>${seoDaysHtml(days, dmax)}</div>
     </div>
     <div class="br-box" style="margin-top:10px"><h4>🔍 구글 검색 (서치 콘솔) <span class="hint">들어오기 전 단계 — 구글 검색 결과에 몇 번 보였고 몇 번 눌렸는지 · 어떤 검색어로</span></h4>${gscHtml()}</div>
+    <div class="br-box" style="margin-top:10px"><h4>🟢 네이버 · 다음 · 빙 검색어 <span class="hint">이 검색엔진 결과에서 우리 페이지를 눌러 들어온 손님이 쓴 검색어 — 우리 사이트가 직접 세요 (구글은 위 서치 콘솔)</span></h4>${seoKwHtml()}</div>
     <div class="br-box" style="margin-top:10px"><h4>📨 문의 · 입점 신청 <span class="hint">연락처는 엉클데이만 봐요 · 업체에 넘기지 마세요</span></h4>
       <div class="br-cats" style="margin-bottom:8px"><button class="${SEO.lf === "open" ? "on" : ""}" data-slf="open">처리 중 <span>${lOpen.length}</span></button><button class="${SEO.lf === "all" ? "on" : ""}" data-slf="all">전체 <span>${L.length}</span></button></div>
       ${leads.length ? `<div class="seo-leads">${leads.map(x => `<div class="seo-lead ${x.kind}">
@@ -137,6 +156,8 @@ function seoDraw() {
     </div>`;
   el.querySelectorAll("[data-sdays]").forEach(b => b.onclick = () => { SEO.days = +b.dataset.sdays; SEO.day = null; SEO.rep = null; GSC.data = null; seoDraw(); });
   el.querySelectorAll("[data-sday]").forEach(b => b.onclick = () => { SEO.day = SEO.day === b.dataset.sday ? null : b.dataset.sday; SEO.rep = null; seoDraw(); });
+  el.querySelectorAll("[data-gko]").forEach(b => b.onclick = () => { GSC.ko = b.dataset.gko === "1"; seoDraw(); });
+  el.querySelectorAll("[data-skwmore]").forEach(b => b.onclick = () => { SEO.kwn = 500; seoDraw(); });
   el.querySelectorAll("[data-gday]").forEach(b => b.onclick = () => { SEO.gday = !SEO.gday; seoDraw(); });
   if (!GSC.data && !GSC.loading) gscLoad();
   el.querySelectorAll("[data-sact=gsc]").forEach(b => b.onclick = () => { GSC.data = null; seoDraw(); });
