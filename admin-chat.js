@@ -45,7 +45,7 @@ async function openThread(id) {
   CHAT_CUR = id; CHAT_MSGS = [];
   const th = THREADS.find(x => x.id === id);
   if (th && chatUnread(th)) { th.admin_seen_at = new Date().toISOString(); sb.from("chat_threads").update({ admin_seen_at: th.admin_seen_at }).eq("id", id).then(() => {}); chatCount(); }
-  await loadMsgs(); drawChat();
+  await loadMsgs(); drawChat(); if (TAB === "chat") { NAV_QUIET = true; navSync(); NAV_QUIET = false; }
   clearInterval(CHAT_TIMER); CHAT_TIMER = setInterval(async () => { if (TAB !== "chat" || CHAT_CUR !== id) { clearInterval(CHAT_TIMER); return; } const n = CHAT_MSGS.length; await loadMsgs(); if (CHAT_MSGS.length !== n) drawThread(); }, 5000);
 }
 async function loadMsgs() {
@@ -73,7 +73,7 @@ function drawThread() {
     ${lastAdmin && !read ? `<div class="cm-ping"><span>손님이 사이트를 닫았으면 답장을 못 봐요 →</span>
       ${phone ? `<button class="btn sm" data-ping="sms">📱 답장 알림 문자 (${esc(phone)})</button>` : ""}<button class="btn sm" data-ping="copy">📋 알림 메시지 복사 (카톡 등)</button></div>` : ""}`;
   const list = box.querySelector(".cm-list"); list.scrollTop = list.scrollHeight;
-  box.querySelector(".cm-back").onclick = () => { CHAT_CUR = null; clearInterval(CHAT_TIMER); drawChat(); };
+  box.querySelector(".cm-back").onclick = () => { CHAT_CUR = null; clearInterval(CHAT_TIMER); drawChat(); NAV_QUIET = true; navSync(); NAV_QUIET = false; };
   const bk = box.querySelector("[data-bk]"); if (bk) bk.onclick = () => openBooking(bk.dataset.bk);
   box.querySelector("[data-st]").onclick = async () => { const st = th.status === "open" ? "closed" : "open"; const r = await sb.from("chat_threads").update({ status: st }).eq("id", th.id); if (r.error) { dbErr(r.error, "상태 변경"); return; } th.status = st; drawChat(); };
   const f = box.querySelector(".cm-form"), ta = f.querySelector("textarea");

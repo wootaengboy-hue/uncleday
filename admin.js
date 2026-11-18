@@ -128,13 +128,13 @@ const TODO = [
 let TAB = "home";
 // 브라우저 '뒤로 가기'가 관리자 페이지 안에서 움직이게: 탭 · 포털 앱마다 주소(#bk, #home/price …)를 남겨요
 let NAV_QUIET = true;   // 처음 열 때 · 뒤로 가기로 움직일 때는 기록을 새로 쌓지 않아요
-function navHash() { return TAB === "home" && typeof PORTAL !== "undefined" && PORTAL.view && PORTAL.view !== "home" ? "home/" + PORTAL.view : TAB; }
+function navHash() { if (TAB === "chat" && typeof CHAT_CUR !== "undefined" && CHAT_CUR) return "chat/" + CHAT_CUR; return TAB === "home" && typeof PORTAL !== "undefined" && PORTAL.view && PORTAL.view !== "home" ? "home/" + PORTAL.view : TAB; }
 function navSync() { const h = navHash(); if (location.hash.slice(1) === h) return; if (NAV_QUIET) history.replaceState(null, "", "#" + h); else history.pushState(null, "", "#" + h); }
 window.addEventListener("popstate", () => {
   if (typeof TAB === "undefined" || $("app").hidden) return;
   const [t, v] = location.hash.slice(1).split("/"); if (!t || /=/.test(t)) return;
   NAV_QUIET = true;
-  try { if (t === "home") { PORTAL.view = v || "home"; if (TAB !== "home") showTab("home"); else portalGo(PORTAL.view, true); } else if (TABS_ALL.includes(t)) showTab(t); }
+  try { if (t === "home") { PORTAL.view = v || "home"; if (TAB !== "home") showTab("home"); else portalGo(PORTAL.view, true); } else if (t === "chat" && v && !IS_FIELD()) { showTab("chat"); if (CHAT_CUR !== v) openThread(v).then(() => $("tab-chat").scrollIntoView({ block: "start" })); } else if (TABS_ALL.includes(t)) { if (t === "chat") CHAT_CUR = null; showTab(t); } }
   finally { NAV_QUIET = false; }
 });
 const TABS_ALL = ["home", "dash", "work", "bk", "chat", "crm", "settle", "shops", "rv", "uni", "acc"];
@@ -915,7 +915,7 @@ function drawReviews() {
 const SLACK_EVS = [["booking", "📅 새 예약", "사이트·카톡으로 들어온 예약"], ["shop", "🏪 업체 답", "업체가 링크로 확정·불가·방문 완료(금액)를 눌렀을 때"],
   ["customer", "🙋 손님 행동", "손님이 '다녀왔어요'·취소를 눌렀을 때"], ["review", "⭐ 새 후기", "게시를 기다리는 후기"],
   ["team", "💬 팀 알림", "낙서장 @언급·담당 지정·참조·댓글 (🔔와 같은 내용)"], ["lead", "🤝 영업 단계", "영업 업체 추가·단계 변경"],
-  ["chat", "💬 사이트 채팅", "손님이 사이트·예약확인증 채팅으로 보낸 메시지 — 하나도 빠짐없이 · 답장하기 링크 포함 (universe26)"],
+  ["chat", "💬 사이트 채팅", "손님이 사이트·예약확인증 채팅으로 보낸 메시지 — 하나도 빠짐없이 · 그 손님 대화로 바로 가는 링크 포함 (universe29)"],
   ["seo", "📨 검색 문의 · 입점 신청", "미입점 가게 페이지에서 손님 예약 문의 · 사장님 입점 신청 (연락처는 포털에서만)"]];
 async function drawSlack() {
   const box = $("slackBox"); if (!box) return;
@@ -1290,6 +1290,8 @@ async function afterLogin(session) {
   const [h, hv] = location.hash.slice(1).split("/");
   if (h === "home" && hv) PORTAL.view = hv;
   NAV_QUIET = true; showTab(TABS_ALL.includes(h) ? h : "home"); NAV_QUIET = false;
+  // 슬랙 알림의 링크(#chat/대화번호)로 들어오면 그 손님 대화를 바로 열어요
+  if (h === "chat" && hv && TAB === "chat") openThread(hv).then(() => setTimeout(() => $("tab-chat").scrollIntoView({ block: "start" }), 300));
   if (!IS_FIELD()) { offerMigration(); checkImports(); initNotis(); }
   // 1분마다 새 예약·후기 확인
   setInterval(async () => {
