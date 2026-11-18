@@ -74,6 +74,7 @@ function workTodos() {
 }
 
 function drawWork() {
+  if (typeof IS_FIELD === "function" && IS_FIELD()) workView = "leads";   // 현장 영업 직원: 업체 영업 보드만
   const t = vnToday();
   if (workView === "guide") { workView = "tasks"; if (typeof PORTAL !== "undefined") PORTAL.guide = true; showTab("home"); return; }
   if (workView === "notes") return drawNotes();
@@ -282,7 +283,7 @@ function drawLeads() {
             <div class="kt">${esc(l.name)}</div>
             <div class="km">${esc([cityName(l.city), l.cat ? catName(l.cat) : ""].filter(x => x && x !== "-").join(" · "))}</div>
             ${l.next_action || l.next_date ? `<div class="km next">➡ ${esc(l.next_action || "다음 연락")} ${l.next_date ? `<b class="${late ? "lt" : ""}">${dayKo(l.next_date)}</b>` : ""}</div>` : ""}
-            <div class="kchips"><span class="chip">👤 ${esc(who(l.assignee))}</span>${l.rate ? `<span class="chip">💯 ${+l.rate}%</span>` : ""}${l.shop_id ? `<span class="chip">🏪 등록됨</span>` : ""}${open ? `<span class="chip">✅ ${open}</span>` : ""}${CMT_N[l.id] ? `<span class="chip">💬 ${CMT_N[l.id]}</span>` : ""}</div></div>`;
+            <div class="kchips"><span class="chip">👤 ${esc(who(l.assignee))}</span>${l.rate ? `<span class="chip rate-chip">💯 ${+l.rate}%</span>` : ""}${l.shop_id ? `<span class="chip">🏪 등록됨</span>` : ""}${open ? `<span class="chip">✅ ${open}</span>` : ""}${CMT_N[l.id] ? `<span class="chip">💬 ${CMT_N[l.id]}</span>` : ""}</div></div>`;
         }).join("") || `<div class="kempty">-</div>`}</div></div>`;
     }).join("");
   if ($("leadSeed")) $("leadSeed").onclick = async () => {
@@ -357,8 +358,7 @@ async function openLead(id) {
   const close = () => { $("layer").innerHTML = ""; if (TAB === "work") drawWork(); };
   $("pCancel").onclick = close; $("ov").onclick = e => { if (e.target.id === "ov") close(); };
   const led = richEditor($("lMemo"), l.memo || "");
-  commentBox($("lCmt"), "lead", l.id);
-  fileBox($("lFiles"), "lead", l.id);
+  if (!(typeof IS_FIELD === "function" && IS_FIELD())) { commentBox($("lCmt"), "lead", l.id); fileBox($("lFiles"), "lead", l.id); }
   const save = async (patch, msg = "저장했어요") => {
     try { const r = await q(sb.from("leads").update(patch).eq("id", l.id).select().single()); LEADS[LEADS.indexOf(l)] = r; l = r; toast(msg); drawHead(); loadLog(); } catch (e) {}
   };

@@ -6,6 +6,7 @@
 let PORTAL = { shops: null, bonus: null, audit: null, err: null, loading: false, guide: false, view: (() => { try { return sessionStorage.getItem("ptView"); } catch (e) { return null; } })() || "home" };
 
 async function portalLoad() {
+  if (typeof IS_FIELD === "function" && IS_FIELD()) return;   // 현장 영업 직원: 매장 운영 정보는 안 불러와요
   if (PORTAL.loading) return; PORTAL.loading = true;
   const r = await Promise.allSettled([sb.rpc("admin_universe_shops"), sb.rpc("admin_bonus_list", { st: "pending" }), sb.rpc("admin_audit_list", { lim: 12 })]);
   const val = x => x.status === "fulfilled" && !x.value.error ? x.value.data : null;
@@ -57,7 +58,10 @@ const PORTAL_APPS = [
   ["🔎 검색 · 마케팅", [["blog", "📝", "블로그", "검색어로 글 만들기 · 네이버 요약본"], ["comp", "🔍", "경쟁사 분석", "빠진 검색어 · 소개된 가게"], ["con", "📈", "엉클데이 서치 콘솔", "구글 색인 상태 · URL 검사"], ["seo", "📨", "검색 유입 · 리드", "어디서 왔는지 · 미입점 문의"]]],
   ["📚 자료", [["guide", "📘", "운영 가이드", "팀원용 설명서 · 자주 묻는 질문"], ["brand", "🎨", "브랜드 자료실 (CI)", "로고 · 색 · 글꼴 · 원본"]]],
 ];
-const portalApp = k => PORTAL_APPS.flatMap(g => g[1]).find(a => a[0] === k);
+const FIELD_APPS = ["field", "fill", "price", "links"];
+// 현장 영업 직원에게는 영업 · 가게 정보 앱만 보여요
+const portalAppsFor = () => typeof IS_FIELD === "function" && IS_FIELD() ? PORTAL_APPS.map(([g, A]) => [g, A.filter(a => FIELD_APPS.includes(a[0]))]).filter(([, A]) => A.length) : PORTAL_APPS;
+const portalApp = k => portalAppsFor().flatMap(g => g[1]).find(a => a[0] === k);
 function portalBadge(k) {
   try {
     if (k === "seo" && typeof SEO !== "undefined" && SEO.leads) return SEO.leads.filter(x => x.status === "new").length;
@@ -67,11 +71,11 @@ function portalBadge(k) {
   return 0;
 }
 function portalApps() {
-  return PORTAL_APPS.map(([g, A]) => `<h4 class="pt-gh">${g}</h4><div class="pt-apps">${A.map(([k, ic, nm, d]) => { const n = portalBadge(k);
+  return portalAppsFor().map(([g, A]) => `<h4 class="pt-gh">${g}</h4><div class="pt-apps">${A.map(([k, ic, nm, d]) => { const n = portalBadge(k);
     return `<button class="pt-app" data-pgo="${k}"><span class="ic">${ic}</span><span class="t"><b>${esc(nm)}${n ? ` <em>${n}</em>` : ""}</b><small>${esc(d)}</small></span></button>`; }).join("")}</div>`).join("");
 }
 function portalNav() {
-  return `<button data-pgo="home"><span>🏠</span>포털 홈</button>` + PORTAL_APPS.map(([g, A]) => `<small>${g}</small>${A.map(([k, ic, nm]) => { const n = portalBadge(k); return `<button data-pgo="${k}"><span>${ic}</span>${esc(nm)}${n ? `<em>${n}</em>` : ""}</button>`; }).join("")}`).join("");
+  return `<button data-pgo="home"><span>🏠</span>포털 홈</button>` + portalAppsFor().map(([g, A]) => `<small>${g}</small>${A.map(([k, ic, nm]) => { const n = portalBadge(k); return `<button data-pgo="${k}"><span>${ic}</span>${esc(nm)}${n ? `<em>${n}</em>` : ""}</button>`; }).join("")}`).join("");
 }
 // 화면 바꾸기: 섹션은 모두 그려 두고 지금 고른 것만 보여요 (입력 중인 내용이 안 날아가요)
 function portalGo(k, quiet) {
@@ -82,7 +86,7 @@ function portalGo(k, quiet) {
   el.querySelectorAll("[data-pv]").forEach(s => s.hidden = !(s.dataset.pv === k || (s.dataset.pv === "sub" && k !== "home")));
   el.querySelectorAll(".pt-side [data-pgo]").forEach(b => b.classList.toggle("on", b.dataset.pgo === k));
   // 같은 묶음의 다른 앱으로 바로 가는 칩 (휴대폰에서 왼쪽 메뉴 대신)
-  const g = PORTAL_APPS.find(x => x[1].some(a => a[0] === k)), cur = el.querySelector("#ptCur");
+  const g = portalAppsFor().find(x => x[1].some(a => a[0] === k)), cur = el.querySelector("#ptCur");
   if (cur) { cur.innerHTML = g ? g[1].map(([id, ic, nm]) => `<button class="${id === k ? "on" : ""}" data-pgo="${id}">${ic} ${esc(nm)}</button>`).join("") : ""; cur.querySelectorAll("[data-pgo]").forEach(x => x.onclick = () => portalGo(x.dataset.pgo)); }
   if (!quiet) { const m = el.querySelector(".pt-main"); if (m) window.scrollTo({ top: Math.max(0, m.getBoundingClientRect().top + window.scrollY - 70), behavior: "smooth" }); }
 }
@@ -131,6 +135,12 @@ function drawPortal(skip) {
       ${PORTAL.guide ? `<button class="btn sm" data-pact="guideclose">← 포털 요약으로</button><div id="ptGuideBox" style="margin-top:10px"></div>` : `<div class="pt-guide">
         <div><b>📘 전체 사용 안내</b><small>예약 처리 · 업체 관리 · 채팅 · 백업 · 사장님 페이지 · 유니버스까지 팀원용 설명서 (검색 가능)</small><button class="btn sm main" data-pact="guide">열기</button></div>
         ${portalFaq().map(it => `<div><b>${it.ic || "❓"} ${esc(it.t)}</b><small>${it.b}</small></div>`).join("")}</div>`}</section></div></div>`;
+  if (typeof IS_FIELD === "function" && IS_FIELD()) {   // 현장 영업 직원: 허락된 앱 칸만 남겨요
+    el.querySelectorAll("[data-pv]").forEach(x => { const v = x.dataset.pv; if (v === "sub") return;
+      if (v === "home") { if (x.matches("section") && !x.querySelector(".pt-apps")) x.remove(); return; }
+      if (!FIELD_APPS.includes(v)) x.remove(); });
+    const hp = el.querySelector(".pt-hero p"); if (hp) hp.textContent = "가게 정보 · 가격 · 사진 입력, 업체 영업 보드, 링크 · QR, 현장 영업 매뉴얼";
+  }
   portalBind(el);
   portalGo(PORTAL.view || "home", true);
   if (typeof brandDraw === "function") brandDraw();

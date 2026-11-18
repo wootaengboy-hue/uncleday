@@ -18,7 +18,7 @@ const FIL_ITEMS = [
   ["addr", "🏠 주소", 5, s => !!(s.address && (s.address.ko || s.address.en || s.address.vi)), "구글 지도 · 검색의 가게 정보와 맞춰져요", "edit"],
   ["tags", "🏷️ 특징 태그 3개+", 5, s => (s.tags || []).length >= 3, "'커플룸' · '한국어' · '공항 샌딩' 같은 검색어에 걸려요", "edit"],
 ];
-const filName = s => (s.name && (s.name.ko || s.name.en || s.name.vi)) || s.id;
+const filName = s => (typeof adminNm === "function" ? adminNm(s.name) : (s.name && (s.name.ko || s.name.en || s.name.vi))) || s.id;
 function filScore(s) { const miss = FIL_ITEMS.filter(it => !it[3](s)); return { score: 100 - miss.reduce((a, it) => a + it[2], 0), miss }; }
 const filLive = () => shops.filter(s => !(typeof META !== "undefined" && META[s.id] && META[s.id].published === false));
 

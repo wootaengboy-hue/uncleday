@@ -3,6 +3,10 @@ const RECOVERY = /type=recovery/.test(location.hash);   // 비밀번호 재설�
 const ON = typeof SUPA !== "undefined" && SUPA.url && SUPA.key;
 const sb = ON ? supabase.createClient(SUPA.url, SUPA.key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }) : null;
 let ME = { email: "", id: "" };
+// 👷 권한: full = 관리자 전부 · field = 현장 영업 직원 (업체 정보 · 가격 · 사진 · 영업 보드 · 링크 · 매뉴얼만) — universe27
+let ROLE = "full";
+const IS_FIELD = () => ROLE === "field";
+const FIELD_TABS = ["home", "shops", "work"];
 let BOOKINGS = []; window.BOOKINGS = BOOKINGS;
 let SETTLES = [], RVS = [];
 const ST = {
@@ -135,6 +139,7 @@ window.addEventListener("popstate", () => {
 });
 const TABS_ALL = ["home", "dash", "work", "bk", "chat", "crm", "settle", "shops", "rv", "uni", "acc"];
 function showTab(t) {
+  if (IS_FIELD() && !FIELD_TABS.includes(t)) t = "home";
   TAB = t;
   document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
   document.querySelectorAll("[data-pane]").forEach(p => p.hidden = p.dataset.pane !== t);
@@ -1078,7 +1083,7 @@ async function drawAccount() {
         <div class="err-text" id="pwErr"></div>
         <div class="btn-row"><button class="btn main">비밀번호 바꾸기</button><button class="btn" type="button" id="logout">로그아웃</button></div></form></div>
     <div class="box"><h3>관리자</h3><div id="adminList" class="hint">불러오는 중…</div>
-      <form id="addAdm" style="display:flex;gap:8px"><input type="email" id="admEmail" placeholder="직원 이메일" required style="flex:1;padding:9px 11px;border:1px solid var(--line);border-radius:9px"><button class="btn">추가</button></form>
+      <form id="addAdm" style="display:flex;gap:8px"><input type="email" id="admEmail" placeholder="직원 이메일" required style="flex:1;padding:9px 11px;border:1px solid var(--line);border-radius:9px"><select id="admRole" style="padding:9px;border:1px solid var(--line);border-radius:9px"><option value="full">관리자 (전부)</option><option value="field">👷 현장 영업 직원</option></select><button class="btn">추가</button></form><div class="hint" style="margin-top:6px">👷 <b>현장 영업 직원</b>: 업체 정보 · 가격 · 사진 입력, 업체 영업 보드, 링크 · QR, 영업 매뉴얼만 보여요 (베트남어 화면). 예약 · 손님 · 채팅 · 정산 · 후기 · 계약서 · 설정은 잠겨요. 업체 게시는 관리자만 해요.</div>
       <div class="hint">직원 추가 순서: ① 여기에 이메일 추가 → ② Supabase → <b>Authentication → Users → Add user → Create new user</b>에서 같은 이메일과 임시 비밀번호로 계정 만들기 (Auto Confirm 켜기) → ③ 직원이 로그인한 뒤 '비밀번호 바꾸기'.</div></div>
   </div>
   <div class="box" style="margin:14px 0 0" id="backupBox"><h3>🛟 자동 백업</h3><div class="hint">불러오는 중…</div></div>
@@ -1097,8 +1102,8 @@ async function drawAccount() {
   const drawAdmins = async () => {
     const [a, e] = await Promise.all([sb.from("admins").select("*").order("created_at"), sb.from("admin_emails").select("*").order("created_at")]);
     const active = new Set((a.data || []).map(x => x.email.toLowerCase()));
-    $("adminList").innerHTML = `<div class="hint" style="margin:0 0 6px">닉네임: 할 일·댓글·알림에 이메일 대신 보여요. <b>@닉네임</b>으로 부를 수 있어요 (띄어쓰기 없이 12자까지).</div>` + (a.data || []).map(x => `<div class="adm-row">✅ <input class="nick-in" data-nick="${esc(x.user_id)}" value="${esc(x.name || "")}" placeholder="닉네임" maxlength="12"><small>${esc(x.email)}${x.user_id === ME.id ? " (나)" : ""}</small></div>`).join("") +
-      (e.data || []).filter(x => !active.has(x.email.toLowerCase())).map(x => `<div>⏳ ${esc(x.email)} <span class="hint">— 아직 로그인 안 함</span> <button class="btn sm danger" data-rm="${esc(x.email)}">빼기</button></div>`).join("");
+    $("adminList").innerHTML = `<div class="hint" style="margin:0 0 6px">닉네임: 할 일·댓글·알림에 이메일 대신 보여요. <b>@닉네임</b>으로 부를 수 있어요 (띄어쓰기 없이 12자까지).</div>` + (a.data || []).map(x => `<div class="adm-row">✅ <input class="nick-in" data-nick="${esc(x.user_id)}" value="${esc(x.name || "")}" placeholder="닉네임" maxlength="12"><small>${esc(x.email)}${x.user_id === ME.id ? " (나)" : ""}</small><select class="role-sel" data-role="${esc(x.email)}" ${x.user_id === ME.id ? "disabled" : ""}><option value="full" ${x.role !== "field" ? "selected" : ""}>관리자</option><option value="field" ${x.role === "field" ? "selected" : ""}>👷 현장 영업</option></select></div>`).join("") +
+      (e.data || []).filter(x => !active.has(x.email.toLowerCase())).map(x => `<div>⏳ ${esc(x.email)} <span class="hint">— 아직 로그인 안 함 · ${x.role === "field" ? "👷 현장 영업" : "관리자"}</span> <button class="btn sm danger" data-rm="${esc(x.email)}">빼기</button></div>`).join("");
     $("adminList").querySelectorAll("[data-nick]").forEach(inp => inp.onchange = async () => {
       const v = inp.value.trim();
       if (v && !NICK_RE.test(v)) { toast("닉네임은 띄어쓰기 없이 한글·영문·숫자로 12자까지예요"); inp.value = ""; return; }
@@ -1107,10 +1112,11 @@ async function drawAccount() {
       const em = (a.data.find(y => y.user_id === inp.dataset.nick) || {}).email, m = ADMINS.find(x => x.email === em); if (m) m.name = v || null;
       toast(v ? `닉네임을 '${v}'(으)로 정했어요` : "닉네임을 지웠어요");
     });
+    $("adminList").querySelectorAll("[data-role]").forEach(sel => sel.onchange = async () => { const r = await sb.rpc("admin_set_role", { em: sel.dataset.role, r: sel.value }); if (r.error) { dbErr(r.error); drawAdmins(); return; } toast(sel.value === "field" ? "👷 현장 영업 직원으로 바꿨어요 (다음 로그인부터)" : "관리자로 바꿨어요 (다음 로그인부터)"); });
     $("adminList").querySelectorAll("[data-rm]").forEach(b => b.onclick = async () => { await sb.from("admin_emails").delete().eq("email", b.dataset.rm); drawAdmins(); });
   };
   drawAdmins(); drawSlack(); drawBackup();
-  $("addAdm").onsubmit = async e => { e.preventDefault(); const r = await sb.from("admin_emails").insert({ email: $("admEmail").value.trim().toLowerCase(), added_by: ME.email }); if (r.error) dbErr(r.error); else { $("admEmail").value = ""; drawAdmins(); toast("추가했어요"); } };
+  $("addAdm").onsubmit = async e => { e.preventDefault(); const r = await sb.from("admin_emails").insert({ email: $("admEmail").value.trim().toLowerCase(), added_by: ME.email, role: $("admRole").value }); if (r.error) dbErr(r.error); else { $("admEmail").value = ""; drawAdmins(); toast("추가했어요"); } };
   const dl = (name, text, type) => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); };
   $("bkAll").onclick = async () => {
     const ev = await sb.from("booking_events").select("*").order("id").limit(100000);
@@ -1271,8 +1277,11 @@ async function afterLogin(session) {
   const ok = await sb.rpc("claim_admin");
   if (ok.error || !ok.data) { gate(`<h1>관리자 권한이 없어요</h1><p class="hint" style="text-align:center">${esc(ME.email)} 계정은 관리자로 등록되지 않았어요. 기존 관리자에게 '계정 → 관리자 추가'를 부탁하세요.</p><p style="text-align:center"><button class="btn" id="lo">다른 계정으로 로그인</button></p>`); $("lo").onclick = async () => { await sb.auth.signOut(); location.reload(); }; return; }
   started = true;
+  try { const rr = await sb.rpc("my_role"); if (!rr.error && rr.data) ROLE = rr.data; } catch (e) {}
+  document.body.classList.toggle("role-field", IS_FIELD());
+  if (IS_FIELD() && typeof adminLangInit === "function") adminLangInit();
   gate(`<h1>불러오는 중…</h1>`);
-  try { await loadAll(); await loadTold(); }
+  try { if (IS_FIELD()) { await Promise.all([loadShops(), loadWork()]); } else { await loadAll(); await loadTold(); } }
   catch (e) { gate(`<h1>불러오지 못했어요</h1><p class="hint" style="text-align:center">${esc(e.message || "")}<br>데이터베이스 설정(schema.sql)을 실행했는지 확인해 주세요.</p>`); started = false; return; }
   $("gate").hidden = true; $("app").hidden = false; $("tabs").hidden = false;
   $("me").textContent = ME.email;
@@ -1281,13 +1290,12 @@ async function afterLogin(session) {
   const [h, hv] = location.hash.slice(1).split("/");
   if (h === "home" && hv) PORTAL.view = hv;
   NAV_QUIET = true; showTab(TABS_ALL.includes(h) ? h : "home"); NAV_QUIET = false;
-  offerMigration();
-  checkImports();
-  initNotis();
+  if (!IS_FIELD()) { offerMigration(); checkImports(); initNotis(); }
   // 1분마다 새 예약·후기 확인
   setInterval(async () => {
     if (document.hidden || $("layer").innerHTML) return;
     const before = BOOKINGS.length, rvBefore = RVS.length;
+    if (IS_FIELD()) { try { await loadWork(); } catch (e) {} if (TAB === "work" && !document.querySelector(".overlay")) showTab(TAB); return; }
     try { await Promise.all([loadBookings(), loadReviews(), loadStats(vnMonth(), true), loadWork()]); await loadTold(); } catch (e) { return; }
     if (BOOKINGS.length > before) toast(`🔔 새 예약 ${BOOKINGS.length - before}건이 들어왔어요`, 5000);
     if (RVS.length > rvBefore) toast(`⭐ 새 후기가 들어왔어요`, 4000);

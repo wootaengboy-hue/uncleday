@@ -5,7 +5,7 @@
  */
 const PRC = { city: "", only: true, open: null, q: "", n: 12 };
 const prcCities = () => (typeof CITIES !== "undefined" ? CITIES : []).filter(c => shops.some(s => s.city === c.id));
-const prcName = n => (n && (n.ko || n.en || n.vi)) || "";
+const prcName = n => typeof adminNm === "function" ? adminNm(n) : (n && (n.ko || n.en || n.vi)) || "";
 // "450" → 450,000 / "45만" → 450,000 / "450k" → 450,000 / "450,000" → 450,000
 function prcParse(v) {
   v = String(v || "").trim().toLowerCase().replace(/[,\s₫동đvnd]/g, "");

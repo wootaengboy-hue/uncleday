@@ -44,6 +44,7 @@ async function dbSaveShop(s, oldId) {
   }
   const m = META[s.id] || { published: true, sort: 0 };
   let r = await sb.from("shops").upsert({ id: s.id, data, published: m.published !== false, sort: m.sort || 0, updated_by: ME.email }); if (r.error) throw r.error;
+  if (typeof IS_FIELD === "function" && IS_FIELD()) return;   // 현장 영업 직원은 계약 · 비공개 메모를 못 봐요 (그대로 둬요)
   const pv = PRIV[s.id] || { commission_rate: 0, contract: {} };
   r = await sb.from("shop_private").upsert({ shop_id: s.id, notes, commission_rate: +pv.commission_rate || 0, contract: pv.contract || {} }); if (r.error) throw r.error;
 }
@@ -97,7 +98,7 @@ function drawList() {
     const c = catOf(s.cat);
     return `<div class="row">
       <div class="thumb">${s.img ? `<img src="${esc(imgSrc(s.img))}" alt="" style="object-position:${s.imgPos || "50% 50%"}">` : (c ? c.icon : "✨")}</div>
-      <div class="nm"><b>${esc(s.name.ko || s.name.en || "(이름 없음)")}${s.best ? `<span class="badge best">✦ 엉클 인증</span>` : ""}${needsReview(s) ? `<span class="badge chk">⚠ 확인 필요</span>` : ""}${!isPub(s) ? `<span class="badge hid">사이트에서 숨김</span>` : ""}</b><small>${esc(s.name.en || "")} · ${esc(s.id)}</small>${needsReview(s) ? `<ul class="rv-list">${s.review.map(r => `<li>${esc(r)}</li>`).join("")}</ul>` : ""}</div>
+      <div class="nm"><b>${esc((typeof adminNm === "function" ? adminNm(s.name) : s.name.ko || s.name.en) || "(이름 없음)")}${s.best ? `<span class="badge best">✦ 엉클 인증</span>` : ""}${needsReview(s) ? `<span class="badge chk">⚠ 확인 필요</span>` : ""}${!isPub(s) ? `<span class="badge hid">사이트에서 숨김</span>` : ""}</b><small>${esc(s.name.en || "")} · ${esc(s.id)}</small>${needsReview(s) ? `<ul class="rv-list">${s.review.map(r => `<li>${esc(r)}</li>`).join("")}</ul>` : ""}</div>
       <span class="c-cat">${c ? c.icon + " " : ""}${esc(catName(s.cat))}</span>
       <span class="c-city">${esc(cityName(s.city))}</span>
       <span class="c-st">${isOk(s) ? `<span class="badge ok">입점 확인됨</span>` : `<span class="badge wait">정보 확인 중</span>`}${s.geo && s.geoApprox ? `<br><small class="geo-apx">📍 대략 위치</small>` : !s.geo ? `<br><small class="geo-apx">📍 좌표 없음</small>` : ""}<br><small class="chk-prog ${chkCount(s)[0] === chkCount(s)[1] ? "full" : ""}">확인 ${chkCount(s)[0]}/${chkCount(s)[1]}</small><br><small class="rate-tag ${rateOf(s.id) ? "" : "none"}">수수료 ${rateOf(s.id) ? rateOf(s.id) + "%" : "미정"}</small></span>
@@ -150,6 +151,7 @@ function openEditor(id, preset, opts = {}) {
         <div class="f"><span>정보 확인 체크 <small style="font-weight:400;color:var(--sub)">업체에 직접 확인한 항목에 체크해요. 손님에게는 안 보여요.</small></span>
           <div class="checks" id="chkList">${CHK.map(([k, n]) => `<label><input type="checkbox" data-chk="${k}" ${(s.checks || {})[k] ? "checked" : ""}>${n}</label>`).join("")}</div>
           <div class="hint" id="chkSum"></div></div>
+        <div class="field-only hint" style="margin-top:8px">🔒 게시(사이트에 보이기)는 관리자가 확인한 뒤에 해요. 새 업체는 숨김 상태로 저장돼요.</div>
         <label class="switch pub-sw ${pub ? "on" : ""}" id="pSw"><input type="checkbox" id="pChk" ${pub ? "checked" : ""}>
           <div><b>사이트에 보이기</b><div class="hint">끄면 손님 화면에서 이 업체가 사라져요. 예약·정산 기록은 그대로 남아요. (업체 삭제 대신 이걸 쓰세요)</div></div></label>
       </div>
@@ -257,7 +259,7 @@ function openEditor(id, preset, opts = {}) {
         <div class="hint">글씨가 잘 보이도록 크게 저장해요. 손님은 상세 화면에서 눌러서 크게 볼 수 있어요. 사진마다 이름(예: 마사지 코스, 패키지)을 달아 두면 찾기 쉬워요.</div>
       </div>
 
-      <div class="box"><h3>이용후기<small>손님이 보낸 후기를 확인하고 붙여 넣어요</small></h3>
+      <div class="box rv-box"><h3>이용후기<small>손님이 보낸 후기를 확인하고 붙여 넣어요</small></h3>
         <div id="rvList" style="display:grid;gap:10px"></div>
         <button class="btn sm" id="rvAdd" type="button">＋ 후기 추가</button>
         <div class="hint">손님이 사이트에서 보낸 후기는 <b>후기</b> 탭에서 '게시'를 누르면 여기에 자동으로 들어가요. 카카오톡 등으로 받은 후기는 여기에 직접 넣어요. 후기가 있으면 위의 평점·후기 수는 자동으로 계산돼요. 직접 지어낸 후기는 넣지 마세요.</div>
