@@ -108,6 +108,12 @@ const CHAT = (() => {
   }, true);
   // 처음: 예전 대화가 있으면 안 읽은 답장이 있는지 확인
   setTimeout(() => poll(true), 1500); timer = setInterval(() => poll(false), 60000);
-  if (typeof ACCT !== "undefined") ACCT.onUser(() => { if (!open) poll(true); });
+  // 로그아웃하면 이 브라우저의 대화도 지워요 (같은 기기를 다른 사람이 쓸 때 예전 대화가 보이지 않게)
+  let wasUser = false;
+  if (typeof ACCT !== "undefined") ACCT.onUser(u => {
+    if (u) { wasUser = true; if (!open) poll(true); return; }
+    if (!wasUser) return; wasUser = false;
+    put(""); msgs = []; last = 0; known = false; fab.querySelector(".cf-dot").hidden = true; if (open) toggle(false);
+  });
   return { open: () => toggle(true), poll, place };
 })();
