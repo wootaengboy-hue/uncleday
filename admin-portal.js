@@ -90,6 +90,13 @@ function portalGo(k, quiet) {
   if (cur) { cur.innerHTML = g ? g[1].map(([id, ic, nm]) => `<button class="${id === k ? "on" : ""}" data-pgo="${id}">${ic} ${esc(nm)}</button>`).join("") : ""; cur.querySelectorAll("[data-pgo]").forEach(x => x.onclick = () => portalGo(x.dataset.pgo)); }
   if (!quiet) { const m = el.querySelector(".pt-main"); if (m) window.scrollTo({ top: Math.max(0, m.getBoundingClientRect().top + window.scrollY - 70), behavior: "smooth" }); }
 }
+// 대시보드 '할 일' 줄로 들어오면 ✅ 오늘 할 일 칸까지 내려가요.
+// 포털은 숫자를 불러온 뒤 다시 그려지니(위쪽 내용 길이가 바뀜) 5초 동안은 다시 그릴 때마다 맞춰서 내려가요. 직접 스크롤하면 멈춰요.
+function portalTodoScroll() {
+  if (!PORTAL.todoUntil || Date.now() > PORTAL.todoUntil) return;
+  if (!PORTAL.todoHook) { PORTAL.todoHook = true; const stop = () => { PORTAL.todoUntil = 0; }; ["wheel", "touchstart", "keydown"].forEach(e => window.addEventListener(e, stop, { passive: true })); }
+  requestAnimationFrame(() => { const t = $("ptTodo"); if (t && TAB === "home") window.scrollTo({ top: Math.max(0, t.getBoundingClientRect().top + scrollY - 120) }); });
+}
 function drawPortal(skip) {
   const el = $("tab-home"); if (!el) return;
   if (!skip && !PORTAL.loading) portalLoad();
@@ -211,3 +218,5 @@ async function portalStaff(shopId, name) {
   };
   draw();
 }
+// 포털을 다시 그릴 때마다 '오늘 할 일로 내려가기' 요청이 남아 있으면 맞춰서 내려가요
+{ const _drawPortal = drawPortal; drawPortal = function (skip) { const r = _drawPortal(skip); portalTodoScroll(); return r; }; }
