@@ -39,23 +39,29 @@ function gscHtml() {
   return `<p class="hint" style="margin-top:0">${esc(d.start)} ~ ${esc(d.end)} · 구글은 2~3일 늦게 알려 줘요 · ${esc(d.site)}</p>
     <div class="seo-kpi"><div><small>👁️ 구글 검색에 보인 수 (노출)</small><b>${imp.toLocaleString()}</b></div><div><small>👆 눌린 수 (클릭)</small><b>${clk.toLocaleString()}</b></div><div><small>클릭률 (CTR)</small><b>${imp ? pct(clk / imp) : "-"}</b></div><div><small>평균 순위</small><b>${imp ? p1(pos) + "위" : "-"}</b></div></div>
     ${d.byDate.length ? `<div class="seo-days gsc-days">${d.byDate.map(r => `<i title="${r.keys[0]} · 노출 ${r.impressions} · 클릭 ${r.clicks}" style="height:${Math.max(4, r.impressions / mx * 100)}%">${r.clicks ? `<em style="height:${Math.max(8, r.clicks / Math.max(1, r.impressions) * 100)}%"></em>` : ""}</i>`).join("")}</div><div class="seo-dl"><span>${d.byDate[0].keys[0].slice(5)}</span><span>막대: 노출 · 진한 부분: 클릭</span><span>${d.byDate[d.byDate.length - 1].keys[0].slice(5)}</span></div>` : `<p class="hint">아직 구글 검색에 보인 기록이 없어요. 색인이 되면 며칠 안에 숫자가 생겨요.</p>`}
+    ${d.byDate.length ? `<button class="btn sm" data-gday style="margin:6px 0">${SEO.gday ? "▲ 날짜별 표 접기" : "▼ 날짜별 숫자 보기 (노출 · 클릭 · 순위)"}</button>${SEO.gday ? `<div class="gsc-t gsc-dt"><div class="th"><span>날짜</span><span>클릭</span><span>노출</span><span>CTR</span><span>순위</span></div>${d.byDate.slice().reverse().map(r => `<div><span>${seoDayLab(r.keys[0])}</span><span>${r.clicks}</span><span>${r.impressions}</span><span>${r.impressions ? pct(r.clicks / r.impressions) : "-"}</span><span>${p1(r.position)}</span></div>`).join("")}</div>` : ""}` : ""}
     ${d.countries.length ? `<div class="gsc-cc">${d.countries.slice().sort((x, y) => y.impressions - x.impressions).map(r => `<span>${esc(GSC_CC[r.keys[0]] || r.keys[0].toUpperCase())} <b>${r.impressions}</b></span>`).join("")}${d.devices.map(r => `<span>${r.keys[0] === "MOBILE" ? "휴대폰" : r.keys[0] === "DESKTOP" ? "PC" : "태블릿"} <b>${r.impressions}</b></span>`).join("")}</div>` : ""}
     ${d.queries.length ? `<h5>사람들이 검색한 말</h5>${tbl(d.queries, GSC.qn, "검색어", "query")}` : ""}
     ${d.pages.length ? `<h5>구글에 보인 페이지</h5>${tbl(d.pages, GSC.pn, "페이지", "page")}` : ""}`;
 }
-const SEO = { days: 30, rep: null, leads: null, err: "", loading: false, lf: "open", pf: "p" };
+const SEO = { day: null, dayList: null, gday: false, days: 30, rep: null, leads: null, err: "", loading: false, lf: "open", pf: "p" };
 const SEO_SRC = { naverblog: "📗 네이버 블로그", gbp: "📍 구글 지도 예약 링크", fb: "가게 페이스북", zalo: "가게 잘로", ig: "가게 인스타", qr: "매장 QR", google: "구글", naver: "네이버", bing: "빙", daum: "다음", chatgpt: "ChatGPT", perplexity: "Perplexity", claude: "Claude", gemini: "Gemini", kakao: "카카오톡", facebook: "페이스북", instagram: "인스타그램", internal: "사이트 안에서", direct: "직접 · 앱", other: "기타" };
 const SEO_AI = ["chatgpt", "perplexity", "claude", "gemini"], SEO_SEARCH = ["google", "naver", "bing", "daum"];
 const SEO_ST = [["new", "🆕 새 문의"], ["contacted", "📞 연락함"], ["won", "✅ 성사"], ["lost", "✖️ 안 됨"]];
 const seoDay = n => { const d = new Date(Date.now() + 7 * 3600e3 - n * 864e5); return d.toISOString().slice(0, 10); };
 
+// 기간: SEO.day 가 있으면 그 하루만, 없으면 최근 SEO.days 일 (베트남 시간 기준)
+const seoRange = () => SEO.day ? [SEO.day, SEO.day] : [seoDay(SEO.days - 1), seoDay(0)];
+const seoDayLab = d => { if (d === seoDay(0)) return "오늘"; if (d === seoDay(1)) return "어제"; const x = new Date(d + "T00:00:00Z"); return `${x.getUTCMonth() + 1}/${x.getUTCDate()} (${"일월화수목금토"[x.getUTCDay()]})`; };
 async function seoLoad() {
   if (SEO.loading) return; SEO.loading = true;
-  const [r, l] = await Promise.all([sb.rpc("seo_report", { d1: seoDay(SEO.days - 1), d2: seoDay(0) }), sb.from("seo_leads").select("*").order("created_at", { ascending: false }).limit(300)]);
+  const [r, l] = await Promise.all([sb.rpc("seo_report", { d1: seoRange()[0], d2: seoRange()[1] }), sb.from("seo_leads").select("*").order("created_at", { ascending: false }).limit(300)]);
   SEO.loading = false;
   const e = r.error || l.error;
   if (e) { SEO.err = /seo_|PGRST20|42P01|42883/.test((e.message || "") + (e.code || "")) ? "setup" : e.message; SEO.rep = { by_src: {}, by_day: [], pages: [] }; SEO.leads = []; }
   else { SEO.err = ""; SEO.rep = r.data || { by_src: {}, by_day: [], pages: [] }; SEO.leads = l.data || []; }
+  // 날짜별 표: 기간 안의 모든 날을 0 포함해서 (하루만 볼 때는 직전 기간 표를 그대로 둬요)
+  if (!SEO.day) { const m = {}; (SEO.rep.by_day || []).forEach(x => m[x.day] = +x.n || 0); SEO.dayList = Array.from({ length: SEO.days }, (_, i) => seoDay(i)).map(d => ({ day: d, n: m[d] || 0 })); }
   const hd = await sb.from("osm_hidden").select("*").order("created_at", { ascending: false });
   SEO.hidden = hd.error ? null : (hd.data || []);   // null = universe20.sql 실행 전
   if (typeof TAB !== "undefined" && TAB === "home" && typeof drawPortal === "function") drawPortal(true); else seoDraw();   // '오늘 할 일'의 새 문의 숫자도 같이
@@ -76,10 +82,18 @@ const seoKind = p => /^\/p\/.*\/vi\/$/.test(p) ? "미입점 · 사장님용" : /
 function seoPitch(pg, l) {
   const nm = seoName(pg.path), v = +pg.views || 0, s = +pg.search || 0;
   return l === "vi"
-    ? `Chào anh/chị! Trong ${SEO.days} ngày qua, trang "${nm}" trên Uncle Day (uncleday.com) (trang tiếng Hàn cho du khách Hàn Quốc) đã được xem ${v} lượt${s ? `, trong đó ${s} lượt đến từ Google/Naver/AI` : ""}${pg.leads ? ` và ${pg.leads} lượt hỏi đặt chỗ` : ""}. Cửa hàng chưa đăng ký nên chúng tôi chưa thể gửi khách. Đăng ký miễn phí — không phí tháng, chỉ trả hoa hồng khi khách đến và thanh toán. Xem trang: https://www.uncleday.com${pg.path}vi/`
-    : `사장님, 지난 ${SEO.days}일 동안 엉클데이(uncleday.com)에서 "${nm}" 페이지(한국인 여행객용 한국어 페이지)가 ${v}번 조회됐어요${s ? ` (그중 구글 · 네이버 · AI 검색으로 ${s}번)` : ""}${pg.leads ? `. 예약 문의도 ${pg.leads}건 들어왔어요` : ""}. 아직 입점 전이라 손님을 보내 드리지 못하고 있어요. 입점비 · 월 고정비 없이 손님이 와서 결제했을 때만 수수료예요. 페이지 보기: https://www.uncleday.com${pg.path}`;
+    ? `Chào anh/chị! ${SEO.day ? (SEO.day === seoDay(0) ? "Hôm nay" : `Ngày ${SEO.day.slice(8)}/${SEO.day.slice(5, 7)}`) : `Trong ${SEO.days} ngày qua`}, trang "${nm}" trên Uncle Day (uncleday.com) (trang tiếng Hàn cho du khách Hàn Quốc) đã được xem ${v} lượt${s ? `, trong đó ${s} lượt đến từ Google/Naver/AI` : ""}${pg.leads ? ` và ${pg.leads} lượt hỏi đặt chỗ` : ""}. Cửa hàng chưa đăng ký nên chúng tôi chưa thể gửi khách. Đăng ký miễn phí — không phí tháng, chỉ trả hoa hồng khi khách đến và thanh toán. Xem trang: https://www.uncleday.com${pg.path}vi/`
+    : `사장님, ${SEO.day ? (SEO.day === seoDay(0) ? "오늘" : seoDayLab(SEO.day) + "에") : `지난 ${SEO.days}일 동안`} 엉클데이(uncleday.com)에서 "${nm}" 페이지(한국인 여행객용 한국어 페이지)가 ${v}번 조회됐어요${s ? ` (그중 구글 · 네이버 · AI 검색으로 ${s}번)` : ""}${pg.leads ? `. 예약 문의도 ${pg.leads}건 들어왔어요` : ""}. 아직 입점 전이라 손님을 보내 드리지 못하고 있어요. 입점비 · 월 고정비 없이 손님이 와서 결제했을 때만 수수료예요. 페이지 보기: https://www.uncleday.com${pg.path}`;
 }
 
+function seoDaysHtml() {
+  const L = SEO.dayList || [], mx = Math.max(1, ...L.map(x => x.n));
+  if (!L.length) return `<p class="hint">아직 기록이 없어요.</p>`;
+  const tot = L.reduce((a, x) => a + x.n, 0);
+  return `${SEO.day ? `<p class="seo-sel">📅 <b>${seoDayLab(SEO.day)}</b> 하루만 보는 중 · 위 숫자 · 어디서 · 페이지 · 문의가 모두 이날 기준이에요 <button class="btn sm" data-sday="${SEO.day}">기간으로 돌아가기</button></p>` : ""}
+    <div class="seo-dt">${L.map(x => `<button class="${SEO.day === x.day ? "on" : ""} ${x.n ? "" : "z"}" data-sday="${x.day}"><span>${seoDayLab(x.day)}</span><i><em style="width:${x.n ? Math.max(4, x.n / mx * 100) : 0}%"></em></i><b>${x.n.toLocaleString()}</b></button>`).join("")}</div>
+    <p class="hint" style="margin:6px 0 0">최근 ${L.length}일 합계 ${tot.toLocaleString()} · 하루 평균 ${(tot / L.length).toFixed(1)}</p>`;
+}
 function seoDraw() {
   const el = document.getElementById("ptSeo"); if (!el) return;
   if (!SEO.rep) { el.innerHTML = `<div class="uni-empty">불러오는 중…</div>`; seoLoad(); return; }
@@ -88,7 +102,7 @@ function seoDraw() {
   const sum = ks => ks.reduce((a, k) => a + (+src[k] || 0), 0);
   const P = R.pages || [], cta = P.reduce((a, p) => a + (+p.cta || 0), 0);
   const L = SEO.leads || [], lOpen = L.filter(x => x.status === "new" || x.status === "contacted");
-  const kpi = [["👀 페이지 조회", tot], ["🔍 검색 (구글 · 네이버 등)", sum(SEO_SEARCH)], ["🤖 AI (ChatGPT 등)", sum(SEO_AI)], ["👆 버튼 클릭", cta], ["📨 문의 · 입점 신청", L.filter(x => x.created_at >= seoDay(SEO.days - 1)).length]];
+  const kpi = [["👀 페이지 조회", tot], ["🔍 검색 (구글 · 네이버 등)", sum(SEO_SEARCH)], ["🤖 AI (ChatGPT 등)", sum(SEO_AI)], ["👆 버튼 클릭", cta], ["📨 문의 · 입점 신청", L.filter(x => { const d = new Date(Date.parse(x.created_at) + 7 * 3600e3).toISOString().slice(0, 10); return d >= seoRange()[0] && d <= seoRange()[1]; }).length]];
   const srcRows = Object.entries(src).sort((a, b) => b[1] - a[1]);
   const max = Math.max(1, ...srcRows.map(x => x[1]));
   const days = R.by_day || [], dmax = Math.max(1, ...days.map(x => +x.n));
@@ -96,11 +110,11 @@ function seoDraw() {
   const leads = SEO.lf === "open" ? lOpen : L;
   const dt = t => new Date(t).toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Ho_Chi_Minh" });
   el.innerHTML = `
-    <div class="seo-bar"><div class="br-cats">${[7, 30, 90].map(n => `<button class="${SEO.days === n ? "on" : ""}" data-sdays="${n}">최근 ${n}일</button>`).join("")}</div><button class="btn sm" data-sact="reload">↻</button></div>
+    <div class="seo-bar"><div class="br-cats"><button class="${SEO.day === seoDay(0) ? "on" : ""}" data-sday="${seoDay(0)}">오늘</button><button class="${SEO.day === seoDay(1) ? "on" : ""}" data-sday="${seoDay(1)}">어제</button>${[7, 30, 90].map(n => `<button class="${!SEO.day && SEO.days === n ? "on" : ""}" data-sdays="${n}">최근 ${n}일</button>`).join("")}</div><button class="btn sm" data-sact="reload">↻</button></div>
     <div class="seo-kpi">${kpi.map(([l, n]) => `<div><small>${l}</small><b>${(+n || 0).toLocaleString()}</b></div>`).join("")}</div>
     <div class="seo-two">
       <div class="br-box"><h4>어디서 들어왔나요</h4>${srcRows.length ? srcRows.map(([k, n]) => `<div class="seo-src ${SEO_AI.includes(k) ? "ai" : SEO_SEARCH.includes(k) ? "se" : ""}"><span>${esc(SEO_SRC[k] || k)}</span><i style="width:${Math.max(3, n / max * 100)}%"></i><b>${n}</b></div>`).join("") : `<p class="hint">아직 기록이 없어요. 페이지가 검색에 잡히면 숫자가 쌓여요.</p>`}</div>
-      <div class="br-box"><h4>날짜별 조회</h4>${days.length ? `<div class="seo-days">${days.map(x => `<i title="${x.day} · ${x.n}" style="height:${Math.max(4, x.n / dmax * 100)}%"></i>`).join("")}</div><div class="seo-dl"><span>${days[0].day.slice(5)}</span><span>${days[days.length - 1].day.slice(5)}</span></div>` : `<p class="hint">아직 기록이 없어요.</p>`}</div>
+      <div class="br-box"><h4>날짜별 조회 <span class="hint">날짜를 누르면 그날만 봐요</span></h4>${seoDaysHtml(days, dmax)}</div>
     </div>
     <div class="br-box" style="margin-top:10px"><h4>🔍 구글 검색 (서치 콘솔) <span class="hint">들어오기 전 단계 — 구글 검색 결과에 몇 번 보였고 몇 번 눌렸는지 · 어떤 검색어로</span></h4>${gscHtml()}</div>
     <div class="br-box" style="margin-top:10px"><h4>📨 문의 · 입점 신청 <span class="hint">연락처는 엉클데이만 봐요 · 업체에 넘기지 마세요</span></h4>
@@ -121,7 +135,9 @@ function seoDraw() {
       <div class="seo-hide"><input id="seoHideIn" placeholder="가게 페이지 주소 붙여넣기 (예: uncleday.com/p/danang/abc-spa-n123/)"><input id="seoHideWhy" placeholder="이유 (예: 사장님 요청)"><button class="btn sm main" data-sact="hide">숨기기</button></div>
       ${(SEO.hidden || []).length ? `<div class="seo-hid">${(SEO.hidden || []).map(h => `<div><b>${esc(h.name || h.ref)}</b><small>${esc(h.ref)}${h.reason ? " · " + esc(h.reason) : ""} · ${dt(h.created_at)} · ${esc(h.created_by || "")}</small><button class="btn sm" data-sunhide="${esc(h.ref)}">다시 보이기</button></div>`).join("")}</div>` : `<p class="hint">숨긴 가게가 없어요.</p>`}`}
     </div>`;
-  el.querySelectorAll("[data-sdays]").forEach(b => b.onclick = () => { SEO.days = +b.dataset.sdays; SEO.rep = null; GSC.data = null; seoDraw(); });
+  el.querySelectorAll("[data-sdays]").forEach(b => b.onclick = () => { SEO.days = +b.dataset.sdays; SEO.day = null; SEO.rep = null; GSC.data = null; seoDraw(); });
+  el.querySelectorAll("[data-sday]").forEach(b => b.onclick = () => { SEO.day = SEO.day === b.dataset.sday ? null : b.dataset.sday; SEO.rep = null; seoDraw(); });
+  el.querySelectorAll("[data-gday]").forEach(b => b.onclick = () => { SEO.gday = !SEO.gday; seoDraw(); });
   if (!GSC.data && !GSC.loading) gscLoad();
   el.querySelectorAll("[data-sact=gsc]").forEach(b => b.onclick = () => { GSC.data = null; seoDraw(); });
   el.querySelectorAll("[data-gmore]").forEach(b => b.onclick = () => { if (b.dataset.gmore === "query") GSC.qn = 100; else GSC.pn = 100; seoDraw(); });
