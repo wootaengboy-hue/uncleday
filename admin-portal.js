@@ -103,7 +103,7 @@ function drawPortal(skip) {
     <div class="pt-hero" data-pv="home"><div><h2>🏠 엉클데이 사내 포털</h2><p>오늘 처리할 일, 공간 바로가기, 매장 관리, 운영 가이드를 한곳에 모았어요.</p></div><button class="btn sm" data-pact="reload">↻ 새로고침</button></div>
     ${PORTAL.err ? `<div class="uni-err">${esc(PORTAL.err)}</div>` : ""}
     <section class="pt-sec" data-pv="home"><h3>🧩 사내 앱 <span class="hint">눌러서 들어가요 · 큰 화면은 왼쪽 메뉴로도 이동</span></h3>${portalApps()}</section>
-    <section class="pt-sec" data-pv="home"><h3>✅ 오늘 할 일 <span class="hint">${todoN ? `${todoN}건` : "모두 처리했어요 🎉"}</span></h3>
+    <section class="pt-sec" data-pv="home" id="ptTodo"><h3>✅ 오늘 할 일 <span class="hint">${todoN ? `${todoN}건` : "모두 처리했어요 🎉"}</span></h3>
       ${(() => { let k = -1; return G.map(([gn, items]) => `<h4 class="pt-gh">${gn} <span class="hint">${items.reduce((a, x) => a + (x[2] || 0), 0)}건</span></h4><div class="pt-todos">${items.map(([ic, l, n, go]) => { k++; return `<button class="pt-todo ${n ? "" : "zero"}" data-ptodo="${k}" ${go && n ? "" : "disabled"}><span class="ic">${ic}</span><span class="l">${esc(l)}</span><b>${n || 0}</b></button>`; }).join("")}</div>`).join(""); })()}</section>
     <section class="pt-sec" data-pv="spaces"><h3>🧭 공간 바로가기</h3>
       <div class="pt-spaces">${PORTAL_SPACES.map(s => `<div class="pt-space"><div class="h"><span class="ic">${s.ic}</span><b>${esc(s.nm)}</b></div>

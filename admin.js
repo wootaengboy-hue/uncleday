@@ -244,7 +244,7 @@ function drawDash() {
   $("dashMonth").onchange = e => { dashMonth = e.target.value; drawDash(); };
   $("tab-dash").querySelectorAll("[data-todo]").forEach(r => r.onclick = () => { if (r.classList.contains("zero")) return; bkF = { ...BKF0, st: "all", todo: r.dataset.todo }; showTab("bk"); });
   $("tab-dash").querySelectorAll("[data-wtodo]").forEach(r => r.onclick = () => { if (r.classList.contains("zero")) return; const t = workTodos().find(x => x[0] === r.dataset.wtodo); if (t) t[4](); });
-  $("tab-dash").querySelectorAll("[data-tab-go-home]").forEach(r => r.onclick = () => showTab("home"));
+  $("tab-dash").querySelectorAll("[data-tab-go-home]").forEach(r => r.onclick = () => { PORTAL.view = "home"; try { sessionStorage.setItem("ptView", "home"); } catch (e) {} showTab("home"); setTimeout(() => { const t = $("ptTodo"); if (t) window.scrollTo({ top: t.getBoundingClientRect().top + scrollY - 120 }); }, 60); });   // 마지막에 보던 앱이 아니라 포털 첫 화면의 오늘 할 일로
   $("tab-dash").querySelectorAll("[data-tab-go]").forEach(r => r.onclick = () => { if (!r.classList.contains("zero")) showTab(r.dataset.tabGo); });
   $("tab-dash").querySelectorAll("[data-go]").forEach(r => r.onclick = () => {
     bkF = r.dataset.go === "today" ? { ...BKF0, st: "all", from: today, to: today } : { ...BKF0, st: "requested" }; showTab("bk"); });
