@@ -171,6 +171,9 @@ function draw(b) {
         await LIVE.rpc("submit_review", { p: { token: t, stars: st, name: v.name, text: v.text, menu: menuName, month: (b.visit_date || "").slice(0, 7), lang } });
         if (tpIn) await sendTp(tpIn, st, v.name);
         draw(await LIVE.rpc("booking_for_customer", { t }));
+        // ⭐ 구글에도 남기기 (별점과 상관없이 모든 손님에게)
+        if (typeof grvPlace === "function") grvPlace(b.shop_id).then(gp => { const at = document.querySelector(".v-ok") || $("vRvBox"); if (!gp || !at) return;
+          at.insertAdjacentHTML("afterend", grvHtml(lang)); const box = at.nextElementSibling; grvBind(box, { gplace: gp, text: v.text, shopId: b.shop_id, lg: lang }); box.scrollIntoView({ behavior: "smooth", block: "center" }); });
       } catch (err) { toastV(err.message); }
     };
   }

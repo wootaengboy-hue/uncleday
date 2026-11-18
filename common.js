@@ -99,3 +99,28 @@ function phCard(shop, big) {
   return `<div class="${big ? "hero " : ""}ph ph-card${bg ? " has-bg" : ""}"${bg ? ` style="background-image:url('${bg}')"` : ""}>
     <span class="ph-cat">${lab}</span>${big ? `<b class="ph-name">${esc(tx(shop.name))}</b><small class="ph-note">${esc(ui("phNote"))}</small>` : ""}</div>`;
 }
+
+/* ⭐ 구글에도 후기 남기기 — 엉클데이 후기를 쓴 손님에게 (별점과 상관없이 모두에게 똑같이)
+ *  누르면 방금 쓴 글이 복사되고 그 가게의 구글 후기 창이 열려요. 손님이 별을 누르고 붙여 넣어요.
+ *  구글은 다른 사이트가 대신 올리는 걸 허락하지 않고, 구글 후기에 보상을 거는 것도 금지해요 → 보상 없음. */
+const GRV_T = {
+  ko: ["⭐ 구글에도 남겨 주실래요?", "가게에 큰 힘이 돼요. 버튼을 누르면 방금 쓴 글이 복사되고 구글 후기 창이 열려요 — 별을 누르고 붙여 넣기만 하세요.", "⭐ 구글에도 남기기", "📋 글을 복사했어요. 구글 창에 붙여 넣어 주세요"],
+  en: ["⭐ Share it on Google too?", "It really helps the shop. Tap the button: your review is copied and the shop's Google review page opens — pick the stars and paste.", "⭐ Post on Google too", "📋 Copied. Paste it on Google"],
+  vi: ["⭐ Đánh giá trên Google nữa nhé?", "Điều này giúp cửa hàng rất nhiều. Bấm nút: nội dung vừa viết được sao chép và trang đánh giá Google của cửa hàng sẽ mở — chọn sao và dán vào.", "⭐ Đánh giá trên Google", "📋 Đã sao chép. Hãy dán vào Google"],
+};
+function grvHtml(lg) { const T = GRV_T[lg] || GRV_T.ko; return `<div class="grv"><b>${T[0]}</b><p>${T[1]}</p><button type="button" class="btn grv-btn">${T[2]}</button></div>`; }
+function grvBind(root, { gplace, text, shopId, lg }) {
+  const b = root && root.querySelector(".grv-btn"); if (!b || !gplace) return;
+  b.onclick = () => {
+    try { navigator.clipboard.writeText(text || ""); } catch (e) {}
+    try { if (typeof SUPA !== "undefined" && SUPA.url && shopId) fetch(`${SUPA.url}/rest/v1/rpc/seo_hit`, { method: "POST", keepalive: true, headers: { apikey: SUPA.key, ...(String(SUPA.key).startsWith("eyJ") ? { Authorization: "Bearer " + SUPA.key } : {}), "Content-Type": "application/json" }, body: JSON.stringify({ path: `/s/${shopId}/`, src: "review", kind: "grv" }) }).catch(() => {}); } catch (e) {}
+    window.open("https://search.google.com/local/writereview?placeid=" + encodeURIComponent(gplace), "_blank", "noopener");
+    const T = GRV_T[lg] || GRV_T.ko; b.textContent = T[3];
+  };
+}
+// 예약확인증처럼 가게 정보에 구글 연결이 없을 때: 가게 id로 구글 연결만 가져와요 (공개 정보)
+async function grvPlace(shopId) {
+  try { if (typeof SUPA === "undefined" || !SUPA.url || !shopId) return null;
+    const r = await fetch(`${SUPA.url}/rest/v1/shops?id=eq.${encodeURIComponent(shopId)}&select=gp:data->>gplace`, { headers: { apikey: SUPA.key, ...(String(SUPA.key).startsWith("eyJ") ? { Authorization: "Bearer " + SUPA.key } : {}) } });
+    const j = r.ok ? await r.json() : []; return (j[0] && j[0].gp) || null; } catch (e) { return null; }
+}

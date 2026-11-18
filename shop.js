@@ -288,6 +288,7 @@ ${f.text}
       <a class="btn kakao-link" href="${SITE.kakao}" target="_blank">${ui("viaKakao")}</a>
       <a class="btn" href="${mail}">${ui("viaMail")}</a>`}`;
     $("rvMsg").textContent = msg;
+    if (sent && shop.gplace && typeof grvHtml === "function") { d.insertAdjacentHTML("beforeend", grvHtml(lang)); grvBind(d, { gplace: shop.gplace, text: f.text, shopId: shop.id, lg: lang }); }
     if ($("rvCopy")) $("rvCopy").onclick = () => navigator.clipboard.writeText(msg).then(() => $("rvCopy").textContent = ui("copied"));
     d.scrollIntoView({ behavior: "smooth" });
   };

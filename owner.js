@@ -53,7 +53,7 @@
     next7: ["7 ngày tới", "앞으로 7일", "Next 7 days"],
     monthTitle: ["Tháng này", "이번 달", "This month"],
     repT: ["📈 Cửa hàng của bạn trên Uncle Day", "📈 엉클데이에서 내 가게", "📈 Your shop on Uncle Day"], rep30: ["30 ngày gần đây", "최근 30일", "Last 30 days"],
-    repViews: ["Lượt xem trang", "가게 조회", "Page views"], repSearch: ["Từ Google · Naver · AI", "구글 · 네이버 · AI 검색", "From Google · Naver · AI"],
+    repViews: ["Lượt xem trang", "가게 조회", "Page views"], repSearch: ["Từ Google · Naver · AI", "구글 · 네이버 · AI 검색", "From Google · Naver · AI"], repGrv: ["⭐ Khách Uncle Day bấm “Đánh giá trên Google”", "⭐ 엉클데이 손님이 누른 ‘구글에도 남기기’", "⭐ Uncle Day guests who tapped “Post on Google”"],
     repConsult: ["Bấm tư vấn", "상담 버튼", "Consult taps"], repBook: ["Đặt chỗ", "예약 요청", "Booking requests"], repPrev: ["30 ngày trước: {n}", "그 전 30일 {n}", "Prev. 30 days: {n}"],
     repNote: ["Số lần khách xem cửa hàng của bạn trên Uncle Day (mỗi người tính 1 lần mỗi lần ghé). Không có thông tin cá nhân — chỉ là con số.", "손님이 엉클데이에서 내 가게를 본 횟수예요 (한 번 들어와서 여러 번 봐도 1번). 개인 정보 없이 숫자만 세요.", "How often guests viewed your shop on Uncle Day (once per visit). Numbers only — no personal data."],
     statVisits: ["Khách đã đến", "방문 완료", "Visits"], statPaid: ["Khách đã trả", "결제 합계", "Paid by guests"], statReply: ["Trả lời TB", "평균 답변", "Avg. reply"],
@@ -301,6 +301,7 @@
       return `<div class="stat"><b>${v.toLocaleString("en-US")}${pv || v ? ` <em class="${up > 0 ? "up" : up < 0 ? "dn" : ""}">${up > 0 ? "▲" + up : up < 0 ? "▼" + -up : "–"}</em>` : ""}</b><span>${lb}</span><small>${t("repPrev", pv.toLocaleString("en-US"))}</small></div>`; };
     return `<div class="sec"><h2>${t("repT")}</h2><span>${t("rep30")}</span></div>
       <div class="stats st4 rep">${it("views", t("repViews"))}${it("search", t("repSearch"))}${it("consult", t("repConsult"))}${it("bookings", t("repBook"))}</div>
+      ${"grv" in r ? `<div class="stats rep" style="grid-template-columns:1fr;margin-top:8px">${it("grv", t("repGrv"))}</div>` : ""}
       <p class="muted rep-note">${t("repNote")}</p>`;
   }
   // 엉클데이 관리자가 대신 고친 기록 (최근 30일)

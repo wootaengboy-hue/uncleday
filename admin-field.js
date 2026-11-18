@@ -146,6 +146,7 @@ const FLD_SECS = [
       "“Khách hủy thì sao?” → Uncle Day báo cho cửa hàng qua Zalo. Không có phí với lịch bị hủy.",
       "“Có cần máy tính không?” → Không, chỉ cần điện thoại có Zalo.",
       "“Khi nào trả hoa hồng?” → Cuối tháng Uncle Day gửi bảng quyết toán theo số khách đã đến; cửa hàng chuyển khoản.",
+      "“Khách Uncle Day có để lại đánh giá Google không?” → Có. Sau khi viết đánh giá trên Uncle Day, khách thấy nút “Đánh giá trên Google” — nội dung được sao chép sẵn, khách chỉ cần chọn sao và dán. Số lần bấm hiện trong trang quản lý cửa hàng.",
       "“Giá trên Uncle Day có khác giá ở cửa hàng không?” → Dùng đúng giá của cửa hàng. Nếu đổi giá, báo quản lý để cập nhật.",
     ]],
     ko: ["사장님이 자주 묻는 것", [
@@ -153,6 +154,7 @@ const FLD_SECS = [
       "\"손님이 취소하면요?\" → 엉클데이가 잘로로 알려 드려요. 취소된 예약은 수수료가 없어요.",
       "\"컴퓨터가 필요해요?\" → 아니요, 잘로 되는 휴대폰이면 돼요.",
       "\"수수료는 언제 내요?\" → 월말에 방문한 손님 기준으로 정산서를 보내 드리고, 계좌로 보내 주시면 돼요.",
+      "\"엉클데이 손님도 구글 후기를 남겨요?\" → 네. 엉클데이에 후기를 쓰면 ‘구글에도 남기기’ 버튼이 떠요. 쓴 글이 복사돼서 손님은 별 누르고 붙여 넣기만 하면 돼요. 누른 수는 사장님 화면에서 보여요.",
       "\"엉클데이 가격이 가게 가격이랑 달라요?\" → 가게 가격 그대로 써요. 가격이 바뀌면 관리자에게 알려 주세요.",
     ]] },
 ];
