@@ -976,10 +976,15 @@ def md_lite(t):
 
 def blog_page(b):
     xs, lm, t, tr = blog_pick(b)
-    cid = b["city"]; cko = tx(cities.get(cid, {}).get("name")); sl = blog_slug(b); url = f"{SITE}/blog/{sl}/"; n = len(xs)
+    info = bool((b.get("body") or "").strip())   # ✍️ 정보 본문이 있는 글: 본문 → 관련 업체 순서
+    cid = b["city"]; cko = tx(cities.get(cid, {}).get("name"))
+    wide = False   # 정보 글인데 검색어에 맞는 업체가 2곳 미만이면: 그 도시에서 한국어로 예약되는 업체를 붙여요
+    if info and (len(xs) < 2 or not BLOG_DOM_RX.search(b.get("kw") or "")):
+        xs = sorted([x for x in live if x.get("city") == cid], key=lambda x: (not x.get("best"), "ko" not in (x.get("staffLangs") or []), -len(mprices(x) or prices(x))))[:6]
+        lm = None; t = None; tr = None; wide = True
+    sl = blog_slug(b); url = f"{SITE}/blog/{sl}/"; n = len(xs)
     upd = max([checked(x) for x in xs] + [b.get("updated") or BUILT]); pub = b.get("published") or upd
     dist = (lambda x: km((lm["lat"], lm["lon"]), x["geo"])) if lm else None
-    info = bool((b.get("body") or "").strip())   # ✍️ 정보 본문이 있는 글: 본문 → 관련 업체 순서
     title = b.get("title") or (b['kw'] if info else None) or (f"{b['kw']} — 가까운 순 · 실제 가격 정리 ({YEAR})" if lm else f"{b['kw']} — 가격 · 영업시간 · 위치 정리 ({YEAR})" if not b.get("treat") else f"{b['kw']} — 실제 메뉴 가격 비교 ({YEAR})")
     allp = sorted(p for x in xs for p in (mprices(x) or prices(x)))
     rows_tr = treat_rows(tr, xs) if tr else []
@@ -989,6 +994,7 @@ def blog_page(b):
     elif allp: summ += f" 엉클데이 확인 참고가는 {won(allp[0])}부터예요."
     kn = sum(1 for x in xs if "ko" in (x.get("staffLangs") or []) or has(x, "한국어|한국인"))
     if kn: summ += f" 그중 {kn}곳은 한국어 응대가 돼요."
+    if wide: summ = f"엉클데이에서는 {cko} 마사지 · 스파 · 뷰티 업체를 한국어로 상담하고 예약할 수 있어요. 여행 중 들르기 좋은 곳 {n}곳을 골랐어요." + (f" 그중 {kn}곳은 한국어 응대가 돼요." if kn else "")
     intro = (b.get("intro") or "").strip() or (f"{lm['ko']} 근처에서 " if lm else f"{cko}에서 ") + (t["why"] if t else tr["why"] if tr else "어디로 갈지 고민된다면, 엉클데이가 직접 확인한 업체 정보(위치 · 가격 · 영업시간 · 한국어 응대)로 비교해 보세요.") + " 모든 업체는 엉클데이에서 한국어로 상담하고 매장 가격 그대로 예약할 수 있어요."
     def card(i, x):
         pr = mprices(x) or prices(x); f0 = facts(x)[0]; hrs = f"{x['open']}~{x.get('close', '')}" if x.get("open") else ""
@@ -1025,7 +1031,7 @@ def blog_page(b):
 </head><body><header class="hd"><div class="in"><a class="logo" href="/"><img src="/images/logo-full.webp" alt="엉클데이 Uncle Day" width="167" height="72"></a><nav>{nav}</nav>{HCTA}</div></header>
 <main class="wrap"><p class="date"><a href="/blog/">← 엉클데이 블로그</a></p>
 <h1>{esc(title)}</h1><p class="date">작성 {pub} · 정보 확인 {upd} · 엉클데이(uncleday.com)</p>
-{(f'<p class="lead">{esc(intro)}</p><div class="art">{md_lite(b.get("body"))}</div><h2>{esc(cko)}에서 받는다면 — 엉클데이 업체 {n}곳</h2><div class="qa"><div class="who">엉클데이 요약</div><b>{esc(summ)}</b></div>') if info else f'<div class="qa"><div class="who">엉클데이 요약</div><b>{esc(summ)}</b></div><p class="lead">{esc(intro)}</p>'}
+{(f'<p class="lead">{esc(intro)}</p><div class="art">{md_lite(b.get("body"))}</div><h2>{esc(cko) + " 여행 중 들르기 좋은 엉클데이 업체" if wide else esc(cko) + "에서 받는다면 — 엉클데이 업체"} {n}곳</h2><div class="qa"><div class="who">엉클데이 요약</div><b>{esc(summ)}</b></div>') if info else f'<div class="qa"><div class="who">엉클데이 요약</div><b>{esc(summ)}</b></div><p class="lead">{esc(intro)}</p>'}
 <h2>한눈에 비교</h2><table class="tb"><tr><th>업체</th>{"<th>거리</th>" if lm else ""}<th>가격(부터)</th><th>영업</th><th>한국어</th></tr>{table}</table>
 <p class="date">{f"거리는 {esc(lm['ko'])} 중심에서 지도상 직선거리예요 · " if lm else ""}가격은 엉클데이 확인 참고가 · 예약해도 매장 가격 그대로</p>
 {"".join(card(i + 1, x) for i, x in enumerate(xs[:6] if info else xs))}
@@ -1133,8 +1139,9 @@ BLOG_OUT_RX = re.compile(r"맛집|식당|음식|먹거리|카페|커피|베이�
 print("블로그 게시 글", len(BLOG), "개")
 for b in BLOG:
     if b.get("city") not in hubs: print("  건너뜀 (도시에 업체 없음):", b.get("kw"), b.get("city")); continue
-    if BLOG_PHRASE_RX.search(b.get("kw") or ""): print("  → 📘 베트남어 가이드로 모음:" if "베트남어" in (b.get("kw") or "") else "  건너뜀 (표현 · 정보 검색어 — 업체 목록 글과 안 맞음):", b.get("kw")); continue
-    if not BLOG_DOM_RX.search(b.get("kw") or ""): print("  건너뜀 (엉클데이 업종 말이 없음):", b.get("kw")); continue   # 검색어와 업체 목록이 맞는 글만 만들어요
+    info_ = bool((b.get("body") or "").strip()) and "베트남어" not in (b.get("kw") or "")   # ✍️ 정보 본문이 있으면 업종 말이 없어도 올려요
+    if not info_ and BLOG_PHRASE_RX.search(b.get("kw") or ""): print("  → 📘 베트남어 가이드로 모음:" if "베트남어" in (b.get("kw") or "") else "  건너뜀 (표현 · 정보 검색어 — 업체 목록 글과 안 맞음):", b.get("kw")); continue
+    if not info_ and not BLOG_DOM_RX.search(b.get("kw") or ""): print("  건너뜀 (엉클데이 업종 말이 없음):", b.get("kw")); continue   # 검색어와 업체 목록이 맞는 글만 만들어요
     kn_ = re.sub(r"\s+", "", b.get("kw") or "")
     if kn_ in BLOG_SEEN: print("  건너뜀 (같은 검색어 글이 이미 있음):", b.get("kw")); continue   # 같은 글이 두 번 생기지 않게
     BLOG_SEEN.add(kn_)

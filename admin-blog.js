@@ -34,6 +34,7 @@ const BLG_DOM = /마사지|맛사지|스파|발\s*관리|풋|네일|젤|패디|�
 const BLG_PHRASE = /베트남어|회화|한마디|발음|뜻|이용\s*가이드|팁은|얼마인가요|해주세요|주세요|할 수 있나요|되나요|아파요/i;
 const blgPhrase = kw => BLG_PHRASE.test(kw || "");
 const blgViet = kw => blgPhrase(kw) && /베트남어/.test(kw || "");   // → 📘 /blog/vietnamese-for-spa/ 가이드 한 곳으로 모아요
+const blgPostOut = p => !!p && !String(p.body || "").trim() && blgOut(p.kw);   // 정보 본문이 있으면 업종 말이 없어도 올라가요
 const blgOut = kw => (!BLG_DOM.test(kw || "") || blgPhrase(kw)) && !/베트남어/.test(kw || "");   // 주제를 바꿔야 올라가는 검색어
 const BLG_OUT = /맛집|식당|음식|먹거리|카페|커피|베이커리|호텔|숙소|리조트|풀빌라|빌라|에어비앤비|가라오케|노래방|골프|렌트|렌터카|차량|택시|투어|술집|클럽|bar\b|pub\b|restaurant|food|cafe|coffee|hotel|villa|golf|karaoke/i;
 // 엉클데이 분야가 아닌 경쟁사 주제를 '같은 손님 · 같은 장소'로 우리 분야 검색어로 바꿔요 (예: 다낭 2룸 풀빌라 추천 – 커플 · 가족 여행 → 커플 · 가족 여행에 좋은 다낭 마사지 추천)
@@ -152,7 +153,7 @@ async function blogNewP(o, fromUrl) {
 //  - 검색어마다 고를 수 있는 주제 중 '손님 상황을 살린 것 → 업체 많은 것' 순으로 첫 번째 맞는 걸 골라요
 //  - 이미 있는 글 · 도시 목록과 같은 넓은 주제 · 같은 장소에서 업체가 80% 이상 겹치는 글은 빼요 (구글 '비슷한 글 대량' 방지)
 function blgAutoPlan(srcs, keepIds = []) {
-  const live = (BLG.posts || []).filter(p => !keepIds.includes(p.id) && p.status === "published" && !blgOut(p.kw) && !blgViet(p.kw));
+  const live = (BLG.posts || []).filter(p => !keepIds.includes(p.id) && p.status === "published" && !blgPostOut(p) && !blgViet(p.kw));
   const taken = live.map(p => ({ kw: String(p.kw).replace(/\s+/g, ""), lm: p.landmark || "", ids: blgPreview(p).map(s => s.id) }));
   const have = new Set((BLG.posts || []).filter(p => !keepIds.includes(p.id)).map(p => String(p.kw).replace(/\s+/g, "")));
   const go = [], skip = [];
@@ -188,7 +189,7 @@ function blgModal({ title, sub = "", items = [], skips = [], yes = "" }) {
   return new Promise(done => {
     const d = document.createElement("div"); d.className = "overlay center"; d.style.zIndex = 70;
     d.innerHTML = `<div class="modal blg-m"><div class="blg-mh"><span>${items.length ? "📝" : "ℹ️"}</span><div><h2>${esc(title)}</h2>${sub ? `<p>${esc(sub)}</p>` : ""}</div></div>
-      <div class="blg-ml">${items.map(x => `<div class="blg-mi">${x.from ? `<small><s>${esc(x.from)}</s> →</small>` : ""}<b>${esc(x.to)}</b><span>${x.lab ? esc(x.lab) + " · " : ""}업체 ${x.n}곳</span></div>`).join("")}
+      <div class="blg-ml">${items.map(x => `<div class="blg-mi">${x.from ? `<small><s>${esc(x.from)}</s> →</small>` : ""}<b>${esc(x.to)}</b><span>${[x.lab ? esc(x.lab) : "", x.n != null ? `업체 ${x.n}곳` : ""].filter(Boolean).join(" · ")}</span></div>`).join("")}
       ${skips.length ? `<details class="blg-ms" ${items.length ? "" : "open"}><summary>빼는 것 ${skips.length}개 · 이유 보기</summary>${skips.map(x => `<div><b>${esc(x.kw)}</b><small>${esc(x.why)}</small></div>`).join("")}</details>` : ""}</div>
       <div class="btns">${items.length ? `<button class="btn" data-no>취소</button><button class="btn main blg-my" data-yes>${esc(yes)}</button>` : `<button class="btn main" data-no>확인</button>`}</div></div>`;
     document.body.appendChild(d);
@@ -209,6 +210,31 @@ function blgFaqParse(t) { const out = []; let cur = null;
   String(t || "").split(/\n/).forEach(l => { const m = l.match(/^\s*(Q|A|질문|답)\s*[:：]\s*(.*)$/i); if (!m) { if (cur && l.trim()) cur[cur.a != null ? "a" : "q"] += " " + l.trim(); return; }
     if (/^(q|질문)$/i.test(m[1])) { cur = { q: m[2].trim(), a: null }; out.push(cur); } else if (cur) cur.a = m[2].trim(); });
   return out.filter(x => x.q && x.a).slice(0, 6); }
+// ✍️ AI 본문 초안 (blog-ai) — 검색어 · 도시 · 장소 · 업종
+async function blgAi(kw, cityId, lmId, what) {
+  const cs = typeof CITIES !== "undefined" ? CITIES : [], lm = BLG_LM.find(l => l.id === lmId);
+  const r = await sb.functions.invoke("blog-ai", { body: { kw, city: ((cs.find(c => c.id === cityId) || {}).name || {}).ko || "", place: lm ? lm.ko : "", what: what || "" } });
+  let d = r.data; if (r.error) { let m = r.error.message || ""; try { m = (await r.error.context.json()).error || m; } catch (e) {} throw new Error(m); }
+  if (typeof d === "string") d = JSON.parse(d); if (d.error) throw new Error(d.error); return d;
+}
+// 업종과 상관없는 검색어를 '그 주제 그대로' 정보 글 초안으로 (본문 · 질문은 AI, 게시는 사람이 확인한 뒤)
+async function blgInfoRun(items) {
+  if (!items.length) return 0;
+  if (!(await blgModal({ title: `${items.length}개 검색어로 정보 글 초안을 만들어요`, sub: "AI가 글마다 본문 · 자주 묻는 질문을 써요 (글 1개 약 30~50원 · 20~40초). 만든 글은 '초안'으로 저장돼요 — 읽고 고친 뒤 [🌐 게시]를 눌러 주세요.", items: items.map(x => ({ to: x.kw, n: null, lab: "✍️ 정보 글 · AI 초안" })), yes: `✍️ ${items.length}개 초안 만들기` }))) return 0;
+  let n = 0, fail = 0;
+  for (const [i, x] of items.entries()) {
+    toast(`✍️ ${i + 1}/${items.length} 쓰는 중… ${x.kw}`, 40000);
+    try {
+      const p = blgParse(x.kw), city = (x.post && x.post.city) || p.city || "danang", d = await blgAi(x.kw, city, p.landmark, "");
+      const row = { kw: x.kw, title: d.title || null, intro: d.intro || null, body: d.body || null, faq: d.faq || [], status: "draft" };
+      const r = x.post ? await sb.from("blog_posts").update(row).eq("id", x.post.id).select().single()
+                       : await sb.from("blog_posts").insert({ ...row, city, landmark: p.landmark || null, grp: "spabody", from_url: x.url || null }).select().single();
+      if (r.error) throw r.error; n++;
+      if (x.post) BLG.posts[BLG.posts.findIndex(q => q.id === x.post.id)] = r.data; else (BLG.posts = BLG.posts || []).unshift(r.data);
+    } catch (e) { fail++; toast("초안 실패: " + x.kw + " — " + e.message, 6000); }
+  }
+  blogDraw(); toast(`✍️ 정보 글 초안 ${n}개를 만들었어요${fail ? ` (${fail}개 실패)` : ""} · 읽고 고친 뒤 [🌐 게시]를 눌러 주세요`, 7000); return n;
+}
 async function blogLoad() {
   const r = await sb.from("blog_posts").select("*").order("created_at", { ascending: false }).limit(300);
   if (r.error) { BLG.err = /blog_posts|42P01|PGRST20/.test((r.error.message || "") + (r.error.code || "")) ? "setup" : r.error.message; BLG.posts = []; } else { BLG.err = ""; BLG.posts = r.data || []; }
@@ -236,11 +262,11 @@ function blogDraw() {
   el.innerHTML = `<div class="crl-add"><input id="blgKw" placeholder="검색어 (예: 한시장 근처 마사지 추천 · 다낭 키즈 마사지 · 나트랑 젤네일 가격)"><button class="btn sm main" data-bnew>📝 글 만들기</button></div><div id="blgFixNew"></div>
     <p class="hint">글은 <b>우리 업체 데이터</b>로만 만들어요 (가까운 순 · 실제 가격 · 영업시간 · 한국어 응대 · FAQ). 매시간 최신 정보로 다시 그려지고, 맞는 업체가 2곳보다 적으면 게시해도 페이지가 생기지 않아요.</p>
     ${(() => { const d = blgDups(); return d.length ? `<div class="uni-err" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between"><span>⚠️ 같은 검색어로 두 번 올린 글이 <b>${d.length}개</b> 있어요 (예: ${esc(d[0].kw)}). 사이트에는 먼저 만든 글만 올라가요.</span><button class="btn sm danger" data-bdeldup>🗑️ 중복 ${d.length}개 지우기</button></div>` : ""; })()}
-    ${(() => { const vn = BLG.posts.filter(p => blgViet(p.kw)).length, bad = BLG.posts.filter(p => blgOut(p.kw)); return (vn ? `<p class="hint" style="background:#eef6ff;border-radius:10px;padding:8px 12px">📘 '○○ 베트남어' 검색어 글 ${vn}개는 <a href="/blog/vietnamese-for-spa/" target="_blank" rel="noopener"><b>마사지 · 스파에서 쓰는 베트남어</b></a> 가이드 한 곳으로 모았어요.</p>` : "") + (bad.length ? `<div class="uni-err" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between"><span>⚠️ 검색어 그대로는 사이트에 안 올라가는 글이 ${bad.length}개 있어요 (예: ${esc(bad[0].kw)}). 엉클데이 주제로 바꾸면 올라가요.</span><span style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm main" data-bconvall>🔄 ${bad.length}개 모두 우리 주제로 바꾸기</button><button class="btn sm danger" data-bdelphrase>🗑️ 모두 지우기</button></span></div>` : ""); })()}
+    ${(() => { const vn = BLG.posts.filter(p => blgViet(p.kw)).length, bad = BLG.posts.filter(p => blgPostOut(p)); return (vn ? `<p class="hint" style="background:#eef6ff;border-radius:10px;padding:8px 12px">📘 '○○ 베트남어' 검색어 글 ${vn}개는 <a href="/blog/vietnamese-for-spa/" target="_blank" rel="noopener"><b>마사지 · 스파에서 쓰는 베트남어</b></a> 가이드 한 곳으로 모았어요.</p>` : "") + (bad.length ? `<div class="uni-err" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between"><span>⚠️ 검색어 그대로는 사이트에 안 올라가는 글이 ${bad.length}개 있어요 (예: ${esc(bad[0].kw)}). 엉클데이 주제로 바꾸거나, 정보 본문을 쓰면 올라가요.</span><span style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm main" data-bconvall>🔄 ${bad.length}개 모두 우리 주제로 바꾸기</button><button class="btn sm" data-binfoall style="border-color:#1a73e8;color:#1a73e8">✍️ ${bad.length}개 그대로 정보 글로 (AI)</button><button class="btn sm danger" data-bdelphrase>🗑️ 모두 지우기</button></span></div>` : ""); })()}
     <div class="crl-list">${BLG.posts.length ? BLG.posts.map(b => {
       const open = BLG.open === b.id, pv = open ? blgPreview(b) : [], lm = BLG_LM.find(l => l.id === b.landmark);
       const cond = [cn(b.city), lm && "📍 " + lm.ko, b.topic && "🏷️ " + ((BLG_TOPIC.find(t => t[0] === b.topic) || [])[1] || b.topic), b.treat && "💰 " + ((BLG_TREAT.find(t => t[0] === b.treat) || [])[1] || b.treat) + " 가격"].filter(Boolean).join(" · ");
-      return `<div class="crl-job ${b.status === "published" ? "published" : "done"} ${open ? "open" : ""}"><button class="crl-h" data-bopen="${b.id}"><span class="st">${b.status === "published" && (b.body || "").trim() && !blgOut(b.kw) ? "✍️ " : ""}${b.status === "published" ? (blgDups().includes(b) ? "⚠️ 같은 글이 이미 있어요 (지워 주세요)" : blgViet(b.kw) ? "📘 베트남어 가이드에 모음" : blgOut(b.kw) ? "⚠️ 사이트에 안 나와요 (업종 안 맞음 · 주제 바꾸기)" : blgPreview(b).length < 2 ? "⚠️ 게시됐지만 업체가 2곳보다 적어 안 나와요" : "🌐 게시됨") : "📝 초안"}</span><b>${esc(b.title || b.kw)}</b><small>${esc(cond)} · ${dt(b.created_at)}</small></button>
+      return `<div class="crl-job ${b.status === "published" ? "published" : "done"} ${open ? "open" : ""}"><button class="crl-h" data-bopen="${b.id}"><span class="st">${b.status === "published" && (b.body || "").trim() && !blgPostOut(b) ? "✍️ " : ""}${b.status === "published" ? (blgDups().includes(b) ? "⚠️ 같은 글이 이미 있어요 (지워 주세요)" : blgViet(b.kw) ? "📘 베트남어 가이드에 모음" : blgPostOut(b) ? "⚠️ 사이트에 안 나와요 (업종 안 맞음 · 주제 바꾸기)" : blgPreview(b).length < 2 ? "⚠️ 게시됐지만 업체가 2곳보다 적어 안 나와요" : "🌐 게시됨") : "📝 초안"}</span><b>${esc(b.title || b.kw)}</b><small>${esc(cond)} · ${dt(b.created_at)}</small></button>
         ${open ? `<div class="crl-body" data-bpost="${b.id}">
           <label>노리는 검색어<input data-bf="kw" value="${esc(b.kw)}"></label>
           <label>제목 <small class="hint">비우면 "검색어 — 가까운 순 · 실제 가격 정리 (연도)"처럼 자동</small><input data-bf="title" value="${esc(b.title || "")}"></label>
@@ -252,7 +278,7 @@ function blogDraw() {
           <div class="blg-ai"><button type="button" class="btn sm main" data-bai="${b.id}">✍️ 본문 초안 만들기 (AI)</button><small class="hint">검색어 주제 자체를 설명하는 <b>정보 글 + 자주 묻는 질문</b>을 써 줘요. 업체 목록은 본문 아래에 자동으로 붙어요. 읽고 고친 뒤 <b>[고친 내용 저장]</b>을 눌러야 반영돼요.</small></div>
           <label>본문 <small class="hint">## 소제목 · - 목록 · **굵게** · 비우면 '업체 목록 글'로 만들어져요</small><textarea data-bf="body" rows="${b.body ? 16 : 4}" placeholder="## 피지는 왜 생길까요&#10;…">${esc(b.body || "")}</textarea></label>
           <label>자주 묻는 질문 <small class="hint">"Q: 질문" 다음 줄에 "A: 답"</small><textarea data-bfaq rows="${(b.faq || []).length ? 6 : 3}">${esc((b.faq || []).map(x => `Q: ${x.q}\nA: ${x.a}`).join("\n\n"))}</textarea></label>
-          ${blgViet(b.kw) ? `<p class="hint" style="background:#eef6ff;border-radius:10px;padding:8px 12px">📘 '○○ 베트남어' 검색어는 글을 따로 만들지 않고 <a href="/blog/vietnamese-for-spa/" target="_blank" rel="noopener"><b>마사지 · 스파에서 쓰는 베트남어</b></a> 가이드 한 곳에 모아요. 이 검색어에 맞는 표현에는 '많이 찾아요' 표시가 붙어요. 이 글은 그대로 두셔도 돼요.</p>` : blgOut(b.kw) ? `<p class="crl-err">⚠️ 이 검색어 그대로는 엉클데이 업체 목록과 안 맞아서 사이트에 글이 안 생겨요. 아래에서 <b>우리 주제로 바꾸면</b> 올라가요.<br>${blgFixHtml(blgReframes(b.kw, b.title), `data-bfix="${b.id}"`, b.kw)}</p>` : b.title && BLG_OUT.test(b.title) ? `<p class="crl-err">⚠️ 제목에 '${esc(b.title.match(BLG_OUT)[0])}'이(가) 들어 있어요. 글 내용은 마사지 · 뷰티 업체라 제목과 안 맞아요. 제목을 비우면 자동 제목이 붙어요.</p>` : ""}
+          ${blgViet(b.kw) ? `<p class="hint" style="background:#eef6ff;border-radius:10px;padding:8px 12px">📘 '○○ 베트남어' 검색어는 글을 따로 만들지 않고 <a href="/blog/vietnamese-for-spa/" target="_blank" rel="noopener"><b>마사지 · 스파에서 쓰는 베트남어</b></a> 가이드 한 곳에 모아요. 이 검색어에 맞는 표현에는 '많이 찾아요' 표시가 붙어요. 이 글은 그대로 두셔도 돼요.</p>` : blgPostOut(b) ? `<p class="crl-err">⚠️ 이 검색어 그대로는 엉클데이 업체 목록과 안 맞아서 사이트에 글이 안 생겨요. 아래에서 <b>우리 주제로 바꾸거나</b>, <b>이 주제 그대로 정보 글</b>로 쓰면 올라가요.<br><button type="button" class="btn sm" data-binfo="${b.id}" style="margin:6px 0;border-color:#1a73e8;color:#1a73e8">✍️ 이 주제 그대로 정보 글로 쓰기 (AI 초안)</button><br>${blgFixHtml(blgReframes(b.kw, b.title), `data-bfix="${b.id}"`, b.kw)}</p>` : b.title && BLG_OUT.test(b.title) ? `<p class="crl-err">⚠️ 제목에 '${esc(b.title.match(BLG_OUT)[0])}'이(가) 들어 있어요. 글 내용은 마사지 · 뷰티 업체라 제목과 안 맞아요. 제목을 비우면 자동 제목이 붙어요.</p>` : ""}
           <div class="blg-pv"><b>미리보기 (예상 ${pv.length}곳${pv.length < 2 ? " — ⚠️ 2곳보다 적어서 페이지가 안 생겨요. 장소 · 주제를 바꿔 보세요" : ""})</b><ol>${pv.map(s => `<li>${esc((s.name || {}).ko || s.id)}${s._d != null ? ` <small>약 ${s._d.toFixed(1)}km</small>` : ""}</li>`).join("")}</ol></div>
           <p class="hint">주소: <code>/blog/${esc(blgSlug(b))}/</code>${b.status === "published" ? ` · <a href="/blog/${esc(blgSlug(b))}/" target="_blank" rel="noopener">사이트에서 보기 ↗</a> (게시 후 1시간 안에 생겨요)` : ""}${b.from_url ? ` · 주제 얻은 곳: <a href="${esc(b.from_url)}" target="_blank" rel="noopener nofollow">경쟁사 글</a>` : ""}</p>
           <div class="crl-act">${b.status === "published" ? `<button class="btn sm main" data-bsave="${b.id}">고친 내용 저장</button><button class="btn sm" data-bunpub="${b.id}">게시 내리기</button><button class="btn sm" data-bnaver="${b.id}" style="background:#03c75a;color:#fff;border-color:#03c75a">📗 네이버 블로그 요약본</button>` : `<button class="btn sm main" data-bpub="${b.id}" ${BLG_OUT.test(b.kw) ? "disabled" : ""}>🌐 게시</button><button class="btn sm" data-bsave="${b.id}">저장만</button>`}<button class="btn sm danger" data-bdel="${b.id}">🗑️</button></div><div class="nv-box"></div>
@@ -292,13 +318,15 @@ function blogDraw() {
     x.disabled = false; x.textContent = t0;
   });
   el.querySelectorAll("[data-bsave]").forEach(b => b.onclick = () => up(+b.dataset.bsave, collect(+b.dataset.bsave), "저장했어요 · 1시간 안에 사이트에 반영돼요"));
-  el.querySelectorAll("[data-bpub]").forEach(b => b.onclick = () => { const id = +b.dataset.bpub, o = collect(id); if (blgPreview({ ...BLG.posts.find(x => x.id === id), ...o }).length < 2 && !confirm("예상 업체가 2곳보다 적어서 페이지가 안 생길 수 있어요. 그래도 게시할까요?")) return; up(id, { ...o, status: "published" }, "🌐 게시했어요. 1시간 안에 블로그 페이지가 생겨요"); });
-  el.querySelectorAll("[data-bconvall]").forEach(x => x.onclick = async () => { x.disabled = true; if (!(await blgAutoRun(BLG.posts.filter(p => blgOut(p.kw)), { inPlace: true }))) x.disabled = false; });
+  el.querySelectorAll("[data-bpub]").forEach(b => b.onclick = () => { const id = +b.dataset.bpub, o = collect(id); if (blgPreview({ ...BLG.posts.find(x => x.id === id), ...o }).length < 2 && !o.body && !confirm("예상 업체가 2곳보다 적어서 페이지가 안 생길 수 있어요. 그래도 게시할까요?")) return; up(id, { ...o, status: "published" }, "🌐 게시했어요. 1시간 안에 블로그 페이지가 생겨요"); });
+  el.querySelectorAll("[data-bconvall]").forEach(x => x.onclick = async () => { x.disabled = true; if (!(await blgAutoRun(BLG.posts.filter(p => blgPostOut(p)), { inPlace: true }))) x.disabled = false; });
   el.querySelectorAll("[data-bdeldup]").forEach(x => x.onclick = async () => { const d = blgDups(); if (!d.length) return;
     if (!(await blgModal({ title: `중복 글 ${d.length}개를 지워요`, sub: "같은 검색어로 먼저 만든 글은 그대로 남아요.", items: d.map(p => ({ to: p.kw, n: blgPreview(p).length, lab: "나중에 만든 글" })), yes: `🗑️ ${d.length}개 지우기` }))) return;
     const r = await sb.from("blog_posts").delete().in("id", d.map(p => p.id)); if (r.error) return toast(r.error.message);
     BLG.posts = BLG.posts.filter(p => !d.includes(p)); blogDraw(); toast(`🗑️ 중복 ${d.length}개를 지웠어요`, 3500); });
-  el.querySelectorAll("[data-bdelphrase]").forEach(x => x.onclick = () => { const bad = BLG.posts.filter(p => blgOut(p.kw));
+  el.querySelectorAll("[data-binfo]").forEach(x => x.onclick = () => { const b = el.querySelector(`[data-bai="${x.dataset.binfo}"]`); if (b) { b.scrollIntoView({ behavior: "smooth", block: "center" }); b.click(); } });
+  el.querySelectorAll("[data-binfoall]").forEach(x => x.onclick = async () => { x.disabled = true; const bad = BLG.posts.filter(p => blgPostOut(p)); await blgInfoRun(bad.map(p => ({ kw: p.kw, post: p }))); x.disabled = false; });
+  el.querySelectorAll("[data-bdelphrase]").forEach(x => x.onclick = () => { const bad = BLG.posts.filter(p => blgPostOut(p));
     confirmBox(`주제가 안 맞는 글 ${bad.length}개를 지울까요?`, async () => { const r = await sb.from("blog_posts").delete().in("id", bad.map(p => p.id)); if (r.error) return toast(r.error.message); BLG.posts = BLG.posts.filter(p => !bad.includes(p)); blogDraw(); toast(`🗑️ ${bad.length}개를 지웠어요 · 1시간 안에 사이트에서도 사라져요`, 4000); }, bad.map(p => "· " + p.kw).slice(0, 12).join("\n"), "지우기"); });
   el.querySelectorAll("[data-bunpub]").forEach(b => b.onclick = () => up(+b.dataset.bunpub, { status: "draft" }, "게시를 내렸어요. 1시간 안에 페이지가 사라져요"));
   el.querySelectorAll("[data-bdel]").forEach(b => b.onclick = async () => { if (!confirm("이 글을 지울까요?")) return; const r = await sb.from("blog_posts").delete().eq("id", +b.dataset.bdel); if (r.error) { alert(r.error.message); return; } BLG.posts = BLG.posts.filter(x => x.id !== +b.dataset.bdel); blogDraw(); });
