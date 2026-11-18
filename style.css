@@ -623,8 +623,9 @@ h1, h2, h3, .head h1, .cat-title, .partner h2 { font-weight: 800; }
 .acct-skip { margin: 14px 0 4px; text-align: center; font-size: 13.5px; color: #1f7a4d; font-weight: 700; }
 .acct-terms { margin: 0; text-align: center; font-size: 11.5px; color: #8a929c; }
 .acct-list { display: grid; gap: 8px; margin-bottom: 14px; }
-.acct-bk { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; padding: 11px 12px; border: 1px solid #eee3cc; border-radius: 12px; color: inherit; text-decoration: none; }
-.acct-bk b { font-size: 14.5px; } .acct-bk span { grid-column: 1; font-size: 12.5px; color: #6b7280; } .acct-bk em { grid-row: 1 / span 2; grid-column: 2; align-self: center; font-style: normal; }
+.acct-bk { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; padding: 11px 12px; border: 1px solid #eee3cc; border-radius: 12px; color: inherit; text-decoration: none; }
+.acct-bk b { font-size: 14.5px; } .acct-bk span { grid-column: 1; font-size: 12.5px; color: #6b7280; } .acct-bk em { grid-row: 1 / span 2; grid-column: 2; align-self: center; font-style: normal; max-width: 150px; text-align: center; line-height: 1.35; border-radius: 14px; }
+/* 상태 글이 길어도 가게 이름 · 날짜 칸이 한 글자 폭으로 찌그러지지 않게 */
 .acct-out { width: 100%; }
 
 /* ===== 사이트 채팅 ===== */
