@@ -207,6 +207,8 @@ function drawDash() {
       <div class="kpi click" data-go="today"><small>오늘 방문 예정</small><b>${todays.length}</b><em>${todays.reduce((t, b) => t + b.people, 0)}명</em></div>
       <div class="kpi money"><small>받을 수수료 (정산서 전)</small><b>${vnd(owed)}</b><em>${krw(owed)}</em></div>
       <div class="kpi money"><small>청구했는데 입금 전</small><b>${vnd(billed)}</b><em>${krw(billed)}</em></div>
+      ${(() => { const T = typeof portalTodos === "function" ? portalTodos().flatMap(g => g[1]).filter(x => +x[2] > 0) : [], n = T.reduce((a, x) => a + +x[2], 0);
+        return `<div class="kpi click todo-kpi ${n ? "alert" : ""}" data-tab-go-home="1"><small>✅ 오늘 할 일</small><b>${n}건</b><em>${T.length ? `${T.length}가지 일 · ` : "모두 처리했어요 🎉 · "}포털에서 보기 →</em></div>`; })()}
     </div>
 
     <h2 class="sec">월별 실적 <select class="month-pick" id="dashMonth">${months.map(m => `<option value="${m}" ${m === dashMonth ? "selected" : ""}>${monthKo(m)}</option>`).join("")}</select> <small>방문일 기준</small></h2>
