@@ -723,3 +723,19 @@ html:not([lang="ko"]) .about-ud .about-en { font-size: 14px; color: inherit; }
 .grv b { font-size: 16px; color: #0E2843; }
 .grv p { margin: 0; font-size: 14px; color: #4b5563; line-height: 1.5; }
 .grv .grv-btn { justify-self: start; background: #1a73e8 !important; color: #fff !important; border: 0; border-radius: 999px; padding: 10px 18px; font-weight: 700; font-size: 15px; cursor: pointer; margin: 4px 0 0; }
+
+/* 💰 결제 확인 페이백 (예약확인증) */
+.pb-box { margin: 14px 0 6px; padding: 16px; border-radius: 14px; background: #fff8ec; border: 1px solid #f6dfb5; display: grid; gap: 8px; }
+.pb-box .pb-t { font-size: 17px; line-height: 1.35; }
+.pb-box .pb-d { margin: 0; font-size: 14.5px; line-height: 1.55; }
+.pb-box .pb-hint { margin: 0; font-size: 13px; color: #6b7280; line-height: 1.5; }
+.pb-box .pb-form { display: grid; gap: 10px; margin: 4px 0 0; }
+.pb-box .pb-form label small { display: block; color: #6b7280; font-size: 12px; margin-top: 4px; font-weight: 400; }
+.pb-box .pb-est { margin: 0; font-size: 14px; }
+.pb-box .pb-est b { color: var(--green, #116241); font-size: 16px; }
+.pb-box .pb-st { background: #fff; border-radius: 12px; padding: 12px; display: grid; gap: 4px; font-size: 14px; }
+.pb-box .pb-st.st-ok { background: #e9f6ee; }
+.pb-box .pb-st small { color: #5f6b78; }
+.pb-box .pb-pts { font-size: 22px; font-weight: 800; color: var(--green, #116241); }
+.pb-box .pb-tot { margin: 0; font-size: 14px; }
+.acct-pts { display: flex; justify-content: space-between; align-items: center; gap: 8px; background: #fff8ec; border: 1px solid #f6dfb5; border-radius: 12px; padding: 10px 12px; margin: 0 0 12px; font-size: 14px; }

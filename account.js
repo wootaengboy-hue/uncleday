@@ -83,9 +83,14 @@ const ACCT = (() => {
     s.querySelectorAll("[data-p]").forEach(b => b.onclick = () => { b.disabled = true; login(b.dataset.p); });
   }
   async function openMine() {
-    const s = openSheet(`<h2>${esc(t("hi")(name()))}</h2><p class="acct-desc">${esc(user.email || "")}</p><h3>${t("my")}</h3><div class="acct-list"><p class="acct-desc">…</p></div>
+    const s = openSheet(`<h2>${esc(t("hi")(name()))}</h2><p class="acct-desc">${esc(user.email || "")}</p><div class="acct-pts" hidden></div><h3>${t("my")}</h3><div class="acct-list"><p class="acct-desc">…</p></div>
       <button class="btn acct-out">${t("out")}</button>`);
     s.querySelector(".acct-out").onclick = logout;
+    // 💰 결제 확인 페이백 포인트 (universe31.sql 실행 전이면 조용히 숨겨요)
+    LIVE.rpc("my_points", {}).then(p => { const el = s.querySelector(".acct-pts"); if (!el || !p) return;
+      const W = { ko: ["💰 내 포인트", "확인 중"], en: ["💰 My points", "being checked"], vi: ["💰 Điểm của tôi", "đang kiểm tra"] }[L()];
+      const wait = (p.list || []).filter(x => x.status === "wait" || x.status === "review").length;
+      el.innerHTML = `<b>${W[0]}</b><span><b>${Number(p.total || 0).toLocaleString("en-US")}P</b>${wait ? ` · ${W[1]} ${wait}` : ""}</span>`; el.hidden = false; }).catch(() => {});
     try {
       const list = await LIVE.rpc("my_bookings", {});
       s.querySelector(".acct-list").innerHTML = (list || []).length ? list.map(b => `<a class="acct-bk" href="booking.html?v=2#${encodeURIComponent(b.t)}">
