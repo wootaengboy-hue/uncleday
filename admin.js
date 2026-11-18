@@ -209,8 +209,6 @@ function drawDash() {
       <div class="kpi money"><small>청구했는데 입금 전</small><b>${vnd(billed)}</b><em>${krw(billed)}</em></div>
     </div>
 
-    <div class="todo-link" data-tab-go-home="1">✅ <b>할 일</b>은 <b>🏠 포털 → 오늘 할 일</b>로 옮겼어요 · 지금 <b style="color:var(--danger)">${typeof portalTodos === "function" ? portalTodos().flatMap(g => g[1]).reduce((t, x) => t + (x[2] || 0), 0) : todos.reduce((t, x) => t + x[3], 0) + pendRv}건</b> <span class="go">포털에서 보기 →</span></div>
-
     <h2 class="sec">월별 실적 <select class="month-pick" id="dashMonth">${months.map(m => `<option value="${m}" ${m === dashMonth ? "selected" : ""}>${monthKo(m)}</option>`).join("")}</select> <small>방문일 기준</small></h2>
     <div class="kpis">
       <div class="kpi"><small>예약</small><b>${st.active}</b><em>취소 ${st.cancel} · 노쇼 ${st.noshow}</em></div>
