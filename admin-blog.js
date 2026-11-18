@@ -127,8 +127,8 @@ function blgFixHtml(list, attrs, keepKw) {
   const P = blgBulkPlan(list, keepKw), why = new Map(P.skip.map(([o, w]) => [o, w]));
   const ex = list.filter(o => why.get(o) === "이미 있는 글");
   // 카테고리별로: 이미 글이 있는 주제는 고르는 칸에서 빼고(아래에 '이미 있음'으로만 보여 줘요), 남은 주제는 한 번에 올리기
-  const first = list.findIndex(o => why.get(o) !== "이미 있는 글");
-  return `<span class="blg-fix">${first >= 0 ? `<select data-fixsel>${list.map((o, i) => why.get(o) === "이미 있는 글" ? "" : `<option value="${i}">${o.lab} · ${esc(o.kw)} (${o.n}곳)</option>`).join("")}</select>` : ""}${first >= 0 ? `<button class="btn sm main" ${attrs}>🔄 이 주제로 바꾸기</button>` : ""}${P.go.length ? `<button class="btn sm" ${attrs.replace(/data-(\w+)/, "data-$1all")} style="border-color:#116241;color:#116241">📚 남은 카테고리 전부 올리기 (${P.go.length}개)</button>` : ""}</span>
+  const first = list.findIndex(o => why.get(o) !== "이미 있는 글" && !o.generic);   // 도시 목록과 같은 넓은 주제는 고르는 칸에서도 빼요
+  return `<span class="blg-fix">${first >= 0 ? `<select data-fixsel>${list.map((o, i) => why.get(o) === "이미 있는 글" || o.generic ? "" : `<option value="${i}">${o.lab} · ${esc(o.kw)} (${o.n}곳)</option>`).join("")}</select>` : ""}${first >= 0 ? `<button class="btn sm main" ${attrs}>🔄 이 주제로 바꾸기</button>` : ""}${P.go.length ? `<button class="btn sm" ${attrs.replace(/data-(\w+)/, "data-$1all")} style="border-color:#116241;color:#116241">📚 남은 카테고리 전부 올리기 (${P.go.length}개)</button>` : ""}</span>
     <small class="hint" style="display:block;margin-top:4px">${P.go.length ? `올릴 카테고리: <b>${P.go.map(o => o.lab).join(" · ")}</b>` : "✅ 바꿀 수 있는 카테고리 글이 모두 이미 있어요. 이 글은 지워도 돼요."}${ex.length ? `<br>이미 있음: ${ex.map(o => o.lab).join(" · ")}` : ""}${P.skip.length > ex.length ? `<br>빼는 것: ${P.skip.filter(([, w]) => w !== "이미 있는 글").map(([o, w]) => `${o.lab} (${esc(w)})`).join(" · ")}` : ""}</small>`;
 }
 // 여러 주제를 한 번에 게시 (첫 번째는 basePost 를 바꾸고, 나머지는 새 글)
