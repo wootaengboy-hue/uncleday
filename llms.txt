@@ -104,6 +104,19 @@ Uncle Day also has English city pages and massage guides for international trave
 - [Da Nang: shops](https://www.uncleday.com/en/c/danang/) · [Da Nang Massage & Spa Guide 2026 — Prices, Tipping, How to Choose, How to Book](https://www.uncleday.com/en/c/danang/guide/)
 - [Nha Trang: shops](https://www.uncleday.com/en/c/nhatrang/) · [Nha Trang Massage & Spa Guide 2026 — Prices, Tipping, How to Choose, How to Book](https://www.uncleday.com/en/c/nhatrang/guide/)
 
+## Other languages
+Shop and city pages translated from Uncle Day's own data (shop names, descriptions, menus):
+- 日本語 (ja): [ホーチミン](https://www.uncleday.com/ja/c/hcm/) · [ハノイ](https://www.uncleday.com/ja/c/hanoi/) · [ダナン](https://www.uncleday.com/ja/c/danang/) · [ニャチャン](https://www.uncleday.com/ja/c/nhatrang/) · 62 shop pages
+- 简体中文 (zh-CN): [胡志明市](https://www.uncleday.com/zh/c/hcm/) · [河内](https://www.uncleday.com/zh/c/hanoi/) · [岘港](https://www.uncleday.com/zh/c/danang/) · [芽庄](https://www.uncleday.com/zh/c/nhatrang/) · 61 shop pages
+- 繁體中文 (zh-TW): [胡志明市](https://www.uncleday.com/zh-tw/c/hcm/) · [河內](https://www.uncleday.com/zh-tw/c/hanoi/) · [峴港](https://www.uncleday.com/zh-tw/c/danang/) · [芽莊](https://www.uncleday.com/zh-tw/c/nhatrang/) · 62 shop pages
+- Русский (ru): [Хошимин](https://www.uncleday.com/ru/c/hcm/) · [Ханой](https://www.uncleday.com/ru/c/hanoi/) · [Дананг](https://www.uncleday.com/ru/c/danang/) · [Нячанг](https://www.uncleday.com/ru/c/nhatrang/) · 62 shop pages
+- Français (fr): [Hô Chi Minh-Ville](https://www.uncleday.com/fr/c/hcm/) · [Hanoï](https://www.uncleday.com/fr/c/hanoi/) · [Da Nang](https://www.uncleday.com/fr/c/danang/) · [Nha Trang](https://www.uncleday.com/fr/c/nhatrang/) · 62 shop pages
+- Deutsch (de): [Ho-Chi-Minh-Stadt](https://www.uncleday.com/de/c/hcm/) · [Hanoi](https://www.uncleday.com/de/c/hanoi/) · [Da Nang](https://www.uncleday.com/de/c/danang/) · [Nha Trang](https://www.uncleday.com/de/c/nhatrang/) · 62 shop pages
+- Español (es): [Ciudad Ho Chi Minh](https://www.uncleday.com/es/c/hcm/) · [Hanói](https://www.uncleday.com/es/c/hanoi/) · [Da Nang](https://www.uncleday.com/es/c/danang/) · [Nha Trang](https://www.uncleday.com/es/c/nhatrang/) · 62 shop pages
+- हिन्दी (hi): [हो ची मिन्ह सिटी](https://www.uncleday.com/hi/c/hcm/) · [हनोई](https://www.uncleday.com/hi/c/hanoi/) · [दा नांग](https://www.uncleday.com/hi/c/danang/) · [न्हा ट्रांग](https://www.uncleday.com/hi/c/nhatrang/) · 62 shop pages
+- ภาษาไทย (th): [โฮจิมินห์](https://www.uncleday.com/th/c/hcm/) · [ฮานอย](https://www.uncleday.com/th/c/hanoi/) · [ดานัง](https://www.uncleday.com/th/c/danang/) · [ญาจาง](https://www.uncleday.com/th/c/nhatrang/) · 62 shop pages
+- Bahasa Indonesia (id): [Kota Ho Chi Minh](https://www.uncleday.com/id/c/hcm/) · [Hanoi](https://www.uncleday.com/id/c/hanoi/) · [Da Nang](https://www.uncleday.com/id/c/danang/) · [Nha Trang](https://www.uncleday.com/id/c/nhatrang/) · 61 shop pages
+
 ## 블로그 (엉클데이 업체 데이터로 쓴 글)
 - [마사지 · 스파에서 쓰는 베트남어](https://www.uncleday.com/blog/vietnamese-for-spa/): 세기 조절 · 아픈 곳 · 수건 · 결제 표현과 읽는 법
 - [커플 · 가족 여행에 좋은 다낭 뷰티샵 추천 (피부 · 네일 · 헤어) — 가격 · 영업시간 · 위치 정리 (2026)](https://www.uncleday.com/blog/danang-guide-1/): 업체 10곳 · 정보 확인 2026-11-13
