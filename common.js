@@ -6,7 +6,8 @@ let lang = (() => {
   const ids = LANGS.map(l => l.id);
   let v = null;
   try { v = v || localStorage.getItem("lang"); } catch (e) {}
-  v = v || (navigator.language || "").slice(0, 2);
+  try { const q = new URLSearchParams(location.search).get("lang"); if (q && ids.includes(q)) { v = q; localStorage.setItem("lang", q); } } catch (e) {}
+  if (!v) { const n = navigator.language || ""; v = /^zh-(TW|HK|MO|Hant)/i.test(n) ? "zh-TW" : n.slice(0, 2); }
   return ids.includes(v) ? v : ids.includes("en") && v !== "ko" ? "en" : "ko";
 })();
 document.documentElement.lang = lang;
@@ -20,8 +21,7 @@ const CITY_GUIDES = {
   hanoi: { ko: "하노이 마사지 가이드", en: "Hanoi massage guide", vi: "Cẩm nang massage Hà Nội" },
 };
 const guideBar = (city, cls) => { const g = CITY_GUIDES[city]; if (!g) return "";
-  const sub = { ko: "가격 · 팁 · 고르는 법 · 공항 가기 전 꿀팁", en: "prices, tipping, how to choose", vi: "giá, tiền tip, cách chọn (tiếng Anh)" };
-  return `<a class="guide-bar ${cls || ""}" href="${lang === "ko" ? "" : "/en"}/c/${city}/guide/"><span class="gb-ic">📘</span><span><b>${tx(g)}</b><small>${tx(sub)}</small></span><span class="gb-go">›</span></a>`; };
+  return `<a class="guide-bar ${cls || ""}" href="${lang === "ko" ? "" : "/en"}/c/${city}/guide/"><span class="gb-ic">📘</span><span><b>${ui("guide_" + city)}</b><small>${ui("guideSub")}</small></span><span class="gb-go">›</span></a>`; };
 const tx = v => (v && typeof v === "object" && !Array.isArray(v)) ? (v[lang] || v.en || v.ko || "") : (v ?? "");
 const ui = (k, vars = {}) => {
   let s = (UI[lang] && UI[lang][k]) ?? UI.en[k] ?? UI.ko[k] ?? k;
@@ -55,14 +55,22 @@ function drawCommon() {
   $("footInfo").textContent = `${tx(SITE.slogan)} · ${SITE.email} · ${tx(SITE.hours)}`;
   { const fi = $("footInfo"); let pl = document.getElementById("footPriv");
     if (!pl) { pl = document.createElement("a"); pl.id = "footPriv"; pl.className = "foot-priv"; pl.href = "privacy.html"; fi.after(pl); }
-    pl.textContent = { ko: "개인정보처리방침", en: "Privacy Policy", vi: "Chính sách quyền riêng tư" }[lang] || "Privacy Policy"; }
+    pl.textContent = ui("privacy"); }
   document.querySelectorAll(".kakao-link").forEach(a => a.href = SITE.kakao);
-  $("langs").innerHTML = LANGS.map(l =>
-    `<button class="chip ${l.id === lang ? "on" : ""}" data-l="${l.id}" title="${l.label}"><span class="lg-full">${l.label}</span><span class="lg-short">${l.id.toUpperCase()}</span></button>`).join("");
-  $("langs").querySelectorAll("button").forEach(b => b.onclick = () => {
-    try { localStorage.setItem("lang", b.dataset.l); } catch (e) {}
-    location.reload();
-  });
+  // 언어 고르기: 13개라 버튼 대신 펼침 목록 (국기 + 그 나라 말 이름)
+  const cur = LANGS.find(l => l.id === lang) || LANGS[0];
+  $("langs").innerHTML = `<button type="button" class="lang-btn" aria-haspopup="listbox" aria-expanded="false" title="${esc(ui("langPick"))}"><span class="lg-flag">${cur.flag || "🌐"}</span><span class="lg-full">${cur.label}</span><span class="lg-short">${cur.id.toUpperCase()}</span><span class="lg-caret">▾</span></button>
+    <div class="lang-menu" role="listbox" hidden>${LANGS.map(l => `<button type="button" role="option" class="${l.id === lang ? "on" : ""}" data-l="${l.id}" lang="${l.id}"><span>${l.flag || ""}</span>${l.label}</button>`).join("")}</div>`;
+  { const lb = $("langs").querySelector(".lang-btn"), lm = $("langs").querySelector(".lang-menu");
+    const shut = () => { lm.hidden = true; lb.setAttribute("aria-expanded", "false"); };
+    lb.onclick = e => { e.stopPropagation(); lm.hidden = !lm.hidden; lb.setAttribute("aria-expanded", String(!lm.hidden)); };
+    document.addEventListener("click", e => { if (!$("langs").contains(e.target)) shut(); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape") shut(); });
+    lm.querySelectorAll("[data-l]").forEach(b => b.onclick = () => {
+      try { localStorage.setItem("lang", b.dataset.l); } catch (e) {}
+      try { const u = new URL(location.href); if (u.searchParams.has("lang")) { u.searchParams.set("lang", b.dataset.l); location.href = u.toString(); return; } } catch (e) {}
+      location.reload();
+    }); }
 }
 const cityName = id => tx((CITIES.find(c => c.id === id) || {}).name || "");
 

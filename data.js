@@ -19,18 +19,40 @@ const SITE = {
   // 환율: 베트남 동(VND) 1동이 얼마인지. ※ 샘플 값입니다. 가끔 직접 갱신하세요.
   rates: {
     ko: { symbol: "₩", rate: 0.055,    round: 100 },
-    en: { symbol: "US$", rate: 0.00004, round: 1 }
-    // ja: { symbol: "¥", rate: 0.006, round: 10 }
+    en: { symbol: "US$", rate: 0.00004, round: 1 },
+    // 대략 환율 (2026년 11월 기준 어림값 · 가끔 고쳐 주세요)
+    ja: { symbol: "¥", rate: 0.0059, round: 10 },
+    zh: { symbol: "¥", rate: 0.00028, round: 1 },
+    "zh-TW": { symbol: "NT$", rate: 0.0012, round: 1 },
+    ru: { symbol: "₽", rate: 0.0031, round: 10 },
+    fr: { symbol: "€", rate: 0.000034, round: 1 },
+    de: { symbol: "€", rate: 0.000034, round: 1 },
+    es: { symbol: "€", rate: 0.000034, round: 1 },
+    hi: { symbol: "₹", rate: 0.0033, round: 10 },
+    th: { symbol: "฿", rate: 0.0013, round: 1 },
+    id: { symbol: "Rp", rate: 0.63, round: 1000 }
   }
 };
 
 // 2) 사용 언어 (일본어를 켜려면 아래 줄 앞의 // 를 지우세요)
 const LANGS = [
-  { id: "ko", label: "한국어" },
-  { id: "en", label: "English" },
-  { id: "vi", label: "Tiếng Việt" }
-  // { id: "ja", label: "日本語" }
+  { id: "ko", label: "한국어", flag: "🇰🇷" },
+  { id: "en", label: "English", flag: "🇬🇧" },
+  { id: "vi", label: "Tiếng Việt", flag: "🇻🇳" },
+  // 아래 10개는 화면 문구 · 업체 내용을 관리자 → 포털 → 🌐 다국어 번역에서 AI로 번역해 채워요 (번역 전에는 영어로 보여요)
+  { id: "ja", label: "日本語", flag: "🇯🇵" },
+  { id: "zh", label: "简体中文", flag: "🇨🇳" },
+  { id: "zh-TW", label: "繁體中文", flag: "🇹🇼" },
+  { id: "ru", label: "Русский", flag: "🇷🇺" },
+  { id: "fr", label: "Français", flag: "🇫🇷" },
+  { id: "de", label: "Deutsch", flag: "🇩🇪" },
+  { id: "es", label: "Español", flag: "🇪🇸" },
+  { id: "hi", label: "हिन्दी", flag: "🇮🇳" },
+  { id: "th", label: "ภาษาไทย", flag: "🇹🇭" },
+  { id: "id", label: "Bahasa Indonesia", flag: "🇮🇩" }
 ];
+// 직접 번역해 둔 언어 (나머지는 AI 번역을 받아와요)
+const CORE_LANGS = ["ko", "en", "vi"];
 
 // 3) 지역
 const CITIES = [

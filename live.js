@@ -7,6 +7,7 @@ const LIVE = (() => {
   function apply(d) {
     if (!d || !Array.isArray(d.shops) || !d.shops.length) return false;
     SHOPS.length = 0; SHOPS.push(...d.shops);
+    if (typeof window.I18N_APPLY === "function") window.I18N_APPLY();   // 🌐 일본어 · 중국어 등 번역 다시 입히기
     if (d.cat && typeof CAT_IMGS !== "undefined") { Object.keys(CAT_IMGS).forEach(k => delete CAT_IMGS[k]); Object.assign(CAT_IMGS, d.cat); }
     return true;
   }

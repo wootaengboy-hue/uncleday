@@ -12,7 +12,7 @@ const GPLACE = (() => {
     if (memo[id] !== undefined) return memo[id];
     if (!(await take("details"))) return (memo[id] = null);
     try {
-      const r = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(id)}?languageCode=${lang === "vi" ? "vi" : lang === "en" ? "en" : "ko"}`, {
+      const r = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(id)}?languageCode=${lang === "zh" ? "zh-CN" : lang}`, {
         headers: { "X-Goog-Api-Key": GMAPS.key, "X-Goog-FieldMask": "rating,userRatingCount,regularOpeningHours,photos,googleMapsUri,formattedAddress" } });
       memo[id] = r.ok ? await r.json() : null;
     } catch (e) { memo[id] = null; }
@@ -28,7 +28,7 @@ function gplaceBox(shop) {
   box.innerHTML = `<div class="g-box"><div class="g-head"><b>${ui("gTitle")}</b><small>${ui("gNote")}</small></div>
     <div class="g-info" id="gInfo"></div>
     <iframe class="g-map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen
-      src="https://www.google.com/maps/embed/v1/place?key=${encodeURIComponent(GMAPS.key)}&q=place_id:${encodeURIComponent(id)}&language=${lang === "vi" ? "vi" : lang === "en" ? "en" : "ko"}"></iframe></div>`;
+      src="https://www.google.com/maps/embed/v1/place?key=${encodeURIComponent(GMAPS.key)}&q=place_id:${encodeURIComponent(id)}&language=${lang === "zh" ? "zh-CN" : lang}"></iframe></div>`;
   GPLACE.details(id).then(async d => {
     const el = document.getElementById("gInfo"); if (!el || !d) { if (el) el.remove(); return; }
     let html = "";

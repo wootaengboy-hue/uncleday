@@ -4,23 +4,12 @@
 const CHAT = (() => {
   if (typeof LIVE === "undefined" || !LIVE.on) return null;
   const KEY = "ud-chat";
-  const L = () => (typeof lang !== "undefined" && ["ko", "en", "vi"].includes(lang) ? lang : "ko");
-  const T = {
-    ko: { title: "엉클데이 상담", sub: "보통 몇 분 안에 답해 드려요 (한국 시간 기준)", hello: "안녕하세요! 엉클데이예요 😊\n예약, 메뉴, 가격, 위치 등 궁금한 걸 편하게 물어보세요.",
-      ph: "메시지를 입력하세요", send: "보내기", name: "이름 (선택)", contact: "답장 알림 받을 휴대폰·카톡 ID (선택)",
-      keep: "이 창을 닫아도 대화는 남아요. 다시 💬를 누르면 이어서 볼 수 있어요.", login: "로그인하면 다른 기기에서도 이어져요", kakao: "카톡으로 상담", me: "나", us: "엉클데이",
-      err: "보내지 못했어요. 잠시 뒤 다시 해 주세요.", bk: c => `예약 ${c} 문의` },
-    en: { title: "Uncle Day chat", sub: "We usually reply within minutes (Korea time)", hello: "Hi! This is Uncle Day 😊\nAsk us anything about bookings, menus, prices or locations.",
-      ph: "Type a message", send: "Send", name: "Name (optional)", contact: "Phone / KakaoTalk ID for reply alerts (optional)",
-      keep: "Your chat stays here even if you close this window. Tap 💬 again to continue.", login: "Log in to continue on other devices", kakao: "Chat on KakaoTalk", me: "Me", us: "Uncle Day",
-      err: "Couldn't send. Please try again shortly.", bk: c => `About booking ${c}` },
-    vi: { title: "Uncle Day hỗ trợ", sub: "Thường trả lời trong vài phút (giờ Hàn Quốc)", hello: "Xin chào! Đây là Uncle Day 😊\nHãy hỏi bất cứ điều gì về đặt lịch, dịch vụ, giá hoặc địa điểm.",
-      ph: "Nhập tin nhắn", send: "Gửi", name: "Tên (không bắt buộc)", contact: "SĐT / Zalo / KakaoTalk để nhận thông báo (không bắt buộc)",
-      keep: "Cuộc trò chuyện vẫn được lưu khi bạn đóng cửa sổ. Bấm 💬 để tiếp tục.", login: "Đăng nhập để tiếp tục trên thiết bị khác", kakao: "Chat KakaoTalk", me: "Tôi", us: "Uncle Day",
-      err: "Không gửi được. Vui lòng thử lại.", bk: c => `Hỏi về lịch ${c}` } };
-  const t = k => T[L()][k];
+  // 문구는 i18n.js 의 cb_… (13개 언어 · 번역 안 된 문구는 영어)
+  const L = () => (typeof lang !== "undefined" ? lang : "ko");
+  const t = (k, v) => ui("cb_" + k, v || {});
+
   // 메시지 속 엉클데이 주소는 짧은 버튼 모양 링크로
-  const linkify = h => h.replace(/https:\/\/(?:www\.)?uncleday\.com\/[^\s<]*/g, u => `<a class="cb-a" href="${u}">${/booking\.html/.test(u) ? ({ ko: "📄 예약확인증 열기", en: "📄 Open voucher", vi: "📄 Mở phiếu đặt lịch" })[L()] : u}</a>`);
+  const linkify = h => h.replace(/https:\/\/(?:www\.)?uncleday\.com\/[^\s<]*/g, u => `<a class="cb-a" href="${u}">${/booking\.html/.test(u) ? t("voucher") : u}</a>`);
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const get = () => { try { return localStorage.getItem(KEY) || ""; } catch (e) { return ""; } };
   const put = v => { try { v ? localStorage.setItem(KEY, v) : localStorage.removeItem(KEY); } catch (e) {} };
@@ -43,11 +32,11 @@ const CHAT = (() => {
   window.addEventListener("resize", place); window.addEventListener("hashchange", () => setTimeout(place, 300)); setInterval(place, 2000);
 
   function draw() {
-    const fmt = d => { try { return new Date(d).toLocaleTimeString(L() === "ko" ? "ko-KR" : L() === "vi" ? "vi-VN" : "en-US", { hour: "numeric", minute: "2-digit" }); } catch (e) { return ""; } };
+    const fmt = d => { try { return new Date(d).toLocaleTimeString(L(), { hour: "numeric", minute: "2-digit" }); } catch (e) { return ""; } };
     const showForm = !known && !(typeof ACCT !== "undefined" && ACCT.user()) && !onVoucher;
     box.innerHTML = `<div class="cb-head"><div><b>${t("title")}</b><small>${t("sub")}</small></div><button type="button" class="cb-x" aria-label="close">✕</button></div>
       <div class="cb-list">
-        <div class="cb-m us"><span>${booking ? `<b>${esc(t("bk")(booking))}</b><br>` : ""}${esc(t("hello")).replace(/\n/g, "<br>")}</span></div>
+        <div class="cb-m us"><span>${booking ? `<b>${esc(t("bk", { c: booking }))}</b><br>` : ""}${esc(t("hello")).replace(/\n/g, "<br>")}</span></div>
         ${msgs.map(m => `<div class="cb-m ${m.from === "admin" ? "us" : "me"}"><span>${linkify(esc(m.body)).replace(/\n/g, "<br>")}</span><time>${m.auto ? "🌐 " + ({ ko: "자동 번역", vi: "Tự động dịch" }[document.documentElement.lang] || "Auto-translated") + " · " : ""}${fmt(m.at)}</time></div>`).join("")}
       </div>
       <form class="cb-form">
@@ -104,7 +93,7 @@ const CHAT = (() => {
     e.preventDefault(); e.stopPropagation(); toggle(true);
     const m = (window.SHOP_ID && [0, window.SHOP_ID]) || location.hash.match(/^#\/shop\/([^/?]+)/) || (/shop\.html$/.test(location.pathname) && [0, location.hash.slice(1)]);
     const shop = m && typeof SHOPS !== "undefined" && SHOPS.find(s => s.id === decodeURIComponent(m[1]));
-    if (shop && !msgs.length) setTimeout(() => { const ta = box.querySelector("textarea[name=body]"); if (ta && !ta.value) { ta.value = ({ ko: `[${tx(shop.name)}] 문의드려요\n`, en: `Question about ${tx(shop.name)}\n`, vi: `Hỏi về ${tx(shop.name)}\n` })[L()]; ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); ta.oninput && ta.oninput(); } }, 80);
+    if (shop && !msgs.length) setTimeout(() => { const ta = box.querySelector("textarea[name=body]"); if (ta && !ta.value) { ta.value = t("shopQ", { shop: tx(shop.name) }); ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); ta.oninput && ta.oninput(); } }, 80);
   }, true);
   // 처음: 예전 대화가 있으면 안 읽은 답장이 있는지 확인
   setTimeout(() => poll(true), 1500); timer = setInterval(() => poll(false), 60000);

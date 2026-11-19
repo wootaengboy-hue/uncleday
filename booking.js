@@ -188,26 +188,8 @@ load();
 /* ===== 💰 결제 확인 페이백 (샵백처럼) =====
    손님이 받은 시술 · 결제 금액 · 영수증(선택)을 알려 주면 결제 금액의 3%를 포인트로 쌓아요 (로그인 필요).
    업체가 적은 금액과 같으면 바로 확정, 다르면 엉클데이가 확인한 뒤 확정해요. 서버 함수: supabase/universe31.sql */
-const PB_T = {
-  ko: { title: "💰 결제 금액 알려 주고 {p}% 포인트 받기", desc: "가게에서 실제로 받은 시술과 결제한 금액을 알려 주세요. 결제 금액의 {p}%를 엉클데이 포인트로 쌓아 드려요 (1P = 1동).",
-    why: "상담 후 메뉴를 바꾸거나 추가했어도 그대로 적어 주세요. 엉클데이가 가게와 정확히 정산하는 데 쓰여요.", login: "로그인하고 포인트 받기", loginHint: "포인트는 계정에 쌓여요. 카카오 · 구글로 10초면 돼요.",
-    amt: "결제한 금액 (동)", amtPh: "예: 1,500,000", items: "받은 시술", itemsPh: "예: 아쿠아필 + 재생관리 업그레이드", rc: "영수증 사진 (선택)", rcHint: "영수증이 있으면 더 빨리 확정돼요",
-    est: "예상 포인트", send: "알려 주기", edit: "고치기", sending: "보내는 중…", done: "알려 주셔서 고마워요 🙏",
-    st_wait: "⏳ 가게가 결제 금액을 적으면 확인해서 바로 쌓아 드려요", st_review: "🔎 엉클데이가 가게와 금액을 확인하고 있어요", st_ok: "✅ 포인트가 쌓였어요", st_no: "확인이 어려워 포인트를 드리지 못했어요",
-    you: "알려 준 금액", total: "내 포인트", waiting: "확인 중 {n}건", other: "이 예약은 다른 계정으로 이미 알려 주셨어요.", soon: "포인트 쓰는 방법은 곧 안내해 드릴게요.", rcSaved: "영수증 있음", needAmt: "결제 금액을 적어 주세요", upFail: "영수증을 올리지 못했어요. 금액만 먼저 보낼게요." },
-  en: { title: "💰 Tell us what you paid — get {p}% back in points", desc: "Tell us the treatments you actually received and the amount you paid. We'll add {p}% of it as Uncle Day points (1P = 1 VND).",
-    why: "If you changed or added treatments after the consultation, please include them. It helps us settle accurately with the shop.", login: "Log in to get points", loginHint: "Points are saved to your account. Takes 10 seconds with Kakao or Google.",
-    amt: "Amount paid (VND)", amtPh: "e.g. 1,500,000", items: "Treatments received", itemsPh: "e.g. Aqua peel + recovery upgrade", rc: "Receipt photo (optional)", rcHint: "A receipt helps us confirm faster",
-    est: "Estimated points", send: "Send", edit: "Edit", sending: "Sending…", done: "Thank you for letting us know 🙏",
-    st_wait: "⏳ We'll confirm as soon as the shop records the amount", st_review: "🔎 We're checking the amount with the shop", st_ok: "✅ Points added", st_no: "We couldn't confirm this one",
-    you: "Amount you reported", total: "My points", waiting: "{n} being checked", other: "This booking was already reported from another account.", soon: "We'll let you know soon how to use your points.", rcSaved: "Receipt attached", needAmt: "Please enter the amount you paid", upFail: "Couldn't upload the receipt. Sending the amount first." },
-  vi: { title: "💰 Báo số tiền đã trả — nhận lại {p}% điểm", desc: "Hãy cho chúng tôi biết dịch vụ bạn đã làm và số tiền đã trả. Uncle Day tặng {p}% số tiền đó thành điểm (1P = 1 đồng).",
-    why: "Nếu bạn đổi hoặc thêm dịch vụ sau khi tư vấn, hãy ghi đầy đủ. Thông tin này giúp Uncle Day đối soát chính xác với cửa hàng.", login: "Đăng nhập để nhận điểm", loginHint: "Điểm được lưu vào tài khoản. Chỉ 10 giây với Kakao hoặc Google.",
-    amt: "Số tiền đã trả (đồng)", amtPh: "VD: 1.500.000", items: "Dịch vụ đã làm", itemsPh: "VD: Aqua peel + nâng cấp phục hồi", rc: "Ảnh hóa đơn (không bắt buộc)", rcHint: "Có hóa đơn sẽ được xác nhận nhanh hơn",
-    est: "Điểm dự kiến", send: "Gửi", edit: "Sửa", sending: "Đang gửi…", done: "Cảm ơn bạn đã cho biết 🙏",
-    st_wait: "⏳ Khi cửa hàng nhập số tiền, chúng tôi sẽ xác nhận ngay", st_review: "🔎 Uncle Day đang kiểm tra số tiền với cửa hàng", st_ok: "✅ Đã cộng điểm", st_no: "Chưa thể xác nhận nên không cộng điểm",
-    you: "Số tiền bạn báo", total: "Điểm của tôi", waiting: "{n} đang kiểm tra", other: "Lịch hẹn này đã được báo từ tài khoản khác.", soon: "Cách dùng điểm sẽ được thông báo sớm.", rcSaved: "Đã có hóa đơn", needAmt: "Hãy nhập số tiền đã trả", upFail: "Không tải được hóa đơn. Gửi số tiền trước." } };
-function pbT(k, v) { const L = ["ko", "en", "vi"].includes(lang) ? lang : "ko"; let x = PB_T[L][k] || PB_T.ko[k] || k; if (v) Object.keys(v).forEach(n => x = x.replace("{" + n + "}", v[n])); return x; }
+// 문구는 i18n.js 의 pb_… (13개 언어 · 번역 안 된 문구는 영어)
+function pbT(k, v) { return ui("pb_" + k, v || {}); }
 const pbNum = v => +(String(v || "").replace(/[^0-9]/g, "")) || 0;
 const pbFmt = n => Math.round(+n || 0).toLocaleString("en-US");
 let PB_EDIT = false;

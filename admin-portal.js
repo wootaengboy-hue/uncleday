@@ -56,7 +56,7 @@ const PORTAL_SIMS = [
 const PORTAL_APPS = [
   ["🧭 운영", [["payback", "💸", "결제 확인 · 페이백", "손님이 알려 준 금액 vs 업체 금액 · 포인트 확정"], ["spaces", "🧭", "공간 바로가기", "손님 사이트 · 사장님 · 직원 화면 주소 · 안내 문구"], ["field", "📒", "현장 영업 매뉴얼", "베트남 영업 담당자용 · 베/한 · 잘로로 보내기 · 인쇄"], ["shops", "🏪", "매장별 관리", "현황판 · 대신 수정 · 직원 PIN · 사장님 계정"], ["audit", "🛠️", "대신 수정 기록", "사장님 화면 '오늘'에도 보여요"], ["sim", "🎬", "운영 시뮬레이션", "입점 영업 · 직원 교육용 데모"]]],
   ["🏪 가게 정보", [["fill", "📋", "가게 정보 채우기", "업체별 검색 점수 · 빈 칸 · 후기 요청"], ["price", "💰", "가격 채우기", "메뉴 가격을 휴대폰으로 바로"], ["links", "🔗", "가게에 링크 달기", "구글 지도 · 페북 · 잘로 · QR"], ["crawl", "📥", "링크로 가게 가져오기", "홈페이지 · 가격표 링크로 페이지 만들기"]]],
-  ["🔎 검색 · 마케팅", [["blog", "📝", "블로그", "검색어로 글 만들기 · 네이버 요약본"], ["comp", "🔍", "경쟁사 분석", "빠진 검색어 · 소개된 가게"], ["con", "📈", "엉클데이 서치 콘솔", "구글 색인 상태 · URL 검사"], ["seo", "📨", "검색 유입 · 리드", "어디서 왔는지 · 미입점 문의"]]],
+  ["🔎 검색 · 마케팅", [["i18n", "🌐", "다국어 번역", "일본어 · 중국어 · 러시아어 등 10개 언어 AI 번역"], ["blog", "📝", "블로그", "검색어로 글 만들기 · 네이버 요약본"], ["comp", "🔍", "경쟁사 분석", "빠진 검색어 · 소개된 가게"], ["con", "📈", "엉클데이 서치 콘솔", "구글 색인 상태 · URL 검사"], ["seo", "📨", "검색 유입 · 리드", "어디서 왔는지 · 미입점 문의"]]],
   ["📚 자료", [["guide", "📘", "운영 가이드", "팀원용 설명서 · 자주 묻는 질문"], ["brand", "🎨", "브랜드 자료실 (CI)", "로고 · 색 · 글꼴 · 원본"]]],
 ];
 const FIELD_APPS = ["field", "fill", "price", "links"];
@@ -67,6 +67,7 @@ function portalBadge(k) {
   try {
     if (k === "seo" && typeof SEO !== "undefined" && SEO.leads) return SEO.leads.filter(x => x.status === "new").length;
     if (k === "payback" && typeof pbCount === "function") return pbCount();
+    if (k === "i18n" && typeof i18nPending === "function") return i18nPending();
     if (k === "fill" && typeof filRvTargets === "function") return filRvTargets().length;
     if (k === "shops") return (PORTAL.shops || []).reduce((a, s) => a + (+s.pending_req || 0), 0);
   } catch (e) {}
@@ -130,6 +131,7 @@ function drawPortal(skip) {
     <section class="pt-sec" data-pv="comp" id="ptCompSec"><h3>🔍 경쟁사 분석 <span class="hint">경쟁 사이트가 노리는 검색어 중 엉클데이에 없는 것 · 경쟁사가 소개한 가게 중 엉클데이에 없는 곳</span></h3><div id="ptComp"></div></section>
     <section class="pt-sec" data-pv="blog" id="ptBlogSec"><h3>📝 블로그 <span class="hint">검색어 하나로 우리 데이터 글 만들기 — 가까운 순 · 실제 가격 · 영업시간 · FAQ, 매시간 최신으로</span></h3><div id="ptBlog"></div></section>
     <section class="pt-sec" data-pv="con" id="ptConSec"><h3>🔎 엉클데이 서치 콘솔 <span class="hint">사이트의 모든 페이지가 구글에 색인됐는지 — 종류별 · URL 검사 · 사이트맵</span></h3><div id="ptCon"></div></section>
+    <section class="pt-sec" data-pv="i18n" id="ptI18nSec"><h3>🌐 다국어 번역 <span class="hint">손님 사이트 13개 언어 — 한 · 영 · 베는 직접, 나머지 10개는 AI 번역</span></h3><div id="ptI18n"></div></section>
     <section class="pt-sec" data-pv="payback" id="ptPaybackSec"><h3>💸 결제 확인 · 페이백 <span class="hint">다녀온 손님이 알려 준 받은 시술 · 결제 금액 · 영수증과 업체가 적은 금액 비교 — 다르면 여기서 확정</span></h3><div id="ptPayback"></div></section>
     <section class="pt-sec" data-pv="seo" id="ptSeoSec"><h3>🔎 검색 유입 · 리드 <span class="hint">구글 · 네이버 · AI 에서 들어온 손님 수 · 미입점 가게 문의 · 영업용 조회수</span></h3><div id="ptSeo"></div></section>
     <section class="pt-sec" data-pv="brand"><h3>🎨 브랜드 자료실 (CI) <span class="hint">명함 · 홍보물 · 자료 만들 때 쓰는 로고 · 색 · 글꼴 · 원본 파일</span></h3><div id="ptBrand"></div></section>
@@ -156,6 +158,7 @@ function drawPortal(skip) {
   if (typeof brandDraw === "function") brandDraw();
   if (typeof seoDraw === "function") seoDraw();
   if (typeof pbDraw === "function") pbDraw();
+  if (typeof i18nDraw === "function" && PORTAL.view === "i18n") i18nDraw();
   if (typeof priceDraw === "function") priceDraw();
   if (typeof fillDraw === "function") fillDraw();
   if (typeof fieldDraw === "function") fieldDraw();

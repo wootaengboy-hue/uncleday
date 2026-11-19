@@ -6,23 +6,15 @@ const ACCT = (() => {
   const ref = on ? ((SUPA.url.match(/^https:\/\/([^.]+)\./) || [])[1] || "") : "";
   const SKEY = `sb-${ref}-auth-token`, BACK = "ud-login-back";
   let sb = null, user = null, loading = null; const subs = [];
-  const L = () => (typeof lang !== "undefined" && ["ko", "en", "vi"].includes(lang) ? lang : "ko");
-  const T = {
-    ko: { login: "로그인", title: "엉클데이 시작하기", desc: "로그인하면 예약 내역과 상담 대화를 어느 기기에서나 이어서 볼 수 있어요.", skip: "로그인 없이도 예약할 수 있어요.",
-      my: "내 예약", out: "로그아웃", none: "아직 예약이 없어요.", hi: n => `${n}님`, vo: "예약확인증", fail: "로그인을 시작하지 못했어요. 잠시 뒤 다시 해 주세요.",
-      terms: "로그인하면 예약·상담 관리를 위해 이름과 이메일(제공하는 경우)을 저장해요.", close: "닫기" },
-    en: { login: "Log in", title: "Start with Uncle Day", desc: "Log in to see your bookings and chats on any device.", skip: "You can book without logging in.",
-      my: "My bookings", out: "Log out", none: "No bookings yet.", hi: n => n, vo: "Voucher", fail: "Couldn't start login. Please try again later.",
-      terms: "We store your name and email (if provided) to manage your bookings and chats.", close: "Close" },
-    vi: { login: "Đăng nhập", title: "Bắt đầu với Uncle Day", desc: "Đăng nhập để xem lịch hẹn và trò chuyện trên mọi thiết bị.", skip: "Bạn vẫn có thể đặt lịch mà không cần đăng nhập.",
-      my: "Lịch hẹn của tôi", out: "Đăng xuất", none: "Chưa có lịch hẹn.", hi: n => n, vo: "Phiếu đặt lịch", fail: "Không thể đăng nhập. Vui lòng thử lại sau.",
-      terms: "Chúng tôi lưu tên và email (nếu có) để quản lý lịch hẹn và trò chuyện.", close: "Đóng" } };
-  const t = k => T[L()][k];
+  // 문구는 i18n.js 의 ac_… (13개 언어 · 번역 안 된 문구는 영어)
+  const L = () => (typeof lang !== "undefined" ? lang : "ko");
+  const t = (k, v) => ui("ac_" + k, v || {});
+
   const PROVIDERS = [
-    { id: "kakao", cls: "kakao", n: { ko: "카카오로 시작하기", en: "Continue with Kakao", vi: "Tiếp tục với Kakao" }, mark: "K" },
-    { id: "custom:naver", off: "naver", cls: "naver", n: { ko: "네이버로 시작하기", en: "Continue with Naver", vi: "Tiếp tục với Naver" }, mark: "N" },
-    { id: "google", cls: "google", n: { ko: "구글로 시작하기", en: "Continue with Google", vi: "Tiếp tục với Google" }, mark: "G" },
-    { id: "facebook", off: true, cls: "facebook", n: { ko: "페이스북으로 시작하기", en: "Continue with Facebook", vi: "Tiếp tục với Facebook" }, mark: "f" }];
+    { id: "kakao", cls: "kakao", n: "p_kakao", mark: "K" },
+    { id: "custom:naver", off: "naver", cls: "naver", n: "p_naver", mark: "N" },
+    { id: "google", cls: "google", n: "p_google", mark: "G" },
+    { id: "facebook", off: true, cls: "facebook", n: "p_facebook", mark: "f" }];
 
   // 승인 전이라 숨긴 로그인(네이버)은 주소에 ?naver=1 을 붙여 들어오면 보여요 (검수 담당자·테스트용, 이 브라우저에 기억)
   const unlocked = id => { try { if (new URLSearchParams(location.search).get(id) === "1") localStorage.setItem("ud-show-" + id, "1"); return localStorage.getItem("ud-show-" + id) === "1"; } catch (e) { return false; } };
@@ -78,17 +70,17 @@ const ACCT = (() => {
   }
   function openLogin() {
     const s = openSheet(`<h2>${t("title")}</h2><p class="acct-desc">${t("desc")}</p>
-      <div class="acct-provs">${PROVIDERS.filter(p => !p.off || (typeof p.off === "string" && unlocked(p.off))).map(p => `<button class="acct-p ${p.cls}" data-p="${p.id}">${p.n[L()]}</button>`).join("")}</div>
+      <div class="acct-provs">${PROVIDERS.filter(p => !p.off || (typeof p.off === "string" && unlocked(p.off))).map(p => `<button class="acct-p ${p.cls}" data-p="${p.id}">${t(p.n)}</button>`).join("")}</div>
       <p class="acct-skip">${t("skip")}</p><p class="acct-terms">${t("terms")}</p>`);
     s.querySelectorAll("[data-p]").forEach(b => b.onclick = () => { b.disabled = true; login(b.dataset.p); });
   }
   async function openMine() {
-    const s = openSheet(`<h2>${esc(t("hi")(name()))}</h2><p class="acct-desc">${esc(user.email || "")}</p><div class="acct-pts" hidden></div><h3>${t("my")}</h3><div class="acct-list"><p class="acct-desc">…</p></div>
+    const s = openSheet(`<h2>${esc(t("hi", { n: name() }))}</h2><p class="acct-desc">${esc(user.email || "")}</p><div class="acct-pts" hidden></div><h3>${t("my")}</h3><div class="acct-list"><p class="acct-desc">…</p></div>
       <button class="btn acct-out">${t("out")}</button>`);
     s.querySelector(".acct-out").onclick = logout;
     // 💰 결제 확인 페이백 포인트 (universe31.sql 실행 전이면 조용히 숨겨요)
     LIVE.rpc("my_points", {}).then(p => { const el = s.querySelector(".acct-pts"); if (!el || !p) return;
-      const W = { ko: ["💰 내 포인트", "확인 중"], en: ["💰 My points", "being checked"], vi: ["💰 Điểm của tôi", "đang kiểm tra"] }[L()];
+      const W = [t("pts"), t("ptsWait")];
       const wait = (p.list || []).filter(x => x.status === "wait" || x.status === "review").length;
       el.innerHTML = `<b>${W[0]}</b><span><b>${Number(p.total || 0).toLocaleString("en-US")}P</b>${wait ? ` · ${W[1]} ${wait}` : ""}</span>`; el.hidden = false; }).catch(() => {});
     try {
