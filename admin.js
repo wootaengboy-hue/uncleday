@@ -1308,6 +1308,8 @@ async function afterLogin(session) {
   $("me").textContent = ME.email;
   initShops();
   document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => showTab(b.dataset.tab));
+  // 왼쪽 위 로고 · '관리자' → 관리자 첫 화면(포털 홈). 손님 사이트는 오른쪽 '사이트 보기'
+  $("logoHome").onclick = e => { e.preventDefault(); PORTAL.view = "home"; try { sessionStorage.setItem("ptView", "home"); } catch (er) {} showTab("home"); window.scrollTo(0, 0); };
   const [h, hv] = location.hash.slice(1).split("/");
   if (h === "home" && hv) PORTAL.view = hv;
   NAV_QUIET = true; showTab(TABS_ALL.includes(h) ? h : "home"); NAV_QUIET = false;
