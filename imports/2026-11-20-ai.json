@@ -1,0 +1,42 @@
+{
+ "id": "2026-11-20-ai",
+ "title": "AI 검색 유입 할 일",
+ "created": "2026-11-20",
+ "tasks": [
+  {
+   "group": "AI 검색",
+   "priority": 2,
+   "title": "[AI 검색] 빙 웹마스터 등록 확인 (내 컴퓨터에서 5분)",
+   "note": "ChatGPT 검색은 빙 검색 결과를 많이 써요. 등록돼 있으면 사이트맵만 확인, 안 돼 있으면 구글 서치콘솔에서 가져오기로 등록.",
+   "memo": "<ol><li>컴퓨터에서 <b>bing.com/webmasters</b> 접속 → 구글 계정으로 로그인</li><li>목록에 <b>www.uncleday.com</b>이 있으면 → 왼쪽 <b>Sitemaps</b>에 <code>https://www.uncleday.com/sitemap.xml</code>이 '성공'인지 확인</li><li>없으면 → <b>Import from Google Search Console</b> 누르고 uncleday.com 고르기 (확인 절차 없이 끝나요)</li><li>등록 후 2~3일 뒤 <b>Search Performance</b>에서 노출 수 보기</li></ol><p>⚠️ 비밀번호 · 인증 코드는 채팅에 보내지 마세요.</p>"
+  },
+  {
+   "group": "AI 검색",
+   "priority": 1,
+   "title": "[AI 검색] 공식 계정 만들고 주소 알려 주기 → 홈페이지 sameAs",
+   "note": "인스타그램 · 유튜브 · 네이버 블로그 등 엉클데이 공식 계정을 만들면 주소만 Claude에게 알려 주세요. 홈페이지에 '공식 계정' 표시(sameAs)를 넣어 AI가 엉클데이를 한 회사로 알아보게 해요. 지금은 카카오톡 채널만 들어가 있어요.",
+   "memo": "<ul><li>인스타그램 (릴스 시작할 때)</li><li>유튜브 (쇼츠)</li><li>네이버 블로그</li><li>엉클데이 자체 구글 비즈니스 프로필 (가능하면)</li></ul><p>영상 · 글 설명란에 가게 이름 + 도시 + www.uncleday.com 넣기</p>"
+  },
+  {
+   "group": "AI 검색",
+   "priority": 1,
+   "title": "[AI 검색] 바깥 언급 늘리기 — 영상 · 블로그 · 커뮤니티 답변",
+   "note": "AI는 우리 사이트보다 다른 곳 글을 더 많이 인용해요. 홍보 영상(릴스 · 쇼츠)과 네이버 블로그에 엉클데이 정보를 꾸준히. 커뮤니티는 실제 질문에 도움 되는 답만 (홍보 글 반복은 역효과).",
+   "memo": "<ul><li>영상 설명: 가게 이름 · 도시 · 엉클데이 주소</li><li>블로그: 엉클데이 도시 가이드 · 가격 페이지 링크</li><li>커뮤니티: 질문에 답할 때만 링크 (광고성 글 X)</li><li>가짜 후기 · 같은 글 여러 번 올리기 X</li></ul>"
+  },
+  {
+   "group": "AI 검색",
+   "priority": 1,
+   "title": "[AI 검색] 매달 1번 — AI 답변 노출 체크 표 채우기",
+   "note": "질문 10개를 ChatGPT · Perplexity · Gemini · 구글 AI 요약에 물어보고 '인용됨 / 이름만 / 안 나옴'을 표에 고르기. 매달 같은 질문으로 늘어나는지 봐요.",
+   "memo": "<p>📊 체크 표: <a href=\"https://claude.ai/artifact/4WjY9iWYgBwjbwZb12qKVJ\">https://claude.ai/artifact/4WjY9iWYgBwjbwZb12qKVJ</a></p><ul><li>로그인 안 한 창(시크릿 창)에서 물어보기 — 내 기록 영향 줄이기</li><li>다음 달은 아래에 같은 질문 10줄 추가 (확인한 달만 바꿔서)</li><li>관리자 SEO 화면의 '🤖 AI' 유입 숫자도 같이 적기</li></ul>"
+  },
+  {
+   "group": "AI 검색",
+   "priority": 0,
+   "title": "[AI 검색] 언어별 페이지가 잘 생겼는지 확인 (1~2시간 뒤)",
+   "note": "자동 갱신이 돌면 www.uncleday.com/ja/c/danang/ 처럼 언어별 페이지가 생겨요. 번역이 있는 업체만 만들어져요. '빠진 번역 모두 만들기'를 하면 더 늘어나요.",
+   "memo": "<ul><li>www.uncleday.com/ja/c/danang/ 열어 보기</li><li>www.uncleday.com/llms.txt 맨 아래 'Other languages' 확인</li><li>포털 → 🌐 다국어 번역 → 빠진 번역 있으면 만들기</li></ul>"
+  }
+ ]
+}

@@ -1,0 +1,47 @@
+{
+ "id": "2026-11-20-done",
+ "title": "완료한 작업 (11/20 새벽)",
+ "created": "2026-11-20",
+ "tasks": [
+  {
+   "group": "AI 검색",
+   "priority": 1,
+   "status": "done",
+   "title": "[11/20] AI 검색: 언어별 페이지 자동 생성 (일본어 · 중국어 간체/번체 · 러시아어 · 프랑스어 · 독일어 · 스페인어 · 힌디어 · 태국어 · 인도네시아어)",
+   "note": "번역이 있는 업체만 /ja/s/… · /ja/c/… 로 만들어요. 한국어 · 영어 페이지와 hreflang으로 연결, 사이트맵 · llms.txt · 빙 알림에 포함. 1시간마다 자동 갱신.",
+   "memo": "<p>✅ 완료 (11/20) · AI 검색</p>"
+  },
+  {
+   "group": "AI 검색",
+   "priority": 1,
+   "status": "done",
+   "title": "[11/20] 언어 안내 띠: 브라우저 언어에 맞는 페이지로 안내 (10개 언어)",
+   "note": "예: 일본어 브라우저로 한국어 도시 페이지에 오면 '日本語で見る' 띠",
+   "memo": "<p>✅ 완료 (11/20)</p>"
+  },
+  {
+   "group": "AI 검색",
+   "priority": 1,
+   "status": "done",
+   "title": "[11/20] 홈페이지 공식 계정 표시(sameAs) 시작 — 카카오톡 채널",
+   "note": "인스타 · 유튜브 계정이 생기면 추가",
+   "memo": "<p>✅ 완료 (11/20)</p>"
+  },
+  {
+   "group": "AI 검색",
+   "priority": 1,
+   "status": "done",
+   "title": "[11/20] AI 답변 노출 체크 표 만들기 (질문 10개 × 4곳)",
+   "note": "https://claude.ai/artifact/4WjY9iWYgBwjbwZb12qKVJ",
+   "memo": "<p>✅ 완료 (11/20) · <a href=\"https://claude.ai/artifact/4WjY9iWYgBwjbwZb12qKVJ\">체크 표</a></p>"
+  },
+  {
+   "group": "홍보 영상",
+   "priority": 1,
+   "status": "done",
+   "title": "[11/20] 낙서장 가져오기 실패 고침 (우선순위 값 0~2)",
+   "note": "홍보 영상 할 일 파일",
+   "memo": "<p>✅ 완료 (11/20)</p>"
+  }
+ ]
+}
