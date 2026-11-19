@@ -57,6 +57,12 @@ async function loadMsgs() {
     if (chatUnread(t.data)) { THREADS[i >= 0 ? i : 0].admin_seen_at = new Date().toISOString(); sb.from("chat_threads").update({ admin_seen_at: new Date().toISOString() }).eq("id", CHAT_CUR).then(() => {}); } }
   chatCount();
 }
+// 마무리 인사 기본 문구 (이 브라우저에 저장한 문구가 있으면 그걸 써요)
+const CHAT_BYE = {
+  ko: "문의해 주셔서 감사합니다 😊\n상담은 여기서 마무리할게요.\n더 궁금한 점이 있으면 언제든 이 창에 다시 남겨 주세요.\n즐거운 베트남 여행 되세요! — 엉클데이",
+  en: "Thank you for contacting Uncle Day 😊\nWe'll close this chat for now.\nIf you have any other questions, just send a message here anytime.\nEnjoy your trip in Vietnam!",
+  vi: "Cảm ơn bạn đã liên hệ Uncle Day 😊\nCuộc trò chuyện xin tạm kết thúc tại đây.\nNếu còn thắc mắc, bạn cứ nhắn lại vào khung chat này bất cứ lúc nào nhé.\nChúc bạn một ngày tốt lành!" };
+function chatByeText(l) { try { const v = localStorage.getItem("ud-chat-bye-" + l); if (v) return v; } catch (e) {} return CHAT_BYE[l] || CHAT_BYE.ko; }
 function drawThread() {
   const box = $("chatMain"), th = THREADS.find(x => x.id === CHAT_CUR); if (!box || !th) return;
   const b = th.booking_id && BOOKINGS.find(x => x.id === th.booking_id), phone = chatPhone(th.contact || (b && b.contact));
@@ -75,7 +81,32 @@ function drawThread() {
   const list = box.querySelector(".cm-list"); list.scrollTop = list.scrollHeight;
   box.querySelector(".cm-back").onclick = () => { CHAT_CUR = null; clearInterval(CHAT_TIMER); drawChat(); NAV_QUIET = true; navSync(); NAV_QUIET = false; };
   const bk = box.querySelector("[data-bk]"); if (bk) bk.onclick = () => openBooking(bk.dataset.bk);
-  box.querySelector("[data-st]").onclick = async () => { const st = th.status === "open" ? "closed" : "open"; const r = await sb.from("chat_threads").update({ status: st }).eq("id", th.id); if (r.error) { dbErr(r.error, "상태 변경"); return; } th.status = st; drawChat(); };
+  const setSt = async st => { const r = await sb.from("chat_threads").update({ status: st }).eq("id", th.id); if (r.error) { dbErr(r.error, "상태 변경"); return false; } th.status = st; return true; };
+  box.querySelector("[data-st]").onclick = async () => {
+    if (th.status !== "open") { if (await setSt("open")) drawChat(); return; }
+    // ✓ 대화 끝내기 → 손님 언어로 된 마무리 인사를 보여 주고, 고쳐서 보내고 끝내거나 그냥 끝내요
+    if (box.querySelector(".cm-bye")) return;
+    const L = ["ko", "en", "vi"].includes(th.lang) ? th.lang : "ko";
+    const bye = document.createElement("div"); bye.className = "cm-bye";
+    bye.innerHTML = `<b>👋 마무리 인사 <span class="hint">${{ ko: "한국어", en: "영어", vi: "베트남어" }[L]} · 손님이 다시 메시지를 보내면 대화가 자동으로 다시 열려요</span></b>
+      <div class="cm-bye-l">${["ko", "en", "vi"].map(k => `<button type="button" class="${k === L ? "on" : ""}" data-bl="${k}">${{ ko: "한국어", en: "English", vi: "Tiếng Việt" }[k]}</button>`).join("")}</div>
+      <textarea rows="5">${esc(chatByeText(L))}</textarea>
+      <label class="cm-bye-k"><input type="checkbox"> 이 문구를 이 언어 기본 인사로 저장 (이 브라우저)</label>
+      <div class="cm-bye-a"><button class="btn sm main" data-bye="send">보내고 끝내기</button><button class="btn sm" data-bye="close">인사 없이 끝내기</button><button class="btn sm" data-bye="cancel">취소</button></div>`;
+    box.querySelector(".cm-head").after(bye);
+    const ta2 = bye.querySelector("textarea"); let cur = L; ta2.focus();
+    bye.querySelectorAll("[data-bl]").forEach(x => x.onclick = () => { cur = x.dataset.bl; ta2.value = chatByeText(cur); bye.querySelectorAll("[data-bl]").forEach(y => y.classList.toggle("on", y === x)); });
+    bye.querySelector("[data-bye=cancel]").onclick = () => bye.remove();
+    bye.querySelector("[data-bye=close]").onclick = async () => { if (await setSt("closed")) { toast("대화를 끝냈어요"); drawChat(); } };
+    bye.querySelector("[data-bye=send]").onclick = async e => {
+      const v = ta2.value.trim(); if (!v) { toast("인사 문구를 적어 주세요"); return; }
+      e.target.disabled = true;
+      if (bye.querySelector(".cm-bye-k input").checked) { try { localStorage.setItem("ud-chat-bye-" + cur, v); } catch (er) {} }
+      const r = await sb.rpc("chat_reply", { thread: th.id, body: v });   // 답장을 보내면 대화가 열린 상태가 되니, 보낸 뒤에 끝내요
+      if (r.error) { e.target.disabled = false; dbErr(r.error, "마무리 인사"); return; }
+      await setSt("closed"); toast("👋 인사를 보내고 대화를 끝냈어요"); await loadMsgs(); drawChat();
+    };
+  };
   const f = box.querySelector(".cm-form"), ta = f.querySelector("textarea");
   ta.onkeydown = e => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); f.requestSubmit(); } };
   f.onsubmit = async e => {
