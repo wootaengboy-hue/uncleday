@@ -96,6 +96,14 @@
    "created": "2026-11-19",
    "kind": "tasks",
    "done": true
+  },
+  {
+   "id": "2026-11-19-video",
+   "file": "2026-11-19-video.json",
+   "title": "홍보 영상 (릴스 · 쇼츠) 할 일",
+   "count": 5,
+   "created": "2026-11-19",
+   "kind": "tasks"
   }
  ]
 }
