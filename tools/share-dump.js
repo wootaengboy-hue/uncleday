@@ -38,8 +38,19 @@ eval(read("config.js") + read("data.js") + read("shops.js") + read("catimgs.js")
     const r = await fetch(`${SUPA.url}/rest/v1/rpc/blog_published`, { method: "POST", headers: h, body: "{}" });
     if (r.ok) blog = await r.json() || []; else console.error("블로그 목록 없음 (universe23.sql 실행 전?)", r.status);
   } catch (e) { console.error("블로그 목록 읽기 실패:", e.message); }
+  // 🌐 다국어 번역 (universe33 i18n_tr · 공개 읽기) → 언어별 검색 페이지 /ja/ · /zh/ …
+  let i18n = [];
+  try {
+    const h = { apikey: SUPA.key }; if (/^eyJ/.test(SUPA.key)) h.Authorization = "Bearer " + SUPA.key;
+    for (let from = 0; from < 20000; from += 1000) {
+      const r = await fetch(`${SUPA.url}/rest/v1/i18n_tr?select=key,lang,tr&order=key.asc,lang.asc`, { headers: { ...h, Range: `${from}-${from + 999}` } });
+      if (!r.ok) { console.error("번역 목록 없음", r.status); break; }
+      const rows = await r.json(); i18n = i18n.concat(rows); if (rows.length < 1000) break;
+    }
+  } catch (e) { console.error("번역 읽기 실패:", e.message); }
+  console.log("번역", i18n.length, "줄");
   const common = read("common.js"); const m = common.match(/(?:const|var) PH_IMGS = (\{[^\n]*\});/);
   const ph = m ? eval("(" + m[1] + ")") : {};
-  fs.writeFileSync(process.argv[2] || "share.json", JSON.stringify({ src, supa: { url: SUPA.url, key: SUPA.key }, hidden, crawled, blog, kakao: (typeof SITE !== "undefined" && SITE.kakao) || "", shops, categories: CATEGORIES, cities: CITIES, catImgs: cat, phImgs: ph }));
+  fs.writeFileSync(process.argv[2] || "share.json", JSON.stringify({ src, i18n, supa: { url: SUPA.url, key: SUPA.key }, hidden, crawled, blog, kakao: (typeof SITE !== "undefined" && SITE.kakao) || "", shops, categories: CATEGORIES, cities: CITIES, catImgs: cat, phImgs: ph }));
   console.log(src, shops.length, "곳");
 })();

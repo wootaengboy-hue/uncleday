@@ -85,9 +85,14 @@ HCTA = f'<a class="hcta" data-cta="kakao" href="{KAKAO}" target="_blank" rel="no
 HCTA_EN = f'<a class="hcta" data-cta="kakao" href="{KAKAO}" target="_blank" rel="noopener">💬 Chat with us</a>'
 # 🌐 언어 안내: 브라우저 언어와 페이지 언어가 다르고, 같은 내용의 다른 언어 페이지(hreflang)가 있으면 맨 위에 "영어로 보기" 띠를 보여 줘요.
 #    자동으로 넘기지(리다이렉트) 않아요 — 구글 로봇은 미국 · 영어로 들어와서, 자동으로 넘기면 한국어 페이지를 못 보고 검색에서 빠져요.
-LANGBAR = ("<script>(function(){try{var P=(document.documentElement.lang||'ko').slice(0,2),B=((navigator.languages&&navigator.languages[0])||navigator.language||'').slice(0,2).toLowerCase();"
-           "if(!B||B===P)return;var want=B==='ko'?'ko':B==='vi'?'vi':'en';if(want===P)return;var a=document.querySelector('link[rel=alternate][hreflang='+want+']')||(want==='vi'?document.querySelector('link[rel=alternate][hreflang=en]'):null);"
-           "if(!a||a.href===location.href)return;try{if(sessionStorage.getItem('udlb'))return}catch(e){}var L=a.getAttribute('hreflang'),T={en:'🌐 This page is in Korean. View it in English',vi:'🌐 Trang này bằng tiếng Hàn. Xem bằng tiếng Việt',ko:'🌐 한국어 페이지로 보기'};"
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from ml_strings import T as MLT, ML_LANGS
+_LB_T = {"en": "🌐 This page is in Korean. View it in English", "vi": "🌐 Trang này bằng tiếng Hàn. Xem bằng tiếng Việt", "ko": "🌐 한국어 페이지로 보기"}
+_LB_T.update({ML_LANGS[k][1]: v["bar"] for k, v in MLT.items()})
+LANGBAR = ("<script>(function(){try{var P=document.documentElement.lang||'ko',N=(navigator.languages&&navigator.languages[0])||navigator.language||'',B=N.slice(0,2).toLowerCase();"
+           "if(!B)return;var want=B==='zh'?(/tw|hk|mo|hant/i.test(N)?'zh-TW':'zh-CN'):B;if(want===P||(B!=='zh'&&B===P.slice(0,2)))return;"
+           "var q=function(l){return document.querySelector('link[rel=alternate][hreflang=\"'+l+'\"]')};var a=q(want);if(!a){if(P==='en')return;a=q('en')}"
+           "if(!a||a.href===location.href)return;try{if(sessionStorage.getItem('udlb'))return}catch(e){}var L=a.getAttribute('hreflang'),T=" + json.dumps(_LB_T, ensure_ascii=False) + ";if(P!=='ko'){T.en='🌐 View this page in English';T.vi='🌐 Xem trang này bằng tiếng Việt'}"
            "var d=document.createElement('div');d.style.cssText='background:#0E2843;color:#fff;padding:10px 16px;font-size:14.5px;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;position:relative;z-index:20';"
            "d.innerHTML='<a style=\"color:#fff;font-weight:700;text-decoration:underline\" href=\"'+a.href+'\">'+(T[L]||T.en)+' →</a><button aria-label=close style=\"background:none;border:0;color:#fff;font-size:18px;cursor:pointer\">×</button>';"
            "d.querySelector('button').onclick=function(){d.remove();try{sessionStorage.setItem('udlb','1')}catch(e){}};document.body.insertBefore(d,document.body.firstChild)}catch(e){}})()</script>")
@@ -1204,6 +1209,190 @@ for x in live:
     os.makedirs(f"en/s/{x['id']}", exist_ok=True); open(f"en/s/{x['id']}/index.html", "w").write(en_shop_page(x)); keep_en.add(x["id"])
 for f in os.listdir("en/s"):
     if f not in keep_en: shutil.rmtree(f"en/s/{f}", ignore_errors=True)
+# ---- 🌐 언어별 검색 페이지 /<언어>/s/<id>/ · /<언어>/c/<도시>/ (일본어 · 중국어 · 러시아어 …) ----
+#   업체 이름 · 소개 · 메뉴 · 태그 = 관리자 '🌐 다국어 번역'에서 만들어 둔 번역(i18n_tr), 페이지 틀 = tools/ml_strings.py
+#   번역이 있는 업체만 만들어요 (번역이 없으면 영어 페이지만). 한국어 · 영어 페이지와 서로 hreflang 으로 이어요.
+TR = {}
+for r_ in d.get("i18n") or []:
+    if isinstance(r_, dict) and r_.get("key") and r_.get("lang"): TR[(r_["key"], r_["lang"])] = r_.get("tr") or {}
+def ml_put(root, path, text):
+    o = root
+    for p_ in path.split("."):
+        if o is None: return
+        if isinstance(o, list): o = o[int(p_)] if p_.isdigit() and int(p_) < len(o) else None
+        elif isinstance(o, dict): o = o.get(p_)
+        else: return
+    if isinstance(o, dict) and isinstance(text, str) and text.strip(): o[ML_CUR[0]] = text.strip()
+ML_CUR = [None]
+def ml_shop(x, L):
+    """번역을 입힌 업체 (소개가 있는 업체는 소개 번역이 있어야, 없으면 이름 번역이 있어야 만들어요)"""
+    t = TR.get(("shop:" + x["id"], L)) or {}
+    need = "desc" if tx(x.get("desc")).strip() else "name"
+    if not (t.get(need) or "").strip(): return None
+    y = json.loads(json.dumps(x)); ML_CUR[0] = L
+    for p_, v in t.items(): ml_put(y, p_, v)
+    return y
+def lt(v, L): return lang(v, L) or lang(v, "en") or tx(v)
+def mdir(L): return ML_LANGS[L][0]
+def mhl(L): return ML_LANGS[L][1]
+def mf(s_, **k): return s_.format(**k)
+ML_S = {L: {} for L in ML_LANGS}   # L → { id: 번역 입힌 업체 }
+for x in live:
+    if x.get("city") not in hubs: continue
+    for L in ML_LANGS:
+        y = ml_shop(x, L)
+        if y: ML_S[L][x["id"]] = y
+ML_C = {L: [c for c in hubs if any(v.get("city") == c for v in ML_S[L].values())] for L in ML_LANGS}
+def alt_shop(sid):
+    h_ = f'<link rel="alternate" hreflang="ko" href="{SITE}/s/{sid}/"><link rel="alternate" hreflang="en" href="{SITE}/en/s/{sid}/">'
+    return h_ + "".join(f'<link rel="alternate" hreflang="{mhl(L)}" href="{SITE}/{mdir(L)}/s/{sid}/">' for L in ML_LANGS if sid in ML_S[L]) + f'<link rel="alternate" hreflang="x-default" href="{SITE}/s/{sid}/">'
+def alt_hub(cid):
+    h_ = f'<link rel="alternate" hreflang="ko" href="{SITE}/c/{cid}/"><link rel="alternate" hreflang="en" href="{SITE}/en/c/{cid}/">'
+    return h_ + "".join(f'<link rel="alternate" hreflang="{mhl(L)}" href="{SITE}/{mdir(L)}/c/{cid}/">' for L in ML_LANGS if cid in ML_C[L]) + f'<link rel="alternate" hreflang="x-default" href="{SITE}/c/{cid}/">'
+def m_city(L, cid): return MLT[L]["city"].get(cid) or ecity(cid)
+def m_kind(L, x): return MLT[L]["kind"].get(x.get("cat")) or MLT[L]["kind"]["spa"]
+def m_facts(L, x):
+    S_ = MLT[L]; pr = mprices(x) or prices(x); tags = [lt(t, L) for t in (x.get("tags") or []) if lt(t, L)]
+    s_ = mf(S_["f_is"], nm=lt(x.get("name"), L), city=m_city(L, x.get("city")), kind=m_kind(L, x))
+    if pr: s_ += (" " if S_["sep"] == ", " else "") + mf(S_["f_price"], p=vnd(pr[0]))
+    if tags: s_ += (" " if S_["sep"] == ", " else "") + mf(S_["f_tags"], t=S_["sep"].join(tags[:3]))
+    return s_ + (" " if S_["sep"] == ", " else "") + S_["f_book"]
+def ml_shell(L, title, desc, url, alts, cid, lds, body, kind="website", upd=BUILT, img=None, cta=None):
+    S_ = MLT[L]; js = lambda o: json.dumps(o, ensure_ascii=False).replace("</", "<\\/")
+    nav = "".join(f'<a href="/{mdir(L)}/c/{k}/" class="{"on" if k == cid else ""}">{esc(m_city(L, k))}</a>' for k in ML_C[L])
+    css = HUB_CSS + """.box{background:#fff;border-radius:16px;padding:14px 18px;border:1px solid var(--line)}.box ul{padding-left:18px;margin:6px 0 0}.box li{margin:3px 0;font-size:14.5px}
+.tb{border-collapse:collapse;width:100%;max-width:560px;background:#fff;border-radius:12px;overflow:hidden}.tb th,.tb td{padding:9px 12px;border-bottom:1px solid var(--line);text-align:left;font-size:14.5px}.tb th{background:var(--sand)}
+.muted{color:var(--sub);font-size:13px}.chip{display:inline-block;background:#fff;border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:13px;margin:0 4px 4px 0}.lgs{font-size:13px;color:var(--sub)}.lgs a{margin-right:8px}"""
+    hcta = f'<a class="hcta" data-cta="chat" href="{cta or "/?lang=" + L}">{esc(S_["chat"])}</a>'
+    return f"""<!doctype html>
+<html lang="{mhl(L)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{esc(title)}</title><meta name="description" content="{esc(desc[:155])}"><link rel="canonical" href="{url}">
+{alts}
+<meta property="og:type" content="{kind}"><meta property="og:site_name" content="Uncle Day"><meta property="og:title" content="{esc(title)}"><meta property="og:description" content="{esc(desc[:155])}"><meta property="og:url" content="{url}"><meta property="og:image" content="{img or SITE + '/images/og-image.jpg'}"><meta property="og:locale" content="{ML_LANGS[L][2]}">
+<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png">{EN_CSS_FONT}
+<style>{css}</style>
+{"".join(f'<script type="application/ld+json">{js(o)}</script>' for o in lds)}
+</head><body><header class="hd"><div class="in"><a class="logo" href="/?lang={L}"><img src="/images/logo-full.webp" alt="Uncle Day" width="167" height="72"></a><nav>{nav}</nav>{hcta}</div></header>
+<main class="wrap">{body}</main>
+<footer class="wrap">{esc(S_["foot"])} · <a href="/?lang={L}">{esc(S_["home"])}</a></footer>{TRACK()}</body></html>
+"""
+def ml_langs_line(L, sid=None, cid=None):
+    """이 페이지의 다른 언어 (한국어 · English · 번역 있는 언어)"""
+    if sid: items = [("ko", "한국어", f"/s/{sid}/"), ("en", "English", f"/en/s/{sid}/")] + [(mhl(K), MLT[K]["name"], f"/{mdir(K)}/s/{sid}/") for K in ML_LANGS if K != L and sid in ML_S[K]]
+    else: items = [("ko", "한국어", f"/c/{cid}/"), ("en", "English", f"/en/c/{cid}/")] + [(mhl(K), MLT[K]["name"], f"/{mdir(K)}/c/{cid}/") for K in ML_LANGS if K != L and cid in ML_C[K]]
+    return '<p class="lgs">🌐 ' + "".join(f'<a href="{u}" lang="{h}" hreflang="{h}">{esc(n)}</a>' for h, n, u in items) + "</p>"
+def ml_shop_page(L, x0):
+    S_ = MLT[L]; x = ML_S[L][x0["id"]]; sid = x["id"]; cid = x.get("city"); cn = m_city(L, cid); nm = lt(x.get("name"), L); kind = m_kind(L, x)
+    url = f"{SITE}/{mdir(L)}/s/{sid}/"; img = OGIMG.get(sid)
+    desc_l = re.sub(r"\s+", " ", lt(x.get("desc"), L)).strip(); rec = lt(x.get("recommend"), L) if lang(x.get("recommend"), L) else ""
+    tags = [lt(t, L) for t in (x.get("tags") or []) if lt(t, L)]
+    menu = [m for m in (x.get("menu") or []) if lt(m.get("name"), L)]
+    pr = prices(x); closed = x.get("closed") or []
+    addr_ko = tx(x.get("address")); addr = lang(x.get("address"), "vi") or lang(x.get("address"), "en")
+    addr_ok = bool(addr) and not re.search(r"확인 중|to be confirmed", (addr_ko or "") + addr, re.I)
+    hours = (f"{x['open']} – {x.get('close', '')}" + (mf(S_["closed"], d=S_["sep"].join(S_["days"][d_] for d_ in closed)) if closed else f" ({S_['daily']})")) if x.get("open") else ""
+    langs = [S_["langs"].get(l_, l_) for l_ in (x.get("staffLangs") or [])]
+    rv = [r for r in (x.get("userReviews") or []) if (r.get("text") or "").strip()]
+    avg = round(sum(r.get("stars", 0) for r in rv) / len(rv), 1) if rv else 0
+    summary = m_facts(L, x)
+    title = mf(S_["title"], nm=nm, city=cn, kind=kind)
+    bits = (mf(S_["m_price"], p=vnd(pr[0])) if pr else "") + (mf(S_["m_rv"], n=len(rv)) if rv else "")
+    meta = mf(S_["meta"], nm=nm, city=cn, bits=bits)
+    ld = {"@context": "https://schema.org", "@type": SCHEMA_TYPE.get(x.get("cat"), "HealthAndBeautyBusiness"), "@id": url + "#shop", "name": nm, "url": url, "description": desc_l or summary, "inLanguage": mhl(L)}
+    if img: ld["image"] = img
+    alts_n = [v for v in {tx(x0.get("name")), lang(x0.get("name"), "en")} if v and v != nm]
+    if alts_n: ld["alternateName"] = sorted(alts_n)
+    if addr_ok: ld["address"] = {"@type": "PostalAddress", "streetAddress": addr, "addressLocality": ecity(cid), "addressCountry": "VN"}
+    if x.get("geo"): ld["geo"] = {"@type": "GeoCoordinates", "latitude": x["geo"][0], "longitude": x["geo"][1]}
+    if x.get("open") and x.get("close"): ld["openingHoursSpecification"] = [{"@type": "OpeningHoursSpecification", "dayOfWeek": [DAYS_EN[d_] for d_ in range(7) if d_ not in closed], "opens": x["open"], "closes": x["close"]}]
+    if x.get("staffLangs"): ld["knowsLanguage"] = x["staffLangs"]
+    if pr: ld["priceRange"] = f"{pr[0]:,}–{pr[-1]:,} VND" if len(pr) > 1 else f"{pr[0]:,} VND"
+    offers = [{"@type": "Offer", "name": lt(m["name"], L), "price": int(m["price"]), "priceCurrency": "VND"} for m in menu if isinstance(m.get("price"), (int, float)) and m["price"] > 0]
+    if offers: ld["hasOfferCatalog"] = {"@type": "OfferCatalog", "name": S_["menu"], "itemListElement": offers}
+    if rv:   # 엉클데이에서 실제 방문 손님이 남긴 후기만 (구글 후기 아님)
+        ld["aggregateRating"] = {"@type": "AggregateRating", "ratingValue": avg, "reviewCount": len(rv), "bestRating": 5, "worstRating": 1}
+        ld["review"] = [{"@type": "Review", "reviewRating": {"@type": "Rating", "ratingValue": r.get("stars", 5), "bestRating": 5}, "author": {"@type": "Person", "name": r.get("name") or "Guest"}, "reviewBody": r["text"][:500], "inLanguage": "ko"} for r in rv[:5]]
+    faq = [(mf(S_["q_book"], nm=nm), S_["a_book"] + (mf(S_["a_staff"], langs=S_["sep"].join(langs)) if langs else "")),
+           (mf(S_["q_price"], nm=nm), (mf(S_["a_price"], p=vnd(pr[0]), upto=mf(S_["upto"], p=vnd(pr[-1])) if len(pr) > 1 else "") if pr else S_["a_price_n"]) + S_["a_same"])]
+    if hours: faq.append((mf(S_["q_hours"], nm=nm), mf(S_["a_hours"], h=hours)))
+    if addr_ok: faq.append((mf(S_["q_where"], nm=nm), addr if ecity(cid).lower() in addr.lower() else f"{addr}, {ecity(cid)}"))
+    faq.append((S_["q_pay"], S_["a_pay"]))
+    faq_ld = {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in faq]}
+    crumbs = {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [
+        {"@type": "ListItem", "position": 1, "name": "Uncle Day", "item": SITE + "/"},
+        {"@type": "ListItem", "position": 2, "name": mf(S_["h_h1"], city=cn), "item": f"{SITE}/{mdir(L)}/c/{cid}/"},
+        {"@type": "ListItem", "position": 3, "name": nm, "item": url}]}
+    gmap = f"https://www.google.com/maps/search/?api=1&query={x['geo'][0]},{x['geo'][1]}" if x.get("geo") else (x.get("map") or "")
+    near = [y for y in live if y.get("city") == cid and y["id"] != sid and grp(y) == grp(x) and y["id"] in ML_S[L]][:3]
+    book = f"/s/{sid}/?lang={L}"
+    body = f"""<p class="date"><a href="/{mdir(L)}/c/{cid}/">{esc(mf(S_["back"], city=cn))}</a></p>
+<h1>{esc(nm)} <small class="en">{esc(cn)} · {esc(kind)}</small></h1>
+<p class="lead"><b>{esc(summary)}</b></p>
+{f'<p>{" ".join(f"<span class=chip>#{esc(t)}</span>" for t in tags)}</p>' if tags else ''}
+{f'<p>{esc(desc_l)}</p>' if desc_l else ''}
+{f'<p><b>{esc(S_["great"])}</b> {esc(rec)}</p>' if rec else ''}
+<div class="box"><ul>{f'<li>📍 <b>{esc(S_["addr"])}:</b> {esc(addr)}</li>' if addr_ok else ''}{f'<li>🕒 <b>{esc(S_["hours"])}:</b> {esc(hours)}</li>' if hours else ''}{f'<li>🗣️ <b>{esc(S_["staff"])}:</b> {esc(S_["sep"].join(langs))}</li>' if langs else ''}<li>💳 {esc(S_["pay"])}</li>{f'<li>🗺️ <a data-cta="map" href="{esc(gmap)}" target="_blank" rel="noopener">{esc(S_["map"])}</a></li>' if gmap else ''}</ul></div>
+<p><a class="cta" data-cta="book" href="{book}">{esc(S_["book"])}</a> <a class="cta" style="background:var(--green)" data-cta="chat" href="{book}">{esc(S_["ask"])}</a></p>
+{(f'<h2>{esc(S_["menu"])}</h2><table class="tb"><tr><th>{esc(S_["th_t"])}</th><th>{esc(S_["th_p"])}</th></tr>' + ''.join(f'<tr><td>{esc(lt(m["name"], L))}</td><td>{vnd(int(m["price"])) if isinstance(m.get("price"), (int, float)) and m["price"] > 0 else esc(S_["ask_p"])}</td></tr>' for m in menu) + f'</table><p class="muted">{esc(S_["ref"])}</p>') if menu else ''}
+{(f'<h2>{esc(mf(S_["rv"], n=len(rv)))} · ★ {avg}</h2><p class="muted">{esc(S_["rv_note"])}</p>' + ''.join(f'<div class="box" style="margin:8px 0"><b>{"★" * int(r.get("stars", 5))}</b> <small class="muted">{esc(r.get("name") or "Guest")}</small><p style="margin:4px 0 0" lang="ko">{esc(r["text"][:400])}</p></div>' for r in rv[:5])) if rv else ''}
+<h2>{esc(S_["faq"])}</h2><dl>{''.join(f'<dt>{esc(q)}</dt><dd>{esc(a)}</dd>' for q, a in faq)}</dl>
+{(f'<h2>{esc(mf(S_["similar"], city=cn))}</h2><div class="grid">' + ''.join(f'<a class="card" data-cta="shop" href="/{mdir(L)}/s/{y["id"]}/"><b>{esc(lt(ML_S[L][y["id"]].get("name"), L))}</b><small>{esc(m_kind(L, y))}</small><p>{esc(m_facts(L, ML_S[L][y["id"]])[:120])}…</p></a>' for y in near) + '</div>') if near else ''}
+<p class="date">{esc(S_["checked"])}: {checked(x)}</p>{ml_langs_line(L, sid=sid)}"""
+    return ml_shell(L, title, meta, url, alt_shop(sid), cid, [ld, crumbs, faq_ld], body, upd=checked(x), img=img, cta=book)
+def ml_hub_page(L, cid, shops_c):
+    S_ = MLT[L]; url = f"{SITE}/{mdir(L)}/c/{cid}/"; cn = m_city(L, cid)
+    xs = [ML_S[L].get(x["id"]) or x for x in shops_c]
+    by = {g: [x for x in xs if grp(x) == g] for g, _, _ in GROUPS}
+    allp = [p_ for x in xs for p_ in mprices(x) if grp(x) == "spabody"]
+    upd = max([checked(x) for x in xs] or [BUILT])
+    lead = mf(S_["h_lead"], n=len(xs), city=cn) + (mf(S_["h_lead_p"], p=vnd(min(allp))) if allp else "")
+    faq = [(mf(S_["h_q1"], city=cn), mf(S_["h_a1"], city=cn, n=len(by["spabody"]))), (S_["h_q2"], S_["h_a2"]), (S_["h_q3"], S_["h_a3"])]
+    if allp: faq.insert(1, (mf(S_["h_qp"], city=cn), mf(S_["h_ap"], city=cn, p1=vnd(min(allp)), p2=vnd(max(allp)))))
+    sec, items = "", []
+    for g, _, _ in GROUPS:
+        if not by[g]: continue
+        sec += f'<h2>{esc(cn)} · {esc(S_["groups"][g])}</h2><div class="grid">'
+        for x in by[g]:
+            has_l = x["id"] in ML_S[L]; u = f"/{mdir(L)}/s/{x['id']}/" if has_l else f"/en/s/{x['id']}/"; pr = mprices(x) or prices(x)
+            sec += f'<a class="card" href="{u}"><b>{esc(lt(x.get("name"), L))}</b><small>{esc(m_kind(L, x))}{" · " + esc(mf(S_["frm"], p=vnd(pr[0]))) if pr else ""}</small><p>{esc(m_facts(L, x) if has_l else en_facts(x))}</p></a>'
+            items.append({"@type": "ListItem", "position": len(items) + 1, "url": SITE + u, "name": lt(x.get("name"), L)})
+        sec += "</div>"
+    title = mf(S_["h_title"], city=cn, n=len(xs))
+    lds = [{"@context": "https://schema.org", "@type": "CollectionPage", "name": title, "url": url, "inLanguage": mhl(L), "dateModified": upd, "description": lead, "mainEntity": {"@type": "ItemList", "numberOfItems": len(items), "itemListElement": items}},
+           {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in faq]}]
+    see = f"/?city={cid}&lang={L}"
+    body = f"""<h1>{esc(mf(S_["h_h1"], city=cn))}</h1><p class="lead"><b>{esc(lead)}</b></p><p class="date">{esc(S_["checked"])}: {upd} · Uncle Day (uncleday.com)</p>
+<a class="cta" data-cta="book" href="{see}">{esc(mf(S_["h_see"], city=cn))}</a>
+{sec}<h2>{esc(S_["faq"])}</h2><dl>{"".join(f"<dt>{esc(q)}</dt><dd>{esc(a)}</dd>" for q, a in faq)}</dl>{ml_langs_line(L, cid=cid)}"""
+    return ml_shell(L, title, lead, url, alt_hub(cid), cid, lds, body, upd=upd, cta=see)
+ML_OUT = {L: [] for L in ML_LANGS}
+for L in ML_LANGS:
+    dl_ = mdir(L)
+    if not ML_S[L]:
+        shutil.rmtree(dl_, ignore_errors=True); continue
+    os.makedirs(f"{dl_}/s", exist_ok=True); os.makedirs(f"{dl_}/c", exist_ok=True)
+    for sid, y in ML_S[L].items():
+        x0 = next(v for v in live if v["id"] == sid)
+        os.makedirs(f"{dl_}/s/{sid}", exist_ok=True); open(f"{dl_}/s/{sid}/index.html", "w").write(ml_shop_page(L, x0)); ML_OUT[L].append(f"{SITE}/{dl_}/s/{sid}/")
+    for f in os.listdir(f"{dl_}/s"):
+        if f not in ML_S[L]: shutil.rmtree(f"{dl_}/s/{f}", ignore_errors=True)
+    for cid in ML_C[L]:
+        os.makedirs(f"{dl_}/c/{cid}", exist_ok=True); open(f"{dl_}/c/{cid}/index.html", "w").write(ml_hub_page(L, cid, [x for x in live if x.get("city") == cid])); ML_OUT[L].append(f"{SITE}/{dl_}/c/{cid}/")
+    for f in os.listdir(f"{dl_}/c"):
+        if f not in ML_C[L]: shutil.rmtree(f"{dl_}/c/{f}", ignore_errors=True)
+    print(f"🌐 {L}: 업체 {len(ML_S[L])}곳 · 도시 {len(ML_C[L])}개")
+# 한국어 · 영어 페이지에도 다른 언어 페이지를 hreflang 으로 이어요 (번역된 언어가 있을 때만)
+def _relink(fp, alts):
+    if not os.path.exists(fp): return
+    h_ = open(fp, encoding="utf-8").read()
+    h2 = re.sub(r'(<link rel="alternate" hreflang="[^"]+" href="[^"]*">)+', alts, h_, count=1)
+    if h2 != h_: open(fp, "w").write(h2)
+for x in live:
+    if any(x["id"] in ML_S[L] for L in ML_LANGS):
+        for fp in (f"s/{x['id']}/index.html", f"en/s/{x['id']}/index.html"): _relink(fp, alt_shop(x["id"]))
+for cid in hubs:
+    if any(cid in ML_C[L] for L in ML_LANGS):
+        for fp in (f"c/{cid}/index.html", f"en/c/{cid}/index.html"): _relink(fp, alt_hub(cid))
 open("blog/index.html", "w").write(blog_index(sorted(BLOG_OUT, key=lambda r: r[3], reverse=True)))
 for f in os.listdir("blog"):
     if f not in keep_b and f != "index.html": shutil.rmtree(f"blog/{f}", ignore_errors=True) if os.path.isdir(f"blog/{f}") else os.remove(f"blog/{f}")
@@ -1233,6 +1422,11 @@ L += ["", "## 안내", f"- [엉클데이 홈]({SITE}/): 업체 검색 · 예약"
 L += ["", "## English", "Uncle Day also has English city pages and massage guides for international travelers:"]
 for cid in hubs:
     L.append(f"- [{ecity(cid)}: shops]({SITE}/en/c/{cid}/)" + (f" · [{GUIDES_EN[cid]['title']}]({SITE}/en/c/{cid}/guide/)" if cid in GUIDES_EN else ""))
+_ml_any = [K for K in ML_LANGS if ML_OUT[K]]
+if _ml_any:
+    L += ["", "## Other languages", "Shop and city pages translated from Uncle Day's own data (shop names, descriptions, menus):"]
+    for K in _ml_any:
+        L.append(f"- {MLT[K]['name']} ({mhl(K)}): " + " · ".join(f"[{m_city(K, c)}]({SITE}/{mdir(K)}/c/{c}/)" for c in ML_C[K]) + f" · {len(ML_S[K])} shop pages")
 if BLOG_OUT or PH_SL in keep_b: L += ["", "## 블로그 (엉클데이 업체 데이터로 쓴 글)"] + ([f"- [마사지 · 스파에서 쓰는 베트남어]({SITE}/blog/{PH_SL}/): 세기 조절 · 아픈 곳 · 수건 · 결제 표현과 읽는 법"] if PH_SL in keep_b else []) + [f"- [{t}]({SITE}/blog/{sl}/): 업체 {n}곳 · 정보 확인 {u}" for sl, t, n, u, _ in BLOG_OUT]
 open("llms.txt", "w").write("\n".join(L) + "\n")
 
@@ -1260,6 +1454,11 @@ if BLOG_OUT or PH_SL in keep_b: topic_urls += [f"{SITE}/blog/"] + ([f"{SITE}/blo
 for r in BLOG_OUT: mod[f"{SITE}/blog/{r[0]}/"] = r[3]
 urls = [f"{SITE}/"] + [f"{SITE}/c/{c}/" for c in hubs] + topic_urls + [f"{SITE}/c/{c}/guide/" for c in hubs if c in GUIDES] \
      + [f"{SITE}/en/c/{c}/" for c in hubs] + [f"{SITE}/en/c/{c}/guide/" for c in hubs if c in GUIDES_EN] + [f"{SITE}/s/{x}/" for x in sorted(keep_s)] + [f"{SITE}/en/s/{x}/" for x in sorted(keep_en)]
+for K in ML_LANGS:
+    for u in ML_OUT[K]:
+        m_ = re.search(r"/s/([^/]+)/$", u); c_ = re.search(r"/c/([^/]+)/$", u)
+        mod[u] = mod.get(f"{SITE}/s/{m_.group(1)}/", BUILT) if m_ else mod.get(f"{SITE}/c/{c_.group(1)}/", BUILT)
+        urls.append(u)
 open("sitemap.xml", "w").write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
     + "".join(f"  <url><loc>{u}</loc><lastmod>{mod.get(u, BUILT)}</lastmod>{'<priority>1.0</priority>' if u == SITE + '/' else '<priority>0.8</priority>' if '/c/' in u else ''}</url>\n" for u in urls) + "</urlset>\n")
 print(len(keep_s), "곳 업체 페이지 ·", len(hubs), "개 도시 페이지 · llms.txt · 사이트맵 완료")
