@@ -1266,8 +1266,19 @@ function newPasswordForm(first) {
   $("nf").onsubmit = async e => {
     e.preventDefault();
     if ($("n1").value !== $("n2").value) { $("nErr").textContent = "두 비밀번호가 달라요 · Hai mật khẩu không giống nhau"; return; }
-    const r = await sb.auth.updateUser({ password: $("n1").value, data: { pw_set: true } });
-    if (r.error) { $("nErr").textContent = /different from the old|same/i.test(r.error.message) ? "임시 비밀번호와 다른 비밀번호로 정해 주세요 · Hãy chọn mật khẩu khác mật khẩu tạm" : r.error.message; return; }
+    const btn = $("nf").querySelector("button"); btn.disabled = true;
+    const r = await sb.auth.updateUser({ password: $("n1").value });
+    if (r.error) {
+      btn.disabled = false;
+      $("nErr").textContent = /different from the old|same_password|same/i.test(r.error.message + (r.error.code || "")) ? "임시 비밀번호와 다른 비밀번호로 정해 주세요 · Hãy chọn mật khẩu khác mật khẩu tạm"
+        : /weak|at least|characters/i.test(r.error.message) ? "비밀번호가 너무 쉬워요. 8자 이상, 영어+숫자로 · Mật khẩu quá yếu, hãy dùng ít nhất 8 ký tự gồm chữ và số"
+        : "비밀번호를 바꾸지 못했어요 · Không đổi được mật khẩu: " + r.error.message;
+      return;
+    }
+    // '바꿨음' 표시는 따로 저장해요 (계정 정보 + 이 브라우저 둘 다 — 하나가 늦게 반영돼도 다시 묻지 않게)
+    try { await sb.auth.updateUser({ data: { pw_set: true } }); } catch (er) {}
+    try { localStorage.setItem("ud-pwset-" + (r.data && r.data.user ? r.data.user.id : ""), "1"); } catch (er) {}
+    try { await sb.auth.refreshSession(); } catch (er) {}
     toast("비밀번호를 바꿨어요 ✅");
     if (started) { $("gate").hidden = true; $("app").hidden = false; $("tabs").hidden = false; return; }   // 들어와 있는 중에 바꾼 경우
     const s = await sb.auth.getSession(); afterLogin(s.data.session);
@@ -1282,7 +1293,8 @@ async function afterLogin(session) {
   try { const rr = await sb.rpc("my_role"); if (!rr.error && rr.data) ROLE = rr.data; } catch (e) {}
   // 👷 현장 영업 직원: 첫 로그인이면 임시 비밀번호부터 바꾸게 해요 (⚙️ 계정 화면을 못 보니까)
   const um = (await sb.auth.getUser()).data?.user?.user_metadata || session.user.user_metadata || {};
-  if (IS_FIELD() && !um.pw_set) { newPasswordForm(true); return; }
+  let pwLocal = false; try { pwLocal = localStorage.getItem("ud-pwset-" + session.user.id) === "1"; } catch (e) {}
+  if (IS_FIELD() && !um.pw_set && !pwLocal) { newPasswordForm(true); return; }
   started = true;
   document.body.classList.toggle("role-field", IS_FIELD());
   if (IS_FIELD() && typeof adminLangInit === "function") adminLangInit();
