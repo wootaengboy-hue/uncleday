@@ -36,14 +36,14 @@ async function drawOwnerBox(shopId, isNew, shopNm) {
     <div class="own-form">
       <input id="ownName" placeholder="이름 (예: Chị Lan)" maxlength="40">
       <input id="ownPhone" placeholder="전화번호 (예: 0905 123 456)" inputmode="tel" maxlength="20">
-      <select id="ownRole"><option value="owner">사장님</option><option value="staff">직원 (영업시간 변경 불가)</option></select>
+      <select id="ownRole"><option value="owner">사장님</option><option value="staff">카운터 직원 (사장님 페이지 · 영업시간 변경 불가)</option></select>
       <button type="button" class="btn main" id="ownAdd">+ 계정 만들기</button>
     </div>
     <div id="ownOut"></div>`;
   const show = (phone, pw) => {
     const msg = ownerMsg(shopNm || shopId, phone, pw), z = ownZalo(phone);
     $("ownOut").innerHTML = `<div class="own-out"><b>✅ 임시 비밀번호: <code>${esc(pw)}</code></b>
-      <p class="hint">아래 안내를 업체에 잘로로 보내 주세요. 이 비밀번호는 지금만 보여요 (잊으면 '비밀번호 초기화').</p>
+      <p class="hint">아래 안내를 업체에 잘로로 보내 주세요. 이 비밀번호는 지금만 보여요 (잊으면 '비밀번호 초기화').<br>⚠️ 이 계정은 <b>www.uncleday.com/owner</b> 에서 로그인해요. 테라피스트 직원 앱(<b>/staff</b>)은 따로 — 사장님 페이지 현황판 → ⚙️ → 직원에서 만드는 <b>숫자 6자리 PIN</b>으로 들어가요.</p>
       <textarea readonly rows="7">${esc(msg)}</textarea>
       <div style="display:flex;gap:6px;margin-top:6px"><button type="button" class="btn sm main" id="ownCopy">📋 안내 복사</button>${z ? `<a class="btn sm" href="${z}" target="_blank" rel="noopener">잘로 열기</a>` : ""}</div></div>`;
     $("ownCopy").onclick = () => copy(msg, "복사했어요. 잘로에 붙여넣어 보내세요.");

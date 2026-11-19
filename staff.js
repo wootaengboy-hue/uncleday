@@ -7,6 +7,7 @@
     title: ["Nhân viên", "직원 화면", "Staff"],
     loginT: ["Đăng nhập nhân viên", "직원 로그인", "Staff login"], loginS: ["Dùng số điện thoại và mã PIN 6 số do chủ cửa hàng đưa.", "사장님이 알려 준 전화번호와 PIN(숫자 6자리)으로 들어와요.", "Use your phone number and the 6-digit PIN from the owner."],
     phone: ["Số điện thoại", "전화번호", "Phone"], pin: ["Mã PIN", "PIN", "PIN"], login: ["Đăng nhập", "로그인", "Log in"], logout: ["Đăng xuất", "로그아웃", "Log out"],
+    ownerHint: ["Tài khoản quầy lễ tân / chủ cửa hàng (mật khẩu tạm có chữ + số, ví dụ ab234567) đăng nhập ở www.uncleday.com/owner", "카운터 직원 · 사장님 계정(영어+숫자 임시 비밀번호, 예: ab234567)은 여기가 아니라 www.uncleday.com/owner 에서 로그인해요", "Counter staff / owner accounts (temporary password with letters + numbers, e.g. ab234567) log in at www.uncleday.com/owner"],
     noPin: ["Chưa có PIN? Hãy nhờ chủ cửa hàng tạo trong Bảng phòng → ⚙️ → Nhân viên.", "PIN이 없으면 사장님께 '현황판 → ⚙️ 매장 설정 → 직원'에서 만들어 달라고 하세요.", "No PIN? Ask the owner to make one in Board → ⚙️ → Staff."],
     today: ["Hôm nay", "오늘", "Today"], myShift: ["Ca của tôi", "내 근무", "My shift"], off: ["Nghỉ", "휴무", "Day off"],
     sh_A: ["Ca mở cửa", "오픈조", "Opening"], sh_B: ["Ca đóng cửa", "마감조", "Closing"], sh_F: ["Cả ngày", "종일", "Full day"], sh_O: ["Nghỉ", "휴무", "Off"], sh_C: ["Giờ riêng", "시간 지정", "Custom"],
@@ -88,7 +89,7 @@
         <label><span>${t("phone")}</span><input name="phone" inputmode="tel" autocomplete="tel" required placeholder="09xx xxx xxx"></label>
         <label><span>${t("pin")}</span><input name="pin" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="current-password" type="password" required></label>
         ${msg ? `<p class="err">${esc(msg)}</p>` : ""}
-        <button class="btn main" type="submit">${t("login")}</button><p class="sub small">${t("noPin")}</p></form></div>`;
+        <button class="btn main" type="submit">${t("login")}</button><p class="sub small">${t("noPin")}</p><p class="sub small owner-hint">🔑 <a href="/owner.html" style="color:inherit">${t("ownerHint")}</a></p></form></div>`;
     bindLang();
     document.getElementById("lf").onsubmit = async e => {
       e.preventDefault(); if (busy) return; busy = true;
