@@ -79,9 +79,9 @@ async function i18nCall(lang, kind, items) {
 // 한 묶음(ui · site · 업체 하나)을 100개씩 나눠 번역 → 다 되면 저장
 async function i18nRunJob(job) {
   const keys = Object.keys(job.items), tr = {}; let model = "";
-  for (let i = 0; i < keys.length; i += 100) {
+  for (let i = 0; i < keys.length; i += 60) {
     if (I18N_ADM.stop) throw new Error("멈춤");
-    const part = {}; keys.slice(i, i + 100).forEach(k => part[k] = job.items[k]);
+    const part = {}; keys.slice(i, i + 60).forEach(k => part[k] = job.items[k]);
     const r = await i18nCall(job.lang, job.kind, part); Object.assign(tr, r.items || {}); model = r.model || model;
   }
   if (Object.keys(tr).length < keys.length * 0.9) throw new Error(`번역이 덜 왔어요 (${Object.keys(tr).length}/${keys.length})`);

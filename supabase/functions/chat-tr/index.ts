@@ -26,7 +26,8 @@ Rules:
 - Keep emojis, numbers, prices, dates, times, booking codes (like UD-1113-9662), URLs, phone numbers, shop names and people's names exactly as they are.
 - If the text is already in the target language, return it unchanged.
 - Korean output: polite 해요체. Vietnamese output: polite (anh/chị/bạn as natural).
-Output only JSON, no explanation: {"items":[{"i":0,"src":"ru","text":"..."}]}`;
+Input format: each item starts with a line "@@<number> -> <target code>", followed by the text.
+Output format (plain text, no JSON, no code block): for EVERY item write a line "@@<same number> <detected source code>" and on the following line(s) only the translation. Nothing else.`;
 
 Deno.serve(async (req) => {
   const h = { ...cors(req.headers.get("origin")), "Content-Type": "application/json" };
@@ -43,8 +44,8 @@ Deno.serve(async (req) => {
     .map((x: any, i: number) => ({ i, id: x.id ?? i, text: String(x.text || "").slice(0, 2000), to: LANGS[x.to] ? x.to : "ko" }))
     .filter((x: any) => x.text.trim());
   if (!items.length) return out({ items: [] });
-  const user = JSON.stringify({ items: items.map((x: any) => ({ i: x.i, to: `${x.to} (${LANGS[x.to]})`, text: x.text })) });
-
+  // 번호(@@1, @@2 …)로 주고받아요 — JSON 은 따옴표 · 줄바꿈 때문에 깨지기 쉬워서요
+  const user = items.map((x: any, n: number) => `@@${n + 1} -> ${x.to} (${LANGS[x.to]})\n${x.text}`).join("\n\n");
   const r = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: { "x-api-key": KEY, "anthropic-version": "2023-06-01", "content-type": "application/json" },
@@ -52,16 +53,10 @@ Deno.serve(async (req) => {
   });
   const j = await r.json().catch(() => ({}));
   if (!r.ok) return out({ error: "AI 호출 실패: " + ((j.error && j.error.message) || r.status) }, 502);
-  const text = (j.content || []).filter((c: any) => c.type === "text").map((c: any) => c.text).join("").trim();
-  const m = text.match(/\{[\s\S]*\}/);
-  try {
-    const d = JSON.parse(m ? m[0] : text);
-    const got: Record<number, any> = {};
-    (Array.isArray(d.items) ? d.items : []).forEach((x: any) => { if (x && typeof x.i === "number") got[x.i] = x; });
-    return out({ model: MODEL, items: items.map((x: any) => {
-      const g = got[x.i] || {};
-      const src = String(g.src || "").slice(0, 8) || null;
-      return { id: x.id, src, to: x.to, text: String(g.text || x.text).slice(0, 2000) };
-    }) });
-  } catch (_) { return out({ error: "AI 답을 읽지 못했어요. 한 번 더 해 주세요" }, 502); }
+  const text = (j.content || []).filter((c: any) => c.type === "text").map((c: any) => c.text).join("").replace(/```[a-z]*\n?/gi, "").trim();
+  const got: Record<number, { src: string | null; text: string }> = {};
+  const parts = text.split(/^\s*@@\s*(\d+)[ \t]*([A-Za-z]{2}(?:-[A-Za-z]{2})?)?[^\S\n]*(?:\([^)\n]*\))?[ \t]*$/m);   // ["앞", "1", "ru", "번역…", …]
+  for (let k = 1; k < parts.length; k += 3) { const n = +parts[k] - 1, t = (parts[k + 2] || "").trim(); if (t) got[n] = { src: parts[k + 1] ? (/^zh-tw$/i.test(parts[k + 1]) ? "zh-TW" : parts[k + 1].toLowerCase()) : null, text: t }; }
+  if (!Object.keys(got).length) return out({ error: "AI 답을 읽지 못했어요: " + text.slice(0, 160).replace(/\s+/g, " ") }, 502);
+  return out({ model: MODEL, items: items.map((x: any, n: number) => ({ id: x.id, src: got[n] ? got[n].src : null, to: x.to, text: String(got[n] ? got[n].text : x.text).slice(0, 2000) })) });
 });

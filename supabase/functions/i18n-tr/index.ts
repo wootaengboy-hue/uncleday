@@ -27,7 +27,8 @@ Rules:
 - Keep emojis, numbers, prices (₫, VND), times, booking codes (UD-1106-1234), URLs and the brand name "Uncle Day" unchanged.
 - KakaoTalk, Zalo, WhatsApp, Grab, Google Maps stay as brand names.
 - Do not add explanations. Do not skip any item.
-Output only JSON: {"items": {"<key>": "<translation>", ...}} with exactly the same keys.`;
+Input format: each item starts with a line "@@<number>", then "EN: …" and "KO: …" (either may be empty).
+Output format (plain text, no JSON, no code block): for EVERY item write a line "@@<same number>" and on the following line(s) only the ${LANGS[lang]} translation. Nothing else before, between or after.`;
 
 Deno.serve(async (req) => {
   const h = { ...cors(req.headers.get("origin")), "Content-Type": "application/json" };
@@ -50,19 +51,24 @@ Deno.serve(async (req) => {
   if (!Object.keys(src).length) return out({ items: {} });
   const model = kind === "shop" ? MODEL_SHOP : MODEL_UI;
 
+  // 번호(@@1, @@2 …)로 주고받아요 — JSON 은 따옴표 · 줄바꿈 때문에 깨지기 쉬워서요
+  const keys = Object.keys(src);
+  const user = keys.map((k, i) => `@@${i + 1}\nEN: ${src[k].en || ""}\nKO: ${src[k].ko || ""}`).join("\n\n");
   const r = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: { "x-api-key": KEY, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-    body: JSON.stringify({ model, max_tokens: 16000, system: system(lang, kind), messages: [{ role: "user", content: JSON.stringify({ items: src }) }] }),
+    body: JSON.stringify({ model, max_tokens: 16000, system: system(lang, kind), messages: [{ role: "user", content: user }] }),
   });
   const j = await r.json().catch(() => ({}));
   if (!r.ok) return out({ error: "AI 호출 실패: " + ((j.error && j.error.message) || r.status) }, 502);
-  const text = (j.content || []).filter((c: any) => c.type === "text").map((c: any) => c.text).join("").trim();
-  const m = text.match(/\{[\s\S]*\}/);
-  try {
-    const d = JSON.parse(m ? m[0] : text);
-    const items: Record<string, string> = {};
-    for (const k of Object.keys(src)) { const v = d.items && d.items[k]; if (typeof v === "string" && v.trim()) items[k] = v.slice(0, 3000); }
-    return out({ items, model, missing: Object.keys(src).filter(k => !items[k]).length });
-  } catch (_) { return out({ error: "AI 답을 읽지 못했어요. 다시 해 주세요" }, 502); }
+  const text = (j.content || []).filter((c: any) => c.type === "text").map((c: any) => c.text).join("").replace(/```[a-z]*\n?/gi, "").trim();
+  const items: Record<string, string> = {};
+  const parts = text.split(/^\s*@@\s*(\d+)\s*[:.)]?[ \t]*/m);   // ["앞", "1", "번역…", "2", "번역…"]
+  for (let i = 1; i < parts.length; i += 2) {
+    const k = keys[+parts[i] - 1], v = (parts[i + 1] || "").replace(/^\s*(?:[A-Z]{2}(?:-[A-Z]{2})?|JA|ZH|RU)\s*:\s*/, "").trim();
+    if (k && v) items[k] = v.slice(0, 3000);
+  }
+  const missing = keys.filter(k => !items[k]).length;
+  if (!Object.keys(items).length) return out({ error: "AI 답을 읽지 못했어요 (" + (j.stop_reason || "") + "): " + text.slice(0, 160).replace(/\s+/g, " ") }, 502);
+  return out({ items, model, missing });
 });
