@@ -1298,7 +1298,9 @@ async function afterLogin(session) {
   started = true;
   document.body.classList.toggle("role-field", IS_FIELD());
   if (IS_FIELD() && typeof adminLangInit === "function") adminLangInit();
-  if (IS_FIELD() && !$("myPw")) { const b = document.createElement("button"); b.id = "myPw"; b.className = "btn sm"; b.type = "button"; b.textContent = "🔑 비밀번호"; b.title = "비밀번호 바꾸기"; b.onclick = () => newPasswordForm(true); $("me").after(b); }
+  if (IS_FIELD() && !$("myPw")) { const b = document.createElement("button"); b.id = "myPw"; b.className = "btn sm"; b.type = "button"; b.textContent = "🔑 비밀번호"; b.title = "비밀번호 바꾸기"; b.onclick = () => newPasswordForm(true); $("me").after(b);
+    // 👷 현장 직원은 ⚙️ 계정 화면을 못 보니 로그아웃 버튼도 위에 둬요
+    const o = document.createElement("button"); o.id = "myOut"; o.className = "btn sm"; o.type = "button"; o.textContent = "로그아웃"; o.onclick = async () => { await sb.auth.signOut(); location.reload(); }; b.after(o); }
   gate(`<h1>불러오는 중…</h1>`);
   try { if (IS_FIELD()) { await Promise.all([loadShops(), loadWork()]); } else { await loadAll(); await loadTold(); } }
   catch (e) { gate(`<h1>불러오지 못했어요</h1><p class="hint" style="text-align:center">${esc(e.message || "")}<br>데이터베이스 설정(schema.sql)을 실행했는지 확인해 주세요.</p>`); started = false; return; }
