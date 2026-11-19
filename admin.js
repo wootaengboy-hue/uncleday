@@ -1258,16 +1258,19 @@ function loginForm(msg = "") {
     $("lErr").textContent = r.error ? "메일을 보내지 못했어요: " + r.error.message : "비밀번호 재설정 메일을 보냈어요. 메일의 링크를 눌러 주세요. (스팸함도 확인)";
   };
 }
-function newPasswordForm() {
-  gate(`<h1>새 비밀번호 정하기</h1><form id="nf"><label class="f"><span>새 비밀번호 (8자 이상)</span><input type="password" id="n1" minlength="8" autocomplete="new-password" required></label>
-    <label class="f"><span>한 번 더</span><input type="password" id="n2" minlength="8" autocomplete="new-password" required></label><div class="err-text" id="nErr"></div>
-    <button class="btn main" style="justify-content:center;padding:11px">저장하고 들어가기</button></form>`);
+// first: 현장 영업 직원 첫 로그인 (임시 비밀번호 → 내 비밀번호) · 화면이 베트남어 전환 전이라 두 언어로 써요
+function newPasswordForm(first) {
+  gate(`<h1>${first ? "Đổi mật khẩu · 비밀번호 바꾸기" : "새 비밀번호 정하기"}</h1>${first ? `<p class="hint" style="text-align:center">Lần đầu đăng nhập: hãy đổi mật khẩu tạm thành mật khẩu của riêng bạn (ít nhất 8 ký tự).<br>첫 로그인이에요. 임시 비밀번호를 내 비밀번호(8자 이상)로 바꿔 주세요.</p>` : ""}<form id="nf"><label class="f"><span>${first ? "Mật khẩu mới · 새 비밀번호 (8+)" : "새 비밀번호 (8자 이상)"}</span><input type="password" id="n1" minlength="8" autocomplete="new-password" required></label>
+    <label class="f"><span>${first ? "Nhập lại · 한 번 더" : "한 번 더"}</span><input type="password" id="n2" minlength="8" autocomplete="new-password" required></label><div class="err-text" id="nErr"></div>
+    <button class="btn main" style="justify-content:center;padding:11px">${first ? "Lưu · 저장하기" : "저장하고 들어가기"}</button></form>`);
   $("nf").onsubmit = async e => {
     e.preventDefault();
-    if ($("n1").value !== $("n2").value) { $("nErr").textContent = "두 비밀번호가 달라요."; return; }
-    const r = await sb.auth.updateUser({ password: $("n1").value });
-    if (r.error) { $("nErr").textContent = r.error.message; return; }
-    toast("비밀번호를 바꿨어요 ✅"); const s = await sb.auth.getSession(); afterLogin(s.data.session);
+    if ($("n1").value !== $("n2").value) { $("nErr").textContent = "두 비밀번호가 달라요 · Hai mật khẩu không giống nhau"; return; }
+    const r = await sb.auth.updateUser({ password: $("n1").value, data: { pw_set: true } });
+    if (r.error) { $("nErr").textContent = /different from the old|same/i.test(r.error.message) ? "임시 비밀번호와 다른 비밀번호로 정해 주세요 · Hãy chọn mật khẩu khác mật khẩu tạm" : r.error.message; return; }
+    toast("비밀번호를 바꿨어요 ✅");
+    if (started) { $("gate").hidden = true; $("app").hidden = false; $("tabs").hidden = false; return; }   // 들어와 있는 중에 바꾼 경우
+    const s = await sb.auth.getSession(); afterLogin(s.data.session);
   };
 }
 let started = false, recovering = false;
@@ -1276,10 +1279,14 @@ async function afterLogin(session) {
   ME = { email: session.user.email, id: session.user.id };
   const ok = await sb.rpc("claim_admin");
   if (ok.error || !ok.data) { gate(`<h1>관리자 권한이 없어요</h1><p class="hint" style="text-align:center">${esc(ME.email)} 계정은 관리자로 등록되지 않았어요. 기존 관리자에게 '계정 → 관리자 추가'를 부탁하세요.</p><p style="text-align:center"><button class="btn" id="lo">다른 계정으로 로그인</button></p>`); $("lo").onclick = async () => { await sb.auth.signOut(); location.reload(); }; return; }
-  started = true;
   try { const rr = await sb.rpc("my_role"); if (!rr.error && rr.data) ROLE = rr.data; } catch (e) {}
+  // 👷 현장 영업 직원: 첫 로그인이면 임시 비밀번호부터 바꾸게 해요 (⚙️ 계정 화면을 못 보니까)
+  const um = (await sb.auth.getUser()).data?.user?.user_metadata || session.user.user_metadata || {};
+  if (IS_FIELD() && !um.pw_set) { newPasswordForm(true); return; }
+  started = true;
   document.body.classList.toggle("role-field", IS_FIELD());
   if (IS_FIELD() && typeof adminLangInit === "function") adminLangInit();
+  if (IS_FIELD() && !$("myPw")) { const b = document.createElement("button"); b.id = "myPw"; b.className = "btn sm"; b.type = "button"; b.textContent = "🔑 비밀번호"; b.title = "비밀번호 바꾸기"; b.onclick = () => newPasswordForm(true); $("me").after(b); }
   gate(`<h1>불러오는 중…</h1>`);
   try { if (IS_FIELD()) { await Promise.all([loadShops(), loadWork()]); } else { await loadAll(); await loadTold(); } }
   catch (e) { gate(`<h1>불러오지 못했어요</h1><p class="hint" style="text-align:center">${esc(e.message || "")}<br>데이터베이스 설정(schema.sql)을 실행했는지 확인해 주세요.</p>`); started = false; return; }
