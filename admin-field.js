@@ -10,14 +10,14 @@ const FLD_INTRO = "https://www.uncleday.com/gioi-thieu.html";   // 사장님께 
 const FLD_SECS = [
   { ic: "🧭", go: null,
     vi: ["Uncle Day là gì? (giới thiệu 1 phút)", [
-      "Uncle Day là trang đặt lịch bằng tiếng Hàn cho khách du lịch Hàn Quốc ở Việt Nam (massage, spa, nail, tóc, chăm sóc da…).",
+      "Uncle Day là trang đặt lịch cho khách du lịch quốc tế ở Việt Nam — Hàn Quốc, Nga, Trung Quốc, Âu – Mỹ… (massage, spa, nail, tóc, chăm sóc da…). Khách xem và chat bằng ngôn ngữ của mình (chat tự động dịch).",
       "Khách Hàn xem giá, ảnh và đặt lịch bằng tiếng Hàn. Uncle Day gửi yêu cầu cho cửa hàng qua Zalo.",
       "Cửa hàng chỉ cần bấm “Nhận được” hoặc “Không nhận được”. Khách đến và thanh toán trực tiếp tại cửa hàng.",
       "Phí: cửa hàng trả hoa hồng theo % trên số tiền khách đã thanh toán — chỉ với khách do Uncle Day gửi đến và đã đến cửa hàng. Tỷ lệ ghi trong hợp đồng. Cuối tháng Uncle Day gửi bảng quyết toán.",
       "Cửa hàng còn được: trang giới thiệu bằng tiếng Hàn · Anh · Việt, hiện trên Google, mã QR menu tiếng Hàn, và trang quản lý lịch hẹn miễn phí.",
     ]],
     ko: ["엉클데이는 무엇인가요? (1분 소개)", [
-      "베트남을 여행하는 한국 손님이 한국어로 마사지 · 스파 · 네일 · 헤어 · 피부관리를 예약하는 사이트예요.",
+      "베트남을 여행하는 전 세계 손님(한국 · 러시아 · 중국 · 유럽 · 미국…)이 자기 나라 말로 마사지 · 스파 · 네일 · 헤어 · 피부관리를 예약하는 사이트예요 (채팅 자동 번역).",
       "손님은 한국어로 가격 · 사진을 보고 예약하고, 엉클데이가 가게에 잘로로 요청을 보내요.",
       "가게는 '받을 수 있음 / 없음'만 누르면 돼요. 손님은 가게에 와서 가게에 직접 결제해요.",
       "비용: 엉클데이가 보낸 손님이 실제로 방문해서 결제한 금액의 % 수수료만 받아요. 비율은 계약서에 적어요. 월말에 정산서를 보내요.",
@@ -92,13 +92,13 @@ const FLD_SECS = [
     vi: ["Gắn link & mã QR", [
       "Quản lý gửi cho cửa hàng tin nhắn hướng dẫn + link đặt lịch riêng của cửa hàng.",
       "Giúp chủ tiệm dán link vào Google Maps (mục “Đường liên kết đặt lịch hẹn”), nút “Đặt ngay” trên Facebook, phần giới thiệu Zalo / Instagram.",
-      "In thẻ QR (quản lý gửi ảnh) và đặt cạnh menu / ở cửa ra vào. Khách Hàn quét để xem menu và giá bằng tiếng Hàn — nhân viên chỉ cần nhìn món khách chỉ. Khách cũng dùng mã này để đặt lịch lần sau hoặc gửi cho bạn bè.",
+      "In thẻ QR (quản lý gửi ảnh) và đặt cạnh menu / ở cửa ra vào. Khách quét để xem menu và giá bằng ngôn ngữ của mình — nhân viên chỉ cần nhìn món khách chỉ. Khách cũng dùng mã này để đặt lịch lần sau hoặc gửi cho bạn bè.",
       "Việc này giúp cửa hàng hiện tốt hơn trên Google.",
     ]],
     ko: ["링크 · QR 달기", [
       "관리자가 가게 전용 예약 링크와 안내문을 가게에 보내요.",
       "사장님 옆에서 구글 지도('예약 링크' 칸) · 페이스북 '지금 예약' 버튼 · 잘로 · 인스타 소개에 링크 넣는 걸 도와드려요.",
-      "QR 카드(관리자가 이미지로 보내 줌)를 인쇄해 메뉴판 옆 · 입구에 둬요. 한국 손님이 찍으면 한국어 메뉴 · 가격이 열려서, 직원은 손님이 가리키는 메뉴만 보면 돼요. 다음 방문 예약 · 일행 공유에도 써요.",
+      "QR 카드(관리자가 이미지로 보내 줌)를 인쇄해 메뉴판 옆 · 입구에 둬요. 손님이 찍으면 자기 나라 말로 메뉴 · 가격이 열려서, 직원은 손님이 가리키는 메뉴만 보면 돼요. 다음 방문 예약 · 일행 공유에도 써요.",
       "이렇게 하면 가게가 구글에 더 잘 나와요.",
     ]],
     admin: "관리자 할 일: 🔗 가게에 링크 달기 → 가게 고르기 → 베트남어 안내문 복사 · 🧾 QR 카드 내려받기 → 담당자 · 사장님께 잘로로 보내기." },
