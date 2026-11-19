@@ -63,6 +63,50 @@ const CHAT_BYE = {
   en: "Thank you for contacting Uncle Day 😊\nWe'll close this chat for now.\nIf you have any other questions, just send a message here anytime.\nEnjoy your trip in Vietnam!",
   vi: "Cảm ơn bạn đã liên hệ Uncle Day 😊\nCuộc trò chuyện xin tạm kết thúc tại đây.\nNếu còn thắc mắc, bạn cứ nhắn lại vào khung chat này bất cứ lúc nào nhé.\nChúc bạn một ngày tốt lành!" };
 function chatByeText(l) { try { const v = localStorage.getItem("ud-chat-bye-" + l); if (v) return v; } catch (e) {} return CHAT_BYE[l] || CHAT_BYE.ko; }
+/* ===== 🌐 자동 번역 (채널톡처럼) — Edge Function 'chat-tr' · SQL universe32 =====
+   손님 글 → 내가 고른 말로 보여 주기 (한 번 번역하면 저장) · 내 답장 → 손님 말로 바꿔서 보내기 */
+const CTR_NAMES = { ko: "한국어", vi: "베트남어", en: "영어", ja: "일본어", zh: "중국어", "zh-TW": "중국어(번체)", ru: "러시아어", fr: "프랑스어", de: "독일어", es: "스페인어", hi: "힌디어", th: "태국어", id: "인도네시아어" };
+const CTR = (() => { let v = {}; try { v = JSON.parse(localStorage.getItem("ud-chat-tr") || "{}"); } catch (e) {} return { on: v.on !== false, me: v.me || (typeof ALANG !== "undefined" && ALANG === "vi" ? "vi" : "ko"), busy: false, fail: "" }; })();
+const ctrSave = () => { try { localStorage.setItem("ud-chat-tr", JSON.stringify({ on: CTR.on, me: CTR.me })); } catch (e) {} };
+const ctrName = l => CTR_NAMES[l] || (l || "").toUpperCase();
+// 손님이 쓰는 말: 마지막 손님 글에서 감지한 말 → 없으면 손님이 보던 사이트 언어
+const ctrGuestLang = th => { const g = [...CHAT_MSGS].reverse().find(m => m.sender === "guest" && m.src_lang); return (g && g.src_lang) || th.lang || "ko"; };
+async function ctrCall(items) {
+  const { data: { session } } = await sb.auth.getSession();
+  const r = await fetch(`${SUPA.url}/functions/v1/chat-tr`, { method: "POST", headers: { "Content-Type": "application/json", apikey: SUPA.key, Authorization: "Bearer " + (session ? session.access_token : SUPA.key) }, body: JSON.stringify({ items }) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || j.error) throw new Error(j.error || ("번역 실패 " + r.status));
+  return j.items || [];
+}
+// 아직 내 말로 번역 안 된 손님 글을 모아서 번역 → 저장 → 다시 그리기
+async function ctrFill() {
+  if (!CTR.on || CTR.busy || !CHAT_CUR) return;
+  const need = CHAT_MSGS.filter(m => m.sender === "guest" && !(m.tr && m.tr[CTR.me]) && m.src_lang !== CTR.me && !m._trFail).slice(-20);
+  if (!need.length) return;
+  CTR.busy = true; const cur = CHAT_CUR;
+  try {
+    const out = await ctrCall(need.map(m => ({ id: m.id, text: m.body, to: CTR.me })));
+    for (const x of out) {
+      const m = CHAT_MSGS.find(y => y.id === x.id); if (!m) continue;
+      m.src_lang = x.src || m.src_lang; m.tr = { ...(m.tr || {}), [CTR.me]: x.text };
+      sb.rpc("admin_chat_tr_save", { mid: m.id, src: x.src || null, lang: CTR.me, txt: x.text }).then(() => {});
+    }
+    CTR.fail = "";
+  } catch (e) { CTR.fail = e.message; need.forEach(m => m._trFail = true); }
+  CTR.busy = false;
+  if (CHAT_CUR === cur) drawThread();
+}
+// 메시지 한 개를 그리기: 손님 글은 번역문(원문 보기), 내 글은 내가 쓴 원문(보낸 번역 보기)
+function ctrMsgHtml(m) {
+  const br = t => esc(t).replace(/\n/g, "<br>");
+  if (m.sender === "guest") {
+    const t = CTR.on && m.tr && m.tr[CTR.me] && m.src_lang !== CTR.me ? m.tr[CTR.me] : null;
+    if (!t) return `<span>${br(m.body)}</span>${CTR.on && !m.tr?.[CTR.me] && m.src_lang !== CTR.me && !m._trFail && CTR.busy ? `<small class="cm-tr">🌐 번역 중…</small>` : ""}`;
+    return `<span>${br(t)}</span><details class="cm-tr"><summary>🌐 ${esc(ctrName(m.src_lang))} 원문</summary>${br(m.body)}</details>`;
+  }
+  if (m.orig) return `<span>${br(m.orig)}</span><details class="cm-tr"><summary>🌐 ${esc(ctrName(m.src_lang))}로 보냄</summary>${br(m.body)}</details>`;
+  return `<span>${br(m.body)}</span>`;
+}
 function drawThread() {
   const box = $("chatMain"), th = THREADS.find(x => x.id === CHAT_CUR); if (!box || !th) return;
   const b = th.booking_id && BOOKINGS.find(x => x.id === th.booking_id), phone = chatPhone(th.contact || (b && b.contact));
@@ -73,9 +117,13 @@ function drawThread() {
       <div><b>${esc(th.name || "손님")}</b> <span class="hint">${esc(th.contact || "")}${th.lang ? ` · ${{ ko: "한국어", en: "영어", vi: "베트남어" }[th.lang] || th.lang}` : ""}${th.page && th.page !== "home" ? ` · 시작 화면: ${esc((shopById(th.page) || {}).name ? shopById(th.page).name.ko : th.page)}` : ""}</span></div>
       <div class="cm-acts">${b ? `<button class="btn sm" data-bk="${b.id}">📅 ${esc(b.code)}</button>` : ""}
         <button class="btn sm" data-st>${th.status === "open" ? "✓ 대화 끝내기" : "다시 열기"}</button></div></div>
-    <div class="cm-list">${CHAT_MSGS.map(m => `<div class="cm ${m.sender === "admin" ? "us" : "them"}"><span>${esc(m.body).replace(/\n/g, "<br>")}</span><time>${m.sender === "admin" ? esc(m.author || "") + " · " : ""}${esc(dt(m.created_at))}</time></div>`).join("")}
+    <div class="cm-trbar">🌐 <b>자동 번역</b> <button type="button" class="tgl ${CTR.on ? "on" : ""}" data-ctr="on">${CTR.on ? "켜짐" : "꺼짐"}</button>
+      <span>내가 볼 말</span><select data-ctr="me">${["ko", "vi", "en"].map(l => `<option value="${l}" ${CTR.me === l ? "selected" : ""}>${ctrName(l)}</option>`).join("")}</select>
+      <span class="hint">손님 말: <b>${esc(ctrName(ctrGuestLang(th)))}</b>${CTR.on && ctrGuestLang(th) !== CTR.me ? ` · 내 답장은 ${esc(ctrName(ctrGuestLang(th)))}로 바꿔서 보내요` : ""}</span>
+      ${CTR.fail ? `<span class="cm-trerr">번역이 안 돼요: ${esc(CTR.fail)} <button type="button" class="btn sm" data-ctr="retry">다시</button></span>` : ""}</div>
+    <div class="cm-list">${CHAT_MSGS.map(m => `<div class="cm ${m.sender === "admin" ? "us" : "them"}">${ctrMsgHtml(m)}<time>${m.sender === "admin" ? esc(m.author || "") + " · " : ""}${esc(dt(m.created_at))}</time></div>`).join("")}
       ${lastAdmin ? `<div class="cm-read">${read ? "✓ 손님이 읽었어요" : "손님이 아직 안 읽었어요"}</div>` : ""}</div>
-    <form class="cm-form"><textarea rows="2" placeholder="답장 입력 · Enter 보내기, Shift+Enter 줄바꿈">${esc(typed)}</textarea><button class="btn main">보내기</button></form>
+    <form class="cm-form"><textarea rows="2" placeholder="${CTR.on && ctrGuestLang(th) !== CTR.me ? `${esc(ctrName(CTR.me))}로 쓰면 ${esc(ctrName(ctrGuestLang(th)))}로 바꿔서 보내요 · Enter 보내기` : "답장 입력 · Enter 보내기, Shift+Enter 줄바꿈"}">${esc(typed)}</textarea><button class="btn main">보내기</button></form>
     ${lastAdmin && !read ? `<div class="cm-ping"><span>손님이 사이트를 닫았으면 답장을 못 봐요 →</span>
       ${phone ? `<button class="btn sm" data-ping="sms">📱 답장 알림 문자 (${esc(phone)})</button>` : ""}<button class="btn sm" data-ping="copy">📋 알림 메시지 복사 (카톡 등)</button></div>` : ""}`;
   const list = box.querySelector(".cm-list"); list.scrollTop = list.scrollHeight;
@@ -111,7 +159,15 @@ function drawThread() {
   ta.onkeydown = e => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); f.requestSubmit(); } };
   f.onsubmit = async e => {
     e.preventDefault(); const v = ta.value.trim(); if (!v) return; f.querySelector("button").disabled = true;
-    const r = await sb.rpc("chat_reply", { thread: th.id, body: v });
+    const to = ctrGuestLang(th); let r;
+    if (CTR.on && to && to !== CTR.me) {
+      // 내 말 → 손님 말로 바꿔서 보내요 (실패하면 원문으로 보낼지 물어봐요)
+      f.querySelector("button").textContent = "번역 중…";
+      let t = null; try { const o = await ctrCall([{ text: v, to }]); t = o[0] && o[0].text; } catch (er) { CTR.fail = er.message; }
+      f.querySelector("button").textContent = "보내기";
+      if (!t) { f.querySelector("button").disabled = false; confirmBox(`번역이 안 됐어요 (${CTR.fail || "?"}). 쓴 그대로 보낼까요?`, async () => { const r2 = await sb.rpc("chat_reply", { thread: th.id, body: v }); if (r2.error) return dbErr(r2.error, "답장"); ta.value = ""; await loadMsgs(); drawChat(); }, "그대로 보내기"); return; }
+      r = await sb.rpc("chat_reply_tr", { thread: th.id, body: t, orig: v, orig_lang: CTR.me, to_lang: to });
+    } else r = await sb.rpc("chat_reply", { thread: th.id, body: v });
     f.querySelector("button").disabled = false;
     if (r.error) { dbErr(r.error, "답장"); return; }
     ta.value = ""; await loadMsgs(); drawChat(); const nt = $("chatMain") && $("chatMain").querySelector("textarea"); if (nt) nt.focus();
@@ -121,7 +177,11 @@ function drawThread() {
     await copy(msg, x.dataset.ping === "sms" ? "알림 메시지를 복사했어요. 문자 앱이 열리면 보내세요." : "알림 메시지를 복사했어요. 손님 카톡·잘로 등에 붙여넣어 보내세요.");
     if (x.dataset.ping === "sms") location.href = `sms:${phone}${/iPhone|iPad|Mac/.test(navigator.userAgent) ? "&" : "?"}body=${encodeURIComponent(msg)}`;
   });
+  box.querySelector('[data-ctr="on"]').onclick = () => { CTR.on = !CTR.on; CTR.fail = ""; ctrSave(); drawThread(); };
+  box.querySelector('[data-ctr="me"]').onchange = e => { CTR.me = e.target.value; CTR.fail = ""; CHAT_MSGS.forEach(m => delete m._trFail); ctrSave(); drawThread(); };
+  const rt = box.querySelector('[data-ctr="retry"]'); if (rt) rt.onclick = () => { CTR.fail = ""; CHAT_MSGS.forEach(m => delete m._trFail); drawThread(); };
   if (innerWidth > 800 && !typed) ta.focus();
+  ctrFill();
 }
 // 15초마다 새 채팅 확인 (탭이 아니어도 숫자·알림)
 setInterval(async () => {
