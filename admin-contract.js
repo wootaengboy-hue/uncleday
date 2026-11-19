@@ -18,7 +18,8 @@ async function loadCt(force) {
   if (CT && !force) return CT;
   const r = await sb.from("settings").select("value").eq("key", "contract_tpl").maybeSingle();
   const v = (r.data && r.data.value) || {};
-  CT = { company: v.company || {}, ko: v.ko || CONTRACT_DEFAULT_KO, vi: v.vi || (typeof CONTRACT_DEFAULT_VI === "string" ? CONTRACT_DEFAULT_VI : ""), en: v.en || "", ver: v.ver || "초안 v2", updated_at: v.updated_at || null, by: v.by || "" };
+  const fix = (h, l) => typeof ctArt5Fix === "function" ? ctArt5Fix(h, l) : h;
+  CT = { company: v.company || {}, ko: fix(v.ko, "ko") || CONTRACT_DEFAULT_KO, vi: fix(v.vi, "vi") || (typeof CONTRACT_DEFAULT_VI === "string" ? CONTRACT_DEFAULT_VI : ""), en: v.en || "", ver: v.ver || "초안 v2", updated_at: v.updated_at || null, by: v.by || "" };
   return CT;
 }
 const ctToday = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_Minh" }).format(new Date());
