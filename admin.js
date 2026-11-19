@@ -1163,15 +1163,15 @@ function openTaskImport(f, data, note) {
     <p class="hint">넣을 것만 체크하세요. 담당자는 나(${esc(typeof who === "function" ? who(ME.email) : ME.email)})로 들어가요. 넣은 뒤에 보드에서 담당자·마감일을 바꿀 수 있어요.</p>
     <div style="max-height:52vh;overflow:auto;border:1px solid var(--line);border-radius:10px">
     ${data.tasks.map((t, i) => `<label style="display:flex;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line);cursor:pointer;align-items:flex-start">
-      <input type="checkbox" data-ti="${i}" checked style="margin-top:4px"><span><b>${esc(t.title)}</b> <small class="hint">· ${PRI_N[t.priority ?? 1]}${t.due ? " · 마감 " + esc(t.due) : ""}${t.group ? " · " + esc(t.group) : ""}</small>
+      <input type="checkbox" data-ti="${i}" checked style="margin-top:4px"><span>${t.status === "done" ? "✅ " : ""}<b>${esc(t.title)}</b> <small class="hint">· ${PRI_N[t.priority ?? 1]}${t.due ? " · 마감 " + esc(t.due) : ""}${t.group ? " · " + esc(t.group) : ""}</small>
       ${t.note ? `<br><small class="hint">${esc(t.note)}</small>` : ""}</span></label>`).join("")}</div>
-    <div class="btns"><button class="btn" data-no>닫기</button><button class="btn main" data-yes>할 일 보드에 넣기</button></div></div>`;
+    <div class="btns"><button class="btn" data-no>닫기</button><button class="btn main" data-yes>${data.tasks.every(t => t.status === "done") ? "완료 칸에 넣기" : "할 일 보드에 넣기"}</button></div></div>`;
   document.body.appendChild(d);
   d.querySelector("[data-no]").onclick = () => d.remove();
   d.querySelector("[data-yes]").onclick = async () => {
     const pick = [...d.querySelectorAll("[data-ti]:checked")].map(x => data.tasks[+x.dataset.ti]);
     if (!pick.length) { toast("고른 할 일이 없어요"); return; }
-    const rows = pick.map(t => ({ title: t.title, memo: t.memo || (t.note ? `<p>${esc(t.note)}</p>` : ""), status: "todo", priority: t.priority ?? 1, due: t.due || null, assignee: ME.email, watchers: [] }));
+    const rows = pick.map(t => ({ title: t.title, memo: t.memo || (t.note ? `<p>${esc(t.note)}</p>` : ""), status: ["todo", "doing", "done"].includes(t.status) ? t.status : "todo", priority: t.priority ?? 1, due: t.due || null, assignee: ME.email, watchers: [] }));
     const r = await sb.from("tasks").insert(rows); if (r.error) return dbErr(r.error, "할 일 넣기");
     await markImport(f.id); d.remove(); if (note) note.remove();
     toast(`할 일 ${rows.length}개를 넣었어요 ✅`);
@@ -1191,7 +1191,7 @@ async function checkImports() {
   try { const r = await fetch("imports/index.json?t=" + Date.now(), { cache: "no-store" }); if (!r.ok) return; idx = await r.json(); } catch (e) { return; }
   const done = await importsDone();
   (idx.files || []).filter(f => !done.includes(f.id)).forEach(f => {
-    const n = notice("info", `<span class="grow">${f.kind === "tasks" ? `📋 <b>${esc(f.title)}</b> — 할 일 ${f.count}개를 보드에 넣을 수 있어요.` : `🔎 <b>${esc(f.title)}</b> — 조사한 업체 ${f.count}곳 정보가 준비됐어요.`}</span><button class="btn main sm" data-imp>미리보기·가져오기</button><button class="btn sm" data-skip>안 가져오기</button>`, "imp-" + f.id);
+    const n = notice("info", `<span class="grow">${f.kind === "tasks" ? (f.done ? `✅ <b>${esc(f.title)}</b> — 작업 ${f.count}개를 낙서장 '완료' 칸에 넣을 수 있어요.` : `📋 <b>${esc(f.title)}</b> — 할 일 ${f.count}개를 보드에 넣을 수 있어요.`) : `🔎 <b>${esc(f.title)}</b> — 조사한 업체 ${f.count}곳 정보가 준비됐어요.`}</span><button class="btn main sm" data-imp>미리보기·가져오기</button><button class="btn sm" data-skip>안 가져오기</button>`, "imp-" + f.id);
     n.querySelector("[data-imp]").onclick = () => openImport(f, n);
     n.querySelector("[data-skip]").onclick = () => confirmBox("이 자료를 가져오지 않을까요?", async () => { await markImport(f.id); n.remove(); toast("알림을 지웠어요"); }, "나중에 다시 보이지 않아요.", "안 가져오기", false);
   });

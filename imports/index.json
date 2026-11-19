@@ -69,6 +69,15 @@
    "count": 7,
    "created": "2026-11-13",
    "kind": "tasks"
+  },
+  {
+   "id": "2026-11-19-done",
+   "file": "2026-11-19-done.json",
+   "title": "완료한 작업 (11/14 ~ 11/19)",
+   "count": 31,
+   "created": "2026-11-19",
+   "kind": "tasks",
+   "done": true
   }
  ]
 }
