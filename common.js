@@ -59,8 +59,8 @@ function drawCommon() {
   document.querySelectorAll(".kakao-link").forEach(a => a.href = SITE.kakao);
   // 언어 고르기: 13개라 버튼 대신 펼침 목록 (국기 + 그 나라 말 이름)
   const cur = LANGS.find(l => l.id === lang) || LANGS[0];
-  $("langs").innerHTML = `<button type="button" class="lang-btn" aria-haspopup="listbox" aria-expanded="false" title="${esc(ui("langPick"))}"><span class="lg-flag">${cur.flag || "🌐"}</span><span class="lg-full">${cur.label}</span><span class="lg-short">${cur.id.toUpperCase()}</span><span class="lg-caret">▾</span></button>
-    <div class="lang-menu" role="listbox" hidden>${LANGS.map(l => `<button type="button" role="option" class="${l.id === lang ? "on" : ""}" data-l="${l.id}" lang="${l.id}"><span>${l.flag || ""}</span>${l.label}</button>`).join("")}</div>`;
+  $("langs").innerHTML = `<button type="button" class="lang-btn" aria-haspopup="listbox" aria-expanded="false" title="${esc(ui("langPick"))}"><span class="lg-flag">${langFlag(cur)}</span><span class="lg-full">${cur.label}</span><span class="lg-short">${cur.id.toUpperCase()}</span><span class="lg-caret">▾</span></button>
+    <div class="lang-menu" role="listbox" hidden>${LANGS.map(l => `<button type="button" role="option" class="${l.id === lang ? "on" : ""}" data-l="${l.id}" lang="${l.id}"><span>${langFlag(l)}</span>${l.label}</button>`).join("")}</div>`;
   { const lb = $("langs").querySelector(".lang-btn"), lm = $("langs").querySelector(".lang-menu");
     const shut = () => { lm.hidden = true; lb.setAttribute("aria-expanded", "false"); };
     lb.onclick = e => { e.stopPropagation(); lm.hidden = !lm.hidden; lb.setAttribute("aria-expanded", String(!lm.hidden)); };

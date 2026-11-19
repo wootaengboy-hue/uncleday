@@ -36,23 +36,25 @@ const SITE = {
 
 // 2) 사용 언어 (일본어를 켜려면 아래 줄 앞의 // 를 지우세요)
 const LANGS = [
-  { id: "ko", label: "한국어", flag: "🇰🇷" },
-  { id: "en", label: "English", flag: "🇬🇧" },
-  { id: "vi", label: "Tiếng Việt", flag: "🇻🇳" },
+  { id: "ko", label: "한국어", flag: "🇰🇷", cc: "kr" },
+  { id: "en", label: "English", flag: "🇬🇧", cc: "gb" },
+  { id: "vi", label: "Tiếng Việt", flag: "🇻🇳", cc: "vn" },
   // 아래 10개는 화면 문구 · 업체 내용을 관리자 → 포털 → 🌐 다국어 번역에서 AI로 번역해 채워요 (번역 전에는 영어로 보여요)
-  { id: "ja", label: "日本語", flag: "🇯🇵" },
-  { id: "zh", label: "简体中文", flag: "🇨🇳" },
-  { id: "zh-TW", label: "繁體中文", flag: "🇹🇼" },
-  { id: "ru", label: "Русский", flag: "🇷🇺" },
-  { id: "fr", label: "Français", flag: "🇫🇷" },
-  { id: "de", label: "Deutsch", flag: "🇩🇪" },
-  { id: "es", label: "Español", flag: "🇪🇸" },
-  { id: "hi", label: "हिन्दी", flag: "🇮🇳" },
-  { id: "th", label: "ภาษาไทย", flag: "🇹🇭" },
-  { id: "id", label: "Bahasa Indonesia", flag: "🇮🇩" }
+  { id: "ja", label: "日本語", flag: "🇯🇵", cc: "jp" },
+  { id: "zh", label: "简体中文", flag: "🇨🇳", cc: "cn" },
+  { id: "zh-TW", label: "繁體中文", flag: "🇹🇼", cc: "tw" },
+  { id: "ru", label: "Русский", flag: "🇷🇺", cc: "ru" },
+  { id: "fr", label: "Français", flag: "🇫🇷", cc: "fr" },
+  { id: "de", label: "Deutsch", flag: "🇩🇪", cc: "de" },
+  { id: "es", label: "Español", flag: "🇪🇸", cc: "es" },
+  { id: "hi", label: "हिन्दी", flag: "🇮🇳", cc: "in" },
+  { id: "th", label: "ภาษาไทย", flag: "🇹🇭", cc: "th" },
+  { id: "id", label: "Bahasa Indonesia", flag: "🇮🇩", cc: "id" }
 ];
 // 직접 번역해 둔 언어 (나머지는 AI 번역을 받아와요)
 const CORE_LANGS = ["ko", "en", "vi"];
+// 국기 그림: images/flags/<cc>.svg (윈도우 PC는 국기 이모지가 글자로 나와서 그림을 써요)
+const langFlag = l => l && l.cc ? `<img class="lg-fi" src="/images/flags/${l.cc}.svg" alt="" width="20" height="15">` : "🌐";
 
 // 3) 지역
 const CITIES = [

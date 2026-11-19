@@ -117,7 +117,7 @@ function i18nDraw() {
     </div>
     <p class="hint">처음 한 번은 10개 언어 전부라 15~30분쯤 걸려요 (창을 열어 두세요). 비용은 Claude API 기준 대략 몇 달러 이하예요. 그다음부터는 바뀐 것만 해요.</p>
     <div class="i18n-tbl"><div class="th"><span>언어</span><span>화면 문구</span><span>사이트 글</span><span>업체</span><span></span></div>
-      ${i18nStatus().map(s => `<div><span>${LN[s.lang] ? LN[s.lang].flag + " " + esc(LN[s.lang].label) : s.lang}</span><span>${chip(s.ui)}</span><span>${chip(s.site)}</span>
+      ${i18nStatus().map(s => `<div><span>${LN[s.lang] ? langFlag(LN[s.lang]) + " " + esc(LN[s.lang].label) : s.lang}</span><span>${chip(s.ui)}</span><span>${chip(s.site)}</span>
         <span><b>${s.shopsOk}</b> / ${s.shops}</span><span>${I18N_ADM.busy ? "" : `<button class="btn sm" data-i18nl="${s.lang}">이 언어만</button> <a class="btn sm" href="/?lang=${s.lang}" target="_blank" rel="noopener">보기 ↗</a>`}</span></div>`).join("")}</div>
     ${I18N_ADM.log.length ? `<details class="i18n-log" open><summary>실패 ${I18N_ADM.log.length}개</summary>${I18N_ADM.log.slice(0, 30).map(x => `<div>${esc(x)}</div>`).join("")}</details>` : ""}`;
   el.querySelectorAll('[data-i18n="all"]').forEach(b => b.onclick = () => i18nRun());

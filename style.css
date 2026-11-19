@@ -743,7 +743,7 @@ html:not([lang="ko"]) .about-ud .about-en { font-size: 14px; color: inherit; }
 /* 🌐 언어 고르기 (펼침 목록 · 13개 언어) */
 .langs { position: relative; display: inline-flex; }
 .lang-btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line, #e6dcc6); background: #fff; border-radius: 999px; padding: 7px 12px; font: inherit; font-size: 14px; font-weight: 700; color: var(--navy, #0E2843); cursor: pointer; white-space: nowrap; }
-.lang-btn .lg-flag { font-size: 16px; line-height: 1; }
+.lang-btn .lg-flag { font-size: 16px; line-height: 1; display: inline-flex; }
 .lang-btn .lg-caret { font-size: 11px; opacity: .6; }
 .lang-menu { position: absolute; top: calc(100% + 6px); right: 0; z-index: 60; background: #fff; border: 1px solid var(--line, #e6dcc6); border-radius: 14px; box-shadow: 0 10px 30px rgba(14, 40, 67, .16); padding: 6px; display: grid; grid-template-columns: repeat(2, minmax(140px, 1fr)); gap: 2px; width: max-content; max-width: calc(100vw - 24px); }
 .lang-menu[hidden] { display: none; }
@@ -753,3 +753,5 @@ html:not([lang="ko"]) .about-ud .about-en { font-size: 14px; color: inherit; }
 .lang-menu button span { font-size: 18px; line-height: 1; }
 @media (max-width: 700px) { .lang-btn { padding: 6px 10px; font-size: 12px; } .lang-btn .lg-flag { font-size: 14px; }
   .lang-menu { position: fixed; top: 64px; left: 12px; right: 12px; width: auto; max-width: none; grid-template-columns: 1fr 1fr; } }
+.lg-fi { width: 20px; height: 15px; border-radius: 2px; box-shadow: 0 0 0 1px rgba(0, 0, 0, .08); object-fit: cover; vertical-align: -2px; display: inline-block; }
+.lang-menu button span { display: inline-flex; }
