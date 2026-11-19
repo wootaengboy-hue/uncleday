@@ -70,7 +70,25 @@ const GUIDE = [
       <ol><li><b>⚙️ 계정</b> 탭 → 관리자 칸에 직원 이메일을 넣고 <b>추가</b></li>
       <li>Supabase → <b>Authentication → Users → Add user → Create new user</b>에서 같은 이메일과 임시 비밀번호로 계정 만들기 (<b>Auto Confirm</b> 켜기)</li>
       <li>직원이 로그인한 뒤 <b>⚙️ 계정 → 비밀번호 바꾸기</b></li></ol>
-      <p class="warn">⚠️ 비밀번호는 메신저에 남기지 말고, 첫 로그인 후 바로 바꾸게 해 주세요.</p>` }
+      <p class="warn">⚠️ 비밀번호는 메신저에 남기지 말고, 첫 로그인 후 바로 바꾸게 해 주세요.</p>` },
+    { ic: "🔐", t: "권한 범위: 관리자 vs 👷 현장 영업 직원", who: "사장님", admin: true, b: `
+      <p>관리자 목록에 이메일을 넣을 때 고르는 권한이에요. <b>현장 영업 직원</b>은 가게를 돌며 영업 · 가게 정보 입력만 하도록 나머지는 <b>화면도 데이터도 잠겨요</b> (서버에서 막혀서 주소를 직접 쳐도 못 봐요). 이 안내는 관리자에게만 보여요.</p>
+      <div class="tscroll"><table class="g-tb g-perm"><tr><th>구분</th><th>관리자 (전부)</th><th>👷 현장 영업 직원</th></tr>
+      <tr><td>화면 언어</td><td>한국어</td><td>기본 베트남어 · [VI | KO] 전환</td></tr>
+      <tr><td>🏠 포털</td><td>앱 전부 · 오늘 할 일</td><td>📒 현장 영업 매뉴얼 · 📋 가게 정보 채우기 · 💰 가격 채우기 · 🔗 링크 · QR 만</td></tr>
+      <tr><td>🏪 업체</td><td>보기 · 추가 · 고치기 · 지우기 · 게시</td><td>보기 · 추가 · 고치기 (지우기 ✕)<br><b>게시 · 엉클 인증 배지 · 입점 확인 완료는 못 바꿔요</b> — 새 업체는 숨김으로 만들어지고 관리자가 확인 후 게시</td></tr>
+      <tr><td>업체 사진</td><td>올리기 · 지우기</td><td>올리기만 (지우기 ✕)</td></tr>
+      <tr><td>📝 낙서장</td><td>칸반 전부 · 댓글 · 첨부파일</td><td><b>업체 영업 보드만</b> — 보기 · 추가 · 단계 옮기기 (지우기 ✕, 댓글 · 첨부 ✕)</td></tr>
+      <tr><td>링크 유입 숫자</td><td>✔</td><td>✔ (QR · 링크 조회수 보기)</td></tr>
+      <tr><td>📅 예약 · 👥 손님 · 💬 채팅</td><td>✔</td><td>✕ (손님 연락처 · 대화 안 보여요)</td></tr>
+      <tr><td>💰 정산 · 수수료 · 💸 페이백</td><td>✔</td><td>✕</td></tr>
+      <tr><td>⭐ 후기 · 📊 대시보드</td><td>✔</td><td>✕</td></tr>
+      <tr><td>📄 계약서 · 🔑 사장님 페이지 계정</td><td>✔</td><td>✕ (계약서 · 신분증 보관함 접근 ✕)</td></tr>
+      <tr><td>🌌 유니버스 · 🔎 검색 · 블로그 · 경쟁사</td><td>✔</td><td>✕</td></tr>
+      <tr><td>⚙️ 계정 · 슬랙 · 백업 · 권한 바꾸기</td><td>✔</td><td>✕ (내 비밀번호 바꾸기만)</td></tr></table></div>
+      <p><b>권한 바꾸기</b>: ⚙️ 계정 → 관리자 목록에서 그 사람 옆 칸을 '관리자 (전부)' / '👷 현장 영업 직원'으로 바꾸면 바로 적용돼요 (상대는 새로고침). 내 권한은 내릴 수 없어요.</p>
+      <p class="warn">⚠️ 현장 영업 직원에게 관리자 권한을 주면 손님 연락처 · 정산 · 계약서까지 다 보여요. 꼭 필요한 사람만 '관리자'로.</p>
+      <p class="tip">💡 서버 쪽 설정은 <code>supabase/universe27.sql</code> — 실행 전이면 권한 선택칸이 안 보여요.</p>` }
   ]},
   { sec: "낙서장", items: [
     { ic: "🏷️", t: "닉네임 정하기와 @이름으로 부르기", b: `
@@ -475,7 +493,8 @@ let guideQ = "";
 function drawGuide(host) {
   const q = guideQ.trim().toLowerCase();
   const strip = h => h.replace(/<[^>]+>/g, " ").toLowerCase();
-  const secs = GUIDE.map(s => ({ ...s, items: s.items.filter(it => !q || (it.t + strip(it.b)).toLowerCase().includes(q)) })).filter(s => s.items.length);
+  const adm = !(typeof IS_FIELD === "function" && IS_FIELD());   // admin: true 항목은 관리자에게만
+  const secs = GUIDE.map(s => ({ ...s, items: s.items.filter(it => (adm || !it.admin) && (!q || (it.t + strip(it.b)).toLowerCase().includes(q))) })).filter(s => s.items.length);
   host.innerHTML = `
     <div class="guide">
       <div class="guide-top"><input id="gQ" type="search" placeholder="🔍 찾고 싶은 말 (예: 정산, 사진, 공유)" value="${esc(guideQ)}"><span class="hint">팀원이 함께 보는 사용 안내예요. 고칠 내용이 있으면 Claude에게 말해 주세요.</span></div>
