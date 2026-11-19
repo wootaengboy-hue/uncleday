@@ -158,7 +158,12 @@ function drawThread() {
   const f = box.querySelector(".cm-form"), ta = f.querySelector("textarea");
   ta.onkeydown = e => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); f.requestSubmit(); } };
   f.onsubmit = async e => {
-    e.preventDefault(); const v = ta.value.trim(); if (!v) return; f.querySelector("button").disabled = true;
+    // 번역 · 보내는 중에 Enter 를 여러 번 눌러도 한 번만 보내요
+    e.preventDefault(); if (f.dataset.busy) return; const v = ta.value.trim(); if (!v) return;
+    f.dataset.busy = "1"; ta.readOnly = true; f.querySelector("button").disabled = true;
+    try { await chatSendNow(v); } finally { delete f.dataset.busy; ta.readOnly = false; const b2 = f.querySelector("button"); if (b2) b2.disabled = false; }
+  };
+  const chatSendNow = async v => {
     const to = ctrGuestLang(th); let r;
     if (CTR.on && to && to !== CTR.me) {
       // 내 말 → 손님 말로 바꿔서 보내요 (실패하면 원문으로 보낼지 물어봐요)

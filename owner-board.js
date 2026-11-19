@@ -13,10 +13,10 @@
     hRows: ["Từng lượt làm", "시술 기록", "Sessions"], hStaff: ["Theo nhân viên", "직원별", "By staff"], hNone: ["Không có lượt làm nào.", "이 기간에는 끝난 시술이 없어요.", "No finished sessions."],
     hCnt: ["Lượt", "시술", "Sessions"], hMin: ["Phút làm", "시술 시간", "Minutes"], hRev: ["Doanh thu", "매출", "Sales"], hAtt: ["Chấm công", "출퇴근", "Attendance"], hDays: ["{n} ngày", "{n}일 출근", "{n} days"],
     hLateN: ["Trễ {n} lần · {m}′", "지각 {n}번 · {m}분", "Late {n}× · {m}′"], hLate: ["Trễ {m}′", "지각 {m}분", "Late {m}′"], hCsv: ["⬇ Tải Excel (CSV)", "⬇ 엑셀로 받기", "⬇ Excel (CSV)"], hOwner: ["Chỉ chủ cửa hàng mới xem được lịch sử.", "기록은 사장님 계정만 볼 수 있어요.", "Only the owner can see history."],
-    hNoStaff: ["Chưa ghi KTV", "담당 미기록", "No therapist"], hSetTp: ["Thêm KTV", "담당 넣기", "Add therapist"], hEditTp: ["Đổi", "바꾸기", "Edit"], hSaveTp: ["Lưu", "저장", "Save"], hTpSaved: ["Đã lưu KTV phụ trách.", "담당을 저장했어요.", "Therapist saved."], hByReview: ["khách xác nhận qua đánh giá", "손님 후기로 확인", "confirmed by guest review"], hRv: ["Đánh giá KTV", "💌 테라피스트 후기", "💌 Therapist reviews"], hRvNone: ["Chưa có đánh giá.", "아직 받은 후기가 없어요.", "No reviews yet."], hRvHint: ["Khách đặt qua Uncle Day có thể viết đánh giá cho KTV sau khi đến. Mỗi đánh giá được xác nhận, Uncle Day thưởng cho KTV.", "엉클데이 예약 손님은 방문 뒤 담당 테라피스트에게 후기를 쓸 수 있어요. 확인된 후기 한 건마다 엉클데이가 테라피스트에게 보너스를 줘요.", "Uncle Day guests can review their therapist after the visit. Uncle Day pays the therapist a bonus per verified review."],
+    hNoStaff: ["Chưa ghi kỹ thuật viên", "담당 미기록", "No therapist"], hSetTp: ["Thêm kỹ thuật viên", "담당 넣기", "Add therapist"], hEditTp: ["Đổi", "바꾸기", "Edit"], hSaveTp: ["Lưu", "저장", "Save"], hTpSaved: ["Đã lưu kỹ thuật viên phụ trách.", "담당을 저장했어요.", "Therapist saved."], hByReview: ["khách xác nhận qua đánh giá", "손님 후기로 확인", "confirmed by guest review"], hRv: ["Đánh giá kỹ thuật viên", "💌 테라피스트 후기", "💌 Therapist reviews"], hRvNone: ["Chưa có đánh giá.", "아직 받은 후기가 없어요.", "No reviews yet."], hRvHint: ["Khách đặt qua Uncle Day có thể viết đánh giá cho kỹ thuật viên sau khi đến. Mỗi đánh giá được xác nhận, Uncle Day thưởng cho kỹ thuật viên.", "엉클데이 예약 손님은 방문 뒤 담당 테라피스트에게 후기를 쓸 수 있어요. 확인된 후기 한 건마다 엉클데이가 테라피스트에게 보너스를 줘요.", "Uncle Day guests can review their therapist after the visit. Uncle Day pays the therapist a bonus per verified review."],
     hByShop: ["nhập tay", "직접 입력", "entered by shop"],
     decoBtn: ["🪴 Trang trí", "🪴 꾸미기", "🪴 Decorate"], decoHint: ["Kéo để di chuyển · bấm 1 lần để xoay/lật/xoá · sofa ở phòng chờ/quầy thêm 3 chỗ ngồi · tối đa 40 món", "끌어서 옮기고, 한 번 누르면 돌리기 · 뒤집기 · 지우기 · 대기실·카운터에 놓은 소파는 자리 +3 · 최대 40개", "Drag to move · tap once to rotate/flip/remove · a sofa in the lounge/counter adds 3 seats · up to 40"],
-    gq_done: ["Xong {n} lượt làm", "시술 {n}건 끝내기", "Finish {n} sessions"], gq_water: ["Tưới cây {n} lần", "화분에 물 {n}번 주기", "Water plants {n} times"], gq_care: ["Chăm KTV {n} lần (ăn vặt · khen)", "테라피스트 챙기기 {n}번 (간식 · 칭찬)", "Care for staff {n} times (snack · praise)"],
+    gq_done: ["Xong {n} lượt làm", "시술 {n}건 끝내기", "Finish {n} sessions"], gq_water: ["Tưới cây {n} lần", "화분에 물 {n}번 주기", "Water plants {n} times"], gq_care: ["Chăm kỹ thuật viên {n} lần (ăn vặt · khen)", "테라피스트 챙기기 {n}번 (간식 · 칭찬)", "Care for staff {n} times (snack · praise)"],
     gq_ud: ["Đón {n} khách Uncle Day", "엉클데이 손님 {n}팀 모시기", "Serve {n} Uncle Day guests"], gq_ontime: ["Hôm nay không ai đi trễ", "오늘 지각 0명", "Nobody late today"],
     claim: ["Nhận", "받기", "Claim"], claimed: ["Đã nhận ✓", "받음 ✓", "Claimed ✓"], gHint: ["🪴 Bấm chậu cây để tưới, cây nở hoa (✨) thì bấm để thu hoạch · bấm nhân viên đang nghỉ để cho ăn vặt/khen · vuốt ve thú cưng", "🪴 화분을 누르면 물을 줘요. 꽃이 피면(✨) 눌러서 수확해요 · 쉬는 직원을 누르면 간식·칭찬 · 펫을 쓰다듬어 보세요", "🪴 Tap a plant to water it, tap again when it blooms (✨) to harvest · tap a resting staff for a snack/praise · pet the animals"],
     gNoPlant: ["Chưa có chậu cây. Bấm 🪴 Trang trí để đặt chậu cây.", "화분이 아직 없어요. 🪴 꾸미기에서 화분을 놓아 보세요.", "No plants yet. Add one with 🪴 Decorate."],
@@ -47,8 +47,8 @@
     walkT: ["Tiếp nhận khách", "손님 접수", "Add a guest"], gName: ["Tên khách", "손님 이름", "Guest name"], course: ["Dịch vụ", "코스", "Service"], ppl: ["Số khách", "인원", "Guests"], addG: ["Tiếp nhận", "접수", "Add"],
     waitT: ["Khách đang chờ", "기다리는 손님", "Waiting guests"], noWait: ["Chưa có khách chờ.", "기다리는 손님이 없어요.", "No one is waiting."],
     assign: ["Phân công", "배정", "Assign"], leave: ["Về", "나감", "Left"], tp: ["Kỹ thuật viên", "테라피스트", "Therapist"], bed: ["Giường / ghế", "베드 / 체어", "Bed / chair"], choose: ["Chọn", "선택", "Choose"], start: ["Bắt đầu", "시작", "Start"],
-    tpPick: ["Chọn KTV (tối đa 4 người)", "테라피스트 고르기 (최대 4명)", "Therapists (up to 4)"], tpN: ["{n} người", "{n}명", "{n}"], max4: ["Tối đa 4 KTV cho một khách.", "손님 한 명에 테라피스트는 4명까지예요.", "Up to 4 therapists per guest."],
-    noTp: ["Không có KTV đang rảnh (chưa chấm vào?).", "대기 중인 테라피스트가 없어요 (출근 처리를 했나요?).", "No free therapist (clocked in?)."], noBed: ["Không có chỗ trống phù hợp.", "이 코스에 맞는 빈 자리가 없어요.", "No suitable free bed."],
+    tpPick: ["Chọn kỹ thuật viên (tối đa 4 người)", "테라피스트 고르기 (최대 4명)", "Therapists (up to 4)"], tpN: ["{n} người", "{n}명", "{n}"], max4: ["Tối đa 4 kỹ thuật viên cho một khách.", "손님 한 명에 테라피스트는 4명까지예요.", "Up to 4 therapists per guest."],
+    noTp: ["Không có kỹ thuật viên đang rảnh (chưa chấm vào?).", "대기 중인 테라피스트가 없어요 (출근 처리를 했나요?).", "No free therapist (clocked in?)."], noBed: ["Không có chỗ trống phù hợp.", "이 코스에 맞는 빈 자리가 없어요.", "No suitable free bed."],
     workT: ["Đang làm", "시술 중", "In session"], noWork: ["Chưa có ca nào.", "진행 중인 시술이 없어요.", "Nothing in progress."],
     left: ["còn {n}′", "{n}분 남음", "{n} min left"], over: ["quá {n}′", "{n}분 지남", "{n} min over"], ext: ["+15′", "+15분", "+15 min"], finish: ["Xong", "끝내기", "Finish"], cancel: ["Hủy ca", "시술 취소", "Cancel"],
     paid: ["Số tiền khách trả (₫)", "받은 금액 (₫)", "Amount paid (₫)"], udAuto: ["Lịch Uncle Day: tự ghi đã đến + số tiền.", "엉클데이 예약: 방문 완료 · 금액이 자동으로 기록돼요.", "Uncle Day booking: visit + amount are recorded automatically."], save: ["Lưu", "저장", "Save"],
@@ -56,7 +56,7 @@
     dayOff: ["🌙 Nghỉ", "🌙 휴무", "🌙 Off"], dayOn: ["☀️ Đi làm", "☀️ 근무", "☀️ Work"],
     doneT: ["Xong hôm nay", "오늘 완료", "Done today"], noDone: ["Chưa có ca xong.", "아직 끝난 시술이 없어요.", "Nothing finished yet."],
     s_off: ["Chưa vào", "출근 전", "Not in"], s_idle: ["Đang chờ", "대기 중", "Free"], s_desk: ["Trực quầy", "카운터 근무", "At desk"], s_work: ["Đang làm", "시술 중", "Working"], s_gone: ["Đã về", "퇴근", "Gone"], s_dayoff: ["Nghỉ", "휴무", "Day off"], s_move: ["Đang đi", "이동 중", "Moving"],
-    roleTp: ["KTV", "테라피스트", "Therapist"], roleRcp: ["Lễ tân", "리셉션", "Reception"],
+    roleTp: ["Kỹ thuật viên", "테라피스트", "Therapist"], roleRcp: ["Lễ tân", "리셉션", "Reception"],
     lounge: ["Phòng chờ NV", "직원 대기실", "Staff lounge"], counter: ["Quầy lễ tân", "카운터", "Reception"], entrance: ["LỐI VÀO", "입구", "ENTRANCE"], stairs: ["CẦU THANG", "계 단", "STAIRS"],
     room: ["P.{n}", "{n}호", "Rm {n}"], free: ["Trống", "비어 있음", "Free"], busyN: ["Đang làm {n}", "시술 중 {n}", "Busy {n}"], fchip: ["Tầng {f} · {a}/{b}", "{f}F · 시술 {a}/{b}", "{f}F · {a}/{b}"],
     sh_A: ["Ca mở cửa", "오픈조", "Opening"], sh_B: ["Ca đóng cửa", "마감조", "Closing"], sh_F: ["Cả ngày", "종일", "Full"], sh_O: ["Nghỉ", "휴무", "Off"], sh_C: ["Giờ riêng", "시간 지정", "Custom"], sh_null: ["Mặc định", "평소대로", "Default"],
@@ -87,7 +87,7 @@
     firstRun: ["Bắt đầu: vào ⚙️ Cài đặt để nhập phòng, dịch vụ và nhân viên của cửa hàng.", "처음이에요: ⚙️ 매장 설정에서 방 · 코스 · 직원을 먼저 넣어 주세요.", "First time: set up rooms, services and staff in ⚙️ Setup."],
     sent: ["{a} → {b}", "{a} → {b}", "{a} → {b}"], grpOf: ["{a} + {n} người", "{a} 외 {n}명", "{a} +{n}"], pN: ["Khách {n}", "{n}번 손님", "Guest {n}"],
     asgN: ["Đã xếp {a}/{b}", "배정 {a}/{b}", "Assigned {a}/{b}"], assignP: ["Xếp khách {n}", "{n}번 배정", "Assign #{n}"], leaveRest: ["Số còn lại về", "남은 분 안 받음", "Rest left"],
-    pWait: ["chờ", "대기", "waiting"], pDone: ["xong", "완료", "done"], grpHint: ["Mỗi khách xếp riêng: chọn giường và KTV cho từng người.", "한 분씩 따로 배정해요. 사람마다 베드와 테라피스트를 골라 주세요.", "Assign each person separately: pick a bed and therapists for each."], doneToast: ["Xong: {n}", "시술 완료: {n}", "Done: {n}"]
+    pWait: ["chờ", "대기", "waiting"], pDone: ["xong", "완료", "done"], grpHint: ["Mỗi khách xếp riêng: chọn giường và kỹ thuật viên cho từng người.", "한 분씩 따로 배정해요. 사람마다 베드와 테라피스트를 골라 주세요.", "Assign each person separately: pick a bed and therapists for each."], doneToast: ["Xong: {n}", "시술 완료: {n}", "Done: {n}"]
   };
   let lang = "vi";
   const li = () => Math.max(0, LANGS.indexOf(lang));
@@ -185,11 +185,11 @@
 
   // 서버 오류 문구를 화면 언어로
   const ERR = {
-    "This therapist is busy": ["KTV này đang làm cho khách khác.", "이 테라피스트는 지금 다른 손님 시술 중이에요.", "This therapist is busy with another guest."],
+    "This therapist is busy": ["Kỹ thuật viên này đang làm cho khách khác.", "이 테라피스트는 지금 다른 손님 시술 중이에요.", "This therapist is busy with another guest."],
     "This bed is in use": ["Giường này đang có khách.", "이 베드는 지금 사용 중이에요.", "This bed is in use."],
     "This guest is not waiting": ["Khách này không còn trong danh sách chờ.", "이 손님은 이미 배정됐거나 나갔어요. 새로고침해 주세요.", "This guest is no longer waiting."],
-    "Choose a therapist": ["Hãy chọn KTV.", "테라피스트를 골라 주세요.", "Choose a therapist."],
-    "Up to 4 therapists": ["Tối đa 4 KTV.", "테라피스트는 4명까지예요.", "Up to 4 therapists."],
+    "Choose a therapist": ["Hãy chọn kỹ thuật viên.", "테라피스트를 골라 주세요.", "Choose a therapist."],
+    "Up to 4 therapists": ["Tối đa 4 kỹ thuật viên.", "테라피스트는 4명까지예요.", "Up to 4 therapists."],
     "Unknown bed": ["Không tìm thấy giường.", "베드를 찾을 수 없어요.", "Unknown bed."],
     "Session not found": ["Không tìm thấy lượt làm.", "시술을 찾을 수 없어요. 새로고침해 주세요.", "Session not found."],
     "Still in a session": ["Đang làm cho khách, chưa thể tan ca.", "시술 중이라 퇴근할 수 없어요.", "Still in a session."],
@@ -912,7 +912,7 @@
   function csvHist() {
     if (!hist || !hist.rows) return;
     const q = v => { const x = String(v == null ? "" : v); return /[",\n]/.test(x) ? '"' + x.replace(/"/g, '""') + '"' : x; };
-    const H = { ko: ["날짜", "시작", "끝", "구분", "손님", "인원", "코스", "테라피스트", "방", "예약번호", "금액", "엉클데이 수수료"], vi: ["Ngày", "Bắt đầu", "Kết thúc", "Loại", "Khách", "Số người", "Dịch vụ", "KTV", "Phòng", "Mã đặt", "Số tiền", "Phí UD"], en: ["Date", "Start", "End", "Type", "Guest", "People", "Course", "Therapists", "Room", "Booking", "Amount", "UD fee"] }[lang];
+    const H = { ko: ["날짜", "시작", "끝", "구분", "손님", "인원", "코스", "테라피스트", "방", "예약번호", "금액", "엉클데이 수수료"], vi: ["Ngày", "Bắt đầu", "Kết thúc", "Loại", "Khách", "Số người", "Dịch vụ", "Kỹ thuật viên", "Phòng", "Mã đặt", "Số tiền", "Phí UD"], en: ["Date", "Start", "End", "Type", "Guest", "People", "Course", "Therapists", "Room", "Booking", "Amount", "UD fee"] }[lang];
     const H2 = { ko: ["직원", "역할", "시술 건수", "시술 시간(분)", "매출", "출근일", "근무 시간(분)", "지각 횟수", "지각(분)"], vi: ["Nhân viên", "Vai trò", "Lượt", "Phút làm", "Doanh thu", "Ngày làm", "Phút có mặt", "Lần trễ", "Phút trễ"], en: ["Staff", "Role", "Sessions", "Minutes", "Sales", "Days", "Worked (min)", "Late count", "Late (min)"] }[lang];
     const lines = [H.map(q).join(",")].concat(hist.rows.map(r => [r.day, hmVN(r.started_at), hmVN(r.done_at), t(r.ud ? "hUD" : "hWalk"), r.guest, r.people || 1, r.course, r.staff, String(r.station || "").split("-")[0], r.code || "", r.paid || 0, r.ud ? (r.commission || 0) : 0].map(q).join(",")));
     lines.push("", H2.map(q).join(","));

@@ -107,8 +107,8 @@
     tRejected: ["Đã báo không nhận.", "불가로 답했어요.", "Declined."],
     tVisited: ["Đã lưu: khách đã đến.", "방문 완료로 저장했어요.", "Saved as visited."],
     auditT: ["Uncle Day đã chỉnh giúp", "엉클데이 관리자가 대신 수정했어요", "Changed by Uncle Day admin"], auditS: ["Ghi lại những gì quản trị Uncle Day đã sửa giúp cửa hàng trong 30 ngày. Có gì sai hãy nhắn Uncle Day.", "최근 30일 동안 엉클데이 관리자가 사장님 대신 고친 내용이에요. 잘못된 게 있으면 엉클데이에 알려 주세요.", "What Uncle Day changed for your shop in the last 30 days. Tell us if anything is wrong."], auditMore: ["Xem tất cả ({n})", "전체 보기 ({n})", "See all ({n})"], auditLess: ["Thu gọn", "접기", "Show less"],
-    tpOpt: ["KTV phụ trách (không bắt buộc)", "담당 테라피스트 (선택)", "Therapist (optional)"], tpOptHint: ["Không nhớ thì để trống. Có thể thêm sau ở Bảng phòng → Lịch sử.", "모르면 비워 두세요. 나중에 현황판 → 기록에서 넣을 수 있어요.", "Leave empty if unsure. You can add it later in Board → History."],
-    tpSave: ["Lưu KTV phụ trách", "담당 저장", "Save therapist"], tpSaved: ["Đã lưu KTV phụ trách.", "담당을 저장했어요.", "Therapist saved."], tpNone: ["Chưa có KTV phụ trách.", "아직 담당이 기록되지 않았어요.", "No therapist recorded yet."], tpMax: ["Tối đa 4 người.", "4명까지 고를 수 있어요.", "Up to 4."],
+    tpOpt: ["Kỹ thuật viên phụ trách (không bắt buộc)", "담당 테라피스트 (선택)", "Therapist (optional)"], tpOptHint: ["Không nhớ thì để trống. Có thể thêm sau ở Bảng phòng → Lịch sử.", "모르면 비워 두세요. 나중에 현황판 → 기록에서 넣을 수 있어요.", "Leave empty if unsure. You can add it later in Board → History."],
+    tpSave: ["Lưu kỹ thuật viên phụ trách", "담당 저장", "Save therapist"], tpSaved: ["Đã lưu kỹ thuật viên phụ trách.", "담당을 저장했어요.", "Therapist saved."], tpNone: ["Chưa có kỹ thuật viên phụ trách.", "아직 담당이 기록되지 않았어요.", "No therapist recorded yet."], tpMax: ["Tối đa 4 người.", "4명까지 고를 수 있어요.", "Up to 4."],
     tNoshow: ["Đã ghi nhận: khách không đến.", "노쇼로 기록했어요.", "Recorded as a no-show."],
     tSaved: ["Đã lưu.", "저장했어요.", "Saved."],
     tNew: ["Có đặt lịch mới!", "새 예약이 들어왔어요!", "New booking!"],
@@ -132,7 +132,7 @@
     mShop: ["Cửa hàng", "업체", "Shop"], mLang: ["Ngôn ngữ", "언어", "Language"], mInstall: ["Cài lên màn hình chính", "홈 화면에 설치", "Add to home screen"],
     mPw: ["Đổi mật khẩu", "비밀번호 변경", "Change password"], mLogout: ["Đăng xuất", "로그아웃", "Log out"],
     mAccount: ["Tài khoản", "계정", "Account"], roleOwner: ["Chủ", "사장님", "Owner"], roleStaff: ["Nhân viên", "직원", "Staff"],
-    soon: ["Màn hình nhân viên (lịch làm, xin nghỉ), đánh giá KTV, thông báo trên điện thoại.", "직원 화면(근무표·휴무 요청), 테라피스트 후기, 휴대폰 알림", "Staff screen (rota, day-off requests), therapist reviews, phone alerts."],
+    soon: ["Màn hình nhân viên (lịch làm, xin nghỉ), đánh giá kỹ thuật viên, thông báo trên điện thoại.", "직원 화면(근무표·휴무 요청), 테라피스트 후기, 휴대폰 알림", "Staff screen (rota, day-off requests), therapist reviews, phone alerts."],
     contactUD: ["Cần hỗ trợ? Nhắn Uncle Day qua Zalo như trước.", "도움이 필요하면 지금처럼 잘로로 엉클데이에 연락하세요.", "Need help? Message Uncle Day on Zalo as usual."],
     refresh: ["Làm mới", "새로고침", "Refresh"]
   };
