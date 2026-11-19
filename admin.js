@@ -739,7 +739,25 @@ function drawSettle() {
   const owe = {};
   BOOKINGS.filter(b => b.status === "visited" && !b.settlement_id).forEach(b => { const k = b.shop_id || "-"; owe[k] = owe[k] || { unb: 0, bil: 0 }; owe[k].unb += +b.commission || 0; });
   SETTLES.filter(s => s.status === "billed").forEach(s => { const k = s.shop_id || "-"; owe[k] = owe[k] || { unb: 0, bil: 0 }; owe[k].bil += +s.total_commission || 0; });
+  // 💰 건별 정산: 방문 완료 1건마다 입금 확인 (계약서 제5조 — 처음에는 건별)
+  const each = BOOKINGS.filter(b => b.status === "visited" && !b.settlement_id).sort((x, y) => (x.visit_date || "").localeCompare(y.visit_date || ""));
+  const eachDone = SETTLES.filter(s => s.kind === "each" && s.status === "paid").slice(0, 8);
+  const ago = d => d ? Math.max(0, Math.round((new Date(vnToday()) - new Date(d)) / 864e5)) : 0;
   $("tab-settle").innerHTML = `
+    <h2 class="sec">💰 건별 정산 <small>손님 1건마다 수수료 입금 확인 · 처음 시작한 가게는 이렇게 해요</small></h2>
+    ${each.length ? `<div class="each-list">
+      ${each.map(b => { const d = ago(b.visit_date), late = d > 7;
+        return `<div class="each-row${late ? " late" : ""}"><div class="each-main"><b>${esc(shopName(b))}</b> <span class="hint">${esc(b.code || "")}</span>
+            <small>${esc(b.visit_date || "")} 방문 · <span class="${late ? "err-text" : ""}">${d ? d + "일 지남" : "오늘"}${late ? " (7일 넘음)" : ""}</span>${b.menu_name ? " · " + esc(b.menu_name) : ""}</small></div>
+          <div class="each-amt">${b.paid_amount == null ? `<span class="err-text">금액 미입력</span>` : `<small>${vnd(b.paid_amount)} × ${+b.commission_rate ? +b.commission_rate + "%" : `<span class="err-text">수수료율 미정</span>`}</small><b>${b.commission == null ? "-" : vnd(b.commission)}</b>`}</div>
+          <div class="each-act">${b.paid_amount == null ? `<button class="btn sm" data-ebk="${b.id}">금액 넣기</button>` : `<button class="btn sm" data-ecopy="${b.id}">📋 잘로 알림 복사</button><button class="btn sm main" data-eok="${b.id}">✅ 입금 확인</button>`}</div></div>`; }).join("")}
+      </div>` : `<div class="todo"><div class="empty">입금을 기다리는 방문 완료 예약이 없어요.</div></div>`}
+    ${eachDone.length ? `<details class="each-done"><summary>최근 건별 입금 확인 ${eachDone.length}건</summary><div class="tscroll"><table class="t"><tbody>
+      ${eachDone.map(s => { const bk = BOOKINGS.find(b => b.settlement_id === s.id);
+        return `<tr><td>${dt(s.paid_at)}</td><td><b>${esc(s.shop_name || "")}</b><br><span class="hint">${esc(bk ? bk.code : s.memo || "")}</span></td><td class="num"><b>${vnd(s.total_commission)}</b></td><td><span class="st settled">입금 완료</span></td><td class="num"><button class="btn sm" data-eundo="${s.id}">입금 취소</button></td></tr>`; }).join("")}
+      </tbody></table></div></details>` : ""}
+    <p class="hint" style="margin:8px 0 22px">순서: 방문 완료(금액 입력) → <b>📋 잘로 알림 복사</b>해서 가게에 보내기 → 수수료가 들어오면 <b>✅ 입금 확인</b>. 예약이 많아져 월말 정산으로 바꾼 가게는 아래 '정산할 내역'에서 한 달 치를 묶어요.</p>
+
     <h2 class="sec">정산할 내역 <select class="month-pick" id="setMonth">${months.map(m => `<option value="${m}" ${m === setMonth ? "selected" : ""}>${monthKo(m)}</option>`).join("")}</select> <small>방문 완료 · 아직 정산서에 안 들어간 예약</small></h2>
     ${openInM.length ? `<div class="notice warn" style="margin:0 0 10px"><span class="grow">이 달에 방문일이 지났는데 결과가 없는 예약이 <b>${openInM.length}건</b> 있어요. 방문 완료나 노쇼로 정리해야 정산에 들어가요.</span><button class="btn sm" id="goOpen">보기</button></div>` : ""}
     ${older.length ? `<div class="notice warn" style="margin:0 0 10px"><span class="grow">이전 달에 정산 안 된 방문 완료가 <b>${older.length}건</b> 있어요.</span><button class="btn sm" id="goOlder">그 달로</button></div>` : ""}
@@ -759,10 +777,10 @@ function drawSettle() {
 
     <h2 class="sec">정산서 <small>만든 순서</small></h2>
     ${SETTLES.length ? `<div class="tscroll"><table class="t"><thead><tr><th>정산 월</th><th>업체</th><th class="num">건수</th><th class="num">결제액</th><th class="num">수수료</th><th>상태</th><th></th></tr></thead><tbody>
-      ${SETTLES.map(s => `<tr style="${s.status === "void" ? "opacity:.45" : ""}"><td>${monthKo(s.month)}</td><td><b>${esc(s.shop_name || s.shop_id || "")}</b><br><span class="hint">${dt(s.billed_at)} 청구</span></td>
+      ${SETTLES.map(s => `<tr style="${s.status === "void" ? "opacity:.45" : ""}"><td>${monthKo(s.month)}${s.kind === "each" ? `<br><span class="hint">건별</span>` : ""}</td><td><b>${esc(s.shop_name || s.shop_id || "")}</b><br><span class="hint">${dt(s.billed_at)} 청구</span></td>
         <td class="num">${s.booking_count}</td><td class="num">${vnd(s.total_paid)}</td><td class="num"><b>${vnd(s.total_commission)}</b></td>
         <td>${s.status === "paid" ? `<span class="st settled">입금 완료</span><br><span class="hint">${dt(s.paid_at)}</span>` : s.status === "void" ? `<span class="st cancelled">취소됨</span>` : `<span class="st requested">입금 대기</span>`}</td>
-        <td class="num">${s.status !== "void" ? `<button class="btn sm" data-view="${s.id}">정산서</button> ${s.status === "billed" ? `<button class="btn sm main" data-paid="${s.id}">입금 확인</button> <button class="btn sm danger" data-void="${s.id}">취소</button>` : `<button class="btn sm" data-unpaid="${s.id}">입금 취소</button>`}` : ""}</td></tr>`).join("")}
+        <td class="num">${s.status !== "void" ? `<button class="btn sm" data-view="${s.id}">정산서</button> ${s.status === "billed" ? `<button class="btn sm main" data-paid="${s.id}">입금 확인</button> <button class="btn sm danger" data-void="${s.id}">취소</button>` : s.kind === "each" ? `<button class="btn sm" data-eundo="${s.id}">입금 취소</button>` : `<button class="btn sm" data-unpaid="${s.id}">입금 취소</button>`}` : ""}</td></tr>`).join("")}
       </tbody></table></div>` : `<div class="todo"><div class="empty">아직 만든 정산서가 없어요.</div></div>`}
     <p class="hint" style="margin:14px 0 40px">순서: 방문 완료(금액 입력) → 월말에 <b>정산서 만들기</b> → 업체에 정산서 보내기 → 수수료가 들어오면 <b>입금 확인</b>. 정산서에 들어간 예약은 금액을 바꿀 수 없어요.</p>`;
   $("setMonth").onchange = e => { setMonth = e.target.value; drawSettle(); };
@@ -778,7 +796,18 @@ function drawSettle() {
   const rpcThen = async (fn, args, msg) => { const r = await sb.rpc(fn, args); if (r.error) { dbErr(r.error); return; } await Promise.all([loadSettles(), loadBookings()]); drawSettle(); toast(msg); };
   $("tab-settle").querySelectorAll("[data-paid]").forEach(x => x.onclick = () => confirmBox("수수료 입금을 확인했나요?", () => rpcThen("settlement_paid", { p_id: x.dataset.paid, p_paid: true }, "입금 완료로 바꿨어요 ✅"), "들어간 예약이 모두 '정산 완료'로 바뀌어요.", "입금 확인", false));
   $("tab-settle").querySelectorAll("[data-unpaid]").forEach(x => x.onclick = () => confirmBox("입금 확인을 취소할까요?", () => rpcThen("settlement_paid", { p_id: x.dataset.unpaid, p_paid: false }, "입금 전으로 되돌렸어요"), "", "되돌리기"));
+  // 건별 정산 버튼
+  $("tab-settle").querySelectorAll("[data-ebk]").forEach(x => x.onclick = () => openBooking(x.dataset.ebk));
+  $("tab-settle").querySelectorAll("[data-ecopy]").forEach(x => x.onclick = () => { const b = BOOKINGS.find(y => y.id === x.dataset.ecopy); if (b) copy(eachMsg(b)); });
+  $("tab-settle").querySelectorAll("[data-eok]").forEach(x => x.onclick = () => { const b = BOOKINGS.find(y => y.id === x.dataset.eok); if (!b) return;
+    confirmBox(`${shopName(b)} · ${b.code} 수수료 ${vnd(b.commission)} 입금을 확인했나요?`, () => rpcThen("settle_one", { p_booking: b.id }, "입금 완료로 바꿨어요 ✅"), "예약이 '정산 완료'로 바뀌고 금액이 잠겨요. 잘못 눌렀으면 '입금 취소'로 되돌릴 수 있어요.", "입금 확인", false); });
+  $("tab-settle").querySelectorAll("[data-eundo]").forEach(x => x.onclick = () => confirmBox("건별 입금 확인을 취소할까요?", () => rpcThen("settle_one_undo", { p_id: x.dataset.eundo }, "입금 전으로 되돌렸어요. 예약은 다시 '방문 완료'예요."), "기록은 '취소됨'으로 남아요.", "되돌리기"));
   $("tab-settle").querySelectorAll("[data-void]").forEach(x => x.onclick = () => confirmBox("이 정산서를 취소할까요?", () => rpcThen("settlement_void", { p_id: x.dataset.void }, "정산서를 취소했어요. 예약은 다시 '정산할 내역'으로 돌아가요."), "취소 기록은 남아요.", "정산서 취소"));
+}
+// 건별 정산 잘로 알림 (베트남어 + 한국어)
+function eachMsg(b) {
+  const r = +b.commission_rate || 0;
+  return `[Uncle Day] Hoa hồng lượt khách ${b.code}\nNgày đến: ${b.visit_date}${b.menu_name ? " · " + b.menu_name : ""}\nSố tiền thanh toán: ${vnd(b.paid_amount)} × ${r}% = ${vnd(b.commission)}\nVui lòng chuyển khoản trong vòng 7 ngày. Cảm ơn anh/chị!\n—\n[엉클데이] ${b.code} 수수료 ${vnd(b.commission)} (결제 ${vnd(b.paid_amount)} × ${r}%) · 7일 안에 입금 부탁드려요.`;
 }
 async function viewStatement(id) {
   const s = SETTLES.find(x => x.id === id); if (!s) return;
