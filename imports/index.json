@@ -116,11 +116,19 @@
   {
    "id": "2026-11-20-done",
    "file": "2026-11-20-done.json",
-   "title": "완료한 작업 (11/20 새벽)",
-   "count": 5,
+   "title": "완료한 작업 (11/20)",
+   "count": 12,
    "created": "2026-11-20",
    "kind": "tasks",
    "done": true
+  },
+  {
+   "id": "2026-11-20-todo2",
+   "file": "2026-11-20-todo2.json",
+   "title": "11/20 새 기능 — 해 주실 일",
+   "count": 4,
+   "created": "2026-11-20",
+   "kind": "tasks"
   }
  ]
 }

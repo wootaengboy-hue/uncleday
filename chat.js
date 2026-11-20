@@ -31,10 +31,19 @@ const CHAT = (() => {
   function place() { const bar = [...document.querySelectorAll(".cta-bar")].find(x => !x.classList.contains("away") && x.getBoundingClientRect().height > 0 && getComputedStyle(x).display !== "none" && getComputedStyle(x).visibility !== "hidden"); const up = bar ? bar.offsetHeight + 12 : 0; fab.style.bottom = (18 + up) + "px"; box.style.bottom = (84 + up) + "px"; fab.classList.toggle("by-bar", !!(bar && bar.querySelector("[data-chat]")) && !open); }
   window.addEventListener("resize", place); window.addEventListener("hashchange", () => setTimeout(place, 300)); setInterval(place, 2000);
 
+  // ⚡ 답장 속도: 최근 30일 실제 기록이 10건 이상일 때만 숫자로 (universe35 chat_speed)
+  let speed = null;
+  try { speed = JSON.parse(sessionStorage.getItem("ud-chat-speed") || "null"); } catch (e) {}
+  if (!speed) LIVE.rpc("chat_speed", {}).then(j => { if (j && j.n != null) { speed = j; try { sessionStorage.setItem("ud-chat-speed", JSON.stringify(speed)); } catch (e) {} if (open) draw(); } }).catch(() => {});
+  function subText() {
+    if (!speed || !(speed.n >= 10) || speed.min == null) return t("sub");
+    const m = Math.max(1, +speed.min);
+    return m <= 60 ? t("subMin", { n: m }) : m <= 24 * 60 ? t("subHr", { n: Math.ceil(m / 60) }) : t("sub");
+  }
   function draw() {
     const fmt = d => { try { return new Date(d).toLocaleTimeString(L(), { hour: "numeric", minute: "2-digit" }); } catch (e) { return ""; } };
     const showForm = !known && !(typeof ACCT !== "undefined" && ACCT.user()) && !onVoucher;
-    box.innerHTML = `<div class="cb-head"><div><b>${t("title")}</b><small>${t("sub")}</small></div><button type="button" class="cb-x" aria-label="close">✕</button></div>
+    box.innerHTML = `<div class="cb-head"><div><b>${t("title")}</b><small>${subText()}</small></div><button type="button" class="cb-x" aria-label="close">✕</button></div>
       <div class="cb-list">
         <div class="cb-m us"><span>${booking ? `<b>${esc(t("bk", { c: booking }))}</b><br>` : ""}${esc(t("hello")).replace(/\n/g, "<br>")}</span></div>
         ${msgs.map(m => `<div class="cb-m ${m.from === "admin" ? "us" : "me"}"><span>${linkify(esc(m.body)).replace(/\n/g, "<br>")}</span><time>${m.auto ? "🌐 " + ({ ko: "자동 번역", vi: "Tự động dịch" }[document.documentElement.lang] || "Auto-translated") + " · " : ""}${fmt(m.at)}</time></div>`).join("")}

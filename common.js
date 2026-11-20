@@ -45,6 +45,61 @@ const priceFrom = shop => {
   return ps.length ? money(Math.min(...ps)) + " ~" : ui("consultPrice");
 };
 
+// 🟢 지금 영업 중? — 베트남 시간(UTC+7) 기준 · 자정 넘어 끝나는 가게(예: 10:00 ~ 02:00)도 맞게
+function openInfo(shop) {
+  if (!shop || !shop.open || !shop.close) return null;
+  const pm = t => { const [h, m] = String(t).split(":").map(Number); return (h || 0) * 60 + (m || 0); };
+  const now = new Date(Date.now() + 7 * 36e5), d = now.getUTCDay(), m = now.getUTCHours() * 60 + now.getUTCMinutes();
+  const o = pm(shop.open); let c = pm(shop.close); if (c <= o) c += 1440;
+  const off = day => (shop.closed || []).includes(day), hm = x => { x = ((x % 1440) + 1440) % 1440; return String(Math.floor(x / 60)).padStart(2, "0") + ":" + String(x % 60).padStart(2, "0"); };
+  if (!off(d) && m >= o && m < c) return { open: true, soon: c - m <= 60, until: hm(c) };
+  const yd = (d + 6) % 7;
+  if (c > 1440 && !off(yd) && m + 1440 < c) return { open: true, soon: c - 1440 - m <= 60, until: hm(c) };
+  if (off(d)) return { open: false, off: true };
+  if (m < o) return { open: false, at: hm(o) };
+  return { open: false, done: true };
+}
+function openBadge(shop) {
+  const i = openInfo(shop); if (!i) return "";
+  if (i.open) return `<span class="op ${i.soon ? "op-soon" : "op-on"}">${i.soon ? ui("op_soon", { t: i.until }) : ui("op_now") + " · " + ui("op_until", { t: i.until })}</span>`;
+  return `<span class="op op-off">${i.off ? ui("op_off") : i.at ? ui("op_before", { t: i.at }) : ui("op_closed")}</span>`;
+}
+const isOpenNow = shop => { const i = openInfo(shop); return !!(i && i.open); };
+// 💸 포인트 적립 표시 (비율은 업체와 협의되면 SITE.ptsRate 로 숫자 표시) · 예약 가능한 업체에만
+const ptsOn = shop => shop && shop.verified !== false && shop.open && shop.menu && shop.menu.length;
+const ptsBadge = shop => ptsOn(shop) ? `<span class="pts-b" title="${esc(ui("pts_hint"))}">${SITE.ptsRate ? ui("pts_badgeN", { p: SITE.ptsRate }) : ui("pts_badge")}</span>` : "";
+const ocBadge = shop => shop && shop.outcall ? `<span class="oc-b">${ui("oc_badge")}</span>` : "";
+// ⚡ 업체별 예약 확정 속도 (universe35 shop_speed · 실제 기록 3건 이상인 업체만)
+let SHOP_SPEED = null;
+function shopSpeed() {
+  if (SHOP_SPEED) return SHOP_SPEED;
+  try { const c = JSON.parse(sessionStorage.getItem("ud-shop-speed") || "null"); if (c) return (SHOP_SPEED = Promise.resolve(c)); } catch (e) {}
+  SHOP_SPEED = (typeof LIVE !== "undefined" && LIVE.on ? LIVE.rpc("shop_speed", {}) : Promise.resolve({})).then(j => { j = j || {}; try { sessionStorage.setItem("ud-shop-speed", JSON.stringify(j)); } catch (e) {} return j; }).catch(() => ({}));
+  return SHOP_SPEED;
+}
+function speedText(sp) {
+  if (!sp || !(sp.n >= 3) || sp.min == null) return "";
+  const m = Math.max(1, +sp.min);
+  return m <= 60 ? ui("sp_min", { n: m }) : m <= 12 * 60 ? ui("sp_hr", { n: Math.ceil(m / 60) }) : "";
+}
+
+// 📲 홈 화면에 추가 (앱처럼) — 안드로이드 · 크롬은 설치 창, 아이폰은 Safari 안내 문구
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); window.UD_BIP = e; pwaBtn(); });
+if ("serviceWorker" in navigator) { try { navigator.serviceWorker.register("/sw.js").catch(() => {}); } catch (e) {} }
+function pwaBtn() {
+  const fp = document.getElementById("footPriv"); if (!fp) return;
+  const standalone = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone;
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) && /safari/i.test(navigator.userAgent) && !/crios|fxios|kakaotalk|naver|instagram|fban/i.test(navigator.userAgent);
+  let w = document.getElementById("pwaWrap");
+  if (standalone || !(window.UD_BIP || ios)) { if (w) w.remove(); return; }
+  if (!w) { w = document.createElement("div"); w.id = "pwaWrap"; w.className = "pwa-wrap"; fp.after(w); }
+  w.innerHTML = `<button type="button" class="pwa-btn">${ui("pwa_btn")}</button><small>${ui("pwa_desc")}</small><p class="pwa-ios" hidden>${ui("pwa_ios")}</p>`;
+  w.querySelector(".pwa-btn").onclick = async () => {
+    if (window.UD_BIP) { const e = window.UD_BIP; window.UD_BIP = null; try { e.prompt(); await e.userChoice; } catch (er) {} pwaBtn(); }
+    else w.querySelector(".pwa-ios").hidden = false;
+  };
+}
+
 // 공통 머리글/바닥글 채우기
 function drawCommon() {
   document.querySelectorAll("[data-i18n]").forEach(e => e.textContent = ui(e.dataset.i18n));
@@ -56,6 +111,7 @@ function drawCommon() {
   { const fi = $("footInfo"); let pl = document.getElementById("footPriv");
     if (!pl) { pl = document.createElement("a"); pl.id = "footPriv"; pl.className = "foot-priv"; pl.href = "privacy.html"; fi.after(pl); }
     pl.textContent = ui("privacy"); }
+  pwaBtn();
   document.querySelectorAll(".kakao-link").forEach(a => a.href = SITE.kakao);
   // 언어 고르기: 13개라 버튼 대신 펼침 목록 (국기 + 그 나라 말 이름)
   const cur = LANGS.find(l => l.id === lang) || LANGS[0];

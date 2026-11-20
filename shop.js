@@ -115,7 +115,7 @@ if (!shop) {
   const facts = [
     ["📍", ui("address"), addrOk ? tx(shop.address) : ui("tbd"), addrOk],
     ["💰", ui("price"), hasPrice ? priceFrom(shop) : ui("consultPrice"), hasPrice],
-    ["🕒", ui("hours"), shop.open ? `${hoursText}<br><small>${ui("closedDays")}: ${closedText}</small>` : ui("tbd"), !!shop.open],
+    ["🕒", ui("hours"), shop.open ? `${hoursText} ${openBadge(shop)}<br><small>${ui("closedDays")}: ${closedText}</small>` : ui("tbd"), !!shop.open],
     ["🗣️", ui("staffLangs"), staff, shop.staffLangs.length > 0]
   ];
   // 비슷한 업체: 같은 도시 업체만 (다낭 업체면 다낭만) · 같은 업종 → 같은 큰 분류 → 나머지 순 · 최대 3곳
@@ -130,6 +130,7 @@ if (!shop) {
       <div class="chips"><span class="tag cat-tag">${cat ? cat.icon + " " + tx(cat.name) : ""}</span>
         <span class="tag">📍 ${cityName(shop.city)}</span>
         ${shop.rating ? `<span class="tag">⭐ ${shop.rating} (${shop.reviews})</span>` : ""}
+        ${openBadge(shop)}${ocBadge(shop)}${ptsBadge(shop)}<span id="spdBadge"></span>
         <button type="button" class="tag share-btn" id="shareBtn">🔗 ${ui("shareBtn")}</button></div>
       <h1>${tx(shop.name)}${shop.best ? ` <span class="best-badge"><i>✦</i>${ui("certBadge")}<i>✦</i></span>` : ""}</h1>
       <div class="tags">${shop.tags.map(t => `<span class="tag">#${tx(t)}</span>`).join("")}</div>
@@ -295,6 +296,8 @@ ${f.text}
   };
 
   // 공유하기: 카톡·네이버에서 미리보기가 예쁘게 나오는 공유 전용 주소
+  // ⚡ 실제 기록으로 본 예약 확정 속도 (3건 이상일 때만)
+  if (!pending) shopSpeed().then(sp => { const el = document.getElementById("spdBadge"), t = speedText(sp && sp[shop.id]); if (el && t) el.outerHTML = `<span class="spd-b">${t}</span>`; });
   $("shareBtn").onclick = async () => {
     const url = `${location.origin}/s/${encodeURIComponent(shop.id)}/`;
     if (navigator.share && /Mobi|Android|iPhone/i.test(navigator.userAgent)) { try { await navigator.share({ title: tx(shop.name) + " | " + tx(SITE.name), url }); return; } catch (e) { if (e.name === "AbortError") return; } }

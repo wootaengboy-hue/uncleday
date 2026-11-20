@@ -29,7 +29,7 @@ async function drawChat() {
   const list = THREADS.filter(th => f === "all" ? true : f === "unread" ? chatUnread(th) : th.status === "open");
   el.innerHTML = `<div class="chat-wrap ${CHAT_CUR ? "has-cur" : ""}">
     <div class="chat-side"><div class="chat-flt">${[["unread", "안 읽음"], ["open", "진행 중"], ["all", "전체"]].map(([k, n]) => `<button class="pill ${f === k ? "on" : ""}" data-cf="${k}">${n}${k === "unread" && THREADS.filter(chatUnread).length ? ` ${THREADS.filter(chatUnread).length}` : ""}</button>`).join("")}</div>
-      <div class="chat-threads">${list.map(th => { const b = th.booking_id && BOOKINGS.find(x => x.id === th.booking_id);
+      <button class="btn sm chat-greet-btn" id="chatGreetBtn" type="button">🤖 자동 인사 설정</button><div class="chat-threads">${list.map(th => { const b = th.booking_id && BOOKINGS.find(x => x.id === th.booking_id);
         return `<button class="ct-row ${CHAT_CUR === th.id ? "on" : ""} ${chatUnread(th) ? "new" : ""}" data-th="${th.id}">
           <span class="ct-n">${esc(th.name || "손님")}${b ? ` <small class="badge">${esc(b.code)}</small>` : ""}${th.user_id ? ` <small title="로그인한 손님">👤</small>` : ""}</span>
           <span class="ct-t">${esc(rel(th.last_at))}</span>
@@ -37,6 +37,7 @@ async function drawChat() {
     <div class="chat-main" id="chatMain">${CHAT_CUR ? "" : `<div class="hint chat-empty">왼쪽에서 대화를 고르세요.<br>손님이 사이트나 예약확인증에서 💬로 보낸 메시지가 여기 모여요.</div>`}</div></div>`;
   el.querySelectorAll("[data-cf]").forEach(b => b.onclick = () => { el.dataset.f = b.dataset.cf; drawChat(); });
   el.querySelectorAll("[data-th]").forEach(b => b.onclick = () => openThread(b.dataset.th));
+  if ($("chatGreetBtn")) $("chatGreetBtn").onclick = openGreet;
   if (CHAT_CUR) drawThread();
 }
 const rel = d => { const s = (Date.now() - Date.parse(d)) / 1000; return s < 60 ? "방금" : s < 3600 ? `${Math.floor(s / 60)}분 전` : s < 86400 ? `${Math.floor(s / 3600)}시간 전` : dt(d); };
@@ -198,3 +199,35 @@ setInterval(async () => {
   if (fresh.length && before.size + fresh.length > 0) toast(`💬 새 채팅: ${fresh[0].name || "손님"} — ${String(fresh[0].last_body || "").slice(0, 30)}`, 5000);
   if (TAB === "chat" && !CHAT_CUR) drawChat();
 }, 15000);
+
+// 🤖 손님이 채팅을 걸면 바로 나가는 자동 인사 (universe35 · settings 'chat_greet') — 손님 언어로 나가요
+const GREET_LANGS = [["ko", "한국어"], ["en", "English"], ["vi", "Tiếng Việt"], ["ja", "日本語"], ["zh", "简体中文"], ["zh-TW", "繁體中文"], ["ru", "Русский"], ["fr", "Français"], ["de", "Deutsch"], ["es", "Español"], ["hi", "हिन्दी"], ["th", "ไทย"], ["id", "Indonesia"]];
+async function openGreet() {
+  const r = await sb.from("settings").select("value").eq("key", "chat_greet").maybeSingle();
+  if (r.error || !r.data) { toast("자동 인사를 쓰려면 Supabase에서 supabase/universe35.sql을 먼저 실행해 주세요"); return; }
+  const G = JSON.parse(JSON.stringify(r.data.value)); G.day = G.day || {}; G.night = G.night || {};
+  let cur = "ko";
+  const d = document.createElement("div"); d.className = "overlay center";
+  d.innerHTML = `<div class="modal" style="width:min(720px,calc(100% - 24px))"><h2>🤖 채팅 자동 인사</h2>
+    <p class="hint">손님이 채팅을 걸면 (최근 12시간 안에 우리 쪽 메시지가 없을 때) 손님 언어로 바로 나가요. 밤(한국 시간 23시 ~ 아침 8시)에는 '밤 인사' 한 줄이 더 붙어요. 자동 인사가 나가도 <b>답장 대기</b>는 그대로라, 담당자가 직접 답해 주세요.</p>
+    <label class="gr-on"><input type="checkbox" id="grOn" ${G.on === false ? "" : "checked"}> 자동 인사 켜기</label>
+    <div class="gr-langs">${GREET_LANGS.map(([k, n]) => `<button type="button" class="pill ${k === cur ? "on" : ""}" data-gl="${k}">${n}</button>`).join("")}</div>
+    <label class="f"><span>인사 문구</span><textarea id="grDay" rows="4"></textarea></label>
+    <label class="f"><span>밤에 덧붙이는 문구 <small class="hint">— 비우면 안 붙어요</small></span><textarea id="grNight" rows="2"></textarea></label>
+    <p class="hint">한국어 · 영어 · 베트남어 말고 다른 언어 문구를 고쳤다면, 번역기로 한 번 확인해 주세요. 손님 언어 문구가 비어 있으면 영어로 나가요.</p>
+    <div class="btns"><button class="btn" type="button" id="grClose">닫기</button><button class="btn main" type="button" id="grSave">저장</button></div></div>`;
+  document.body.appendChild(d);
+  const keep = () => { G.day[cur] = d.querySelector("#grDay").value.trim(); G.night[cur] = d.querySelector("#grNight").value.trim(); };
+  const show = () => { d.querySelector("#grDay").value = G.day[cur] || ""; d.querySelector("#grNight").value = G.night[cur] || ""; d.querySelectorAll("[data-gl]").forEach(x => x.classList.toggle("on", x.dataset.gl === cur)); };
+  show();
+  d.querySelectorAll("[data-gl]").forEach(x => x.onclick = () => { keep(); cur = x.dataset.gl; show(); });
+  d.querySelector("#grClose").onclick = () => d.remove();
+  d.onclick = e => { if (e.target === d) d.remove(); };
+  d.querySelector("#grSave").onclick = async () => {
+    keep(); G.on = d.querySelector("#grOn").checked;
+    if (!(G.day.ko || "").trim()) { toast("한국어 인사 문구는 비울 수 없어요"); return; }
+    const w = await sb.from("settings").upsert({ key: "chat_greet", value: G });
+    if (w.error) { toast("저장하지 못했어요: " + w.error.message); return; }
+    toast(G.on ? "자동 인사를 저장했어요 ✅" : "자동 인사를 껐어요"); d.remove();
+  };
+}

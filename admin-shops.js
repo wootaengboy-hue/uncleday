@@ -146,6 +146,8 @@ function openEditor(id, preset, opts = {}) {
       <div class="box">
         <label class="switch best-sw ${s.best ? "on" : ""}" id="bSw"><input type="checkbox" id="bChk" ${s.best ? "checked" : ""}>
           <div><b>✦ 엉클 인증업체 배지 달기</b><div class="hint">켜면 손님 화면의 업체 사진과 이름 옆에 반짝이는 '엉클 인증업체' 배지가 붙고, 목록에서 맨 앞에 보여요.</div></div></label>
+        <label class="switch ${s.outcall ? "on" : ""}" id="ocSw"><input type="checkbox" id="ocChk" ${s.outcall ? "checked" : ""}>
+          <div><b>🏨 호텔 출장 가능</b><div class="hint">사장님께 <b>직접 확인한 경우에만</b> 켜요. 켜면 손님 화면에 '호텔 출장 가능' 표시가 붙고, '🏨 호텔 출장' 필터에 나와요. 출장 가격 · 지역은 메뉴나 소개 글에 적어 주세요.</div></div></label>
         <label class="switch ${isOk(s) ? "on" : ""}" id="vSw"><input type="checkbox" id="vChk" ${isOk(s) ? "checked" : ""}>
           <div><b>입점 확인 완료</b><div class="hint">켜면 손님 화면에서 "정보 확인 중" 표시가 사라지고, 영업시간과 메뉴가 있으면 예약 폼이 열려요.</div></div></label>
         <div class="f"><span>정보 확인 체크 <small style="font-weight:400;color:var(--sub)">업체에 직접 확인한 항목에 체크해요. 손님에게는 안 보여요.</small></span>
@@ -319,6 +321,7 @@ function openEditor(id, preset, opts = {}) {
   if ($("revDone")) $("revDone").onclick = () => { delete s.review; $("revBox").remove(); toast("배너를 지웠어요. '저장'을 눌러 주세요."); };
   const drawChk = () => { const [n, t] = chkCount(s); $("chkSum").textContent = `확인 ${n} / ${t}` + (n === t ? " · 모두 확인됐어요" : ""); };
   $("bChk").onchange = () => { if ($("bChk").checked) s.best = true; else delete s.best; $("bSw").classList.toggle("on", !!s.best); };
+  $("ocChk").onchange = () => { if ($("ocChk").checked) s.outcall = true; else delete s.outcall; $("ocSw").classList.toggle("on", !!s.outcall); };
   $("vChk").onchange = () => { s.verified = $("vChk").checked; $("vSw").classList.toggle("on", s.verified); drawChk(); };
   $("chkList").querySelectorAll("[data-chk]").forEach(el => el.onchange = () => {
     s.checks = s.checks || {}; s.checks[el.dataset.chk] = el.checked; drawChk(); });

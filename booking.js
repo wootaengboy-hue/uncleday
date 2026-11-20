@@ -208,35 +208,35 @@ async function pbShow() {
 }
 function pbRender(box, b, t, d) {
   const rate = d && d.rate ? Math.round(d.rate * 100) : 3, user = typeof ACCT !== "undefined" && ACCT.on ? ACCT.user() : null;
-  const head = `<b class="pb-t">${pbT("title", { p: rate })}</b>`;
+  const head = `<b class="pb-t">${SITE.ptsRate ? pbT("title", { p: rate }) : pbT("titleN")}</b>`;   // 비율은 업체와 협의되면 숫자로 (data.js SITE.ptsRate)
   const totalLine = d && d.total != null ? `<p class="pb-tot">${pbT("total")} <b>${pbFmt(d.total)}P</b>${d.waiting ? ` · ${pbT("waiting", { n: d.waiting })}` : ""}</p>` : "";
   if (d && d.other) { box.innerHTML = `${head}<p class="pb-d">${pbT("other")}</p>`; return; }
   if (d && d.mine && !PB_EDIT) {
     const st = d.status, can = st === "wait" || st === "review";
     box.innerHTML = `${head}<div class="pb-st st-${st}"><b>${pbT("st_" + st)}</b>
       <span>${pbT("you")}: <b>${pbFmt(d.amount)}₫</b>${d.items ? ` · ${esc(d.items)}` : ""}${d.receipt ? ` · 🧾 ${pbT("rcSaved")}` : ""}</span>
-      ${st === "ok" ? `<span class="pb-pts">+${pbFmt(d.points)}P</span>` : can ? `<span>${pbT("est")}: <b>+${pbFmt(Math.floor(d.amount * (d.rate || 0.03)))}P</b></span>` : ""}
+      ${st === "ok" ? `<span class="pb-pts">+${pbFmt(d.points)}P</span>` : can && SITE.ptsRate ? `<span>${pbT("est")}: <b>+${pbFmt(Math.floor(d.amount * (d.rate || 0.03)))}P</b></span>` : ""}
       ${d.note ? `<small>💬 ${esc(d.note)}</small>` : ""}</div>${totalLine}<p class="pb-hint">${pbT("soon")}</p>
       ${can ? `<button class="btn" type="button" id="pbEdit">${pbT("edit")}</button>` : ""}`;
     const e = document.getElementById("pbEdit"); if (e) e.onclick = () => { PB_EDIT = true; pbRender(box, b, t, d); };
     return;
   }
   if (!user) {
-    box.innerHTML = `${head}<p class="pb-d">${pbT("desc", { p: rate })}</p><p class="pb-hint">${pbT("why")}</p>
+    box.innerHTML = `${head}<p class="pb-d">${SITE.ptsRate ? pbT("desc", { p: rate }) : pbT("descN")}</p><p class="pb-hint">${pbT("why")}</p>
       <button class="btn big-btn" type="button" id="pbLogin">${pbT("login")}</button><p class="pb-hint">${pbT("loginHint")}</p>`;
     document.getElementById("pbLogin").onclick = () => ACCT.openLogin();
     return;
   }
   const pre = d && d.mine ? d : {};
-  box.innerHTML = `${head}<p class="pb-d">${pbT("desc", { p: rate })}</p><p class="pb-hint">${pbT("why")}</p>
+  box.innerHTML = `${head}<p class="pb-d">${SITE.ptsRate ? pbT("desc", { p: rate }) : pbT("descN")}</p><p class="pb-hint">${pbT("why")}</p>
     <form class="form pb-form" id="pbForm">
       <label>${pbT("amt")}<input name="amt" inputmode="numeric" autocomplete="off" required placeholder="${esc(pbT("amtPh"))}" value="${pre.amount ? pbFmt(pre.amount) : ""}"></label>
       <label>${pbT("items")}<input name="items" maxlength="300" placeholder="${esc(pbT("itemsPh"))}" value="${esc(pre.items || "")}"></label>
       <label>${pbT("rc")}<input name="rc" type="file" accept="image/*"><small>${pbT("rcHint")}</small></label>
-      <p class="pb-est">${pbT("est")}: <b id="pbEst">+0P</b></p>
+      ${SITE.ptsRate ? `<p class="pb-est">${pbT("est")}: <b id="pbEst">+0P</b></p>` : ""}
       <button class="btn big-btn" type="submit">${pbT("send")}</button></form>${totalLine}`;
   const f = document.getElementById("pbForm"), est = document.getElementById("pbEst");
-  const upd = () => { const n = pbNum(f.amt.value); est.textContent = "+" + pbFmt(Math.floor(n * rate / 100)) + "P"; };
+  const upd = () => { const n = pbNum(f.amt.value); if (!est) return; est.textContent = "+" + pbFmt(Math.floor(n * rate / 100)) + "P"; };
   f.amt.oninput = () => { const n = pbNum(f.amt.value); f.amt.value = n ? pbFmt(n) : ""; upd(); }; upd();
   f.onsubmit = async e => {
     e.preventDefault();

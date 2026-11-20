@@ -1,0 +1,35 @@
+{
+ "id": "2026-11-20-todo2",
+ "title": "11/20 새 기능 — 해 주실 일",
+ "created": "2026-11-20",
+ "tasks": [
+  {
+   "group": "채팅",
+   "priority": 2,
+   "title": "[11/20] SQL universe35 실행 (자동 인사 · 속도)",
+   "note": "https://raw.githubusercontent.com/wootaengboy-hue/uncleday/main/supabase/universe35.sql 내용을 Supabase SQL Editor 에 붙여 넣고 Run",
+   "memo": "<p>실행 전엔 자동 인사 · 속도 표시가 안 나와요 (사이트는 그대로 동작).</p>"
+  },
+  {
+   "group": "다국어",
+   "priority": 1,
+   "title": "[11/20] 🌐 다국어 번역 → 빠진 번역 모두 만들기",
+   "note": "새 문구(영업 중 · 포인트 적립 · 호텔 출장 · 홈 화면 추가 · 채팅 안내)를 다른 10개 언어로",
+   "memo": "<p>포털 → 🌐 다국어 번역</p>"
+  },
+  {
+   "group": "손님 사이트",
+   "priority": 1,
+   "title": "[11/20] 🏨 호텔 출장 되는 가게 사장님께 확인",
+   "note": "확인된 곳만 관리자 업체 편집에서 '호텔 출장 가능' 켜기. 출장 가격 · 지역은 메뉴/소개에",
+   "memo": "<p>켠 가게가 하나라도 있으면 손님 화면에 '🏨 호텔 출장' 필터가 생겨요.</p>"
+  },
+  {
+   "group": "손님 사이트",
+   "priority": 0,
+   "title": "[나중에] 포인트 비율 협의되면 숫자 표시",
+   "note": "data.js 의 ptsRate: 0 → 3 처럼 바꾸면 '💸 3% 포인트 적립'으로 보여요 (Claude에게 말해 주세요)",
+   "memo": "<p>지금은 숫자 없이 '포인트 적립'만 보여요.</p>"
+  }
+ ]
+}

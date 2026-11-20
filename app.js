@@ -1,7 +1,7 @@
 /* 메인 페이지를 그려주는 파일. 내용 수정은 data.js에서 하세요. */
 window.SPA = true;
 const HOME_TITLE = document.title;
-const state = { cat: "", city: "all", q: "", from: null, fromName: "" };
+const state = { cat: "", city: "all", q: "", from: null, fromName: "", openNow: false, outcall: false };
 // 도시 모아보기(c/<도시>/)에서 들어오면 그 도시를 먼저 보여 줘요: /?city=danang
 try { const qc = new URLSearchParams(location.search).get("city"); if (qc && typeof CITIES !== "undefined" && CITIES.some(c => c.id === qc)) state.city = qc; } catch (e) {}
 
@@ -27,6 +27,8 @@ function drawNear() {
         `<option value="${PLACES.indexOf(p)}" ${String(PLACES.indexOf(p)) === sel ? "selected" : ""}>${tx(p.name)}</option>`).join("")}</optgroup>`).join("")}
     </select>
     ${state.from ? `<button class="chip" id="nearOff" type="button">${ui("nearOff")}</button>` : ""}
+    <button class="chip op-chip ${state.openNow ? "on" : ""}" id="openNow" type="button">${ui("op_filter")}</button>
+    ${SHOPS.some(s => s.outcall) ? `<button class="chip ${state.outcall ? "on" : ""}" id="ocOnly" type="button">${ui("oc_filter")}</button>` : ""}
     <div class="near-msg" id="nearMsg">${state.from ? (state.fromName === "me" ? ui("nearFromMe") : ui("nearFromPlace", { p: tx(PLACES[+state.fromName].name) })) + ` · <small>${ui("nearApprox")}</small>` : ""}</div>`;
   $("nearPlace").onchange = e => {
     const v = e.target.value;
@@ -34,6 +36,8 @@ function drawNear() {
     else { const p = PLACES[+v]; state.from = p.geo; state.fromName = v; state.city = p.city; drawCities(); }
     drawNear(); drawShops();
   };
+  $("openNow").onclick = () => { state.openNow = !state.openNow; drawNear(); drawShops(); };
+  if ($("ocOnly")) $("ocOnly").onclick = () => { state.outcall = !state.outcall; drawNear(); drawShops(); };
   if ($("nearOff")) $("nearOff").onclick = () => { state.from = null; state.fromName = ""; drawNear(); drawShops(); };
   $("nearMe").onclick = () => {
     const msg = t => { $("nearMsg").textContent = t; };
@@ -112,6 +116,7 @@ function drawShops() {
     const text = textOf(s);
     return (!state.cat || catGroup(s.cat).id === state.cat) &&
            (state.city === "all" || s.city === state.city) &&
+           (!state.openNow || isOpenNow(s)) && (!state.outcall || s.outcall) &&
            (!full || (wholeHit ? text.includes(full) : words.every(w => text.includes(w))));
   });
   const cur = CATEGORIES.find(c => c.id === state.cat);
@@ -123,13 +128,14 @@ function drawShops() {
       ${s.rating ? `<div class="rate"><span class="rate-stars">${stars(Math.round(s.rating))}</span><b>${(+s.rating).toFixed(1)}</b><small>(${s.reviews})</small></div>` : ""}
       <div class="meta">${state.from && s.geo ? `<b class="dist">📍 ${distText(distKm(state.from, s.geo))}</b> · ` : ""}${cityName(s.city)}</div>
       <div class="price">${priceFrom(s)}</div>
+      <div class="card-badges">${openBadge(s)}${ocBadge(s)}${ptsBadge(s)}</div>
       <div class="tags card-tags">${s.tags.map(t => `<span class="tag">${tx(t)}</span>`).join("")}</div>
     </div></a>`;
   };
   const grid = arr => `<div class="shop-grid">${arr.map(card).join("")}</div>`;
   // 도시를 골랐고 그 도시 안내 글이 있으면 목록 위에 띠 하나
   const gb = $("cityGuide"); if (gb) gb.innerHTML = state.city !== "all" ? guideBar(state.city) : "";
-  if (!list.length) { $("shopGrid").innerHTML = `<p class="empty">${state.q ? ui("empty") : ui("comingSoon")}</p>`; return; }
+  if (!list.length) { $("shopGrid").innerHTML = `<p class="empty">${state.openNow ? ui("op_none") : state.q ? ui("empty") : ui("comingSoon")}</p>`; return; }
   // 카테고리를 고르지 않았으면 카테고리별로 묶어서 보여줘요
   if (state.from) {
     const far = list.filter(s => !s.geo);
@@ -192,7 +198,7 @@ route();
 
 // 데이터베이스에서 새 정보가 오면 화면을 다시 그려요
 window.onLiveUpdate = () => {
-  drawCats(); drawShops(); drawReviews();
+  drawNear(); drawCats(); drawShops(); drawReviews();
   const m = location.hash.match(/^#\/shop\/(.+)$/);
   if (m && !document.querySelector("#detail form:not([hidden]) input:focus, #detail textarea:focus")) renderShop(decodeURIComponent(m[1]));
 };

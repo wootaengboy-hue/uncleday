@@ -242,6 +242,23 @@ function drawDash() {
       : `<div class="todo"><div class="empty">이 달에는 예약이 없어요.</div></div>`}
     <p class="hint" style="margin:14px 0 40px">수수료 = 손님이 업체에 낸 금액 × 업체 수수료율. 방문 완료 처리할 때 결제 금액을 넣으면 자동으로 계산돼요.<br>'리포트'는 업체에 보내는 월간 성과 보고서예요 (조회·상담·예약·방문·수수료, 베트남어·영어·한국어).</p>`;
   $("dashMonth").onchange = e => { dashMonth = e.target.value; drawDash(); };
+  // ⚡ 답장 · 예약 확정 속도 (universe35 · 실제 기록으로만) — 느린 가게부터
+  { const tab = $("tab-dash"); let box = document.getElementById("spdBox");
+    if (!box) { box = document.createElement("div"); box.id = "spdBox"; tab.appendChild(box); }
+    Promise.all([sb.rpc("chat_speed"), sb.rpc("shop_speed")]).then(([c, s]) => {
+      if (c.error || s.error) { box.innerHTML = `<p class="hint" style="margin:0 0 40px">⚡ 답장 · 확정 속도를 보려면 supabase/universe35.sql 을 실행해 주세요.</p>`; return; }
+      const mm = m => m == null ? "-" : m < 1 ? "1분 미만" : m < 60 ? `${m}분` : m < 1440 ? `${(m / 60).toFixed(1)}시간` : `${(m / 1440).toFixed(1)}일`;
+      const rows = Object.entries(s.data || {}).map(([id, v]) => ({ id, v, n: (shops.find(x => x.id === id) || {}).name })).sort((a, b) => b.v.min - a.v.min);
+      const cd = c.data || {};
+      box.innerHTML = `<h2 class="sec">⚡ 답장 · 예약 확정 속도 <small>실제 기록 · 가운데 값</small></h2>
+        <p class="hint">💬 채팅 첫 답장 (최근 30일): <b>${mm(cd.min)}</b> · ${cd.n || 0}건 ${cd.n >= 10 ? "— 손님 채팅창에 이 숫자가 보여요" : "— 10건이 넘으면 손님 채팅창에 보여요"} (자동 인사는 빼고 셌어요)</p>
+        ${rows.length ? `<div class="tscroll"><table class="t"><thead><tr><th>업체</th><th class="num">요청 → 확정</th><th class="num">건수</th><th></th></tr></thead><tbody>
+          ${rows.map(r => `<tr><td><b>${esc(r.n ? (r.n.ko || r.n.en) : r.id)}</b></td><td class="num">${mm(+r.v.min)}</td><td class="num">${r.v.n}</td><td>${r.v.min > 180 ? `<span class="err-text">느려요 — 사장님께 알림 확인 부탁</span>` : r.v.min <= 60 ? "손님 화면에 '⚡ 보통 N분 안에 확정' 표시" : r.v.min <= 720 ? "손님 화면에 '⚡ 보통 N시간 안에 확정' 표시" : ""}</td></tr>`).join("")}
+        </tbody></table></div>` : `<div class="todo"><div class="empty">아직 확정 기록이 3건 넘는 업체가 없어요 (최근 120일).</div></div>`}
+        <p class="hint" style="margin:10px 0 40px">12시간보다 오래 걸리는 업체는 손님 화면에 숫자를 보여 주지 않아요.</p>`;
+    }).catch(() => {});
+  }
+
   $("tab-dash").querySelectorAll("[data-todo]").forEach(r => r.onclick = () => { if (r.classList.contains("zero")) return; bkF = { ...BKF0, st: "all", todo: r.dataset.todo }; showTab("bk"); });
   $("tab-dash").querySelectorAll("[data-wtodo]").forEach(r => r.onclick = () => { if (r.classList.contains("zero")) return; const t = workTodos().find(x => x[0] === r.dataset.wtodo); if (t) t[4](); });
   $("tab-dash").querySelectorAll("[data-tab-go-home]").forEach(r => r.onclick = () => { PORTAL.view = "home"; try { sessionStorage.setItem("ptView", "home"); } catch (e) {} PORTAL.todoUntil = Date.now() + 5000; showTab("home"); portalTodoScroll(); });   // 마지막에 보던 앱이 아니라 포털 첫 화면의 오늘 할 일로

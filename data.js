@@ -12,6 +12,7 @@ const SITE = {
   name: { ko: "엉클데이", en: "Uncle Day", vi: "Uncle Day" },
   slogan: { ko: "베트남 뷰티, 믿을 수 있는 곳만 골라 연결해 드려요",
             en: "Trusted beauty services in Vietnam, booked for you", vi: "Dịch vụ làm đẹp uy tín tại Việt Nam, đặt lịch giúp bạn" },
+  ptsRate: 0,   // 💸 포인트 적립 비율(%) — 업체와 협의되면 숫자(예: 3)를 넣어요. 0이면 숫자 없이 "포인트 적립"만 보여요
   kakao: "https://pf.kakao.com/_xgkuxeX/chat",   // 엉클데이 카카오톡 채널 (누르면 바로 1:1 채팅)
   email: "uncledayadmin@gmail.com",         // 예약 요청 받을 이메일
   formEndpoint: "",                   // (선택) 예약을 자동 수신할 폼 주소. 비워두면 카톡/이메일 방식. README 참고
