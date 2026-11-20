@@ -67,7 +67,7 @@ function chatByeText(l) { try { const v = localStorage.getItem("ud-chat-bye-" + 
 /* ===== 🌐 자동 번역 (채널톡처럼) — Edge Function 'chat-tr' · SQL universe32 =====
    손님 글 → 내가 고른 말로 보여 주기 (한 번 번역하면 저장) · 내 답장 → 손님 말로 바꿔서 보내기 */
 const CTR_NAMES = { ko: "한국어", vi: "베트남어", en: "영어", ja: "일본어", zh: "중국어", "zh-TW": "중국어(번체)", ru: "러시아어", fr: "프랑스어", de: "독일어", es: "스페인어", hi: "힌디어", th: "태국어", id: "인도네시아어" };
-const CTR = (() => { let v = {}; try { v = JSON.parse(localStorage.getItem("ud-chat-tr") || "{}"); } catch (e) {} return { on: v.on !== false, me: v.me || (typeof ALANG !== "undefined" && ALANG === "vi" ? "vi" : "ko"), busy: false, fail: "" }; })();
+const CTR = (() => { let v = {}; try { v = JSON.parse(localStorage.getItem("ud-chat-tr") || "{}"); } catch (e) {} return { on: v.on !== false, me: v.me || "", busy: false, fail: "" }; })();
 const ctrSave = () => { try { localStorage.setItem("ud-chat-tr", JSON.stringify({ on: CTR.on, me: CTR.me })); } catch (e) {} };
 const ctrName = l => CTR_NAMES[l] || (l || "").toUpperCase();
 // 손님이 쓰는 말: 마지막 손님 글에서 감지한 말 → 없으면 손님이 보던 사이트 언어
@@ -81,7 +81,7 @@ async function ctrCall(items) {
 }
 // 아직 내 말로 번역 안 된 손님 글을 모아서 번역 → 저장 → 다시 그리기
 async function ctrFill() {
-  if (!CTR.on || CTR.busy || !CHAT_CUR) return;
+  if (!CTR.on || CTR.busy || !CHAT_CUR || !CTR.me) return;
   const need = CHAT_MSGS.filter(m => m.sender === "guest" && !(m.tr && m.tr[CTR.me]) && m.src_lang !== CTR.me && !m._trFail).slice(-20);
   if (!need.length) return;
   CTR.busy = true; const cur = CHAT_CUR;
@@ -108,7 +108,15 @@ function ctrMsgHtml(m) {
   if (m.orig) return `<span>${br(m.orig)}</span><details class="cm-tr"><summary>🌐 ${esc(ctrName(m.src_lang))}로 보냄</summary>${br(m.body)}</details>`;
   return `<span>${br(m.body)}</span>`;
 }
+// 답장 칸 안내 문구 (입력칸은 화면 번역이 안 닿아서 여기서 바로 · 현장 영업 베트남어 화면)
+function chatPh(th) {
+  const vi = typeof IS_FIELD === "function" && IS_FIELD() && typeof ALANG !== "undefined" && ALANG === "vi", g = ctrGuestLang(th);
+  if (vi) { const N = l => (typeof ADMIN_VI !== "undefined" && ADMIN_VI[ctrName(l)]) || ctrName(l); return CTR.on && g !== CTR.me ? `Viết bằng ${N(CTR.me)} → tự dịch sang ${N(g)} · Enter để gửi` : "Nhập trả lời · Enter để gửi, Shift+Enter xuống dòng"; }
+  return CTR.on && ctrGuestLang(th) !== CTR.me ? `${esc(ctrName(CTR.me))}로 쓰면 ${esc(ctrName(ctrGuestLang(th)))}로 바꿔서 보내요 · Enter 보내기` : "답장 입력 · Enter 보내기, Shift+Enter 줄바꿈";
+}
 function drawThread() {
+  // 내가 볼 말: 고른 적 없으면 현장 영업(베트남어 화면)은 베트남어, 나머지는 한국어
+  if (!CTR.me) CTR.me = typeof IS_FIELD === "function" && IS_FIELD() && typeof ALANG !== "undefined" && ALANG === "vi" ? "vi" : "ko";
   const box = $("chatMain"), th = THREADS.find(x => x.id === CHAT_CUR); if (!box || !th) return;
   const b = th.booking_id && BOOKINGS.find(x => x.id === th.booking_id), phone = chatPhone(th.contact || (b && b.contact));
   const lastAdmin = [...CHAT_MSGS].reverse().find(m => m.sender === "admin");
@@ -124,7 +132,7 @@ function drawThread() {
       ${CTR.fail ? `<span class="cm-trerr">번역이 안 돼요: ${esc(CTR.fail)} <button type="button" class="btn sm" data-ctr="retry">다시</button></span>` : ""}</div>
     <div class="cm-list">${CHAT_MSGS.map(m => `<div class="cm ${m.sender === "admin" ? "us" : "them"}">${ctrMsgHtml(m)}<time>${m.sender === "admin" ? esc(m.author || "") + " · " : ""}${esc(dt(m.created_at))}</time></div>`).join("")}
       ${lastAdmin ? `<div class="cm-read">${read ? "✓ 손님이 읽었어요" : "손님이 아직 안 읽었어요"}</div>` : ""}</div>
-    <form class="cm-form"><textarea rows="2" placeholder="${CTR.on && ctrGuestLang(th) !== CTR.me ? `${esc(ctrName(CTR.me))}로 쓰면 ${esc(ctrName(ctrGuestLang(th)))}로 바꿔서 보내요 · Enter 보내기` : "답장 입력 · Enter 보내기, Shift+Enter 줄바꿈"}">${esc(typed)}</textarea><button class="btn main">보내기</button></form>
+    <form class="cm-form"><textarea rows="2" placeholder="${chatPh(th)}">${esc(typed)}</textarea><button class="btn main">보내기</button></form>
     ${lastAdmin && !read ? `<div class="cm-ping"><span>손님이 사이트를 닫았으면 답장을 못 봐요 →</span>
       ${phone ? `<button class="btn sm" data-ping="sms">📱 답장 알림 문자 (${esc(phone)})</button>` : ""}<button class="btn sm" data-ping="copy">📋 알림 메시지 복사 (카톡 등)</button></div>` : ""}`;
   const list = box.querySelector(".cm-list"); list.scrollTop = list.scrollHeight;

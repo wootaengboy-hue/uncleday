@@ -123,3 +123,29 @@ const aviText0 = aviText;
 aviText = function (t) { const r = aviText0(t); if (r != null) return r; const k = t.trim(); if (!k.includes(" · ")) return null; const parts = k.split(" · ").map(aviPart); return parts.every(x => x != null) ? t.replace(k, parts.join(" · ")) : null; };
 // 직원 화면에서는 가게 · 메뉴 이름을 베트남어 → 영어 → 한국어 순으로
 function adminNm(o) { if (!o) return ""; if (typeof o === "string") return o; return ALANG === "vi" && typeof IS_FIELD === "function" && IS_FIELD() ? (o.vi || o.en || o.ko || "") : (o.ko || o.en || o.vi || ""); }
+
+// 11/20: 💬 채팅 (현장 영업도 봐요 · universe36)
+Object.assign(ADMIN_VI, {
+  "💬 채팅": "💬 Chat", "채팅": "Chat", "안 읽음": "Chưa đọc", "진행 중": "Đang mở", "전체": "Tất cả", "대화가 없어요.": "Chưa có cuộc trò chuyện.",
+  "왼쪽에서 대화를 고르세요.": "Chọn một cuộc trò chuyện bên trái.", "손님이 사이트나 예약확인증에서": "Tin nhắn khách gửi từ trang web hoặc phiếu xác nhận", "로 보낸 메시지가 여기 모여요.": "được gom về đây.",
+  "답장 입력 · Enter 보내기": "Nhập trả lời · Enter để gửi", "보내기": "Gửi", "✓ 대화 끝내기": "✓ Kết thúc trò chuyện", "다시 열기": "Mở lại", "손님": "Khách",
+  "답장 대기": "Chờ trả lời", "방금": "Vừa xong", "‹ 목록": "‹ Danh sách", "✓ 손님이 읽었어요": "✓ Khách đã đọc", "손님이 아직 안 읽었어요": "Khách chưa đọc",
+  "원문": "Bản gốc", "자동 번역": "Tự động dịch", "번역 중…": "Đang dịch…", "번역 실패": "Dịch thất bại", "보내고 끝내기": "Gửi và kết thúc", "인사 없이 끝내기": "Kết thúc không gửi lời chào",
+  "마무리 인사": "Lời chào kết thúc", "인사 문구": "Lời chào", "대화를 끝냈어요": "Đã kết thúc trò chuyện", "다시": "Lại", "로그인한 손님": "Khách đã đăng nhập",
+  "내가 볼 말": "Ngôn ngữ tôi xem", "손님 말": "Ngôn ngữ của khách", "손님이 쓰는 말": "Ngôn ngữ khách dùng", "꺼짐": "Tắt", "그대로 보내기": "Gửi nguyên văn",
+  "답장 알림 문자": "Tin nhắn báo có trả lời", "엉클데이": "Uncle Day",
+});
+ADMIN_VI_RX.push([/^(\d+)분 전$/, "$1 phút trước"], [/^(\d+)시간 전$/, "$1 giờ trước"]);
+Object.assign(ADMIN_VI, {
+  "한국어": "Tiếng Hàn", "베트남어": "Tiếng Việt", "영어": "Tiếng Anh", "일본어": "Tiếng Nhật", "중국어": "Tiếng Trung", "중국어(번체)": "Tiếng Trung (phồn thể)", "러시아어": "Tiếng Nga",
+  "프랑스어": "Tiếng Pháp", "독일어": "Tiếng Đức", "스페인어": "Tiếng Tây Ban Nha", "힌디어": "Tiếng Hindi", "태국어": "Tiếng Thái", "인도네시아어": "Tiếng Indonesia",
+  "켜짐": "Bật", "자동 인사": "Lời chào tự động", "손님 말:": "Ngôn ngữ của khách:", "손님이 사이트를 닫았으면 답장을 못 봐요 →": "Nếu khách đã đóng trang web thì sẽ không thấy trả lời →",
+  "📋 알림 메시지 복사 (카톡 등)": "📋 Sao chép tin báo (Zalo, KakaoTalk…)", "🤖 자동 인사": "🤖 Lời chào tự động",
+});
+{ const L = s => ADMIN_VI[s] || s;
+  ADMIN_VI_RX.push(
+    [/^🌐 (.+) 원문$/, (m, a) => `🌐 Bản gốc (${L(a)})`], [/^🌐 (.+)로 보냄$/, (m, a) => `🌐 Đã gửi bằng ${L(a)}`],
+    [/^· 내 답장은 (.+)로 바꿔서 보내요$/, (m, a) => `· trả lời của tôi sẽ được dịch sang ${L(a)}`],
+    [/^(.+)로 쓰면 (.+)로 바꿔서 보내요 · Enter 보내기$/, (m, a, b) => `Viết bằng ${L(a)} → tự dịch sang ${L(b)} · Enter để gửi`],
+    [/^🤖 자동 인사 · (.+)$/, "🤖 Lời chào tự động · $1"]);
+}

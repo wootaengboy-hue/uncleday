@@ -6,7 +6,7 @@ let ME = { email: "", id: "" };
 // 👷 권한: full = 관리자 전부 · field = 현장 영업 직원 (업체 정보 · 가격 · 사진 · 영업 보드 · 링크 · 매뉴얼만) — universe27
 let ROLE = "full";
 const IS_FIELD = () => ROLE === "field";
-const FIELD_TABS = ["home", "shops", "work"];
+const FIELD_TABS = ["home", "shops", "work", "chat"];   // 11/20: 현장 영업도 💬 채팅 (universe36)
 let BOOKINGS = []; window.BOOKINGS = BOOKINGS;
 let SETTLES = [], RVS = [];
 const ST = {
@@ -134,7 +134,7 @@ window.addEventListener("popstate", () => {
   if (typeof TAB === "undefined" || $("app").hidden) return;
   const [t, v] = location.hash.slice(1).split("/"); if (!t || /=/.test(t)) return;
   NAV_QUIET = true;
-  try { if (t === "home") { PORTAL.view = v || "home"; if (TAB !== "home") showTab("home"); else portalGo(PORTAL.view, true); } else if (t === "chat" && v && !IS_FIELD()) { showTab("chat"); if (CHAT_CUR !== v) openThread(v).then(() => $("tab-chat").scrollIntoView({ block: "start" })); } else if (TABS_ALL.includes(t)) { if (t === "chat") CHAT_CUR = null; showTab(t); } }
+  try { if (t === "home") { PORTAL.view = v || "home"; if (TAB !== "home") showTab("home"); else portalGo(PORTAL.view, true); } else if (t === "chat" && v) { showTab("chat"); if (CHAT_CUR !== v) openThread(v).then(() => $("tab-chat").scrollIntoView({ block: "start" })); } else if (TABS_ALL.includes(t)) { if (t === "chat") CHAT_CUR = null; showTab(t); } }
   finally { NAV_QUIET = false; }
 });
 const TABS_ALL = ["home", "dash", "work", "bk", "chat", "crm", "settle", "shops", "rv", "uni", "acc"];
@@ -1348,7 +1348,7 @@ async function afterLogin(session) {
     // 👷 현장 직원은 ⚙️ 계정 화면을 못 보니 로그아웃 버튼도 위에 둬요
     const o = document.createElement("button"); o.id = "myOut"; o.className = "btn sm"; o.type = "button"; o.textContent = "로그아웃"; o.onclick = async () => { await sb.auth.signOut(); location.reload(); }; b.after(o); }
   gate(`<h1>불러오는 중…</h1>`);
-  try { if (IS_FIELD()) { await Promise.all([loadShops(), loadWork()]); } else { await loadAll(); await loadTold(); } }
+  try { if (IS_FIELD()) { await Promise.all([loadShops(), loadWork(), loadThreads().catch(() => {})]); } else { await loadAll(); await loadTold(); } }
   catch (e) { gate(`<h1>불러오지 못했어요</h1><p class="hint" style="text-align:center">${esc(e.message || "")}<br>데이터베이스 설정(schema.sql)을 실행했는지 확인해 주세요.</p>`); started = false; return; }
   $("gate").hidden = true; $("app").hidden = false; $("tabs").hidden = false;
   $("me").textContent = ME.email;
@@ -1366,7 +1366,7 @@ async function afterLogin(session) {
   setInterval(async () => {
     if (document.hidden || $("layer").innerHTML) return;
     const before = BOOKINGS.length, rvBefore = RVS.length;
-    if (IS_FIELD()) { try { await loadWork(); } catch (e) {} if (TAB === "work" && !document.querySelector(".overlay")) showTab(TAB); return; }
+    if (IS_FIELD()) { try { await Promise.all([loadWork(), loadThreads().catch(() => {})]); } catch (e) {} if (typeof chatCount === "function") chatCount(); if (TAB === "work" && !document.querySelector(".overlay")) showTab(TAB); else if (TAB === "chat" && !CHAT_CUR && !document.querySelector(".overlay")) drawChat(); return; }
     try { await Promise.all([loadBookings(), loadReviews(), loadStats(vnMonth(), true), loadWork()]); await loadTold(); } catch (e) { return; }
     if (BOOKINGS.length > before) toast(`🔔 새 예약 ${BOOKINGS.length - before}건이 들어왔어요`, 5000);
     if (RVS.length > rvBefore) toast(`⭐ 새 후기가 들어왔어요`, 4000);

@@ -11,6 +11,13 @@
    "memo": "<p>실행 전엔 자동 인사 · 속도 표시가 안 나와요 (사이트는 그대로 동작).</p>"
   },
   {
+   "group": "채팅",
+   "priority": 2,
+   "title": "[11/20] SQL universe36 실행 + Edge Function chat-tr 다시 배포 (현장 영업 채팅)",
+   "note": "universe36: https://raw.githubusercontent.com/wootaengboy-hue/uncleday/main/supabase/universe36.sql · chat-tr: https://raw.githubusercontent.com/wootaengboy-hue/uncleday/main/supabase/functions/chat-tr/index.ts 로 코드 바꾸고 Deploy",
+   "memo": "<p>chat-tr 을 다시 배포해야 현장 영업 직원도 자동 번역이 돼요. (키는 그대로 · 채팅에 보내지 마세요)</p>"
+  },
+  {
    "group": "다국어",
    "priority": 1,
    "title": "[11/20] 🌐 다국어 번역 → 빠진 번역 모두 만들기",

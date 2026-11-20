@@ -1,4 +1,4 @@
-// 🌐 채팅 자동 번역 (Claude) — 관리자만
+// 🌐 채팅 자동 번역 (Claude) — 엉클데이 직원만 (관리자 + 현장 영업)
 //  손님이 어떤 나라 말로 써도 담당자가 고른 말(한국어 · 베트남어 · 영어)로 보여 주고,
 //  담당자가 쓴 답장은 손님 말로 바꿔서 보내요 (채널톡처럼).
 //  요청: { items: [{ id?: any, text: string, to: "ko" | "vi" | "ru" | ... }] }  (한 번에 20개까지)
@@ -35,8 +35,8 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: h });
   if (req.method !== "POST") return out({ error: "POST only" }, 405);
   const caller = createClient(URL, ANON, { global: { headers: { Authorization: req.headers.get("Authorization") || "" } } });
-  const { data: isAdmin, error: e1 } = await caller.rpc("is_admin");
-  if (e1 || isAdmin !== true) return out({ error: "Admins only" }, 403);
+  const { data: isStaff, error: e1 } = await caller.rpc("is_staff");
+  if (e1 || isStaff !== true) return out({ error: "Staff only" }, 403);
   if (!KEY) return out({ error: "ANTHROPIC_API_KEY 비밀값이 아직 없어요 (Supabase → Edge Functions → Secrets)" }, 400);
 
   const b = await req.json().catch(() => ({}));
