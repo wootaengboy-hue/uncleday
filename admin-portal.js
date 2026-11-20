@@ -91,6 +91,8 @@ function portalGo(k, quiet) {
   // 같은 묶음의 다른 앱으로 바로 가는 칩 (휴대폰에서 왼쪽 메뉴 대신)
   const g = portalAppsFor().find(x => x[1].some(a => a[0] === k)), cur = el.querySelector("#ptCur");
   if (cur) { cur.innerHTML = g ? g[1].map(([id, ic, nm]) => `<button class="${id === k ? "on" : ""}" data-pgo="${id}">${ic} ${esc(nm)}</button>`).join("") : ""; cur.querySelectorAll("[data-pgo]").forEach(x => x.onclick = () => portalGo(x.dataset.pgo)); }
+  // 처음 열 때 그려야 하는 앱 (다국어 번역은 열어야 불러와요 — 안 그러면 빈 화면이라 새로고침이 필요했어요)
+  if (k === "i18n" && typeof i18nDraw === "function") { const b = document.getElementById("ptI18n"); if (b && !b.innerHTML.trim()) i18nDraw(); }
   if (!quiet) { const m = el.querySelector(".pt-main"); if (m) window.scrollTo({ top: Math.max(0, m.getBoundingClientRect().top + window.scrollY - 70), behavior: "smooth" }); }
 }
 // 대시보드 '할 일' 줄로 들어오면 ✅ 오늘 할 일 칸까지 내려가요.
