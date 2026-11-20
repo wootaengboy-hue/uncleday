@@ -245,6 +245,7 @@ for shop in d["shops"]:
     name = tx(shop.get("name")); desc = re.sub(r"\s+", " ", tx(shop.get("desc"))).strip()
     pre = " · ".join(x for x in [tx(city.get("name")), tx(cat.get("name"))] if x)
     desc = (f"{pre} | " if pre else "") + (desc[:90] + ("…" if len(desc) > 90 else "") if desc else "한국어로 상담하고 추가 요금 없이 예약하세요.")
+    if len(desc) < 80: desc += " 가격 · 영업시간 · 위치를 확인하고, 한국어로 상담한 뒤 추가 요금 없이 예약하세요."   # 빙: 설명이 너무 짧으면 안 좋아요
     os.makedirs(f"s/{sid}", exist_ok=True)
     en_n = lang(shop.get("name"), "en"); kind_ko = SUB_KO.get(shop.get("cat")) or tx(cat.get("name"))
     # 제목에 한국어 이름 + 원래(영어) 이름을 같이 — '클로버 스파'로 찾든 'Clover Spa'로 찾든 걸리게
@@ -718,7 +719,7 @@ def price_index_page(cid, all_t):
     city = cities.get(cid, {}); cko = tx(city.get("name")); url = f"{SITE}/c/{cid}/price/"
     upd = max(checked(x) for _, rr in all_t for x, _ in rr)
     title = f"{cko} 마사지 · 스파 · 뷰티 시술별 가격 ({YEAR}) | 엉클데이"
-    lead = f"엉클데이 업체의 실제 메뉴 가격으로 정리한 {cko} 시술별 가격이에요. " + " ".join(f"{t['kw']} {won(rr[0][1]['price'])}~{won(rr[-1][1]['price'])}." for t, rr in all_t[:3])
+    lead = f"엉클데이 업체의 실제 메뉴 가격으로 정리한 {cko} 시술별 가격이에요. " + " ".join(f"{t['kw']} {won(rr[0][1]['price'])}~{won(rr[-1][1]['price'])}." for t, rr in all_t[:3]) + (" 엉클데이로 예약해도 가게 가격 그대로예요." if len(all_t) < 3 else "")
     rows_h = "".join(f'<tr><td><a href="/c/{cid}/price/{t["id"]}/"><b>{esc(t["kw"])}</b></a><small>업체 {len({r[0]["id"] for r in rr})}곳 · 메뉴 {len(rr)}개</small></td><td class="n">{won(int(rr[0][1]["price"]))} ~ {won(int(rr[-1][1]["price"]))}</td></tr>' for t, rr in all_t)
     nav = "".join(f'<a href="/c/{k}/" class="{"on" if k == cid else ""}">{esc(tx(cities[k]["name"]))}</a>' for k in hubs)
     js = lambda o: json.dumps(o, ensure_ascii=False).replace("</", "<\\/")
@@ -754,7 +755,7 @@ def en_price_page(cid, t, rows, all_t):
     return en_shell(title, summ, url, f"{SITE}/c/{cid}/price/{t['id']}/", cid, lds, body, upd=upd)
 def en_price_index(cid, all_t):
     cen = ecity(cid); url = f"{SITE}/en/c/{cid}/price/"; upd = max(checked(x) for _, rr in all_t for x, _ in rr)
-    title = f"{cen} massage, spa & beauty prices ({YEAR}) | Uncle Day"; lead = f"Real menu prices from Uncle Day shops in {cen}, by treatment."
+    title = f"{cen} massage, spa & beauty prices ({YEAR}) | Uncle Day"; lead = f"Real menu prices from Uncle Day shops in {cen}, by treatment: " + ", ".join(t["en"] for t, _ in all_t[:4]) + " and more — the same price as at the shop, with no booking fee."
     rows_h = "".join(f'<tr><td><a href="/en/c/{cid}/price/{t["id"]}/"><b>{esc(t["en"])}</b></a><small>{len({r[0]["id"] for r in rr})} shops · {len(rr)} menu items</small></td><td class="n">{vnd(int(rr[0][1]["price"]))} – {vnd(int(rr[-1][1]["price"]))}</td></tr>' for t, rr in all_t)
     body = f"""<h1>{esc(cen)} prices by treatment</h1><p class="lead">{esc(lead)}</p><style>{PRICE_CSS}</style><table class="tb"><tr><th>Treatment</th><th>Price range</th></tr>{rows_h}</table><p class="date">Reference prices · last checked {upd}</p>"""
     return en_shell(title, lead, url, f"{SITE}/c/{cid}/price/", cid, [{"@context": "https://schema.org", "@type": "CollectionPage", "name": title, "url": url, "inLanguage": "en", "dateModified": upd}], body, upd=upd)
@@ -839,7 +840,7 @@ def unclaimed_page(cid, u):
     G = hasgeo(u); crawl = u.get("src") == "crawl"; um = u.get("menu") or []
     near = sorted([x for x in live if x.get("city") == cid and (x.get("geo") or not G)], key=lambda x: (grp(x) != "spabody", km((u["lat"], u["lon"]), x["geo"]) if G else 0))[:3]
     title = f"{u['name']} — {cko} {u['kind']} {'가격 · ' if um else ''}위치 · 영업시간{' · 근처 가격' if near_prices(u, cid) else ''} · 한국어 예약 문의 | 엉클데이"
-    desc = f"{u['name']}은(는) {cko}의 {u['kind']} 가게예요." if False else f"{cko}의 {u['kind']} 가게 {u['name']} 정보 (주소 · 영업시간 · 지도). 엉클데이에 남기면 한국어로 확인해 드려요."
+    desc = f"{u['name']}은(는) {cko}의 {u['kind']} 가게예요." if False else f"{cko}의 {u['kind']} 가게 {u['name']} 정보 — 주소 · 영업시간 · 지도{', 메뉴 가격' if um else ''}와 근처 엉클데이 가게 가격. 예약이 되는지 엉클데이에 남기면 한국어로 확인해 드려요."
     gmap = f"https://www.google.com/maps/search/?api=1&query={u['lat']},{u['lon']}" if G else "https://www.google.com/maps/search/?api=1&query=" + urllib.parse.quote(f"{u['name']} {u['addr'] or CITY_EN.get(cid, '')}")
     ld = {"@context": "https://schema.org", "@type": "HealthAndBeautyBusiness", "name": u["name"], "url": url}
     if G: ld["geo"] = {"@type": "GeoCoordinates", "latitude": u["lat"], "longitude": u["lon"]}
@@ -1082,7 +1083,7 @@ def more_page(cid, us):
     rows = "".join(f'<a class="card" data-cta="shop" href="/p/{cid}/{u["slug"]}/"><b>{esc(u["name"])}</b><small>{esc(u["kind"])}{(" · " + esc(u["addr"][:40])) if u["addr"] else ""}</small><p>예약 문의를 남기면 엉클데이가 확인해 드려요</p></a>' for u in us)
     return f"""<!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{esc(title)}</title><meta name="description" content="{esc(f'{cko}의 마사지 · 스파 · 네일 가게 {len(us)}곳. 엉클데이 미입점 가게도 한국어로 예약 문의를 남길 수 있어요.')}"><link rel="canonical" href="{url}">
+<title>{esc(title)}</title><meta name="description" content="{esc(f'{cko}의 마사지 · 스파 · 네일 가게 {len(us)}곳의 주소 · 영업시간 · 지도. 엉클데이 미입점 가게도 한국어로 예약 문의를 남기면 가능한지 확인해 드려요.')}"><link rel="canonical" href="{url}">
 <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png"><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"><style>{HUB_CSS}{UNC_CSS}</style>
 </head><body><header class="hd"><div class="in"><a class="logo" href="/"><img src="/images/logo-full.webp" alt="엉클데이 Uncle Day" width="167" height="72"></a><nav><a href="/c/{cid}/">{esc(cko)} 인증 업체</a></nav>{HCTA}</div></header>
 <main class="wrap"><h1>{esc(cko)} 가게 {len(us)}곳 더 보기</h1><p class="lead">엉클데이 인증 업체 말고도 {esc(cko)}에 있는 마사지 · 스파 · 네일 가게를 공개 지도 정보로 모았어요. 가격 · 한국어 응대는 아직 확인 전이에요. 가게 페이지에서 예약 문의를 남기면 엉클데이가 확인해 드려요.</p>
@@ -1298,6 +1299,7 @@ def ml_shop_page(L, x0):
     title = mf(S_["title"], nm=nm, city=cn, kind=kind)
     bits = (mf(S_["m_price"], p=vnd(pr[0])) if pr else "") + (mf(S_["m_rv"], n=len(rv)) if rv else "")
     meta = mf(S_["meta"], nm=nm, city=cn, bits=bits)
+    if len(meta) < 110: meta = (meta + " " + (desc_l or summary))[:150].rstrip() + ("…" if len(meta + " " + (desc_l or summary)) > 150 else "")
     ld = {"@context": "https://schema.org", "@type": SCHEMA_TYPE.get(x.get("cat"), "HealthAndBeautyBusiness"), "@id": url + "#shop", "name": nm, "url": url, "description": desc_l or summary, "inLanguage": mhl(L)}
     if img: ld["image"] = img
     alts_n = [v for v in {tx(x0.get("name")), lang(x0.get("name"), "en")} if v and v != nm]
@@ -1358,13 +1360,14 @@ def ml_hub_page(L, cid, shops_c):
             items.append({"@type": "ListItem", "position": len(items) + 1, "url": SITE + u, "name": lt(x.get("name"), L)})
         sec += "</div>"
     title = mf(S_["h_title"], city=cn, n=len(xs))
+    meta_h = lead if len(lead) >= 110 else (lead + " " + S_["sep"].join(lt(x.get("name"), L) for x in xs[:6]))[:155]
     lds = [{"@context": "https://schema.org", "@type": "CollectionPage", "name": title, "url": url, "inLanguage": mhl(L), "dateModified": upd, "description": lead, "mainEntity": {"@type": "ItemList", "numberOfItems": len(items), "itemListElement": items}},
            {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in faq]}]
     see = f"/?city={cid}&lang={L}"
     body = f"""<h1>{esc(mf(S_["h_h1"], city=cn))}</h1><p class="lead"><b>{esc(lead)}</b></p><p class="date">{esc(S_["checked"])}: {upd} · Uncle Day (uncleday.com)</p>
 <a class="cta" data-cta="book" href="{see}">{esc(mf(S_["h_see"], city=cn))}</a>
 {sec}<h2>{esc(S_["faq"])}</h2><dl>{"".join(f"<dt>{esc(q)}</dt><dd>{esc(a)}</dd>" for q, a in faq)}</dl>{ml_langs_line(L, cid=cid)}"""
-    return ml_shell(L, title, lead, url, alt_hub(cid), cid, lds, body, upd=upd, cta=see)
+    return ml_shell(L, title, meta_h, url, alt_hub(cid), cid, lds, body, upd=upd, cta=see)
 ML_OUT = {L: [] for L in ML_LANGS}
 for L in ML_LANGS:
     dl_ = mdir(L)
