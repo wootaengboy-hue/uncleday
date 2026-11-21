@@ -129,6 +129,14 @@
    "count": 5,
    "created": "2026-11-20",
    "kind": "tasks"
+  },
+  {
+   "id": "2026-11-21-video",
+   "file": "2026-11-21-video.json",
+   "title": "홍보 영상 — HyperFrames 할 일",
+   "count": 3,
+   "created": "2026-11-21",
+   "kind": "tasks"
   }
  ]
 }
