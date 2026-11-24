@@ -106,12 +106,12 @@ td:first-child{font-weight:800;width:40%;padding-right:10px}
       lead: T("Khách Hàn Quốc, Nga, Trung Quốc, Âu – Mỹ… đặt lịch bằng ngôn ngữ của họ. Cửa hàng chỉ cần bấm nhận lịch trên Zalo — bằng tiếng Việt.", "한국 · 러시아 · 중국 · 유럽 · 미국 손님이 자기 나라 말로 예약하고, 가게는 잘로에서 베트남어로 예약만 받아 주시면 돼요."),
       pill: T("Chỉ trả phí khi khách đã đến và thanh toán", "손님이 실제로 와서 결제했을 때만 비용이 생겨요") },
     { eb: T("KHÁCH QUỐC TẾ", "외국인 손님"), h2: T("Khách quốc tế đến Việt Nam ngày càng nhiều — từ khắp thế giới", "베트남을 찾는 외국인 손님이 전 세계에서 늘고 있어요"),
-      big: "17,7 " + "triệu", bigd: T("lượt khách quốc tế đến Việt Nam trong 9 tháng 2026 (+14,5%)", "2026년 1~9월 베트남을 찾은 외국인 (+14.5%)"),
-      mk: [["cn", T("Trung Quốc", "중국"), "3,9 tr"], ["kr", T("Hàn Quốc", "한국"), "3 tr"], ["ru", T("Nga", "러시아"), "1,1 tr · +160%"], ["🌏", T("Đài Loan (TQ)", "대만"), "964 n"],
-        ["us", T("Mỹ", "미국"), "764 n"], ["jp", T("Nhật Bản", "일본"), "674 n"], ["in", T("Ấn Độ", "인도"), "505 n · +33%"], ["eu", T("Châu Âu", "유럽"), "+55%"]],
+      big: T("17,7 triệu", "1,770만 명"), bigd: T("lượt khách quốc tế đến Việt Nam trong 9 tháng 2026 (+14,5%)", "2026년 1~9월 베트남을 찾은 외국인 — 작년 같은 기간보다 14.5% 늘었어요"),
+      mk: [["cn", T("Trung Quốc", "중국"), T("3,9 tr", "390만 명")], ["kr", T("Hàn Quốc", "한국"), T("3 tr", "300만 명")], ["ru", T("Nga", "러시아"), T("1,1 tr · +160%", "110만 명 · 160%↑")], ["🌏", T("Đài Loan (TQ)", "대만"), T("964 n", "96만 명")],
+        ["us", T("Mỹ", "미국"), T("764 n", "76만 명")], ["jp", T("Nhật Bản", "일본"), T("674 n", "67만 명")], ["in", T("Ấn Độ", "인도"), T("505 n · +33%", "50만 명 · 33%↑")], ["eu", T("Châu Âu", "유럽"), T("+55%", "55%↑")]],
       sub: T("Nhưng khách nước ngoài thường ngại vì:", "하지만 외국인 손님은 이런 게 불편해요"),
       steps: [card(0, T("Không đọc được menu tiếng Việt, không biết giá trước", "베트남어 메뉴를 못 읽고, 가격을 미리 몰라요")), card(0, T("Khó nói chuyện với nhân viên khi làm dịch vụ", "시술 중에 직원과 말이 안 통해요")), card(0, T("Muốn đặt lịch trước bằng ngôn ngữ của mình, đến là làm ngay", "자기 나라 말로 미리 예약하고, 가면 바로 받고 싶어요"))],
-      src: T("Nguồn: VietnamPlus, 03/10/2026 (9 tháng đầu năm 2026) · tr = triệu lượt, n = nghìn lượt", "출처: VietnamPlus 2026-10-03 (2026년 1~9월) · tr = 백만 명, n = 천 명") },
+      src: T("Nguồn: VietnamPlus, 03/10/2026 (9 tháng đầu năm 2026) · tr = triệu lượt, n = nghìn lượt", "출처: VietnamPlus 2026-10-03 (2026년 1~9월) · ↑ = 작년 같은 기간보다 늘어난 비율") },
     { eb: T("UNCLE DAY LÀ GÌ?", "엉클데이는?"), h2: T("Trang đặt lịch spa · làm đẹp ở Việt Nam cho khách nước ngoài", "외국인 손님을 위한 베트남 스파 · 뷰티 예약 사이트"), c: 3,
       cards: [card("🌏", T("Khách xem bằng ngôn ngữ của mình", "손님은 자기 나라 말로 봐요"), T("Ảnh, menu, giá và giờ mở cửa bằng 13 ngôn ngữ: Hàn, Anh, Việt, Nhật, Trung, Nga, Pháp, Đức, Tây Ban Nha, Hindi, Thái, Indonesia…", "사진 · 메뉴 · 가격 · 영업시간을 13개 언어로: 한 · 영 · 베 · 일 · 중 · 러 · 프 · 독 · 스페인 · 힌디 · 태국 · 인도네시아…")),
         card("📩", T("Đặt lịch trước", "미리 예약"), T("Massage, spa, nail, tóc, chăm sóc da… Khách chọn ngày giờ và dịch vụ.", "마사지 · 스파 · 네일 · 헤어 · 피부관리… 날짜 · 시간 · 시술을 골라요.")),
@@ -164,8 +164,8 @@ td:first-child{font-weight:800;width:40%;padding-right:10px}
     if (s.eb) h += '<p class="eb">' + esc(L(s.eb)) + '</p>';
     if (s.h1) h += '<h1>' + esc(L(s.h1)) + '</h1>';
     if (s.h2) h += '<h2>' + esc(L(s.h2)) + '</h2>';
-    if (s.big) h += '<div><p class="big">' + s.big + '</p><p style="font-weight:800;margin-top:6px">' + esc(L(s.bigd)) + '</p></div>';
-    if (s.mk) h += '<div class="mk">' + s.mk.map(function (m) { return '<div><span>' + (/^[a-z]{2}$/.test(m[0]) ? '<img class="fl" src="images/flags/' + m[0] + '.svg" alt="">' : m[0]) + '</span><b>' + esc(L(m[1])) + '</b><em>' + esc(m[2]) + '</em></div>'; }).join("") + '</div>';
+    if (s.big) h += '<div><p class="big">' + esc(L(s.big)) + '</p><p style="font-weight:800;margin-top:6px">' + esc(L(s.bigd)) + '</p></div>';
+    if (s.mk) h += '<div class="mk">' + s.mk.map(function (m) { return '<div><span>' + (/^[a-z]{2}$/.test(m[0]) ? '<img class="fl" src="images/flags/' + m[0] + '.svg" alt="">' : m[0]) + '</span><b>' + esc(L(m[1])) + '</b><em>' + esc(L(m[2])) + '</em></div>'; }).join("") + '</div>';
     if (s.sub) h += '<p style="font-weight:800;color:var(--ord)">' + esc(L(s.sub)) + '</p>';
     if (s.img) {
       h += '<div class="split"><div class="cards">' + s.checks.map(function (c) { return '<div class="card"><span class="n">✓</span><b style="font-weight:600">' + esc(L(c)) + '</b></div>'; }).join("") + '</div>'
