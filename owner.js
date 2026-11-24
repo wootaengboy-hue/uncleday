@@ -62,7 +62,7 @@
     shopToday: ["Cửa hàng hôm nay", "오늘 매장", "Shop today"], lgIdle: ["Đang chờ", "대기 중", "Free"], lgWork: ["Đang làm", "시술 중", "In session"], lgOff: ["Chưa vào / đã về", "출근 전 · 퇴근", "Not in / gone"], lgDay: ["Nghỉ", "휴무", "Day off"], ssBefore: ["Mở lúc {n}", "{n} 오픈 예정", "Opens {n}"], ssOpen: ["Đang mở cửa", "영업 중", "Open"], ssAfter: ["Đã đóng cửa", "영업 종료", "Closed"], ssDayoff: ["Nghỉ hôm nay", "오늘 휴무일", "Closed today"], bIn: ["Đi làm", "출근", "Clocked in"], bWork: ["Đang làm", "시술 중", "In session"], bWait: ["Khách chờ", "대기 · 올 손님", "Waiting"], bDone: ["Xong · doanh thu", "완료 · 매출", "Done · revenue"],
     openBoard: ["Mở bảng phòng", "현황판 열기", "Open board"], boardStart: ["Bắt đầu bảng phòng", "현황판 시작하기", "Start the room board"], boardStartS: ["Nhập phòng, dịch vụ và nhân viên một lần", "방 · 코스 · 직원을 한 번만 넣으면 돼요", "Add rooms, services and staff once"], soonT: ["Sắp có", "곧 추가", "Coming soon"],
     rotaT: ["Lịch làm của nhân viên", "직원 근무표", "Staff rota"], rotaS: ["Xếp ca mở cửa · đóng cửa · nghỉ, duyệt yêu cầu", "오픈조 · 마감조 · 휴무 짜기, 요청 승인", "Plan opening · closing · days off, approve requests"],
-    tabHome: ["Hôm nay", "오늘", "Today"], tabBookings: ["Đặt lịch", "예약", "Bookings"], tabSchedule: ["Lịch", "일정", "Schedule"], tabMore: ["Thêm", "더보기", "More"],
+    tabHome: ["Hôm nay", "오늘", "Today"], tabBookings: ["Đặt lịch", "예약", "Bookings"], tabSchedule: ["Cài đặt", "가게 설정", "Settings"], jmpHours: ["⏰ Giờ mở cửa · lịch", "⏰ 영업시간 · 일정", "⏰ Hours · schedule"], jmpPm: ["🎁 Ưu đãi", "🎁 할인 이벤트", "🎁 Deals"], jmpSv: ["📋 Câu hỏi trước khi đến", "📋 방문 전 질문", "📋 Pre-visit questions"], tabMore: ["Thêm", "더보기", "More"],
     install: ["Cài Uncle Day lên màn hình chính để mở nhanh như ứng dụng", "홈 화면에 설치하면 앱처럼 바로 열 수 있어요", "Add Uncle Day to your home screen to open it like an app"],
     installBtn: ["Cách cài", "설치 방법", "How to"],
     installAndroid: ["Android (Chrome): bấm ⋮ ở góc trên → \"Thêm vào màn hình chính\" hoặc \"Cài đặt ứng dụng\".", "안드로이드(크롬): 오른쪽 위 ⋮ → '홈 화면에 추가' 또는 '앱 설치'", "Android (Chrome): tap ⋮ at the top → \"Add to Home screen\" or \"Install app\"."],
@@ -259,6 +259,8 @@
     const off = p.kind === "pct" ? [`Giảm ${p.v}%`, `${p.v}% 할인`, `${p.v}% off`][li()] : p.kind === "amt" ? [`Giảm ${vnd(p.v)}`, `${vnd(p.v)} 할인`, `${vnd(p.v)} off`][li()] : "";
     return [tt[L] || tt.vi || tt.ko || tt.en || "", off].filter(Boolean).join(" · ") + (p.orig && p.price != null && p.price < p.orig ? ` (${vnd(p.orig)} → ${vnd(p.price)})` : "");
   }
+  // ⚙️ 가게 설정 탭 맨 위: 영업시간 · 할인 이벤트 · 방문 전 질문으로 바로 가기
+  const jumpHtml = () => `<div class="jmp">${[["secHours", "jmpHours"], ["secPm", "jmpPm"], ["secSv", "jmpSv"]].map(([id, k]) => `<button type="button" class="chip" data-jmp="${id}">${t(k)}</button>`).join("")}</div>`;
   function pmSetHtml() {
     if (!pmCfg) { pmLoad().then(() => { if (tab === "schedule") draw(); }); return `<div class="card">${t("pmSet")} …</div>`; }
     if (pmCfg.err) return "";
@@ -375,7 +377,7 @@
         ${tabBtn("home", t("tabHome"), '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>')}
         ${tabBtn("bookings", t("tabBookings"), '<rect x="4" y="5" width="16" height="16" rx="3"/><path d="M8 3v4M16 3v4M4 10h16"/>', reqN)}
         ${window.OwnerBoard ? tabBtn("board", t("tabBoard"), '<rect x="3" y="4" width="8" height="7" rx="1.5"/><rect x="13" y="4" width="8" height="7" rx="1.5"/><rect x="3" y="13" width="8" height="7" rx="1.5"/><rect x="13" y="13" width="8" height="7" rx="1.5"/>', boardPending) : ""}
-        ${tabBtn("schedule", t("tabSchedule"), '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>')}
+        ${tabBtn("schedule", t("tabSchedule"), '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>')}
         ${tabBtn("settle", t("tabSettle"), '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/>')}
         ${tabBtn("more", t("tabMore"), '<path d="M4 7h16M4 12h16M4 17h16"/>')}
       </nav>`;
@@ -386,7 +388,8 @@
     if (window.OwnerBoard) window.OwnerBoard.unmount();
     if (tab === "home") m.innerHTML = homeHtml();
     else if (tab === "bookings") m.innerHTML = bookingsHtml();
-    else if (tab === "schedule") { m.innerHTML = scheduleHtml() + pmSetHtml() + svSetHtml(); svBind(m); pmBind(m); }
+    else if (tab === "schedule") { m.innerHTML = jumpHtml() + `<div id="secHours"></div>` + scheduleHtml() + `<div id="secPm"></div>` + pmSetHtml() + `<div id="secSv"></div>` + svSetHtml(); svBind(m); pmBind(m);
+      m.querySelectorAll("[data-jmp]").forEach(x => x.onclick = () => { const e = document.getElementById(x.dataset.jmp); if (e) window.scrollTo({ top: e.getBoundingClientRect().top + window.scrollY - 80, behavior: "smooth" }); }); }
     else if (tab === "settle") m.innerHTML = settleHtml();
     else m.innerHTML = moreHtml();
     bindMain(m);
