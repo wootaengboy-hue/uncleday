@@ -87,8 +87,23 @@ const CHAT = (() => {
     const f = box.querySelector(".cb-form"), ta = f.body;
     box.querySelectorAll("[data-zoom]").forEach(x => x.onclick = () => zoom(x.dataset.zoom));
     const fi = box.querySelector(".cb-fi"); box.querySelector(".cb-att").onclick = () => fi.click();
-    fi.onchange = async () => {
-      const file = fi.files && fi.files[0]; fi.value = ""; if (!file || sending) return;
+    fi.onchange = () => { const file = fi.files && fi.files[0]; fi.value = ""; if (file) sendFile(file); };
+    ta.onpaste = e => { const it = [...((e.clipboardData && e.clipboardData.files) || [])][0]; if (it) { e.preventDefault(); sendFile(it); } };   // 붙여넣기(Ctrl+V)로도 보내요
+    ta.oninput = () => { ta.style.height = "auto"; ta.style.height = Math.min(120, ta.scrollHeight) + "px"; };
+    ta.onkeydown = e => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); f.requestSubmit(); } };
+    f.onsubmit = async e => {
+      e.preventDefault(); const body = ta.value.trim(); if (!body || sending) return; sending = true; f.querySelector(".cb-send").disabled = true;
+      try {
+        const r = await LIVE.rpc("chat_send", { body, t: get() || null, bt: bt(), name: f.name ? f.name.value.trim() || null : null, contact: f.contact ? f.contact.value.trim() || null : null, lang: L(), page: (location.hash.match(/#\/shop\/([^/?]+)/) || [])[1] || (onVoucher ? "voucher" : "home") });
+        if (r && r.token && !bt()) put(r.token);
+        known = true; take(r, true); ta.value = ""; draw(); box.querySelector(".cb-form textarea").focus();
+        if (typeof LIVE.track === "function") LIVE.track("chat");
+      } catch (err) { alert(err.server ? err.message : t("err")); }
+      sending = false; const sb = box.querySelector(".cb-send"); if (sb) sb.disabled = false;
+    };
+  }
+  async function sendFile(file) {
+      const f = box.querySelector(".cb-form"), ta = f && f.body; if (!f || !file || sending) return;
       if (!/^image\//.test(file.type) && file.type !== "application/pdf") { alert(t("type")); return; }
       const up = box.querySelector(".cb-up"); sending = true; up.hidden = false; up.textContent = "📎 " + t("upl");
       try {
@@ -107,20 +122,7 @@ const CHAT = (() => {
         if (typeof LIVE.track === "function") LIVE.track("chat");
       } catch (err) { alert(err.message || t("err")); }
       sending = false; const u2 = box.querySelector(".cb-up"); if (u2) u2.hidden = true;
-    };
-    ta.oninput = () => { ta.style.height = "auto"; ta.style.height = Math.min(120, ta.scrollHeight) + "px"; };
-    ta.onkeydown = e => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); f.requestSubmit(); } };
-    f.onsubmit = async e => {
-      e.preventDefault(); const body = ta.value.trim(); if (!body || sending) return; sending = true; f.querySelector(".cb-send").disabled = true;
-      try {
-        const r = await LIVE.rpc("chat_send", { body, t: get() || null, bt: bt(), name: f.name ? f.name.value.trim() || null : null, contact: f.contact ? f.contact.value.trim() || null : null, lang: L(), page: (location.hash.match(/#\/shop\/([^/?]+)/) || [])[1] || (onVoucher ? "voucher" : "home") });
-        if (r && r.token && !bt()) put(r.token);
-        known = true; take(r, true); ta.value = ""; draw(); box.querySelector(".cb-form textarea").focus();
-        if (typeof LIVE.track === "function") LIVE.track("chat");
-      } catch (err) { alert(err.server ? err.message : t("err")); }
-      sending = false; const sb = box.querySelector(".cb-send"); if (sb) sb.disabled = false;
-    };
-  }
+    }
   function take(r, reset) {
     if (!r) return;
     if (r.booking) booking = r.booking;
@@ -144,6 +146,10 @@ const CHAT = (() => {
     if (open) { fab.querySelector(".cf-dot").hidden = true; draw(); poll(true); timer = setInterval(() => poll(false), 4000); setTimeout(() => { const ta = box.querySelector("textarea"); if (ta && innerWidth > 600) ta.focus(); }, 50); }
     else timer = setInterval(() => poll(false), 60000);
   }
+  // 끌어다 놓기: 채팅 창 위에 사진 · PDF 를 놓으면 바로 보내요
+  box.addEventListener("dragover", e => { if ([...(e.dataTransfer && e.dataTransfer.types || [])].includes("Files")) { e.preventDefault(); box.classList.add("cb-drop"); } });
+  box.addEventListener("dragleave", e => { if (!box.contains(e.relatedTarget)) box.classList.remove("cb-drop"); });
+  box.addEventListener("drop", e => { const fl = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]; box.classList.remove("cb-drop"); if (fl) { e.preventDefault(); sendFile(fl); } });
   fab.onclick = () => toggle(!open);
   // 상단 "상담하기"·업체 화면 아래 "상담" 버튼 → 사이트 채팅 열기
   document.addEventListener("click", e => {
