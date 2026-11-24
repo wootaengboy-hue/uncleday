@@ -12,6 +12,31 @@ const CHAT = (() => {
   const linkify = h => h.replace(/https:\/\/(?:www\.)?uncleday\.com\/[^\s<]*/g, u => `<a class="cb-a" href="${u}">${/booking\.html/.test(u) ? t("voucher") : u}</a>`);
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const get = () => { try { return localStorage.getItem(KEY) || ""; } catch (e) { return ""; } };
+  // 📎 첨부 (universe40 · Edge Function chat-file): 사진은 대화 안에 바로, PDF 는 눌러서 화면에서 바로 열어요
+  const attUrl = m => `${SUPA.url}/functions/v1/chat-file?id=${m.id}&${bt() ? "bt=" + encodeURIComponent(bt()) : "t=" + encodeURIComponent(get())}`;
+  const kb = n => n > 1048576 ? (n / 1048576).toFixed(1) + "MB" : Math.max(1, Math.round(n / 1024)) + "KB";
+  const isPh = (m) => m.att && (m.body === "📷" || m.body === "📄 " + m.att.n);
+  function attHtml(m) {
+    const a = m.att; if (!a) return "";
+    if (/^image\//.test(a.m)) return `<button type="button" class="cb-img" data-zoom="${esc(attUrl(m))}"><img src="${esc(attUrl(m))}" alt="" loading="lazy"${a.w && a.h ? ` width="${a.w}" height="${a.h}"` : ""}></button>`;
+    return `<a class="cb-file" href="${esc(attUrl(m))}" target="_blank" rel="noopener"><b>📄 ${esc(a.n)}</b><small>${a.s ? kb(a.s) + " · " : ""}${t("open")}</small></a>`;
+  }
+  // 사진은 보내기 전에 줄이고(긴 쪽 1600px) 위치 정보를 지워요 (다시 그리면 EXIF 가 빠져요) · GIF 는 그대로
+  async function shrink(file) {
+    if (!/^image\//.test(file.type) || file.type === "image/gif") return { blob: file, name: file.name };
+    try {
+      const bm = await createImageBitmap(file, { imageOrientation: "from-image" });
+      const k = Math.min(1, 1600 / Math.max(bm.width, bm.height)), w = Math.round(bm.width * k), h = Math.round(bm.height * k);
+      const c = document.createElement("canvas"); c.width = w; c.height = h; c.getContext("2d").drawImage(bm, 0, 0, w, h);
+      const blob = await new Promise(r => c.toBlob(r, "image/jpeg", 0.85));
+      if (blob) return { blob, w, h, name: (file.name || "photo").replace(/\.[^.]*$/, "") + ".jpg" };
+    } catch (e) {}
+    return { blob: file, name: file.name };
+  }
+  function zoom(src) {
+    const z = document.createElement("div"); z.className = "cb-zoom"; z.innerHTML = `<img src="${esc(src)}" alt=""><button type="button" aria-label="close">✕</button>`;
+    z.onclick = () => z.remove(); document.body.appendChild(z);
+  }
   const put = v => { try { v ? localStorage.setItem(KEY, v) : localStorage.removeItem(KEY); } catch (e) {} };
   // 문자로 받은 "?chat=열쇠" 링크로 들어오면 그 대화를 이어가요
   const q = new URLSearchParams(location.search).get("chat");
@@ -46,11 +71,12 @@ const CHAT = (() => {
     box.innerHTML = `<div class="cb-head"><div><b>${t("title")}</b><small>${subText()}</small></div><button type="button" class="cb-x" aria-label="close">✕</button></div>
       <div class="cb-list">
         <div class="cb-m us"><span>${booking ? `<b>${esc(t("bk", { c: booking }))}</b><br>` : ""}${esc(t("hello")).replace(/\n/g, "<br>")}</span></div>
-        ${msgs.map(m => `<div class="cb-m ${m.from === "admin" ? "us" : "me"}"><span>${linkify(esc(m.body)).replace(/\n/g, "<br>")}</span><time>${m.auto ? "🌐 " + ({ ko: "자동 번역", vi: "Tự động dịch" }[document.documentElement.lang] || "Auto-translated") + " · " : ""}${fmt(m.at)}</time></div>`).join("")}
+        ${msgs.map(m => `<div class="cb-m ${m.from === "admin" ? "us" : "me"}">${attHtml(m)}${isPh(m) ? "" : `<span>${linkify(esc(m.body)).replace(/\n/g, "<br>")}</span>`}<time>${m.auto ? "🌐 " + ({ ko: "자동 번역", vi: "Tự động dịch" }[document.documentElement.lang] || "Auto-translated") + " · " : ""}${fmt(m.at)}</time></div>`).join("")}
       </div>
       <form class="cb-form">
         ${showForm ? `<div class="cb-who"><input name="name" placeholder="${t("name")}" maxlength="60" autocomplete="name"><input name="contact" placeholder="${t("contact")}" maxlength="100" autocomplete="tel"></div>` : ""}
-        <div class="cb-row"><textarea name="body" rows="1" placeholder="${t("ph")}" maxlength="2000"></textarea><button class="cb-send" type="submit">${t("send")}</button></div>
+        <div class="cb-row"><button type="button" class="cb-att" aria-label="${esc(t("attach"))}" title="${esc(t("attach"))}">📎</button><input type="file" class="cb-fi" accept="image/*,application/pdf" hidden><textarea name="body" rows="1" placeholder="${t("ph")}" maxlength="2000"></textarea><button class="cb-send" type="submit">${t("send")}</button></div>
+        <div class="cb-up" hidden></div>
         <div class="cb-foot">${msgs.length ? `<span>${t("keep")}</span>` : ""}
           ${typeof ACCT !== "undefined" && ACCT.on && !ACCT.user() ? `<button type="button" class="cb-link" data-login>${t("login")}</button>` : ""}
           ${typeof SITE !== "undefined" && SITE.kakao ? `<a class="cb-link" href="${SITE.kakao}" target="_blank" rel="noopener">${t("kakao")}</a>` : ""}</div>
@@ -59,6 +85,29 @@ const CHAT = (() => {
     box.querySelector(".cb-x").onclick = () => toggle(false);
     const lg = box.querySelector("[data-login]"); if (lg) lg.onclick = () => ACCT.openLogin();
     const f = box.querySelector(".cb-form"), ta = f.body;
+    box.querySelectorAll("[data-zoom]").forEach(x => x.onclick = () => zoom(x.dataset.zoom));
+    const fi = box.querySelector(".cb-fi"); box.querySelector(".cb-att").onclick = () => fi.click();
+    fi.onchange = async () => {
+      const file = fi.files && fi.files[0]; fi.value = ""; if (!file || sending) return;
+      if (!/^image\//.test(file.type) && file.type !== "application/pdf") { alert(t("type")); return; }
+      const up = box.querySelector(".cb-up"); sending = true; up.hidden = false; up.textContent = "📎 " + t("upl");
+      try {
+        const s1 = await shrink(file);
+        if (s1.blob.size > 10 * 1048576) throw new Error(t("big"));
+        const fd = new FormData(); fd.append("file", s1.blob, s1.name);
+        const add = (k, v) => { if (v) fd.append(k, v); };
+        add("t", get()); add("bt", bt()); add("lang", L()); add("page", (location.hash.match(/#\/shop\/([^/?]+)/) || [])[1] || (onVoucher ? "voucher" : "home"));
+        add("name", f.name ? f.name.value.trim() : ""); add("contact", f.contact ? f.contact.value.trim() : ""); add("body", ta.value.trim()); if (s1.w) { add("w", String(s1.w)); add("h", String(s1.h)); }
+        const hd = { apikey: SUPA.key, Authorization: "Bearer " + (window.UD_TOKEN || SUPA.key) };
+        const r = await fetch(`${SUPA.url}/functions/v1/chat-file`, { method: "POST", headers: hd, body: fd });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok || j.error) throw new Error(j.error || t("err"));
+        if (j.token && !bt()) put(j.token);
+        known = true; take(j, true); ta.value = ""; draw();
+        if (typeof LIVE.track === "function") LIVE.track("chat");
+      } catch (err) { alert(err.message || t("err")); }
+      sending = false; const u2 = box.querySelector(".cb-up"); if (u2) u2.hidden = true;
+    };
     ta.oninput = () => { ta.style.height = "auto"; ta.style.height = Math.min(120, ta.scrollHeight) + "px"; };
     ta.onkeydown = e => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); f.requestSubmit(); } };
     f.onsubmit = async e => {
