@@ -9,6 +9,16 @@
   let lang = (() => { try { const l = localStorage.getItem("ud-owner-lang"); return LANGS.includes(l) ? l : "vi"; } catch (e) { return "vi"; } })();
   const T = {
     title: ["Trang chủ sở hữu", "사장님 페이지", "Owner page"],
+    hiTitle: ["📒 Lịch sử dịch vụ của khách", "📒 손님 시술 내역", "📒 Guest's treatment history"],
+    hiFirst: ["Lần đầu đến cửa hàng mình", "우리 가게 첫 방문이에요", "First visit to your shop"],
+    hiHere: ["Ở cửa hàng mình", "우리 가게에서", "At your shop"],
+    hiOther: ["Ở nơi khác trên Uncle Day (khách đồng ý chia sẻ)", "엉클데이 다른 가게에서 (손님이 공유에 동의)", "At other shops on Uncle Day (guest agreed to share)"],
+    hiNote: ["🧾 Ghi chú dịch vụ lần này", "🧾 이번 시술 기록", "🧾 Notes for this visit"],
+    hiPub: ["Cho khách xem: dịch vụ đã làm · gợi ý lần sau (tự dịch sang tiếng của khách)", "손님용: 받은 시술 · 다음 추천 (손님 말로 자동 번역돼요)", "For the guest: what was done · next suggestion (auto-translated)"],
+    hiPubPh: ["VD: Massage đá nóng, lực vừa. Lần sau nên thử chăm sóc da cổ vai.", "예: 핫스톤 마사지, 중간 강도. 다음엔 목 · 어깨 집중 관리 추천", "e.g. Hot stone massage, medium pressure. Next time try the neck & shoulder care."],
+    hiPriv: ["🔒 Chỉ cửa hàng xem: lực, điểm cần lưu ý…", "🔒 가게만 보기: 강도 · 주의할 점…", "🔒 Shop only: pressure, things to watch…"],
+    hiSave: ["Lưu ghi chú", "기록 저장", "Save notes"], hiSaved: ["Đã lưu ✅", "저장했어요 ✅", "Saved ✅"],
+    hiBy: ["Ghi bởi", "작성", "By"],
     svTitle: ["📋 Câu hỏi trước khi đến", "📋 방문 전 질문", "📋 Pre-visit questions"],
     svNone: ["Khách chưa trả lời câu hỏi trước khi đến", "손님이 아직 방문 전 질문에 답하지 않았어요", "The guest hasn't answered the pre-visit questions yet"],
     svAt: ["Trả lời lúc", "작성", "Answered"],
@@ -303,6 +313,42 @@
       keep(); sv.disabled = true;
       const list = pmDraft.map(({ _pick, ...p }) => ({ ...p, menus: p.menus || [] }));
       try { pmCfg.promos = await rpc("owner_promo_save", { shop: shopId, list }); pmDraft = null; toast(t("svSaved")); draw(); }
+      catch (e) { sv.disabled = false; toast(errMsg(e)); }
+    };
+  }
+
+  // ---- 📒 손님 시술 내역 · 이번 시술 기록 (universe42) ----
+  const HIST = {}, HIST_TX = {};
+  const CAT_IC = { massage: "💆", spa: "🧖", nail: "💅", hair: "💇", skin: "✨", derma: "🩺", dental: "🦷", lash: "👁️", waxing: "🪒", package: "🎁" };
+  const mnOf = x => { const n = x.mn; return n && typeof n === "object" ? n[LANGS[li()]] || n.vi || n.ko || n.en || x.menu : x.menu; };
+  const dShort = d => d ? String(d).slice(8, 10) + "/" + String(d).slice(5, 7) + "/" + String(d).slice(2, 4) : "";
+  function histHtml(b) {
+    const h = HIST[b.id];
+    if (h === undefined) { HIST[b.id] = null; rpc("owner_history", { bid: b.id }).then(r => { HIST[b.id] = r || { own: [], other: [] }; if (detail === b.id) keepTx(drawDetail); }).catch(() => { HIST[b.id] = { err: true }; }); }
+    if (!h) return `<div class="card hist"><b>${t("hiTitle")}</b> <span class="muted">…</span></div>`;
+    if (h.err) return "";
+    const canNote = ["confirmed", "shop_ok", "visited", "settled"].includes(b.status);
+    const tx = HIST_TX[b.id] || { pub: (h.note && h.note.pub) || "", priv: (h.note && h.note.priv) || "" };
+    const row = (x, mine) => `<div class="hi-row"><span class="hi-d">${esc(dShort(x.date))}</span><div><b>${mine ? "" : (CAT_IC[x.cat] || "•") + " "}${esc(mnOf(x))}</b>${x.pub ? `<p>${esc(x.pub)}</p>` : ""}${x.priv ? `<p class="hi-priv">🔒 ${esc(x.priv)}</p>` : ""}</div></div>`;
+    return `<div class="card hist"><b style="display:block;margin-bottom:6px">${t("hiTitle")}</b>
+      ${h.own && h.own.length ? `<p class="lbl">${t("hiHere")} · ${h.own.length}</p>${h.own.slice(0, 10).map(x => row(x, true)).join("")}` : `<p class="hi-first">✨ ${t("hiFirst")}</p>`}
+      ${h.other && h.other.length ? `<p class="lbl" style="margin-top:10px">${t("hiOther")} · ${h.other.length}</p>${h.other.slice(0, 10).map(x => row(x, false)).join("")}` : ""}
+      ${canNote ? `<div class="hi-note"><p class="lbl" style="margin-top:12px">${t("hiNote")}</p>
+        <label class="hi-l">${t("hiPub")}<textarea class="inp" id="hiPub" rows="3" maxlength="1000" placeholder="${esc(t("hiPubPh"))}">${esc(tx.pub)}</textarea></label>
+        <label class="hi-l">${t("hiPriv")}<textarea class="inp" id="hiPriv" rows="2" maxlength="1000">${esc(tx.priv)}</textarea></label>
+        <button class="btn main" type="button" data-hsave="${b.id}">${t("hiSave")}</button>
+        ${h.note && h.note.author ? `<span class="muted" style="font-size:12px;margin-left:8px">${t("hiBy")}: ${esc(h.note.author)}</span>` : ""}</div>` : ""}</div>`;
+  }
+  // 다시 그려도 쓰던 글이 지워지지 않게
+  function keepTx(fn) { const p = document.getElementById("hiPub"), q = document.getElementById("hiPriv"); if (p && detail) HIST_TX[detail] = { pub: p.value, priv: q ? q.value : "" }; fn(); }
+  function histBind(ov, b) {
+    const sv = ov.querySelector("[data-hsave]"); if (!sv) return;
+    const p = ov.querySelector("#hiPub"), q = ov.querySelector("#hiPriv");
+    const keep = () => { HIST_TX[b.id] = { pub: p.value, priv: q.value }; }; p.oninput = keep; q.oninput = keep;
+    sv.onclick = async () => {
+      sv.disabled = true;
+      try { const r = await rpc("owner_note_save", { bid: b.id, pub: p.value, priv: q.value, lg: LANGS[li()] });
+        HIST[b.id] = { ...(HIST[b.id] || {}), note: { ...(HIST[b.id] && HIST[b.id].note || {}), pub: r.pub, priv: r.priv } }; delete HIST_TX[b.id]; toast(t("hiSaved")); drawDetail(); }
       catch (e) { sv.disabled = false; toast(errMsg(e)); }
     };
   }
@@ -693,10 +739,12 @@
           <div class="kv"><span>${t("guestLang")}</span><b>${esc(ln)}</b></div></div>
         ${b.note ? `<div class="note"><b style="display:block;font-size:13px">${t("note")}</b>${esc(b.note)}</div>` : ""}
         ${svDetailHtml(b, st)}
+        ${histHtml(b)}
         <div class="info">${t("contactHidden")}</div>
         ${actions}
       </div></div>`;
     ov.querySelectorAll("[data-d]").forEach(x => x.onclick = () => detailAct(b, x.dataset.d));
+    histBind(ov, b);
     ov.querySelectorAll("[data-tp]").forEach(x => x.onclick = () => { if (!detTp) return; const id = x.dataset.tp, i = detTp.ids.indexOf(id); if (i >= 0) detTp.ids.splice(i, 1); else if (detTp.ids.length >= 4) { toast(t("tpMax")); return; } else detTp.ids.push(id);
       const a2 = document.getElementById("amt"), av = a2 ? a2.value : null; drawDetail(); const a3 = document.getElementById("amt"); if (a3 && av != null) a3.value = av; });
     ov.querySelectorAll("[data-pday]").forEach(x => x.onclick = () => { pDay = x.dataset.pday; drawDetail(); });

@@ -106,6 +106,10 @@ async function openCustomer(cid) {
   const s = custStats(cid);
   const logs = await sb.from("customer_logs").select("*").eq("customer_id", cid).order("at", { ascending: false }).limit(300);
   const cps = COUPONS.filter(k => k.customer_id === cid);
+  // 📒 시술 기록 (universe42 · 가게가 남긴 손님용 / 가게 전용 메모)
+  const vnR = s.bs.length ? await sb.from("visit_notes").select("*").in("booking_id", s.bs.map(b => b.id)) : { data: [] };
+  const VN = {}; (vnR.data || []).forEach(v => VN[v.booking_id] = v);
+  const visits = s.bs.filter(b => DONE_ST.includes(b.status)).sort((a, b) => String(b.visit_date).localeCompare(String(a.visit_date)));
   const ST = { requested: "접수", confirmed: "확정", rejected: "불가", visited: "방문 완료", settled: "정산 완료", cancelled: "취소", noshow: "노쇼" };
   const tl = [
     ...s.bs.map(b => ({ at: b.created_at, html: `<span class="tl-ic">📅</span><div><b>${esc(b.shop_name || "")}</b> · ${esc(b.menu_name || "")} · ${b.people}명 <span class="st st-${b.status}">${ST[b.status] || b.status}</span><br><small class="hint">${b.visit_date || ""} ${b.visit_time || ""} · <a href="#" data-bk="${b.id}">${esc(b.code)}</a>${b.paid_amount ? ` · 결제 ${vnd(b.paid_amount)}` : ""}${b.coupon_code ? ` · 🎟 ${esc(b.coupon_code)}` : ""}</small></div>` })),
@@ -125,6 +129,9 @@ async function openCustomer(cid) {
         <div class="box"><h3>🏷️ 태그</h3><div class="crm-tagpick">${[...new Set([...CRM_TAGS, ...(c.tags || [])])].map(t => `<button class="chip ${(c.tags || []).includes(t) ? "on" : ""}" data-tag="${esc(t)}">${esc(t)}</button>`).join("")}</div>
           <input id="cuNewTag" placeholder="+ 새 태그 입력 후 Enter" class="at-in" style="width:100%"></div>
         <div class="box"><h3>📝 메모 <small class="hint">손님 취향·주의할 점 (팀만 봐요)</small></h3><textarea id="cuMemo" rows="4" style="width:100%;box-sizing:border-box">${esc(c.memo || "")}</textarea></div>
+        <div class="box"><h3>📒 시술 기록 <small class="hint">${c.share_history ? `✅ 다른 가게 공유 동의 · ${dt(c.share_at)}` : "다른 가게 공유: 동의 안 함 (그 가게 내역만 보여요)"}</small></h3>
+          ${visits.length ? visits.map(b => { const v = VN[b.id]; return `<div class="vn-row"><span class="hint">${esc(b.visit_date || "")}</span><div><b>${esc(shopById(b.shop_id) ? shopById(b.shop_id).name.ko : b.shop_name || "")}</b> · ${esc(b.menu_name || "")}
+            ${v && v.pub ? `<p>🧾 ${esc(v.pub)}${v.pub_tr && v.pub_tr.ko && v.lang !== "ko" ? `<br><small class="hint">🌐 ${esc(v.pub_tr.ko)}</small>` : ""}</p>` : ""}${v && v.priv ? `<p class="vn-priv">🔒 ${esc(v.priv)}</p>` : ""}${!v ? `<p class="hint">가게 기록 없음</p>` : ""}</div></div>`; }).join("") : `<p class="hint">아직 방문 완료된 예약이 없어요</p>`}</div>
         <div class="box"><h3>📣 쿠폰·이벤트 안내</h3>
           <label class="sl-ck"><input type="checkbox" id="cuOk" ${c.marketing_ok ? "checked" : ""}><span><b>안내 받기에 동의함</b><small>${c.marketing_ok ? `${dt(c.marketing_at)} · ${esc(c.marketing_src || "")}` : "동의한 손님에게만 쿠폰·이벤트 메시지를 보낼 수 있어요"}</small></span></label></div>
         <div class="box"><h3>🎟 쿠폰 <small class="hint">${cps.length}장</small></h3>${cps.length ? cps.map(k => couponRow(k)).join("") : `<p class="hint">아직 없어요</p>`}</div>

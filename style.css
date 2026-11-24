@@ -836,3 +836,12 @@ footer .foot-priv, footer .foot-priv:visited { color: #fff; }
 .cb-un { border: 0; background: none; padding: 0; font: inherit; font-size: 10.5px; color: #B23A1E; text-decoration: underline; cursor: pointer; }
 .cb-up .cb-un { font-size: 12px; margin-left: 6px; }
 .cb-m span.cb-del { background: #f1f3f5 !important; color: #8a939c !important; font-style: italic; font-size: 13px; }
+/* 📒 내 시술 기록 (universe42) */
+.vh-box { margin: 14px 0; padding: 16px; border-radius: 16px; background: #F4FAF6; border: 1px solid #CFE6D7; text-align: left; }
+.vh-box h3 { margin: 0 0 8px; font-size: 16px; }
+.vh-row { display: flex; gap: 12px; padding: 9px 0; border-top: 1px solid #DCEDE2; } .vh-row:first-of-type { border-top: 0; }
+.vh-d { flex: none; width: 86px; font-size: 13px; color: var(--sub, #667); padding-top: 1px; }
+.vh-row b { display: block; font-size: 14.5px; } .vh-row small { color: var(--sub, #667); font-size: 12.5px; } .vh-row p { margin: 5px 0 0; font-size: 14px; line-height: 1.5; }
+.vh-empty { margin: 0 0 6px; color: var(--sub, #667); font-size: 13.5px; }
+.vh-share { display: flex; gap: 10px; align-items: flex-start; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #CFE6D7; cursor: pointer; }
+.vh-share input { margin-top: 4px; width: 18px; height: 18px; flex: none; } .vh-share b { display: block; font-size: 14px; } .vh-share small { display: block; color: var(--sub, #667); font-size: 12.5px; line-height: 1.5; margin-top: 2px; }

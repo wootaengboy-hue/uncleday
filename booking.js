@@ -95,6 +95,7 @@ function draw(b) {
     ${b.change_count && b.status !== "reschedule" ? `<p class="v-ok" style="background:#fff4e5;color:#9a5208">🔁 ${ui("vChanged", { n: b.change_count })}</p>` : ""}
     ${b.status === "confirmed" ? `<p class="v-show">📱 ${ui("vShow")}</p>` : ""}
     ${svCan ? `<div class="sv-box" id="svBox"></div>` : ""}
+    <div class="vh-box" id="vhBox" hidden></div>
     <div class="v-btns">
       ${canVisit && !start && (past || b.status === "confirmed" || b.status === "noshow") ? `<button class="btn big-btn" id="vVisit">${ui("vVisited")}</button>` : ""}
       ${b.customer_visit_at && !inside ? `<p class="v-ok">${ui("vVisitedDone")}</p>` : ""}
@@ -138,6 +139,7 @@ function draw(b) {
   if ($("vRv")) $("vRv").onclick = () => openRv(0);
   if (pbCan) pbInit(b, t);
   if (svCan) svInit(t, s);
+  vhInit(t);
   function tpForm(list) {
     return `<div class="tp-pick"><span>${ui("tpRvWho")}</span><div class="tp-chips">${list.map(x => `<button type="button" class="tp-chip ${x.id === tpParam ? "on" : ""}" data-tpid="${esc(x.id)}" aria-pressed="${x.id === tpParam}">${esc(x.name)}</button>`).join("")}</div>
       <div class="tp-stars" ${b.reviewed ? "" : "hidden"}>${[1, 2, 3, 4, 5].map(n => `<button type="button" data-ts="${n}">★</button>`).join("")}</div>
@@ -332,4 +334,29 @@ function svTranslate(t) {
     const h = { apikey: SUPA.key, "Content-Type": "application/json" }; if (/^eyJ/.test(SUPA.key)) h.Authorization = "Bearer " + SUPA.key;
     fetch(`${SUPA.url}/functions/v1/chat-tr`, { method: "POST", headers: h, body: JSON.stringify({ survey: t }) }).catch(() => {});
   } catch (e) {}
+}
+
+// 📒 내 시술 기록 (universe42): 가게가 남긴 손님용 메모 (손님 말로 번역) + 다른 가게와 공유 동의
+async function vhInit(t, again) {
+  const el = document.getElementById("vhBox"); if (!el || typeof LIVE === "undefined" || !LIVE.on) return;
+  let h; try { h = await LIVE.rpc("customer_history", { t }); } catch (e) { return; }
+  if (!h) return;
+  const list = h.list || [], L = typeof lang !== "undefined" ? lang : "ko";
+  const mn = x => (x.mn && typeof x.mn === "object" ? tx(x.mn) : "") || x.menu || "";
+  const noteOf = x => !x.pub ? "" : (x.lang && x.lang === L) ? x.pub : (x.tr && x.tr[L]) || x.pub;
+  el.hidden = false;
+  el.innerHTML = `<h3>${ui("vh_title")}</h3>
+    ${list.length ? list.map(x => `<div class="vh-row"><span class="vh-d">${esc(x.date || "")}</span><div><b>${esc(mn(x))}</b><small>${esc(x.shop && typeof x.shop === "object" ? tx(x.shop) : x.shop || "")}</small>
+      ${x.pub ? `<p>🧾 ${esc(noteOf(x))}</p>` : ""}</div></div>`).join("") : `<p class="vh-empty">${ui("vh_empty")}</p>`}
+    <label class="vh-share"><input type="checkbox" id="vhShare" ${h.share ? "checked" : ""}><span><b>${ui("vh_share")}</b><small>${ui("vh_shareD")}</small></span></label>`;
+  const cb = document.getElementById("vhShare");
+  cb.onchange = async () => { cb.disabled = true; try { await LIVE.rpc("customer_history_share", { t, on_: cb.checked }); toastV(ui(cb.checked ? "vh_on" : "vh_off")); } catch (e) { cb.checked = !cb.checked; toastV(e.message); } cb.disabled = false; };
+  // 아직 손님 말로 번역 안 된 메모가 있으면 한 번 번역해서 다시 그려요 (Edge Function chat-tr · 실패해도 원문은 보여요)
+  if (!again && list.some(x => x.pub && x.lang !== L && !(x.tr && x.tr[L]))) {
+    try {
+      const hd = { apikey: SUPA.key, "Content-Type": "application/json" }; if (/^eyJ/.test(SUPA.key)) hd.Authorization = "Bearer " + SUPA.key;
+      const r = await fetch(`${SUPA.url}/functions/v1/chat-tr`, { method: "POST", headers: hd, body: JSON.stringify({ visit: t, to: L }) });
+      const j = await r.json().catch(() => ({})); if (j && j.n) vhInit(t, true);
+    } catch (e) {}
+  }
 }

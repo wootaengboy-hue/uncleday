@@ -278,3 +278,9 @@ textarea.inp { min-height: 64px; resize: vertical; }
 .pm-it .inp{width:100%;box-sizing:border-box;min-width:0}.pm-top .sv-row{white-space:nowrap}
 .jmp{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}.jmp .chip{border:1px solid #D9CFB8;background:#fff;border-radius:999px;padding:8px 14px;font-weight:700;font-size:14px;cursor:pointer;color:inherit}.jmp .chip:hover{border-color:#11624A;color:#11624A}
 @media(max-width:700px){.jmp{flex-wrap:nowrap;overflow-x:auto;margin:0 -16px 6px;padding:0 16px 4px;scrollbar-width:none}.jmp .chip{flex:none;padding:7px 12px;font-size:13.5px}}
+/* 📒 손님 시술 내역 (universe42) */
+.hist .lbl{font-weight:700;font-size:12.5px;color:#5b6676;margin:4px 0}
+.hi-row{display:flex;gap:10px;padding:7px 0;border-top:1px solid #EEE6D3}.hi-row:first-of-type{border-top:0}
+.hi-d{flex:none;width:62px;font-size:12.5px;color:#5b6676;padding-top:2px}.hi-row b{font-size:14px}.hi-row p{margin:3px 0 0;font-size:13.5px;line-height:1.45}
+.hi-priv{color:#8A5A00}.hi-first{margin:2px 0;color:#11624A;font-weight:700}
+.hi-l{display:grid;gap:4px;font-size:12.5px;color:#5b6676;font-weight:600;margin:6px 0}.hi-l textarea{width:100%;box-sizing:border-box;resize:vertical;font:inherit;font-size:14px}

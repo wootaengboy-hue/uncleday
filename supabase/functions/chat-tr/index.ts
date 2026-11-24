@@ -2,6 +2,7 @@
 //  손님이 어떤 나라 말로 써도 담당자가 고른 말(한국어 · 베트남어 · 영어)로 보여 주고,
 //  담당자가 쓴 답장은 손님 말로 바꿔서 보내요 (채널톡처럼).
 //  요청: { items: [{ id?: any, text: string, to: "ko" | "vi" | "ru" | ... }] }  (한 번에 20개까지)
+//  📒 { visit: "예약확인증 열쇠", to: "ko" } — 가게가 쓴 시술 기록(손님용 메모)을 손님 말로 번역해 저장 (universe42)
 //  📋 { survey: "예약확인증 열쇠" } — 방문 전 질문에 손님이 쓴 글을 베트남어 · 한국어로 번역해 저장 (로그인 필요 없음 · DB 에 있는 글만)
 //  답:   { items: [{ id, src: "ru", text: "번역" }] }  — src 가 to 와 같으면 text 는 원문 그대로
 //  필요한 비밀값: ANTHROPIC_API_KEY (blog-ai 와 같은 키 · Supabase → Edge Functions → Secrets). 키는 채팅 · 코드에 적지 않아요.
@@ -65,6 +66,26 @@ Deno.serve(async (req) => {
     for (let k = 1; k < parts.length; k += 3) { const x = its[+parts[k] - 1], t2 = (parts[k + 2] || "").trim(); if (x && t2) (tr[x.id] = tr[x.id] || {})[x.to] = t2.slice(0, 600); }
     if (Object.keys(tr).length) await anon.rpc("survey_tr_save", { t: b.survey, tr });
     return out({ ok: true, n: Object.keys(tr).length });
+  }
+  // 📒 시술 기록 (universe42): { visit: 예약확인증 열쇠, to: 손님 말 } — 가게가 쓴 '손님용 메모' 를 손님 말로 번역해 저장 (DB 에 있는 글만)
+  if (typeof b.visit === "string" && b.visit.length >= 16 && b.visit.length <= 64 && LANGS[b.to]) {
+    if (!KEY) return out({ ok: false });
+    const anon = createClient(URL, ANON);
+    const { data: src } = await anon.rpc("visit_tr_src", { t: b.visit, lg: b.to });
+    const its = (Array.isArray(src) ? src : []).slice(0, 15).map((x: any) => ({ id: x.id, text: String(x.text || "").slice(0, 1000) })).filter((x: any) => x.text);
+    if (!its.length) return out({ ok: true, n: 0 });
+    const ub = its.map((x: any, n: number) => `@@${n + 1} -> ${b.to} (${LANGS[b.to]})\n${x.text}`).join("\n\n");
+    const r3 = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST", headers: { "x-api-key": KEY, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+      body: JSON.stringify({ model: MODEL, max_tokens: 3000, system: SYSTEM, messages: [{ role: "user", content: ub }] }),
+    });
+    const j3 = await r3.json().catch(() => ({}));
+    if (!r3.ok) return out({ ok: false });
+    const txt = (j3.content || []).filter((c: any) => c.type === "text").map((c: any) => c.text).join("").replace(/```[a-z]*\n?/gi, "").trim();
+    const parts = txt.split(/^\s*@@\s*(\d+)[ \t]*([A-Za-z]{2}(?:-[A-Za-z]{2})?)?[^\S\n]*(?:\([^)\n]*\))?[ \t]*$/m);
+    let n = 0;
+    for (let k = 1; k < parts.length; k += 3) { const x = its[+parts[k] - 1], t2 = (parts[k + 2] || "").trim(); if (x && t2) { await anon.rpc("visit_tr_save", { t: b.visit, bid: x.id, lg: b.to, txt: t2.slice(0, 1500) }); n++; } }
+    return out({ ok: true, n });
   }
   const caller = createClient(URL, ANON, { global: { headers: { Authorization: req.headers.get("Authorization") || "" } } });
   const { data: isStaff, error: e1 } = await caller.rpc("is_staff");

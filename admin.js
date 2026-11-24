@@ -453,6 +453,7 @@ async function openBooking(id) {
       </div>
 
       <div class="box"><h3>🔗 연결 흔적 <small>엉클데이가 연결한 손님이라는 근거</small></h3><div class="trace" id="trace"></div></div>
+      <div class="box" id="bkVn" hidden><h3>📒 시술 기록 <small>가게가 남긴 메모 · 손님용은 손님 예약확인증에 보여요</small></h3><div id="bkVnIn"></div></div>
       <div class="box" id="bkSv" hidden><h3>📋 방문 전 질문 <small>건강 정보 — 이 시술에만 · 방문 30일 뒤 자동 삭제</small></h3><div id="bkSvIn"></div></div>
 
       <div class="two">
@@ -677,7 +678,7 @@ async function openBooking(id) {
       [!!rv, rv ? `손님 후기 ${"★".repeat(rv.stars)}` : "손님 후기 (선택)"],
       [!!st, st ? `정산서 ${monthKo(st.month)} · ${st.status === "paid" ? "입금 완료" : "청구됨"}` : "정산 (방문 완료 후)"]
     ];
-    bkSurvey(b, shop);
+    bkSurvey(b, shop); bkVisitNote(b);
     $("trace").innerHTML = rows.map(([ok, t]) => `<div><span class="${ok ? "y" : "n"}">${ok ? "✓" : "○"}</span><span>${esc(t)}</span></div>`).join("");
   }
   const EVN = { created: "예약 접수", status: "상태 변경", edit: "정보 수정", sent_to_shop: "업체에 메시지 보냄", sent_to_customer: "손님에게 안내 보냄", customer_visited: "손님이 체크인·방문 확인", sent_followup: "안부(별점) 메시지 보냄", customer_kakao: "손님이 '카톡으로 확정 받기' 누름", shop_memo: "업체 메모", memo: "메모" };
@@ -1428,6 +1429,22 @@ function pmTxt(p, l) {
   const t = p.t || {}, nm = t[l] || t.vi || t.ko || t.en || "";
   const off = p.kind === "pct" ? { vi: `Giảm ${p.v}%`, en: `${p.v}% off`, ko: `${p.v}% 할인` }[l] : p.kind === "amt" ? { vi: `Giảm ${vnd(p.v)}`, en: `${vnd(p.v)} off`, ko: `${vnd(p.v)} 할인` }[l] : "";
   return [nm, off].filter(Boolean).join(" · ") + (p.orig && p.price != null && p.price < p.orig ? ` (${vnd(p.orig)} → ${vnd(p.price)})` : "");
+}
+// 📒 시술 기록 (universe42): 관리자도 보고 고칠 수 있어요 (사장님이 못 쓸 때)
+async function bkVisitNote(b) {
+  const box = $("bkVn"); if (!box || !["confirmed", "shop_ok", "visited", "settled"].includes(b.status)) return;
+  const r = await sb.from("visit_notes").select("*").eq("booking_id", b.id).maybeSingle();
+  if (r.error) return;   // universe42 실행 전
+  const v = r.data || {};
+  box.hidden = false;
+  $("bkVnIn").innerHTML = `<label class="f"><span>손님용 (받은 시술 · 다음 추천) <small class="hint">손님 말로 자동 번역돼요</small></span><textarea id="vnPub" rows="2" maxlength="1000">${esc(v.pub || "")}</textarea></label>
+    ${v.pub_tr && v.pub_tr.ko && v.lang !== "ko" ? `<p class="hint">🌐 ${esc(v.pub_tr.ko)}</p>` : ""}
+    <label class="f"><span>🔒 가게 전용</span><textarea id="vnPriv" rows="2" maxlength="1000">${esc(v.priv || "")}</textarea></label>
+    <div style="display:flex;gap:8px;align-items:center"><button class="btn sm main" id="vnSave">기록 저장</button><span class="hint">${v.author ? `작성 ${esc(v.author)} · ${dt(v.updated_at)}` : "아직 기록이 없어요"}</span></div>`;
+  $("vnSave").onclick = async () => {
+    const x = await sb.rpc("owner_note_save", { bid: b.id, pub: $("vnPub").value, priv: $("vnPriv").value, lg: "ko" });
+    if (x.error) return dbErr(x.error, "시술 기록"); toast("시술 기록을 저장했어요"); bkVisitNote(b);
+  };
 }
 async function bkSurvey(b, shop) {
   const box = $("bkSv"); if (!box || typeof svRows !== "function") return;
