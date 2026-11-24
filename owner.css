@@ -266,3 +266,8 @@ textarea.inp { min-height: 64px; resize: vertical; }
 .stats.rep .stat b em.up { color: #116241; } .stats.rep .stat b em.dn { color: #b42318; }
 .stats.rep .stat small { display: block; font-size: 11px; color: var(--sub); margin-top: 2px; }
 .rep-note { font-size: 12px; margin: 6px 2px 0; }
+
+/* 11/24 📋 방문 전 질문 */
+.sv-row{display:flex;gap:8px;align-items:flex-start;padding:6px 0;font-size:14.5px;line-height:1.45}.sv-row input{margin-top:3px;flex:none;width:18px;height:18px}
+.sv-cu{display:grid;grid-template-columns:1fr auto auto;gap:6px;margin:6px 0}.sv-set .lbl{font-weight:700;font-size:13px;color:#5b6676}
+.sv-own .sv-kv{align-items:flex-start;gap:12px}.sv-own .sv-kv span{flex:1}.sv-own .sv-kv b{max-width:55%;text-align:right}

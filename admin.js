@@ -453,6 +453,7 @@ async function openBooking(id) {
       </div>
 
       <div class="box"><h3>🔗 연결 흔적 <small>엉클데이가 연결한 손님이라는 근거</small></h3><div class="trace" id="trace"></div></div>
+      <div class="box" id="bkSv" hidden><h3>📋 방문 전 질문 <small>건강 정보 — 이 시술에만 · 방문 30일 뒤 자동 삭제</small></h3><div id="bkSvIn"></div></div>
 
       <div class="two">
         <div class="box"><h3>🏪 업체에 알리기</h3>
@@ -675,6 +676,7 @@ async function openBooking(id) {
       [!!rv, rv ? `손님 후기 ${"★".repeat(rv.stars)}` : "손님 후기 (선택)"],
       [!!st, st ? `정산서 ${monthKo(st.month)} · ${st.status === "paid" ? "입금 완료" : "청구됨"}` : "정산 (방문 완료 후)"]
     ];
+    bkSurvey(b, shop);
     $("trace").innerHTML = rows.map(([ok, t]) => `<div><span class="${ok ? "y" : "n"}">${ok ? "✓" : "○"}</span><span>${esc(t)}</span></div>`).join("");
   }
   const EVN = { created: "예약 접수", status: "상태 변경", edit: "정보 수정", sent_to_shop: "업체에 메시지 보냄", sent_to_customer: "손님에게 안내 보냄", customer_visited: "손님이 체크인·방문 확인", sent_followup: "안부(별점) 메시지 보냄", customer_kakao: "손님이 '카톡으로 확정 받기' 누름", shop_memo: "업체 메모", memo: "메모" };
@@ -1417,3 +1419,14 @@ async function afterLogin(session) {
     tryClose(o);
   });
 })();
+
+// 📋 예약 상세: 방문 전 질문 답 (universe37 · 관리자만 읽기)
+async function bkSurvey(b, shop) {
+  const box = $("bkSv"); if (!box || typeof svRows !== "function") return;
+  const r = await sb.from("booking_surveys").select("answers,updated_at").eq("booking_id", b.id).maybeSingle();
+  const qs = shop ? surveyQs(shop) : [];
+  if (r.error) { if (!/booking_surveys|42P01|PGRST20/.test((r.error.message || "") + (r.error.code || ""))) { box.hidden = false; $("bkSvIn").innerHTML = `<p class="hint">${esc(r.error.message)}</p>`; } return; }
+  if (!r.data) { if (qs.length && ["confirmed", "shop_ok", "reschedule"].includes(b.status)) { box.hidden = false; $("bkSvIn").innerHTML = `<p class="hint">아직 손님이 답하지 않았어요${shop.survey && shop.survey.req ? " — <b class='err-text'>이 가게는 '꼭 작성'이에요</b>. 손님에게 예약확인증 링크로 작성을 부탁해 주세요" : ""}.</p>`; } return; }
+  box.hidden = false;
+  $("bkSvIn").innerHTML = `<dl class="sv-adm">${svRows(r.data.answers, shop || {}, "ko").map(x => `<dt>${esc(x.q)}</dt><dd class="${x.flag ? "err-text" : ""}">${x.flag ? "⚠️ " : ""}${esc(x.a)}</dd>`).join("")}</dl><p class="hint">작성: ${dt(r.data.updated_at)}</p>`;
+}

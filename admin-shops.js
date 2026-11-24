@@ -146,6 +146,7 @@ function openEditor(id, preset, opts = {}) {
       <div class="box">
         <label class="switch best-sw ${s.best ? "on" : ""}" id="bSw"><input type="checkbox" id="bChk" ${s.best ? "checked" : ""}>
           <div><b>✦ 엉클 인증업체 배지 달기</b><div class="hint">켜면 손님 화면의 업체 사진과 이름 옆에 반짝이는 '엉클 인증업체' 배지가 붙고, 목록에서 맨 앞에 보여요.</div></div></label>
+        <div class="sv-edit" id="svEdit"></div>
         <label class="switch ${s.outcall ? "on" : ""}" id="ocSw"><input type="checkbox" id="ocChk" ${s.outcall ? "checked" : ""}>
           <div><b>🏨 호텔 출장 가능</b><div class="hint">사장님께 <b>직접 확인한 경우에만</b> 켜요. 켜면 손님 화면에 '호텔 출장 가능' 표시가 붙고, '🏨 호텔 출장' 필터에 나와요. 출장 가격 · 지역은 메뉴나 소개 글에 적어 주세요.</div></div></label>
         <label class="switch ${isOk(s) ? "on" : ""}" id="vSw"><input type="checkbox" id="vChk" ${isOk(s) ? "checked" : ""}>
@@ -321,6 +322,7 @@ function openEditor(id, preset, opts = {}) {
   if ($("revDone")) $("revDone").onclick = () => { delete s.review; $("revBox").remove(); toast("배너를 지웠어요. '저장'을 눌러 주세요."); };
   const drawChk = () => { const [n, t] = chkCount(s); $("chkSum").textContent = `확인 ${n} / ${t}` + (n === t ? " · 모두 확인됐어요" : ""); };
   $("bChk").onchange = () => { if ($("bChk").checked) s.best = true; else delete s.best; $("bSw").classList.toggle("on", !!s.best); };
+  shopSvDraw(s);
   $("ocChk").onchange = () => { if ($("ocChk").checked) s.outcall = true; else delete s.outcall; $("ocSw").classList.toggle("on", !!s.outcall); };
   $("vChk").onchange = () => { s.verified = $("vChk").checked; $("vSw").classList.toggle("on", s.verified); drawChk(); };
   $("chkList").querySelectorAll("[data-chk]").forEach(el => el.onchange = () => {
@@ -763,4 +765,29 @@ async function gplaceBulk() {
     drawList();
     toast(`${ok}곳 연결했어요${miss.length ? ` · 못 찾은 곳 ${miss.length}곳: ${miss.slice(0, 5).join(", ")}${miss.length > 5 ? " …" : ""}` : ""}`, 8000);
   }, "이름과 주소로 검색해서 첫 번째 결과를 연결해요. 이 검색은 구글 무료(무제한)예요. 잘못 연결된 곳이 있을 수 있으니 업체마다 '확인 필요' 메모를 남겨 둘게요.", "자동 연결", false);
+}
+
+// 📋 업체 편집: 방문 전 질문 (손님이 예약 확정 후 답해요) — 사장님 페이지에서도 바꿀 수 있어요. 가게가 더한 질문은 여기서 한국어 · 영어를 채워 주세요
+function shopSvDraw(s) {
+  const el = $("svEdit"); if (!el || typeof SURVEY_TPL === "undefined") return;
+  const sv = s.survey || {}, off = sv.off || [], cu = sv.custom || [];
+  const base = (SURVEY_TPL[s.cat] || SURVEY_TPL.package).concat(["note"]).filter((x, i, a) => a.indexOf(x) === i);
+  el.innerHTML = `<details ${cu.some(c => !(c.q && c.q.ko && c.q.en)) ? "open" : ""}><summary><b>📋 방문 전 질문</b> <span class="hint">${sv.on === false ? "꺼짐" : "켜짐"}${sv.req ? " · 꼭 작성" : ""} · 질문 ${surveyQs(s).length}개${cu.some(c => !(c.q && c.q.ko && c.q.en)) ? " · <b class='err-text'>번역 필요</b>" : ""}</span></summary>
+    <p class="hint">예약이 확정되면 손님이 예약확인증에서 답해요 (건강 정보라 동의 필수 · 방문 30일 뒤 자동 삭제). 답은 이 가게 사장님 페이지와 관리자 예약 상세에서만 보여요.</p>
+    <label class="sv-r"><input type="checkbox" data-svk="on" ${sv.on === false ? "" : "checked"}> 질문 받기</label>
+    <label class="sv-r"><input type="checkbox" data-svk="req" ${sv.req ? "checked" : ""}> 방문 전에 꼭 작성 (가게 요청)</label>
+    <p class="hint" style="margin:8px 0 2px">기본 질문 (업종: ${esc(s.cat || "-")})</p>
+    ${base.map(id => `<label class="sv-r"><input type="checkbox" data-svb="${id}" ${off.includes(id) ? "" : "checked"}> ${esc(SURVEY_Q[id].q.ko)}</label>`).join("")}
+    <p class="hint" style="margin:8px 0 2px">가게가 더한 질문 — 베트남어 · 한국어 · 영어</p>
+    ${cu.map((c, i) => `<div class="sv-c">${["vi", "ko", "en"].map(l => `<input data-svc="${i}" data-l="${l}" placeholder="${l.toUpperCase()}" value="${esc((c.q || {})[l] || "")}" maxlength="300">`).join("")}
+      <select data-svt="${i}"><option value="yn" ${c.type === "yn" ? "selected" : ""}>예/아니요</option><option value="text" ${c.type !== "yn" ? "selected" : ""}>직접 쓰기</option></select><button class="btn sm" type="button" data-svx="${i}">✕</button></div>`).join("")}
+    ${cu.length < 10 ? `<button class="btn sm" type="button" data-svadd>+ 질문 더하기</button>` : ""}
+    <p class="hint">바꾼 뒤 위쪽 <b>저장</b>을 눌러야 반영돼요.</p></details>`;
+  const set = () => { s.survey = { on: sv.on !== false, req: !!sv.req, off, custom: cu }; };
+  el.querySelectorAll("[data-svk]").forEach(x => x.onchange = () => { sv[x.dataset.svk] = x.checked; set(); });
+  el.querySelectorAll("[data-svb]").forEach(x => x.onchange = () => { const i = off.indexOf(x.dataset.svb); if (x.checked && i >= 0) off.splice(i, 1); if (!x.checked && i < 0) off.push(x.dataset.svb); set(); });
+  el.querySelectorAll("[data-svc]").forEach(x => x.oninput = () => { const c = cu[+x.dataset.svc]; c.q = { ...(c.q || {}), [x.dataset.l]: x.value.trim() }; set(); });
+  el.querySelectorAll("[data-svt]").forEach(x => x.onchange = () => { cu[+x.dataset.svt].type = x.value; set(); });
+  el.querySelectorAll("[data-svx]").forEach(x => x.onclick = () => { cu.splice(+x.dataset.svx, 1); set(); shopSvDraw(s); });
+  const add = el.querySelector("[data-svadd]"); if (add) add.onclick = () => { cu.push({ id: "c" + Date.now().toString(36), type: "yn", q: {} }); set(); shopSvDraw(s); el.querySelector("details").open = true; };
 }

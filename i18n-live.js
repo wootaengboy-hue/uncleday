@@ -19,7 +19,8 @@ const I18N = (() => {
   const SITE_ROOTS = () => ({ SITE: typeof SITE !== "undefined" ? SITE : null, CITIES: typeof CITIES !== "undefined" ? CITIES : null,
     CATEGORY_DETAIL: typeof CATEGORY_DETAIL !== "undefined" ? CATEGORY_DETAIL : null, CATEGORIES: typeof CATEGORIES !== "undefined" ? CATEGORIES : null,
     BANNERS: typeof BANNERS !== "undefined" ? BANNERS : null, PLACES: typeof PLACES !== "undefined" ? PLACES : null,
-    STEPS: typeof STEPS !== "undefined" ? STEPS : null, FAQ: typeof FAQ !== "undefined" ? FAQ : null });
+    STEPS: typeof STEPS !== "undefined" ? STEPS : null, FAQ: typeof FAQ !== "undefined" ? FAQ : null,
+    SURVEY_Q: typeof SURVEY_Q !== "undefined" ? SURVEY_Q : null });   // 📋 방문 전 질문 (survey.js)
 
   function apply() {
     if (!rows) return;

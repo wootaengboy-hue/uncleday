@@ -67,6 +67,9 @@ function draw(b) {
   // 💰 결제 확인 페이백: 다녀온 뒤(방문 시간이 지났거나 다녀왔어요를 누른 뒤) 받은 시술 · 결제 금액을 알려 주면 3% 포인트
   const pbCan = !["cancelled", "rejected", "requested", "reschedule"].includes(b.status) && (past || !!b.customer_visit_at || (end && now >= end));
   const tpCan = !!b.tp_window && ["confirmed", "visited", "settled"].includes(b.status) && tpLeft.length > 0 && (past || (end && now >= end));
+  // 📋 시술 전 질문: 확정된 예약 · 방문일 전까지 · 가게가 켜 둔 경우 (universe37)
+  const vnToday = new Date(Date.now() + 7 * 36e5).toISOString().slice(0, 10);
+  const svCan = typeof surveyQs === "function" && ["confirmed", "shop_ok", "reschedule"].includes(b.status) && (b.visit_date || "") >= vnToday && surveyQs(s).length > 0;
   document.title = `${ui("vTitle")} ${b.code} | ${tx(SITE.name)}`;
   box.innerHTML = `<div class="done voucher">
     <div class="v-head"><small>${ui("vTitle")}</small><b class="v-code">${esc(b.code)}</b>
@@ -90,6 +93,7 @@ function draw(b) {
       <p style="margin:10px 0 0">${ui("vResNone")}</p></div>` : ""}
     ${b.change_count && b.status !== "reschedule" ? `<p class="v-ok" style="background:#fff4e5;color:#9a5208">🔁 ${ui("vChanged", { n: b.change_count })}</p>` : ""}
     ${b.status === "confirmed" ? `<p class="v-show">📱 ${ui("vShow")}</p>` : ""}
+    ${svCan ? `<div class="sv-box" id="svBox"></div>` : ""}
     <div class="v-btns">
       ${canVisit && !start && (past || b.status === "confirmed" || b.status === "noshow") ? `<button class="btn big-btn" id="vVisit">${ui("vVisited")}</button>` : ""}
       ${b.customer_visit_at && !inside ? `<p class="v-ok">${ui("vVisitedDone")}</p>` : ""}
@@ -132,6 +136,7 @@ function draw(b) {
   };
   if ($("vRv")) $("vRv").onclick = () => openRv(0);
   if (pbCan) pbInit(b, t);
+  if (svCan) svInit(t, s);
   function tpForm(list) {
     return `<div class="tp-pick"><span>${ui("tpRvWho")}</span><div class="tp-chips">${list.map(x => `<button type="button" class="tp-chip ${x.id === tpParam ? "on" : ""}" data-tpid="${esc(x.id)}" aria-pressed="${x.id === tpParam}">${esc(x.name)}</button>`).join("")}</div>
       <div class="tp-stars" ${b.reviewed ? "" : "hidden"}>${[1, 2, 3, 4, 5].map(n => `<button type="button" data-ts="${n}">★</button>`).join("")}</div>
@@ -264,3 +269,57 @@ async function pbUpload(file, b) {
   return path;
 }
 
+
+// 📋 시술 전 질문 (예약확인증) — 답은 건강 정보라 동의를 받고, 가게와 엉클데이만 봐요. 방문 30일 뒤 자동 삭제
+const SVC = { t: null, shop: null, d: null, edit: false, delAsk: false };
+async function svInit(t, shop) {
+  SVC.t = t; SVC.shop = shop; SVC.edit = false; SVC.delAsk = false;
+  let r = null; try { r = await LIVE.rpc("survey_get", { t }); } catch (e) {}
+  if (r) SVC.shop = { ...shop, cat: r.cat || shop.cat, survey: r.survey || shop.survey };
+  SVC.d = r && r.answers ? { answers: r.answers, updated_at: r.updated_at } : null;
+  if (!surveyQs(SVC.shop).length) { const el = document.getElementById("svBox"); if (el) el.remove(); return; }   // 가게가 질문을 꺼 둠
+  svRender();
+}
+function svRender() {
+  const el = document.getElementById("svBox"); if (!el) return;
+  const qs = surveyQs(SVC.shop), req = !!(SVC.shop.survey && SVC.shop.survey.req), d = SVC.d, A = (d && d.answers) || {};
+  const head = `<b class="sv-t">📋 ${ui("sv_title")}</b>${req ? `<span class="sv-req">${ui("sv_req")}</span>` : ""}`;
+  if (d && !SVC.edit) {
+    el.innerHTML = `${head}<p class="v-ok">✅ ${ui("sv_done")}</p>
+      <dl class="sv-sum">${svRows(A, SVC.shop, lang).map(r => `<dt>${esc(r.q)}</dt><dd>${esc(r.a)}</dd>`).join("")}</dl>
+      <div class="sv-btns"><button class="btn" type="button" id="svEdit">${ui("sv_edit")}</button>
+      <button class="btn v-cancel" type="button" id="svDel">${SVC.delAsk ? ui("sv_delSure") : ui("sv_del")}</button></div>`;
+    el.querySelector("#svEdit").onclick = () => { SVC.edit = true; svRender(); };
+    el.querySelector("#svDel").onclick = async () => {
+      if (!SVC.delAsk) { SVC.delAsk = true; svRender(); return; }
+      try { await LIVE.rpc("survey_delete", { t: SVC.t }); SVC.d = null; SVC.delAsk = false; toastV(ui("sv_deleted")); } catch (e) { toastV(e.message || String(e)); }
+      svRender();
+    };
+    return;
+  }
+  const yn = (q, a) => `<div class="sv-yn">${["y", "n"].map(v => `<label><input type="radio" name="sv_${q.id}" value="${v}" ${a && a.v === v ? "checked" : ""}> ${ui(v === "y" ? "sv_yes" : "sv_no")}</label>`).join("")}</div>
+    ${q.detail ? `<input class="sv-d" data-d="${q.id}" placeholder="${esc(ui("sv_detail"))}" value="${esc((a && a.d) || "")}" ${a && a.v === "y" ? "" : "hidden"} maxlength="200">` : ""}`;
+  const pick = (q, a) => `<div class="sv-yn">${q.opts.map((o, i) => `<label><input type="radio" name="sv_${q.id}" value="${i}" ${a && String(a.v) === String(i) ? "checked" : ""}> ${esc(svTx(o, lang))}</label>`).join("")}</div>`;
+  const text = (q, a) => `<textarea name="sv_${q.id}" rows="2" maxlength="300" placeholder="${esc(ui("sv_ph"))}">${esc((a && a.v) || "")}</textarea>`;
+  el.innerHTML = `${head}<p class="sv-desc">${ui("sv_desc")}</p>
+    <form id="svForm">${qs.map(q => `<div class="sv-q"><span>${esc(svTx(q.q, lang))}</span>${q.type === "yn" ? yn(q, A[q.id]) : q.type === "pick" ? pick(q, A[q.id]) : text(q, A[q.id])}</div>`).join("")}
+      <label class="sv-ok"><input type="checkbox" name="consent"> <span>${ui("sv_consent")}</span></label>
+      <div class="sv-btns"><button class="btn big-btn" type="submit">${ui("sv_send")}</button>${d ? `<button class="btn" type="button" id="svCancel">${ui("back")}</button>` : ""}</div></form>`;
+  const f = el.querySelector("#svForm");
+  f.querySelectorAll('input[type=radio]').forEach(r => r.onchange = () => { const box = f.querySelector(`[data-d="${r.name.slice(3)}"]`); if (box) box.hidden = !(r.checked && r.value === "y" || f.querySelector(`[name="${r.name}"][value="y"]`).checked); });
+  const cancel = el.querySelector("#svCancel"); if (cancel) cancel.onclick = () => { SVC.edit = false; svRender(); };
+  f.onsubmit = async e => {
+    e.preventDefault();
+    const ans = {}; let miss = false;
+    qs.forEach(q => {
+      if (q.type === "text") { const v = (f.elements["sv_" + q.id].value || "").trim(); if (v) ans[q.id] = { v }; }
+      else { const c = f.querySelector(`[name="sv_${q.id}"]:checked`); if (!c) { miss = true; return; } ans[q.id] = { v: q.type === "pick" ? +c.value : c.value }; const dd = f.querySelector(`[data-d="${q.id}"]`); if (dd && c.value === "y" && dd.value.trim()) ans[q.id].d = dd.value.trim(); }
+      if (ans[q.id] && !SURVEY_Q[q.id]) { ans[q.id].q = q.q; ans[q.id].t = q.type; }   // 가게가 더한 질문은 질문 글도 같이 (나중에 질문이 바뀌어도 알아볼 수 있게)
+    });
+    if (miss) { toastV(ui("sv_need")); return; }
+    if (!f.consent.checked) { toastV(ui("sv_needConsent")); return; }
+    const btn = f.querySelector("[type=submit]"); btn.disabled = true;
+    try { SVC.d = await LIVE.rpc("survey_submit", { t: SVC.t, ans, consent: true, lg: lang }); SVC.edit = false; toastV(ui("sv_saved")); svRender(); }
+    catch (er) { btn.disabled = false; toastV(er.message || String(er)); }
+  };
+}

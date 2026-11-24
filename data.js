@@ -193,3 +193,4 @@ CATEGORIES.forEach(g => { g.sub = g.members.map(id => CATEGORY_DETAIL.find(c => 
 // 업체의 세부 카테고리 → 사이트 묶음 (모르는 값은 Skin & Beauty로)
 const catGroup = id => CATEGORIES.find(c => c.id === id || c.members.includes(id)) || CATEGORIES.find(c => c.id === "beauty") || CATEGORIES[0];
 const catDetail = id => CATEGORY_DETAIL.find(c => c.id === id);
+

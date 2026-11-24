@@ -30,7 +30,7 @@ async function i18nSources() {
   }
   // 사이트 글: data.js (관리자 화면에도 같은 파일이 들어와 있어요)
   const site = {};
-  const roots = { SITE, CITIES, CATEGORY_DETAIL, CATEGORIES, BANNERS, PLACES, STEPS, FAQ };
+  const roots = { SITE, CITIES, CATEGORY_DETAIL, CATEGORIES, BANNERS, PLACES, STEPS, FAQ, ...(typeof SURVEY_Q !== "undefined" ? { SURVEY_Q } : {}) };   // 📋 방문 전 질문 기본 문구도
   for (const [name, root] of Object.entries(roots)) if (root) i18nWalk(root, name, site);
   ["SITE.rates"].forEach(p => Object.keys(site).filter(k => k.startsWith(p)).forEach(k => delete site[k]));
   // 업체: 게시된 업체의 공개 정보만 (비공개 메모 · 계약 정보는 안 보내요)

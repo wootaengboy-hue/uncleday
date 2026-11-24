@@ -9,6 +9,20 @@
   let lang = (() => { try { const l = localStorage.getItem("ud-owner-lang"); return LANGS.includes(l) ? l : "vi"; } catch (e) { return "vi"; } })();
   const T = {
     title: ["Trang chủ sở hữu", "사장님 페이지", "Owner page"],
+    svTitle: ["📋 Câu hỏi trước khi đến", "📋 방문 전 질문", "📋 Pre-visit questions"],
+    svNone: ["Khách chưa trả lời câu hỏi trước khi đến", "손님이 아직 방문 전 질문에 답하지 않았어요", "The guest hasn't answered the pre-visit questions yet"],
+    svAt: ["Trả lời lúc", "작성", "Answered"],
+    svPriv: ["Thông tin sức khỏe — chỉ dùng cho dịch vụ này, không chia sẻ. Tự xóa sau 30 ngày.", "건강 정보예요 — 이번 시술에만 쓰고 공유하지 마세요. 방문 30일 뒤 자동으로 지워져요.", "Health information — use it only for this treatment and don't share it. Deleted 30 days after the visit."],
+    svSet: ["📋 Câu hỏi trước khi đến (khách trả lời sau khi đặt lịch được xác nhận)", "📋 방문 전 질문 (예약 확정 후 손님이 답해요)", "📋 Pre-visit questions (guests answer after confirmation)"],
+    svOn: ["Bật câu hỏi", "질문 받기", "Ask questions"],
+    svReq: ["Bắt buộc trả lời trước khi đến", "방문 전에 꼭 작성하게 하기", "Required before the visit"],
+    svBase: ["Câu hỏi mẫu (bỏ chọn để không hỏi)", "기본 질문 (체크를 빼면 안 물어봐요)", "Standard questions (untick to skip)"],
+    svCustom: ["Câu hỏi thêm của cửa hàng", "가게가 더할 질문", "Your own questions"],
+    svAdd: ["+ Thêm câu hỏi", "+ 질문 더하기", "+ Add question"],
+    svCustomPh: ["Viết câu hỏi bằng tiếng Việt (Uncle Day sẽ dịch cho khách)", "질문을 적어 주세요 (엉클데이가 손님 말로 번역해요)", "Write your question (Uncle Day translates it for guests)"],
+    svYn: ["Có/Không", "예/아니요", "Yes/No"], svText: ["Viết", "직접 쓰기", "Text"],
+    svSave: ["Lưu câu hỏi", "질문 저장", "Save questions"], svSaved: ["Đã lưu ✅", "저장했어요 ✅", "Saved ✅"],
+    svOwnerOnly: ["Chỉ chủ cửa hàng mới sửa được", "사장님만 바꿀 수 있어요", "Only the owner can change this"],
     loginTitle: ["Đăng nhập cho chủ cửa hàng", "사장님 로그인", "Owner login"],
     loginNote: ["Uncle Day tạo tài khoản sau khi ký hợp đồng. Lần đầu đăng nhập, hãy đổi mật khẩu.", "계약 후 엉클데이가 계정을 만들어 드려요. 처음 로그인하면 비밀번호를 바꿔 주세요.", "Uncle Day creates your account after signing. Change your password on first login."],
     phone: ["Số điện thoại", "전화번호", "Phone number"],
@@ -174,8 +188,59 @@
   const dur = m => m >= 1440 ? t("days", Math.floor(m / 1440)) : m >= 60 ? t("hours", Math.floor(m / 60)) : t("mins", m);
   const dueOf = b => { const base = Date.parse(b.sent_to_shop_at || b.created_at); const left = Math.round((base + 30 * 60e3 - Date.now()) / 60e3); return left >= 0 ? { late: false, text: t("dueLeft", dur(left)) } : { late: true, text: t("dueLate", dur(-left)) }; };
   const row = (b, withDate) => `<button class="trow" data-open="${b.id}"><div class="tm">${esc(b.visit_time || "--:--")}${withDate ? `<small>${esc(dateLabel(b.visit_date))}</small>` : ""}</div>
-      <div class="grow"><span class="nm">${esc(b.customer_name || "-")} · ${t("people", b.people)}</span><span class="sub">${esc(menuLabel(b))}</span></div>
+      <div class="grow"><span class="nm">${esc(b.customer_name || "-")} · ${t("people", b.people)}${b.survey ? ` <span title="${esc(t("svTitle"))}">📋</span>` : ""}</span><span class="sub">${esc(menuLabel(b))}</span></div>
       <span class="${badge(b.status)}">${t("st_" + b.status)}</span></button>`;
+
+  // ---- 📋 방문 전 질문 (universe37 · survey.js) ----
+  const svL = () => LANGS[li()] || "vi";
+  let svCfg = null, svDraft = null;
+  async function svLoad() { try { svCfg = await rpc("owner_survey_get", { shop: shopId }); } catch (e) { svCfg = null; } }
+  function svDetailHtml(b, st) {
+    if (typeof svRows !== "function") return "";
+    if (b.survey) {
+      const rows = svRows(b.survey, { cat: (svCfg && svCfg.cat) || "package", survey: svCfg ? svCfg.survey : {} }, svL());
+      return `<div class="card sv-own"><b style="display:block;margin-bottom:6px">${t("svTitle")}</b>
+        ${rows.map(r => `<div class="kv sv-kv"><span>${esc(r.q)}</span><b ${r.flag ? `style="color:#B23A1E"` : ""}>${r.flag ? "⚠️ " : ""}${esc(r.a)}</b></div>`).join("")}
+        <p class="muted" style="margin:8px 0 0;font-size:12.5px">${b.survey_at ? t("svAt") + " " + esc(String(b.survey_at).slice(0, 16).replace("T", " ")) + " · " : ""}${t("svPriv")}</p></div>`;
+    }
+    return ["confirmed", "shop_ok"].includes(st) && !(svCfg && svCfg.survey && svCfg.survey.on === false) ? `<div class="note">📋 ${t("svNone")}</div>` : "";
+  }
+  function svSetHtml() {
+    if (typeof SURVEY_TPL === "undefined") return "";
+    if (!svCfg) { svLoad().then(() => { if (tab === "schedule" && svCfg) draw(); }); return `<div class="card">${t("svSet")} …</div>`; }
+    const cfg = svDraft || JSON.parse(JSON.stringify(svCfg.survey || {})); svDraft = cfg;
+    const own = isOwner(), dis = own ? "" : "disabled", L = svL();
+    const base = (SURVEY_TPL[svCfg.cat] || SURVEY_TPL.package).concat(["note"]).filter((x, i, a) => a.indexOf(x) === i);
+    const off = cfg.off || [], cu = cfg.custom || [];
+    return `<div class="card sv-set"><b style="display:block;font-size:16px;margin-bottom:8px">${t("svSet")}</b>
+      ${own ? "" : `<p class="muted">${t("svOwnerOnly")}</p>`}
+      <label class="sv-row"><input type="checkbox" data-sv="on" ${cfg.on === false ? "" : "checked"} ${dis}> <b>${t("svOn")}</b></label>
+      <label class="sv-row"><input type="checkbox" data-sv="req" ${cfg.req ? "checked" : ""} ${dis}> ${t("svReq")}</label>
+      <p class="lbl" style="margin:12px 0 4px">${t("svBase")}</p>
+      ${base.map(id => `<label class="sv-row"><input type="checkbox" data-svq="${id}" ${off.includes(id) ? "" : "checked"} ${dis}> ${esc(svTx(SURVEY_Q[id].q, L))}</label>`).join("")}
+      <p class="lbl" style="margin:12px 0 4px">${t("svCustom")}</p>
+      ${cu.map((c, i) => `<div class="sv-cu"><input class="inp" data-svc="${i}" value="${esc(svTx(c.q, L === "vi" ? "vi" : L) || svTx(c.q, "vi"))}" placeholder="${esc(t("svCustomPh"))}" maxlength="300" ${dis}>
+        <select class="inp" data-svt="${i}" ${dis}><option value="yn" ${c.type === "yn" ? "selected" : ""}>${t("svYn")}</option><option value="text" ${c.type !== "yn" ? "selected" : ""}>${t("svText")}</option></select>
+        ${own ? `<button class="btn ghost" type="button" data-svx="${i}">✕</button>` : ""}</div>`).join("")}
+      ${own && cu.length < 10 ? `<button class="btn ghost" type="button" data-sv="add">${t("svAdd")}</button>` : ""}
+      ${own ? `<button class="btn main" type="button" data-sv="save" style="margin-top:12px">${t("svSave")}</button>` : ""}</div>`;
+  }
+  function svBind(m) {
+    const box = m.querySelector(".sv-set"); if (!box || !svDraft) return;
+    const keep = () => { box.querySelectorAll("[data-svc]").forEach(x => { const c = svDraft.custom[+x.dataset.svc]; if (c) c.q = { ...(c.q || {}), [svL()]: x.value.trim() }; });
+      box.querySelectorAll("[data-svt]").forEach(x => { const c = svDraft.custom[+x.dataset.svt]; if (c) c.type = x.value; }); };
+    box.querySelectorAll("[data-svq]").forEach(x => x.onchange = () => { const off = new Set(svDraft.off || []); if (x.checked) off.delete(x.dataset.svq); else off.add(x.dataset.svq); svDraft.off = [...off]; });
+    box.querySelectorAll("[data-svx]").forEach(x => x.onclick = () => { keep(); svDraft.custom.splice(+x.dataset.svx, 1); draw(); });
+    box.querySelectorAll("[data-sv]").forEach(x => {
+      if (x.dataset.sv === "on" || x.dataset.sv === "req") x.onchange = () => { svDraft[x.dataset.sv] = x.checked; };
+      else if (x.dataset.sv === "add") x.onclick = () => { keep(); svDraft.custom = svDraft.custom || []; svDraft.custom.push({ id: "c" + Date.now().toString(36), type: "yn", q: {} }); draw(); };
+      else if (x.dataset.sv === "save") x.onclick = async () => {
+        keep(); x.disabled = true;
+        try { const c = await rpc("owner_survey_save", { shop: shopId, cfg: svDraft }); svCfg.survey = c; svDraft = null; toast(t("svSaved")); draw(); }
+        catch (e) { x.disabled = false; toast(errMsg(e)); }
+      };
+    });
+  }
 
   // ---- 화면: 로그인 ----
   function drawLogin(err) {
@@ -258,7 +323,7 @@
     if (window.OwnerBoard) window.OwnerBoard.unmount();
     if (tab === "home") m.innerHTML = homeHtml();
     else if (tab === "bookings") m.innerHTML = bookingsHtml();
-    else if (tab === "schedule") m.innerHTML = scheduleHtml();
+    else if (tab === "schedule") { m.innerHTML = scheduleHtml() + svSetHtml(); svBind(m); }
     else if (tab === "settle") m.innerHTML = settleHtml();
     else m.innerHTML = moreHtml();
     bindMain(m);
@@ -450,7 +515,7 @@
     m.querySelectorAll("[data-sf]").forEach(b => b.onclick = () => { sFilter = b.dataset.sf; draw(); });
     m.querySelectorAll("[data-day]").forEach(b => b.onclick = () => { schedDay = b.dataset.day; draw(); });
     m.querySelectorAll("[data-slot]").forEach(b => b.onclick = () => toggleClosure(schedDay, b.dataset.slot));
-    m.querySelectorAll("[data-shop]").forEach(b => b.onclick = () => { shopId = b.dataset.shop; store("ud-owner-shop", shopId); sched = null; settle = null; hoursDraft = null; load(); });
+    m.querySelectorAll("[data-shop]").forEach(b => b.onclick = () => { shopId = b.dataset.shop; store("ud-owner-shop", shopId); sched = null; svCfg = null; svDraft = null; settle = null; hoursDraft = null; load(); });
     m.querySelectorAll("[data-wsw]").forEach(b => b.onclick = () => { const d = draft(), i = +b.dataset.wsw; d.week[i].closed = !d.week[i].closed; draw(); });
     m.querySelectorAll("[data-wo]").forEach(s => s.onchange = () => { draft().week[+s.dataset.wo].open = s.value; draw(); });
     m.querySelectorAll("[data-wc]").forEach(s => s.onchange = () => { draft().week[+s.dataset.wc].close = s.value; draw(); });
@@ -560,6 +625,7 @@
           ${b.list_price ? `<div class="kv"><span>${t("listPrice")}</span><b>${vnd(b.list_price)}</b></div>` : ""}
           <div class="kv"><span>${t("guestLang")}</span><b>${esc(ln)}</b></div></div>
         ${b.note ? `<div class="note"><b style="display:block;font-size:13px">${t("note")}</b>${esc(b.note)}</div>` : ""}
+        ${svDetailHtml(b, st)}
         <div class="info">${t("contactHidden")}</div>
         ${actions}
       </div></div>`;
@@ -610,6 +676,7 @@
   }
   async function load(quiet) {
     try {
+      if (!svCfg) svLoad();
       const r = await rpc("owner_bookings", { shop: shopId });
       const req = new Set(r.filter(b => b.status === "requested").map(b => b.id));
       if (knownReq && [...req].some(id => !knownReq.has(id))) ping();
