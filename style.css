@@ -871,3 +871,15 @@ footer .foot-priv, footer .foot-priv:visited { color: #fff; }
 .hist-act { display: flex; gap: 10px; align-items: center; margin-top: 10px; } .hist-act .btn { padding: 8px 14px; font-size: 14px; } .hist-v { font-size: 13px; color: var(--sub, #667); }
 .hist-go { display: grid; gap: 8px; margin-top: 12px; }
 .hist-sum div:last-child b { font-size: 16px; white-space: nowrap; padding-top: 3px; }
+/* 📒 머리글 '내 시술 기록' 바로 가기 */
+.hist-btn { display: inline-flex; align-items: center; gap: 5px; height: 40px; padding: 0 12px; border-radius: 999px; border: 1px solid #CFE6D7; background: #F4FAF6; color: #11624A; font-weight: 800; font-size: 14px; text-decoration: none; white-space: nowrap; }
+@media (max-width: 640px) { .hist-btn { width: 40px; padding: 0; justify-content: center; } .hist-btn .hist-l { display: none; } }
+@media (max-width: 480px) {   /* 📒 버튼이 생겨도 머리글이 한 줄에 들어가게 */
+  .top-in { gap: 4px; }
+  .hist-btn, .top-in > .acct-btn { width: 34px; height: 34px; padding: 0; justify-content: center; }
+  .top-in > .acct-btn .acct-l { display: none; }
+  .top-in > .btn.find-bk { padding: 6px 8px; }
+  .lang-btn { padding: 5px 8px; } .lang-btn .lg-caret { display: none; }
+  .top-in > .btn.kakao-link { padding: 7px 10px; }
+}
+@media (max-width: 400px) { .hist-btn { width: 32px; height: 32px; } .top-in > .btn.kakao-link { padding: 7px 8px; } .top-in > .btn.find-bk { padding: 6px 7px; } }

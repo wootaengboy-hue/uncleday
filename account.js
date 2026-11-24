@@ -95,6 +95,13 @@ const ACCT = (() => {
     if (!b) { const host = document.querySelector(".top-in"); if (!host || !on) return; b = document.createElement("button"); b.id = "acctBtn"; b.className = "acct-btn"; b.type = "button"; const k = host.querySelector(".kakao-link"); host.insertBefore(b, k || null); }
     b.innerHTML = user ? `<span class="acct-av">${esc((name() || "?").slice(0, 1).toUpperCase())}</span><span class="acct-l">${t("my")}</span>` : `<span class="acct-ic">👤</span><span class="acct-l">${t("login")}</span>`;
     b.onclick = () => user ? openMine() : openLogin();
+    // 📒 내 시술 기록 바로 가기: 로그인했거나 이 기기에서 예약한 적이 있으면 머리글에 보여요
+    let mine = 0; try { mine = (JSON.parse(localStorage.getItem("uncleday-my-bookings") || "[]") || []).length; } catch (e) {}
+    let h = document.getElementById("histBtn");
+    if ((user || mine) && !/history\.html/.test(location.pathname)) {
+      if (!h) { h = document.createElement("a"); h.id = "histBtn"; h.className = "hist-btn"; h.href = "history.html"; b.parentNode.insertBefore(h, b); }
+      h.innerHTML = `<span>📒</span><span class="hist-l">${typeof ui === "function" ? ui("vh_title").replace(/^📒\s*/, "") : "내 시술 기록"}</span>`;
+    } else if (h) h.remove();
   }
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 

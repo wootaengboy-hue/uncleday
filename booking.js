@@ -74,6 +74,7 @@ function draw(b) {
   box.innerHTML = `<div class="done voucher">
     <div class="v-head"><small>${ui("vTitle")}</small><b class="v-code">${esc(b.code)}</b>
       <span class="v-st st-${esc(b.status)}">${ui("st_" + b.status)}</span></div>
+    <div class="vh-box" id="vhBox" hidden></div>
     ${checkin ? `<div class="ci-box"><b>📍 ${ui("ciTitle")}</b><p>${ui("ciDesc")}</p><button class="btn big-btn" id="vCheckin">${ui("ciBtn")}</button></div>` : ""}
     ${inside ? `<p class="v-ok">✅ ${ui("ciDone")}</p>` : ""}
     ${rate ? `<div class="rate-box"><b>${ui("rateTitle")}</b><div class="rate-stars">${[1, 2, 3, 4, 5].map(n => `<button type="button" data-rate="${n}" aria-label="${n}">★</button>`).join("")}</div><small>${ui("rateHint")}</small></div>` : ""}
@@ -95,7 +96,6 @@ function draw(b) {
     ${b.change_count && b.status !== "reschedule" ? `<p class="v-ok" style="background:#fff4e5;color:#9a5208">🔁 ${ui("vChanged", { n: b.change_count })}</p>` : ""}
     ${b.status === "confirmed" ? `<p class="v-show">📱 ${ui("vShow")}</p>` : ""}
     ${svCan ? `<div class="sv-box" id="svBox"></div>` : ""}
-    <div class="vh-box" id="vhBox" hidden></div>
     <div class="v-btns">
       ${canVisit && !start && (past || b.status === "confirmed" || b.status === "noshow") ? `<button class="btn big-btn" id="vVisit">${ui("vVisited")}</button>` : ""}
       ${b.customer_visit_at && !inside ? `<p class="v-ok">${ui("vVisitedDone")}</p>` : ""}
