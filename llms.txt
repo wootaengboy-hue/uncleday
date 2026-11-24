@@ -5,7 +5,7 @@
 - 손님은 엉클데이 사이트 채팅이나 카카오톡으로 한국어 상담을 하고, 엉클데이가 매장에 확인한 뒤 예약을 확정해요.
 - 엉클데이를 통해도 매장 가격 그대로예요. 손님이 엉클데이에 내는 추가 요금은 없고, 결제는 시술 후 매장에서 직접 해요.
 - 후기는 실제로 예약하고 방문한 손님만 남길 수 있어요.
-- 등록 업체 62곳 · 정보 업데이트 2026-11-23
+- 등록 업체 62곳 · 정보 업데이트 2026-11-24
 
 ## 도시별 모아보기
 - [호치민 (Ho Chi Minh City) 7곳](https://www.uncleday.com/c/hcm/): 마사지 · 스파 · 뷰티 업체 목록과 자주 묻는 질문
@@ -129,6 +129,7 @@ Shop and city pages translated from Uncle Day's own data (shop names, descriptio
 - [다낭 마사지 여행 후 피로를 풀고 편안한 휴식 — 가격 · 영업시간 · 위치 정리 (2026)](https://www.uncleday.com/blog/danang-guide-10/): 업체 10곳 · 정보 확인 2026-11-14
 - [관광 후 피로 풀기 좋은 다낭 뷰티샵 추천 (피부 · 네일 · 헤어) — 가격 · 영업시간 · 위치 정리 (2026)](https://www.uncleday.com/blog/danang-guide-13/): 업체 10곳 · 정보 확인 2026-11-14
 - [다낭 긴급상황 발생 시 대처법과 연락처 총정리](https://www.uncleday.com/blog/danang-guide-14/): 업체 6곳 · 정보 확인 2026-11-18
+- [다낭 실시간 날씨 확인법과 날씨별 여행 팁](https://www.uncleday.com/blog/danang-guide-15/): 업체 6곳 · 정보 확인 2026-11-23
 - [관광 후 피로 풀기 좋은 다낭 마사지 추천 — 가격 · 영업시간 · 위치 정리 (2026)](https://www.uncleday.com/blog/danang-guide-16/): 업체 10곳 · 정보 확인 2026-11-14
 - [다낭 여행 일정 계획, 3박 4일 동선 짜는 법](https://www.uncleday.com/blog/danang-guide-17/): 업체 6곳 · 정보 확인 2026-11-18
 - [다낭 여행 준비물 체크리스트, 빠짐없이 챙기는 법](https://www.uncleday.com/blog/danang-guide-18/): 업체 6곳 · 정보 확인 2026-11-18
@@ -140,3 +141,4 @@ Shop and city pages translated from Uncle Day's own data (shop names, descriptio
 - [관광 후 피로 풀기 좋은 다낭 스킨케어 · 피부관리 추천 — 실제 메뉴 가격 비교 (2026)](https://www.uncleday.com/blog/danang-facial-46/): 업체 3곳 · 정보 확인 2026-11-14
 - [남자 피지관리 중요성, 다낭 여행 전에 알아둘 점](https://www.uncleday.com/blog/danang-guide-47/): 업체 10곳 · 정보 확인 2026-11-18
 - [다낭 발 마사지 추천 — 가격 · 영업시간 · 위치 정리 (2026)](https://www.uncleday.com/blog/danang-foot-48/): 업체 7곳 · 정보 확인 2026-11-17
+- [다낭 한시장 근처 뷰티샵 추천 (피부 · 네일 · 헤어) — 가까운 순 · 실제 가격 정리 (2026)](https://www.uncleday.com/blog/danang-han-market-49/): 업체 8곳 · 정보 확인 2026-11-23
