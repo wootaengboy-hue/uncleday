@@ -806,3 +806,8 @@ html:not([lang="ko"]) .about-ud .about-en { font-size: 14px; color: inherit; }
   .menu-row.pm-row > div:first-child { flex-basis: 100%; }
   .menu-row.pm-row .price.pm { max-width: none; flex: 1; text-align: left; }
 }
+/* 푸터 링크: 어두운 배경에서 잘 보이게 (방문한 링크도 보라색 ✕) */
+footer a, footer a:visited { color: #FFC08A; }
+footer a:hover { color: #fff; }
+.foot-find a, .foot-blog a, .foot-find a:visited, .foot-blog a:visited { color: #FFC08A; text-decoration: underline; text-underline-offset: 3px; }
+footer .foot-priv, footer .foot-priv:visited { color: #fff; }
