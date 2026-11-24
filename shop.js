@@ -107,6 +107,7 @@ if (!shop) {
   const closedText = shop.open ? closed : ui("tbd");
 
   const hasPrice = shop.menu.some(m => m.price > 0);
+  const pms = promosOn(shop);
   const addrOk = !/확인 중|to be confirmed/i.test(JSON.stringify(shop.address));
   const checks = [
     [ui("address"), addrOk], [ui("hours"), !!shop.open], [ui("price"), hasPrice],
@@ -130,7 +131,7 @@ if (!shop) {
       <div class="chips"><span class="tag cat-tag">${cat ? cat.icon + " " + tx(cat.name) : ""}</span>
         <span class="tag">📍 ${cityName(shop.city)}</span>
         ${shop.rating ? `<span class="tag">⭐ ${shop.rating} (${shop.reviews})</span>` : ""}
-        ${openBadge(shop)}${ocBadge(shop)}${ptsBadge(shop)}<span id="spdBadge"></span>
+        ${openBadge(shop)}${pmBadge(shop)}${ocBadge(shop)}${ptsBadge(shop)}<span id="spdBadge"></span>
         <button type="button" class="tag share-btn" id="shareBtn">🔗 ${ui("shareBtn")}</button></div>
       <h1>${tx(shop.name)}${shop.best ? ` <span class="best-badge"><i>✦</i>${ui("certBadge")}<i>✦</i></span>` : ""}</h1>
       <div class="tags">${shop.tags.map(t => `<span class="tag">#${tx(t)}</span>`).join("")}</div>
@@ -148,10 +149,11 @@ if (!shop) {
     ${shop.recommend && tx(shop.recommend) ? `<p class="reco">👍 <b>${ui("recoFor")}</b> ${tx(shop.recommend)}</p>` : ""}
 
     ${shop.menu.length ? `<h2>${ui("menu")}</h2>
-    <div id="menuList">${shop.menu.map((m, i) => `
-      <div class="menu-row"><div><b>${tx(m.name)}</b>${m.min ? `<br><small>${m.min} ${ui("min")}</small>` : ""}</div>
-      <div class="price">${money(m.price)}</div>
-      ${pending ? "" : `<button class="chip pick" data-i="${i}">${ui("bookBtn")}</button>`}</div>`).join("")}
+    ${pms.length ? `<div class="pm-box"><b class="pm-h">${ui("pm_title")}</b><ul>${pms.map(p => `<li>${esc(pmLine(p, shop))}</li>`).join("")}</ul><small>${ui("pm_note")}</small></div>` : ""}
+    <div id="menuList">${shop.menu.map((m, i) => { const pf = promoFor(shop, i); return `
+      <div class="menu-row${pf && pf.cut ? " pm-row" : ""}"><div><b>${tx(m.name)}</b>${m.min ? `<br><small>${m.min} ${ui("min")}</small>` : ""}</div>
+      <div class="price${pf && pf.cut ? " pm" : ""}">${pf && pf.cut ? `<s>₫${m.price.toLocaleString("en-US")}</s><span class="pm-tag">${esc(pmTag(pf.p))}</span><br>${money(pf.price)}` : money(m.price)}</div>
+      ${pending ? "" : `<button class="chip pick" data-i="${i}">${ui("bookBtn")}</button>`}</div>`; }).join("")}
     </div>` : ""}
 
     ${(shop.menuImgs || []).length ? `<h2>${ui("menuBoard")}</h2>
@@ -187,7 +189,8 @@ if (!shop) {
     <p class="find-hint" ${pending ? "hidden" : ""}>${ui("vAlready")} <a href="booking.html">🔎 ${ui("vFind")}</a></p>
     <form id="form" class="form" ${pending ? "hidden" : ""}>
       <label>${ui("fMenu")}<select name="menu" id="fMenu">${shop.menu.map((m, i) =>
-        `<option value="${i}">${tx(m.name)} – ${money(m.price)}</option>`).join("")}</select></label>
+        `<option value="${i}">${tx(m.name)} – ${(pf => pf && pf.cut ? money(pf.price) + " 🎁" : money(m.price))(promoFor(shop, i))}</option>`).join("")}</select></label>
+      <p class="pm-est" id="pmEst" hidden></p>
       <div class="bk-pick">
         <button type="button" class="bk-sum" id="bkSum"><span class="bk-ic">📅</span><span id="bkSumT">${ui("pickDT")}</span><span class="bk-car">▾</span></button>
         <div class="bk-panel" id="bkPanel" hidden>
@@ -346,6 +349,8 @@ ${f.text}
   function drawSum() {
     $("bkSumT").textContent = fDate.value && fTime.value ? `${fmtDate(fDate.value)} ${fmtTime(fTime.value)}` : fDate.value ? `${fmtDate(fDate.value)} · ${ui("pickTime")}` : ui("pickDT");
     $("bkSum").classList.toggle("set", !!(fDate.value && fTime.value));
+    const pe = $("pmEst"), pf = pe && promoFor(shop, +fMenu.value, fDate.value || undefined), n = +$("fPeople").value || 1;   // 🎁 고른 날짜 · 메뉴의 할인
+    if (pe) { pe.hidden = !pf; if (pf) pe.textContent = "🎁 " + pmLine(pf.p, shop) + (pf.cut ? " → " + ui("pm_est") + ": " + money(pf.price * n) : ""); }
   }
   function drawCal() {
     const y = view.getFullYear(), m = view.getMonth();
@@ -374,7 +379,7 @@ ${f.text}
   $("calNext").onclick = () => { view = new Date(view.getFullYear(), view.getMonth() + 1, 1); drawCal(); };
   const setPpl = n => { n = Math.max(1, Math.min(10, n)); $("fPeople").value = n; $("pplN").textContent = n; $("pplM").disabled = n <= 1; $("pplP").disabled = n >= 10;
     if (AV && fDate.value) { if (fTime.value && !slotsFor().includes(fTime.value)) { fTime.value = ""; drawSum(); } if (!$("bkPanel").hidden) drawSlots(); } };
-  $("pplM").onclick = () => setPpl(+$("fPeople").value - 1); $("pplP").onclick = () => setPpl(+$("fPeople").value + 1); setPpl(1);
+  $("pplM").onclick = () => { setPpl(+$("fPeople").value - 1); drawSum(); }; $("pplP").onclick = () => { setPpl(+$("fPeople").value + 1); drawSum(); }; setPpl(1);
   fMenu.onchange = () => { if (fTime.value && !slotsFor().includes(fTime.value)) fTime.value = ""; drawSlots(); drawSum(); };
   drawSum();
 

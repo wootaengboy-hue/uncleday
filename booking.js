@@ -84,6 +84,7 @@ function draw(b) {
       <dt>${ui("vMenu")}</dt><dd>${esc(menuName)}${b.menu_min ? ` · ${b.menu_min}${ui("min")}` : ""}</dd>
       <dt>${ui("vPeople")}</dt><dd>${ui("vPeopleN", { n: b.people })}</dd>
       <dt>${ui("vPrice")}</dt><dd>${money(b.list_price)}<br><small>${ui("vPriceNote")}</small></dd>
+      ${b.promo ? `<dt>${ui("pm_applied")}</dt><dd>🎁 ${esc([pmName(b.promo), pmOff(b.promo)].filter(Boolean).join(" · "))}${b.promo.orig && b.promo.price < b.promo.orig ? `<br><small><s>₫${Number(b.promo.orig).toLocaleString("en-US")}</s> → ₫${Number(b.promo.price).toLocaleString("en-US")} · ${ui("pm_note")}</small>` : ""}</dd>` : ""}
       ${tps.length ? `<dt>${ui("vTp")}</dt><dd><b>${tps.map(x => esc(x.name)).join(", ")}</b>${tps.some(x => x.working) ? ` <small>· ${ui("vTpNow")}</small>` : ""}</dd>` : ""}
       <dt>${ui("vName")}</dt><dd>${esc(b.customer_name)}</dd>
       ${b.note ? `<dt>${ui("vNote")}</dt><dd>${esc(b.note)}</dd>` : ""}

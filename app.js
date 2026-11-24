@@ -128,7 +128,7 @@ function drawShops() {
       ${s.rating ? `<div class="rate"><span class="rate-stars">${stars(Math.round(s.rating))}</span><b>${(+s.rating).toFixed(1)}</b><small>(${s.reviews})</small></div>` : ""}
       <div class="meta">${state.from && s.geo ? `<b class="dist">📍 ${distText(distKm(state.from, s.geo))}</b> · ` : ""}${cityName(s.city)}</div>
       <div class="price">${priceFrom(s)}</div>
-      <div class="card-badges">${openBadge(s)}${ocBadge(s)}${ptsBadge(s)}</div>
+      <div class="card-badges">${openBadge(s)}${pmBadge(s)}${ocBadge(s)}${ptsBadge(s)}</div>
       <div class="tags card-tags">${s.tags.map(t => `<span class="tag">${tx(t)}</span>`).join("")}</div>
     </div></a>`;
   };

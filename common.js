@@ -41,7 +41,7 @@ function money(vnd) {
   return s;
 }
 const priceFrom = shop => {
-  const ps = shop.menu.map(m => m.price).filter(p => p > 0);
+  const ps = shop.menu.map((m, i) => { const pf = typeof promoFor === "function" && m.price > 0 ? promoFor(shop, i) : null; return pf && pf.cut ? pf.price : m.price; }).filter(p => p > 0);   // 🎁 할인 중이면 할인가 기준
   return ps.length ? money(Math.min(...ps)) + " ~" : ui("consultPrice");
 };
 
@@ -68,6 +68,30 @@ const isOpenNow = shop => { const i = openInfo(shop); return !!(i && i.open); };
 // 💸 포인트 적립 표시 (비율은 업체와 협의되면 SITE.ptsRate 로 숫자 표시) · 예약 가능한 업체에만
 const ptsOn = shop => shop && shop.verified !== false && shop.open && shop.menu && shop.menu.length;
 const ptsBadge = shop => ptsOn(shop) ? `<span class="pts-b" title="${esc(ui("pts_hint"))}">${SITE.ptsRate ? ui("pts_badgeN", { p: SITE.ptsRate }) : ui("pts_badge")}</span>` : "";
+// 🎁 업체별 할인 이벤트 (universe39 · shop.promos) — 오늘(베트남 시간) 진행 중인 것만
+// { id, on, kind: pct|amt|text, v, menus: [메뉴 번호…] (비면 전 메뉴), from, to, t: {vi, ko, en} }
+const pmDay = () => new Date(Date.now() + 7 * 36e5).toISOString().slice(0, 10);
+const pmLive = (p, d) => p && p.on !== false && (!p.from || d >= p.from) && (!p.to || d <= p.to) && (p.kind === "text" ? !!(p.t && (p.t.vi || p.t.ko || p.t.en)) : p.v > 0);
+const promosOn = (shop, d) => ((shop && shop.promos) || []).filter(p => pmLive(p, d || pmDay()));
+const pmCut = (p, price) => !price || !p ? 0 : p.kind === "pct" ? Math.round(price * Math.min(p.v, 90) / 100 / 1000) * 1000 : p.kind === "amt" ? Math.min(p.v, price) : 0;
+const pmFits = (p, i) => !(p.menus && p.menus.length) || p.menus.includes(i);
+function promoFor(shop, i, d) {   // 그 메뉴에 맞는 가장 큰 할인 (서버 promo_pick 과 같은 규칙)
+  const m = shop.menu[i]; let best = null, bc = 0, txt = null;
+  promosOn(shop, d).filter(p => pmFits(p, i)).forEach(p => { if (p.kind === "text") { txt = txt || p; return; } const c = pmCut(p, m && m.price); if (c > bc) { bc = c; best = p; } });
+  return best ? { p: best, cut: bc, price: m.price - bc } : txt ? { p: txt, cut: 0, price: m && m.price } : null;
+}
+const pmName = p => { const t = p.t || {}; return t[lang] || (lang === "vi" ? "" : t.en || (lang === "ko" ? t.ko : "")) || (p.kind === "text" ? t.en || t.ko || t.vi || "" : ""); };
+const pmOff = p => p.kind === "pct" ? ui("pm_pct", { v: p.v }) : p.kind === "amt" ? ui("pm_amt", { v: "₫" + Number(p.v).toLocaleString("en-US") }) : "";
+const pmTag = p => p.kind === "pct" ? "-" + p.v + "%" : p.kind === "amt" ? "-₫" + Number(p.v).toLocaleString("en-US") : "🎁";
+const pmMD = d => d ? (+d.slice(5, 7)) + "/" + (+d.slice(8, 10)) : "";
+function pmLine(p, shop) {   // "개업 3주년 · 전 메뉴 20% 할인 · 12/31까지"
+  const scope = p.menus && p.menus.length ? (p.menus.length <= 2 && shop ? p.menus.map(i => shop.menu[i] ? tx(shop.menu[i].name) : "").filter(Boolean).join(", ") : ui("pm_some")) : ui("pm_all");
+  const when = p.to ? ui("pm_until", { d: pmMD(p.to) }) : p.from && p.from > pmDay() ? ui("pm_from", { d: pmMD(p.from) }) : "";
+  return [pmName(p), p.kind === "text" ? "" : scope + " " + pmOff(p), when].filter(Boolean).join(" · ");
+}
+const pmBadge = shop => { const ps = promosOn(shop); if (!ps.length) return "";
+  const pct = Math.max(0, ...ps.filter(p => p.kind === "pct").map(p => p.v)), amt = ps.find(p => p.kind === "amt");
+  return `<span class="pm-b">🎁 ${pct ? "-" + pct + "%" : amt ? pmTag(amt) : esc(pmName(ps[0]) || ui("pm_title").replace("🎁 ", ""))}</span>`; };
 const ocBadge = shop => shop && shop.outcall ? `<span class="oc-b">${ui("oc_badge")}</span>` : "";
 // ⚡ 업체별 예약 확정 속도 (universe35 shop_speed · 실제 기록 3건 이상인 업체만)
 let SHOP_SPEED = null;

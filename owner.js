@@ -21,6 +21,14 @@
     svAdd: ["+ Thêm câu hỏi", "+ 질문 더하기", "+ Add question"],
     svCustomPh: ["Viết câu hỏi bằng tiếng Việt (Uncle Day sẽ dịch cho khách)", "질문을 적어 주세요 (엉클데이가 손님 말로 번역해요)", "Write your question (Uncle Day translates it for guests)"],
     svYn: ["Có/Không", "예/아니요", "Yes/No"], svText: ["Viết", "직접 쓰기", "Text"],
+    pmSet: ["🎁 Ưu đãi · giảm giá của cửa hàng (khách thấy ngay trên Uncle Day)", "🎁 할인 이벤트 (저장하면 바로 손님 화면에 보여요)", "🎁 Deals & discounts (guests see them right away)"],
+    pmHelp: ["VD: giảm 20% massage body, khai trương 3 năm giảm tất cả dịch vụ, tặng gội đầu… Giá giảm hiện trên menu và được ghi vào lịch hẹn.", "예: 전신 마사지 20% 할인, 개업 3주년 전 메뉴 할인, 헤어 워시 서비스… 할인가가 메뉴에 보이고 예약에도 기록돼요.", "e.g. 20% off body massage, 3rd anniversary discount on all menus, free hair wash… The discounted price shows on the menu and is recorded on bookings."],
+    pmName: ["Tên ưu đãi (VD: Khai trương 3 năm)", "이벤트 이름 (예: 개업 3주년)", "Deal name (e.g. 3rd anniversary)"],
+    pmKind: ["Loại", "종류", "Type"], pmPct: ["Giảm %", "% 할인", "% off"], pmAmt: ["Giảm số tiền (₫)", "금액 할인 (₫)", "Amount off (₫)"], pmText: ["Chỉ ghi chữ (VD: tặng 1 dịch vụ)", "문구만 (예: 서비스 증정)", "Text only (e.g. free add-on)"],
+    pmVal: ["Mức giảm", "할인 크기", "Discount"], pmFrom: ["Từ ngày", "시작일", "From"], pmTo: ["Đến ngày", "종료일", "Until"], pmNoEnd: ["Để trống = không giới hạn", "비우면 기간 제한 없음", "Leave blank = no limit"],
+    pmAll: ["Tất cả dịch vụ", "전 메뉴", "All menus"], pmOn: ["Đang chạy", "진행 중", "Active"],
+    pmAdd: ["+ Thêm ưu đãi", "+ 이벤트 더하기", "+ Add a deal"], pmSave: ["Lưu ưu đãi", "이벤트 저장", "Save deals"], pmNone: ["Chưa có ưu đãi nào.", "아직 이벤트가 없어요.", "No deals yet."],
+    pmApplied: ["🎁 Ưu đãi", "🎁 할인 이벤트", "🎁 Deal"], pmDel: ["Xoá", "삭제", "Delete"],
     svSave: ["Lưu câu hỏi", "질문 저장", "Save questions"], svSaved: ["Đã lưu ✅", "저장했어요 ✅", "Saved ✅"],
     svOwnerOnly: ["Chỉ chủ cửa hàng mới sửa được", "사장님만 바꿀 수 있어요", "Only the owner can change this"],
     loginTitle: ["Đăng nhập cho chủ cửa hàng", "사장님 로그인", "Owner login"],
@@ -242,6 +250,61 @@
     });
   }
 
+  // ---- 🎁 할인 이벤트 (universe39) — 사장님만 저장, 직원은 보기만 ----
+  let pmCfg = null, pmDraft = null;
+  async function pmLoad() { try { pmCfg = await rpc("owner_promo_get", { shop: shopId }); } catch (e) { pmCfg = { menu: [], promos: [], err: true }; } }
+  const pmMenuName = m => { const n = m && m.name; return n ? (typeof n === "object" ? n[LANGS[li()]] || n.vi || n.ko || n.en : n) : ""; };
+  function pmShopTxt(p) {   // 예약 상세: "Khai trương 3 năm · Giảm 20% (450.000₫ → 360.000₫)"
+    if (!p) return ""; const tt = p.t || {}, L = LANGS[li()];
+    const off = p.kind === "pct" ? [`Giảm ${p.v}%`, `${p.v}% 할인`, `${p.v}% off`][li()] : p.kind === "amt" ? [`Giảm ${vnd(p.v)}`, `${vnd(p.v)} 할인`, `${vnd(p.v)} off`][li()] : "";
+    return [tt[L] || tt.vi || tt.ko || tt.en || "", off].filter(Boolean).join(" · ") + (p.orig && p.price != null && p.price < p.orig ? ` (${vnd(p.orig)} → ${vnd(p.price)})` : "");
+  }
+  function pmSetHtml() {
+    if (!pmCfg) { pmLoad().then(() => { if (tab === "schedule") draw(); }); return `<div class="card">${t("pmSet")} …</div>`; }
+    if (pmCfg.err) return "";
+    const list = pmDraft || JSON.parse(JSON.stringify(pmCfg.promos || [])); pmDraft = list;
+    const own = isOwner(), dis = own ? "" : "disabled", L = LANGS[li()], menu = pmCfg.menu || [];
+    return `<div class="card pm-set"><b style="display:block;font-size:16px;margin-bottom:4px">${t("pmSet")}</b>
+      <p class="muted" style="margin:0 0 8px;font-size:13px">${t("pmHelp")}</p>
+      ${own ? "" : `<p class="muted">${t("svOwnerOnly")}</p>`}
+      ${list.length ? "" : `<p class="muted">${t("pmNone")}</p>`}
+      ${list.map((p, i) => { const all = !(p.menus && p.menus.length) && !p._pick; return `<div class="pm-it" data-pi="${i}">
+        <div class="pm-top"><label class="sv-row" style="flex:1"><input type="checkbox" data-pk="on" ${p.on === false ? "" : "checked"} ${dis}> <b>${t("pmOn")}</b></label>
+          ${own ? `<button class="btn ghost" type="button" data-pdel="${i}">✕ ${t("pmDel")}</button>` : ""}</div>
+        <input class="inp" data-pk="t" value="${esc((p.t || {})[L] || (p.t || {}).vi || "")}" placeholder="${esc(t("pmName"))}" maxlength="80" ${dis}>
+        <div class="pm-g"><label><span class="lbl">${t("pmKind")}</span><select class="inp" data-pk="kind" ${dis}>
+          <option value="pct" ${p.kind === "pct" || !p.kind ? "selected" : ""}>${t("pmPct")}</option><option value="amt" ${p.kind === "amt" ? "selected" : ""}>${t("pmAmt")}</option><option value="text" ${p.kind === "text" ? "selected" : ""}>${t("pmText")}</option></select></label>
+          <label ${p.kind === "text" ? "hidden" : ""}><span class="lbl">${t("pmVal")} ${p.kind === "amt" ? "(₫)" : "(%)"}</span><input class="inp" data-pk="v" inputmode="numeric" value="${p.v || ""}" placeholder="${p.kind === "amt" ? "50000" : "20"}" ${dis}></label></div>
+        <div class="pm-g"><label><span class="lbl">${t("pmFrom")}</span><input class="inp" type="date" data-pk="from" value="${esc(p.from || "")}" ${dis}></label>
+          <label><span class="lbl">${t("pmTo")}</span><input class="inp" type="date" data-pk="to" value="${esc(p.to || "")}" ${dis}></label></div>
+        <p class="muted" style="margin:-2px 0 6px;font-size:12px">${t("pmNoEnd")}</p>
+        <label class="sv-row"><input type="checkbox" data-pk="all" ${all ? "checked" : ""} ${dis}> <b>${t("pmAll")}</b></label>
+        ${all ? "" : menu.map((m, k) => `<label class="sv-row" style="padding-left:22px"><input type="checkbox" data-pm="${k}" ${(p.menus || []).includes(k) ? "checked" : ""} ${dis}> ${esc(pmMenuName(m))}${m.price ? ` · ${vnd(m.price)}` : ""}</label>`).join("")}
+      </div>`; }).join("")}
+      ${own && list.length < 10 ? `<button class="btn ghost" type="button" data-padd>${t("pmAdd")}</button>` : ""}
+      ${own ? `<button class="btn main" type="button" data-psave style="margin-top:12px">${t("pmSave")}</button>` : ""}</div>`;
+  }
+  function pmBind(m) {
+    const box = m.querySelector(".pm-set"); if (!box || !pmDraft) return;
+    const L = LANGS[li()];
+    const keep = () => box.querySelectorAll(".pm-it").forEach(it => { const p = pmDraft[+it.dataset.pi]; if (!p) return;
+      it.querySelectorAll("[data-pk]").forEach(x => { const k = x.dataset.pk;
+        if (k === "on") p.on = x.checked; else if (k === "t") p.t = { ...(p.t || {}), [L]: x.value.trim() };
+        else if (k === "v") p.v = +String(x.value).replace(/[^0-9.]/g, "") || 0; else if (k === "kind") p.kind = x.value;
+        else if (k === "from" || k === "to") p[k] = x.value || null;
+        else if (k === "all") { p._pick = !x.checked; if (x.checked) p.menus = []; } });
+      const ms = [...it.querySelectorAll("[data-pm]")]; if (ms.length) p.menus = ms.filter(x => x.checked).map(x => +x.dataset.pm); });
+    box.querySelectorAll('[data-pk="kind"],[data-pk="all"]').forEach(x => x.onchange = () => { keep(); draw(); });
+    box.querySelectorAll("[data-pdel]").forEach(x => x.onclick = () => { keep(); pmDraft.splice(+x.dataset.pdel, 1); draw(); });
+    const add = box.querySelector("[data-padd]"); if (add) add.onclick = () => { keep(); pmDraft.push({ id: "p" + Date.now().toString(36), on: true, kind: "pct", v: 0, menus: [], t: {} }); draw(); };
+    const sv = box.querySelector("[data-psave]"); if (sv) sv.onclick = async () => {
+      keep(); sv.disabled = true;
+      const list = pmDraft.map(({ _pick, ...p }) => ({ ...p, menus: p.menus || [] }));
+      try { pmCfg.promos = await rpc("owner_promo_save", { shop: shopId, list }); pmDraft = null; toast(t("svSaved")); draw(); }
+      catch (e) { sv.disabled = false; toast(errMsg(e)); }
+    };
+  }
+
   // ---- 화면: 로그인 ----
   function drawLogin(err) {
     $app.classList.remove("in");
@@ -323,7 +386,7 @@
     if (window.OwnerBoard) window.OwnerBoard.unmount();
     if (tab === "home") m.innerHTML = homeHtml();
     else if (tab === "bookings") m.innerHTML = bookingsHtml();
-    else if (tab === "schedule") { m.innerHTML = scheduleHtml() + svSetHtml(); svBind(m); }
+    else if (tab === "schedule") { m.innerHTML = scheduleHtml() + pmSetHtml() + svSetHtml(); svBind(m); pmBind(m); }
     else if (tab === "settle") m.innerHTML = settleHtml();
     else m.innerHTML = moreHtml();
     bindMain(m);
@@ -623,6 +686,7 @@
           <div class="kv"><span>${t("service")}</span><b>${esc(menuLabel(b))}</b></div>
           <div class="kv"><span>${t("guests")}</span><b>${t("people", b.people)}</b></div>
           ${b.list_price ? `<div class="kv"><span>${t("listPrice")}</span><b>${vnd(b.list_price)}</b></div>` : ""}
+          ${b.promo ? `<div class="kv"><span>${t("pmApplied")}</span><b style="color:#B23A1E">${esc(pmShopTxt(b.promo))}</b></div>` : ""}
           <div class="kv"><span>${t("guestLang")}</span><b>${esc(ln)}</b></div></div>
         ${b.note ? `<div class="note"><b style="display:block;font-size:13px">${t("note")}</b>${esc(b.note)}</div>` : ""}
         ${svDetailHtml(b, st)}

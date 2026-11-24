@@ -57,7 +57,7 @@ textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px
 <script src="config.js"></script>
 <script>
 const T = {
-  vi: { title: "Lịch hẹn từ Uncle Day", code: "Mã đặt lịch", status: "Trạng thái", date: "Ngày giờ", svc: "Dịch vụ", ppl: "Số khách", guest: "Tên khách", note: "Ghi chú", price: "Giá dự kiến",
+  vi: { title: "Lịch hẹn từ Uncle Day", code: "Mã đặt lịch", status: "Trạng thái", date: "Ngày giờ", svc: "Dịch vụ", ppl: "Số khách", guest: "Tên khách", note: "Ghi chú", price: "Giá dự kiến", promo: "Ưu đãi",
     requested: "Chờ cơ sở xác nhận", confirmed: "Đã nhận lịch", rejected: "Đã từ chối", visited: "Khách đã đến", settled: "Đã quyết toán", cancelled: "Khách đã hủy", noshow: "Khách không đến",
     accept: "✅ Nhận lịch", reject: "Không nhận được giờ này", visited_btn: "Khách đã đến – xác nhận", noshow_btn: "Khách không đến",
     amount: "Số tiền khách đã thanh toán (₫)", amountHint: "Nhập tổng số tiền khách trả tại cơ sở. Hoa hồng được tính theo hợp đồng.",
@@ -69,7 +69,7 @@ const T = {
     notThis: "Không nhận được giờ này", propTitle: "Giờ khác có thể nhận", propHint: "Chọn giờ khác mà cơ sở có thể nhận (tối đa 3, không bắt buộc). Uncle Day sẽ hỏi lại khách.", addTime: "+ Thêm giờ khác", sendReject: "Gửi: không nhận được", cancel: "Quay lại",
     rejectedMsg: "Bạn đã báo không nhận được giờ này.", proposed: "Giờ bạn đề xuất", resMsg: "Uncle Day đang hỏi khách chọn giờ khác. Khi khách chọn, bạn sẽ nhận yêu cầu mới.",
     changed: n => `🔁 Lịch đã được ĐỔI GIỜ (lần ${n}). Vui lòng kiểm tra giờ mới bên dưới.` },
-  en: { title: "Booking from Uncle Day", code: "Booking no.", status: "Status", date: "Date & time", svc: "Service", ppl: "Guests", guest: "Guest name", note: "Notes", price: "Estimated price",
+  en: { title: "Booking from Uncle Day", code: "Booking no.", status: "Status", date: "Date & time", svc: "Service", ppl: "Guests", guest: "Guest name", note: "Notes", price: "Estimated price", promo: "Deal",
     requested: "Waiting for your reply", confirmed: "Accepted", rejected: "Declined", visited: "Guest visited", settled: "Settled", cancelled: "Cancelled by guest", noshow: "No-show",
     accept: "✅ Accept booking", reject: "Can't take this time", visited_btn: "Guest visited – confirm", noshow_btn: "Guest did not come",
     amount: "Amount the guest paid (₫)", amountHint: "Enter the total the guest paid at your shop. Commission follows our agreement.",
@@ -81,7 +81,7 @@ const T = {
     notThis: "Can't take this time", propTitle: "Other times you CAN take", propHint: "Pick other times that work for you (up to 3, optional). Uncle Day will ask the guest.", addTime: "+ Add another time", sendReject: "Send: can't take it", cancel: "Back",
     rejectedMsg: "You said you can't take this time.", proposed: "Times you suggested", resMsg: "Uncle Day is asking the guest to pick another time. You'll get a new request when they do.",
     changed: n => `🔁 This booking was MOVED to a new time (change #${n}). Please check the new time below.` },
-  ko: { title: "엉클데이 예약", code: "예약번호", status: "상태", date: "방문 일시", svc: "메뉴", ppl: "인원", guest: "손님 이름", note: "요청사항", price: "예상 금액",
+  ko: { title: "엉클데이 예약", code: "예약번호", status: "상태", date: "방문 일시", svc: "메뉴", ppl: "인원", guest: "손님 이름", note: "요청사항", price: "예상 금액", promo: "할인 이벤트",
     requested: "업체 확인 대기", confirmed: "예약 수락", rejected: "예약 불가", visited: "방문 완료", settled: "정산 완료", cancelled: "손님 취소", noshow: "노쇼",
     accept: "✅ 예약 수락", reject: "이 시간은 불가", visited_btn: "손님 방문 완료", noshow_btn: "손님이 안 왔어요",
     amount: "손님이 결제한 금액 (₫)", amountHint: "손님이 업체에서 낸 총금액을 적어 주세요. 수수료는 계약대로 계산돼요.",
@@ -98,6 +98,10 @@ let L = (() => { try { return localStorage.getItem("partner-lang") || "vi"; } ca
 const $ = id => document.getElementById(id);
 const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const t = k => T[L][k] ?? T.en[k];
+// 🎁 적용된 할인 이벤트 (universe39) → "Khai trương 3 năm · Giảm 20% (₫450,000 → ₫360,000)"
+const pmShop = p => { const n = (p.t || {})[L] || (p.t || {}).vi || (p.t || {}).ko || (p.t || {}).en || "", f = x => "₫" + Number(x).toLocaleString("en-US");
+  const off = p.kind === "pct" ? { vi: `Giảm ${p.v}%`, en: `${p.v}% off`, ko: `${p.v}% 할인` }[L] : p.kind === "amt" ? { vi: `Giảm ${f(p.v)}`, en: `${f(p.v)} off`, ko: `${f(p.v)} 할인` }[L] : "";
+  return [n, off].filter(Boolean).join(" · ") + (p.orig && p.price != null && p.price < p.orig ? ` (${f(p.orig)} → ${f(p.price)})` : ""); };
 const tk = decodeURIComponent(location.hash.slice(1));
 const nm = v => v && typeof v === "object" ? (v[L] || v.en || v.ko || "") : (v || "");
 const toast = m => { const d = document.createElement("div"); d.className = "toast"; d.textContent = m; document.body.appendChild(d); setTimeout(() => d.remove(), 2500); };
@@ -138,6 +142,7 @@ function draw() {
       <dt>${t("guest")}</dt><dd>${esc(b.customer_name)}</dd>
       ${b.note ? `<dt>${t("note")}</dt><dd>${esc(b.note)}</dd>` : ""}
       ${b.list_price ? `<dt>${t("price")}</dt><dd>₫${Number(b.list_price).toLocaleString("en-US")}</dd>` : ""}
+      ${b.promo ? `<dt>${t("promo")}</dt><dd>🎁 ${esc(pmShop(b.promo))}</dd>` : ""}
     </dl>
     ${b.change_count && b.status === "requested" ? `<p class="done" style="background:#fff4e5;color:#9a5208">${t("changed")(b.change_count)}</p>` : ""}
     ${closed ? `<p class="done">${t("closed")}</p>` : proposing ? propBox : `

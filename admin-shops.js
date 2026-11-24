@@ -146,6 +146,7 @@ function openEditor(id, preset, opts = {}) {
       <div class="box">
         <label class="switch best-sw ${s.best ? "on" : ""}" id="bSw"><input type="checkbox" id="bChk" ${s.best ? "checked" : ""}>
           <div><b>✦ 엉클 인증업체 배지 달기</b><div class="hint">켜면 손님 화면의 업체 사진과 이름 옆에 반짝이는 '엉클 인증업체' 배지가 붙고, 목록에서 맨 앞에 보여요.</div></div></label>
+        <div class="sv-edit" id="pmEdit"></div>
         <div class="sv-edit" id="svEdit"></div>
         <label class="switch ${s.outcall ? "on" : ""}" id="ocSw"><input type="checkbox" id="ocChk" ${s.outcall ? "checked" : ""}>
           <div><b>🏨 호텔 출장 가능</b><div class="hint">사장님께 <b>직접 확인한 경우에만</b> 켜요. 켜면 손님 화면에 '호텔 출장 가능' 표시가 붙고, '🏨 호텔 출장' 필터에 나와요. 출장 가격 · 지역은 메뉴나 소개 글에 적어 주세요.</div></div></label>
@@ -322,7 +323,7 @@ function openEditor(id, preset, opts = {}) {
   if ($("revDone")) $("revDone").onclick = () => { delete s.review; $("revBox").remove(); toast("배너를 지웠어요. '저장'을 눌러 주세요."); };
   const drawChk = () => { const [n, t] = chkCount(s); $("chkSum").textContent = `확인 ${n} / ${t}` + (n === t ? " · 모두 확인됐어요" : ""); };
   $("bChk").onchange = () => { if ($("bChk").checked) s.best = true; else delete s.best; $("bSw").classList.toggle("on", !!s.best); };
-  shopSvDraw(s);
+  shopSvDraw(s); shopPmDraw(s);
   $("ocChk").onchange = () => { if ($("ocChk").checked) s.outcall = true; else delete s.outcall; $("ocSw").classList.toggle("on", !!s.outcall); };
   $("vChk").onchange = () => { s.verified = $("vChk").checked; $("vSw").classList.toggle("on", s.verified); drawChk(); };
   $("chkList").querySelectorAll("[data-chk]").forEach(el => el.onchange = () => {
@@ -467,6 +468,12 @@ function openEditor(id, preset, opts = {}) {
     s.tags = s.tags.filter(t => t.ko.trim() || t.en.trim() || (t.vi || "").trim());
     s.menu = s.menu.filter(m => m.name.ko.trim() || m.name.en.trim());
     if (!s.menuImgs.length) delete s.menuImgs;
+    if (s.promos) {   // 🎁 할인 이벤트 정리: 크기 없는 할인 · 이름 없는 문구 이벤트는 빼요
+      const bad = s.promos.filter(p => p.kind === "text" ? !(p.t && (p.t.vi || p.t.ko || p.t.en)) : !(p.v > 0));
+      if (bad.length) toast(`할인 크기나 이름이 빈 이벤트 ${bad.length}개는 빼고 저장했어요`, 3500);
+      s.promos = s.promos.filter(p => !bad.includes(p)).map(({ _pick, ...p }) => ({ ...p, menus: (p.menus || []).filter(k => k < s.menu.length) }));
+      if (!s.promos.length) delete s.promos;
+    }
     s.userReviews = s.userReviews.filter(r => (r.text || "").trim()).map(r => ({ ...r, name: (r.name || "").trim() || "손님", text: r.text.trim() }));
     if (s.userReviews.length) {
       s.rating = Math.round(s.userReviews.reduce((t, r) => t + r.stars, 0) / s.userReviews.length * 10) / 10;
@@ -765,6 +772,42 @@ async function gplaceBulk() {
     drawList();
     toast(`${ok}곳 연결했어요${miss.length ? ` · 못 찾은 곳 ${miss.length}곳: ${miss.slice(0, 5).join(", ")}${miss.length > 5 ? " …" : ""}` : ""}`, 8000);
   }, "이름과 주소로 검색해서 첫 번째 결과를 연결해요. 이 검색은 구글 무료(무제한)예요. 잘못 연결된 곳이 있을 수 있으니 업체마다 '확인 필요' 메모를 남겨 둘게요.", "자동 연결", false);
+}
+
+// 🎁 업체 편집: 할인 이벤트 (universe39) — 사장님 페이지에서도 바꿀 수 있어요. 저장하면 바로 손님 화면에 보여요
+//  { id, on, kind: pct|amt|text, v, menus: [메뉴 번호…] (비면 전 메뉴), from, to, t: {vi, ko, en} }
+function shopPmDraw(s) {
+  const el = $("pmEdit"); if (!el) return;
+  const list = s.promos = (s.promos || []).slice(0, 10), menu = s.menu || [], today = vnToday();
+  const live = p => p.on !== false && (!p.from || today >= p.from) && (!p.to || today <= p.to);
+  const need = list.some(p => !(p.t && p.t.ko && p.t.en) && (p.t && (p.t.vi || p.t.ko || p.t.en)));
+  el.innerHTML = `<details ${list.length && need ? "open" : ""}><summary><b>🎁 할인 이벤트</b> <span class="hint">${list.length ? `${list.length}개 · 진행 중 ${list.filter(live).length}개` : "없음"}${need ? " · <b class='err-text'>번역 필요</b>" : ""}</span></summary>
+    <p class="hint">시술별 할인 · 개업 기념 할인처럼 가게마다 다른 이벤트를 넣어요. <b>저장하면 바로</b> 손님 화면 (목록 배지 · 가게 메뉴 할인가)에 보이고, 예약하면 그 날짜 · 메뉴에 맞는 가장 큰 할인이 예약에 기록돼요. 사장님이 사장님 페이지에서 직접 바꿀 수도 있어요.</p>
+    ${list.map((p, i) => { const all = !(p.menus && p.menus.length) && !p._pick; return `<div class="sv-c pm-a" style="display:block;border:1px solid var(--line);border-radius:10px;padding:8px;margin:6px 0">
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><label class="sv-r" style="margin:0"><input type="checkbox" data-pon="${i}" ${p.on === false ? "" : "checked"}> 켜기</label>
+        <span class="hint">${live(p) ? "🟢 지금 보여요" : p.on === false ? "꺼짐" : p.to && p.to < today ? "기간 끝남" : "시작 전"}</span><span style="flex:1"></span><button class="btn sm" type="button" data-px="${i}">✕ 삭제</button></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:6px 0">${["vi", "ko", "en"].map(l => `<input data-pt="${i}" data-l="${l}" placeholder="이름 ${l.toUpperCase()}${l === "vi" ? " (예: Khai trương 3 năm)" : l === "ko" ? " (예: 개업 3주년)" : ""}" value="${esc((p.t || {})[l] || "")}" maxlength="80">`).join("")}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+        <select data-pk="${i}"><option value="pct" ${p.kind !== "amt" && p.kind !== "text" ? "selected" : ""}>% 할인</option><option value="amt" ${p.kind === "amt" ? "selected" : ""}>금액 할인 (₫)</option><option value="text" ${p.kind === "text" ? "selected" : ""}>문구만 (예: 서비스 증정)</option></select>
+        ${p.kind === "text" ? "" : `<input data-pv="${i}" inputmode="numeric" style="width:110px" placeholder="${p.kind === "amt" ? "50000" : "20"}" value="${p.v || ""}">${p.kind === "amt" ? "₫" : "%"}`}
+        <span class="hint">기간</span><input type="date" data-pf="${i}" value="${esc(p.from || "")}"><span>~</span><input type="date" data-pe="${i}" value="${esc(p.to || "")}"><span class="hint">(비우면 제한 없음)</span></div>
+      <label class="sv-r"><input type="checkbox" data-pall="${i}" ${all ? "checked" : ""}> 전 메뉴</label>
+      ${all ? "" : menu.map((m, k) => `<label class="sv-r" style="padding-left:18px"><input type="checkbox" data-pm="${i}" data-k="${k}" ${(p.menus || []).includes(k) ? "checked" : ""}> ${esc((m.name && (m.name.ko || m.name.vi)) || "메뉴 " + (k + 1))}${m.price ? " · ₫" + m.price.toLocaleString("en-US") : ""}</label>`).join("")}
+    </div>`; }).join("")}
+    ${list.length < 10 ? `<button class="btn sm" type="button" data-padd>+ 이벤트 더하기</button>` : ""}
+    <p class="hint">이름은 베트남어 · 한국어 · 영어를 채워 주세요 (손님 언어에 맞춰 보여요 — 비어 있으면 '전 메뉴 20% 할인'처럼 자동 문구가 나와요). 바꾼 뒤 위쪽 <b>저장</b>을 눌러야 반영돼요.</p></details>`;
+  const redraw = () => { shopPmDraw(s); el.querySelector("details").open = true; };
+  const num = v => +String(v).replace(/[^0-9.]/g, "") || 0;
+  el.querySelectorAll("[data-pon]").forEach(x => x.onchange = () => { list[+x.dataset.pon].on = x.checked; });
+  el.querySelectorAll("[data-pt]").forEach(x => x.oninput = () => { const p = list[+x.dataset.pt]; p.t = { ...(p.t || {}), [x.dataset.l]: x.value.trim() }; if (!p.t[x.dataset.l]) delete p.t[x.dataset.l]; });
+  el.querySelectorAll("[data-pk]").forEach(x => x.onchange = () => { const p = list[+x.dataset.pk]; p.kind = x.value; if (p.kind === "text") delete p.v; else if (p.kind === "pct" && p.v > 90) p.v = 0; redraw(); });
+  el.querySelectorAll("[data-pv]").forEach(x => x.oninput = () => { const p = list[+x.dataset.pv]; p.v = p.kind === "pct" ? Math.min(90, num(x.value)) : num(x.value); });
+  el.querySelectorAll("[data-pf]").forEach(x => x.onchange = () => { const p = list[+x.dataset.pf]; if (x.value) p.from = x.value; else delete p.from; });
+  el.querySelectorAll("[data-pe]").forEach(x => x.onchange = () => { const p = list[+x.dataset.pe]; if (x.value) p.to = x.value; else delete p.to; });
+  el.querySelectorAll("[data-pall]").forEach(x => x.onchange = () => { const p = list[+x.dataset.pall]; if (x.checked) { p.menus = []; delete p._pick; } else p._pick = true; redraw(); });
+  el.querySelectorAll("[data-pm]").forEach(x => x.onchange = () => { const p = list[+x.dataset.pm], k = +x.dataset.k, ms = new Set(p.menus || []); if (x.checked) ms.add(k); else ms.delete(k); p.menus = [...ms].sort((a, b) => a - b); });
+  el.querySelectorAll("[data-px]").forEach(x => x.onclick = () => { list.splice(+x.dataset.px, 1); redraw(); });
+  const add = el.querySelector("[data-padd]"); if (add) add.onclick = () => { list.push({ id: "p" + Date.now().toString(36), on: true, kind: "pct", v: 0, menus: [], t: {} }); redraw(); };
 }
 
 // 📋 업체 편집: 방문 전 질문 (손님이 예약 확정 후 답해요) — 사장님 페이지에서도 바꿀 수 있어요. 가게가 더한 질문은 여기서 한국어 · 영어를 채워 주세요

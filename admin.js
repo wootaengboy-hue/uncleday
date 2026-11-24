@@ -364,7 +364,7 @@ function shopMsg(b, l) {
   if (l === "vi") return `[Uncle Day] ${ch ? `🔁 ĐỔI GIỜ (lần ${b.change_count}) – vui lòng xác nhận giờ MỚI` : "Đặt lịch mới"} · ${b.code}
 📅 ${d} lúc ${b.visit_time || "-"}
 💆 ${mn}${b.menu_min ? ` (${b.menu_min} phút)` : ""} × ${b.people} người
-👤 Khách: ${b.customer_name}${nat.vi ? ` (${nat.vi})` : ""}${b.note ? `\n📝 Ghi chú: ${b.note}` : ""}${b.list_price ? `\n💰 Giá dự kiến: ${vnd(b.list_price)}` : ""}
+👤 Khách: ${b.customer_name}${nat.vi ? ` (${nat.vi})` : ""}${b.note ? `\n📝 Ghi chú: ${b.note}` : ""}${b.list_price ? `\n💰 Giá dự kiến: ${vnd(b.list_price)}` : ""}${b.promo ? `\n🎁 Ưu đãi: ${pmTxt(b.promo, "vi")}` : ""}
 
 👉 Vui lòng bấm link để NHẬN hoặc TỪ CHỐI lịch:
 ${link}
@@ -372,7 +372,7 @@ Sau khi khách đến, mở lại link này và nhập số tiền khách đã t
   if (l === "en") return `[Uncle Day] ${ch ? `🔁 TIME CHANGED (#${b.change_count}) – please confirm the NEW time` : "New booking"} · ${b.code}
 📅 ${d} at ${b.visit_time || "-"}
 💆 ${mn}${b.menu_min ? ` (${b.menu_min} min)` : ""} × ${b.people}
-👤 Guest: ${b.customer_name}${nat.en ? ` (${nat.en})` : ""}${b.note ? `\n📝 Notes: ${b.note}` : ""}${b.list_price ? `\n💰 Estimated: ${vnd(b.list_price)}` : ""}
+👤 Guest: ${b.customer_name}${nat.en ? ` (${nat.en})` : ""}${b.note ? `\n📝 Notes: ${b.note}` : ""}${b.list_price ? `\n💰 Estimated: ${vnd(b.list_price)}` : ""}${b.promo ? `\n🎁 Deal: ${pmTxt(b.promo, "en")}` : ""}
 
 👉 Please tap to ACCEPT or DECLINE:
 ${link}
@@ -380,7 +380,7 @@ After the guest visits, open the link again and enter the amount paid. Thank you
   return `[엉클데이] ${ch ? `🔁 시간 변경 (${b.change_count}번째) – 새 시간 확인 부탁드려요` : "새 예약"} · ${b.code}
 📅 ${dayKo(b.visit_date)} ${b.visit_time || ""}
 💆 ${b.menu_name}${b.menu_min ? ` (${b.menu_min}분)` : ""} × ${b.people}명
-👤 손님: ${b.customer_name}${b.note ? `\n📝 요청: ${b.note}` : ""}${b.list_price ? `\n💰 예상 금액: ${vnd(b.list_price)}` : ""}
+👤 손님: ${b.customer_name}${b.note ? `\n📝 요청: ${b.note}` : ""}${b.list_price ? `\n💰 예상 금액: ${vnd(b.list_price)}` : ""}${b.promo ? `\n🎁 할인 이벤트: ${pmTxt(b.promo, "ko")}` : ""}
 
 👉 아래 링크에서 수락/불가를 눌러 주세요:
 ${link}
@@ -669,6 +669,7 @@ async function openBooking(id) {
     const st = SETTLES.find(s => s.id === b.settlement_id);
     const rows = [
       [true, `예약 접수 — ${SRC[b.source] || b.source} · ${dt(b.created_at)}`],
+      ...(b.promo ? [[true, `🎁 할인 이벤트 적용 — ${pmTxt(b.promo, "ko")}`]] : []),
       [!!b.sent_to_shop_at, b.sent_to_shop_at ? `업체에 예약 알림 · ${dt(b.sent_to_shop_at)}` : "업체에 예약 알림 (아직)"],
       [!!b.shop_replied_at, b.shop_replied_at ? `업체가 링크로 직접 답함 · ${dt(b.shop_replied_at)}` : "업체가 링크로 직접 답함 (아직 — 관리자가 대신 처리해도 돼요)"],
       [!!told, told ? `손님에게 안내 · ${dt(told.at)}` : "손님에게 안내 (아직)"],
@@ -1421,6 +1422,13 @@ async function afterLogin(session) {
 })();
 
 // 📋 예약 상세: 방문 전 질문 답 (universe37 · 관리자만 읽기)
+// 🎁 예약에 적용된 할인 이벤트 (universe39 bookings.promo) → "개업 3주년 · 20% 할인 (₫450,000 → ₫360,000)"
+function pmTxt(p, l) {
+  if (!p) return "";
+  const t = p.t || {}, nm = t[l] || t.vi || t.ko || t.en || "";
+  const off = p.kind === "pct" ? { vi: `Giảm ${p.v}%`, en: `${p.v}% off`, ko: `${p.v}% 할인` }[l] : p.kind === "amt" ? { vi: `Giảm ${vnd(p.v)}`, en: `${vnd(p.v)} off`, ko: `${vnd(p.v)} 할인` }[l] : "";
+  return [nm, off].filter(Boolean).join(" · ") + (p.orig && p.price != null && p.price < p.orig ? ` (${vnd(p.orig)} → ${vnd(p.price)})` : "");
+}
 async function bkSurvey(b, shop) {
   const box = $("bkSv"); if (!box || typeof svRows !== "function") return;
   const r = await sb.from("booking_surveys").select("answers,updated_at").eq("booking_id", b.id).maybeSingle();
