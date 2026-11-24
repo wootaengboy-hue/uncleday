@@ -75,7 +75,7 @@ const ACCT = (() => {
     s.querySelectorAll("[data-p]").forEach(b => b.onclick = () => { b.disabled = true; login(b.dataset.p); });
   }
   async function openMine() {
-    const s = openSheet(`<h2>${esc(t("hi", { n: name() }))}</h2><p class="acct-desc">${esc(user.email || "")}</p><div class="acct-pts" hidden></div><h3>${t("my")}</h3><div class="acct-list"><p class="acct-desc">…</p></div>
+    const s = openSheet(`<h2>${esc(t("hi", { n: name() }))}</h2><p class="acct-desc">${esc(user.email || "")}</p><div class="acct-pts" hidden></div><a class="acct-hist" href="history.html">📒 ${typeof ui === "function" ? ui("hi_open") : "내 시술 기록"} ›</a><h3>${t("my")}</h3><div class="acct-list"><p class="acct-desc">…</p></div>
       <button class="btn acct-out">${t("out")}</button>`);
     s.querySelector(".acct-out").onclick = logout;
     // 💰 결제 확인 페이백 포인트 (universe31.sql 실행 전이면 조용히 숨겨요)
