@@ -6,13 +6,6 @@
   {
    "group": "예약",
    "priority": 2,
-   "title": "[11/24] SQL universe37 → universe38 실행 (방문 전 질문 · 전날 안내 · 번역)",
-   "note": "https://raw.githubusercontent.com/wootaengboy-hue/uncleday/main/supabase/universe37.sql 다음 https://raw.githubusercontent.com/wootaengboy-hue/uncleday/main/supabase/universe38.sql 을 Supabase SQL Editor 에서 차례로 Run",
-   "memo": "<p>실행 전엔 예약확인증에 질문 칸이 안 나와요 (사이트는 그대로 동작).</p>"
-  },
-  {
-   "group": "예약",
-   "priority": 2,
    "title": "[11/24] Edge Function chat-tr 다시 배포 (손님 글 번역)",
    "note": "https://raw.githubusercontent.com/wootaengboy-hue/uncleday/main/supabase/functions/chat-tr/index.ts 로 코드 바꾸고 Deploy. 현장 영업 채팅 번역도 같이 해결돼요",
    "memo": "<p>키는 그대로 · 채팅에 보내지 않기</p>"
