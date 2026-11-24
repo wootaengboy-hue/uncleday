@@ -1426,7 +1426,21 @@ async function bkSurvey(b, shop) {
   const r = await sb.from("booking_surveys").select("answers,updated_at").eq("booking_id", b.id).maybeSingle();
   const qs = shop ? surveyQs(shop) : [];
   if (r.error) { if (!/booking_surveys|42P01|PGRST20/.test((r.error.message || "") + (r.error.code || ""))) { box.hidden = false; $("bkSvIn").innerHTML = `<p class="hint">${esc(r.error.message)}</p>`; } return; }
-  if (!r.data) { if (qs.length && ["confirmed", "shop_ok", "reschedule"].includes(b.status)) { box.hidden = false; $("bkSvIn").innerHTML = `<p class="hint">아직 손님이 답하지 않았어요${shop.survey && shop.survey.req ? " — <b class='err-text'>이 가게는 '꼭 작성'이에요</b>. 손님에게 예약확인증 링크로 작성을 부탁해 주세요" : ""}.</p>`; } return; }
+  if (!r.data) {
+    if (qs.length && ["confirmed", "shop_ok", "reschedule"].includes(b.status)) {
+      box.hidden = false;
+      $("bkSvIn").innerHTML = `<p class="hint">아직 손님이 답하지 않았어요${shop.survey && shop.survey.req ? " — <b class='err-text'>이 가게는 '꼭 작성'이에요</b>" : ""}.
+        ${b.survey_reminded_at ? `방문 전날 채팅 안내를 보냈어요 (${dt(b.survey_reminded_at)}).` : "방문 전날 낮에 채팅으로 자동 안내가 한 번 나가요."}</p>
+        <button class="btn sm" type="button" id="svCopy">📋 작성 부탁 문구 복사 (카톡 · 잘로 등)</button>`;
+      $("svCopy").onclick = () => {
+        const l = ["ko", "vi"].includes(b.lang) ? b.lang : b.lang ? "en" : "ko", link = `https://www.uncleday.com/booking.html?v=2#${b.customer_token}`;
+        copy({ ko: `[엉클데이] ${b.code} 예약 전에 가게가 미리 알고 싶어 하는 질문(알레르기 등)이 있어요. 1분이면 돼요 🙏\n${link}`,
+               en: `[Uncle Day] Before your booking ${b.code}, the shop would like you to answer a few short questions (allergies, etc.). It takes about a minute 🙏\n${link}`,
+               vi: `[Uncle Day] Trước lịch hẹn ${b.code}, cơ sở muốn bạn trả lời vài câu hỏi ngắn (dị ứng…). Chỉ mất khoảng 1 phút 🙏\n${link}` }[l]);
+      };
+    }
+    return;
+  }
   box.hidden = false;
   $("bkSvIn").innerHTML = `<dl class="sv-adm">${svRows(r.data.answers, shop || {}, "ko").map(x => `<dt>${esc(x.q)}</dt><dd class="${x.flag ? "err-text" : ""}">${x.flag ? "⚠️ " : ""}${esc(x.a)}</dd>`).join("")}</dl><p class="hint">작성: ${dt(r.data.updated_at)}</p>`;
 }

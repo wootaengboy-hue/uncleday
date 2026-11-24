@@ -36,6 +36,11 @@ jobs:
         env:
           CRAWL_TOKEN: ${{ secrets.CRAWL_TOKEN }}
         run: python3 tools/crawl.py || echo "링크 가져오기 건너뜀"
+      - name: 📋 방문 전 질문 — 내일 방문 손님 중 안 쓴 사람에게 채팅 안내 (예약마다 1번 · 베트남 낮 시간만)
+        run: |
+          U=$(grep -o 'url: *"[^"]*"' config.js | head -1 | sed 's/.*"\(.*\)"/\1/'); K=$(grep -o 'key: *"[^"]*"' config.js | head -1 | sed 's/.*"\(.*\)"/\1/')
+          A=""; case "$K" in eyJ*) A="Authorization: Bearer $K";; esac
+          curl -s -m 30 -X POST "$U/rest/v1/rpc/survey_remind" -H "apikey: $K" ${A:+-H "$A"} -H "Content-Type: application/json" -d '{}' || true; echo
       - name: 미입점 업체 공개 지도 정보 (오픈스트리트맵, 일주일에 한 번)
         run: python3 tools/osm-fetch.py || echo "OSM 건너뜀"
       - name: 미리보기 만들기

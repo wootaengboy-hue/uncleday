@@ -319,7 +319,16 @@ function svRender() {
     if (miss) { toastV(ui("sv_need")); return; }
     if (!f.consent.checked) { toastV(ui("sv_needConsent")); return; }
     const btn = f.querySelector("[type=submit]"); btn.disabled = true;
-    try { SVC.d = await LIVE.rpc("survey_submit", { t: SVC.t, ans, consent: true, lg: lang }); SVC.edit = false; toastV(ui("sv_saved")); svRender(); }
+    try { SVC.d = await LIVE.rpc("survey_submit", { t: SVC.t, ans, consent: true, lg: lang }); SVC.edit = false; toastV(ui("sv_saved")); svRender(); svTranslate(SVC.t); }
     catch (er) { btn.disabled = false; toastV(er.message || String(er)); }
   };
+}
+
+// 손님이 직접 쓴 글은 가게(베트남어) · 엉클데이(한국어)가 읽을 수 있게 번역해 둬요 (Edge Function chat-tr · 저장된 글만 · 실패해도 괜찮아요)
+function svTranslate(t) {
+  try {
+    if (typeof SUPA === "undefined" || !SUPA.url) return;
+    const h = { apikey: SUPA.key, "Content-Type": "application/json" }; if (/^eyJ/.test(SUPA.key)) h.Authorization = "Bearer " + SUPA.key;
+    fetch(`${SUPA.url}/functions/v1/chat-tr`, { method: "POST", headers: h, body: JSON.stringify({ survey: t }) }).catch(() => {});
+  } catch (e) {}
 }

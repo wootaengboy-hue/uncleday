@@ -53,9 +53,11 @@ function svRows(answers, shop, l) {
   const one = (q, a) => {
     if (!a || (a.v == null || a.v === "") && !a.d) return;
     let txt = "";
-    if (q.type === "yn") txt = svTx(SV_YN[a.v], l) + (a.d ? " — " + a.d : "");
+    // 손님이 쓴 글: 번역이 있으면 '번역 (원문)' — 가게는 베트남어, 엉클데이는 한국어 (universe38)
+    const free = s => { const tr = a.tr && a.tr[l]; return tr && tr !== s ? `${tr} (${s})` : s; };
+    if (q.type === "yn") txt = svTx(SV_YN[a.v], l) + (a.d ? " — " + free(a.d) : "");
     else if (q.type === "pick") txt = q.opts && q.opts[+a.v] ? svTx(q.opts[+a.v], l) : String(a.v);
-    else txt = String(a.v || "") + (a.d ? " — " + a.d : "");
+    else txt = free(String(a.v || "")) + (a.d ? " — " + a.d : "");
     out.push({ q: svTx(q.q, l), a: txt, flag: q.type === "yn" && a.v === "y" });
   };
   qs.forEach(q => { seen.add(q.id); one(q, answers[q.id]); });
