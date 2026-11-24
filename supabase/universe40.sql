@@ -32,14 +32,15 @@ begin
   return jsonb_strip_nulls(jsonb_build_object('p', a ->> 'p', 'n', left(coalesce(nullif(btrim(a ->> 'n'), ''), 'file'), 120), 'm', a ->> 'm',
     's', nullif(regexp_replace(coalesce(a ->> 's', ''), '[^0-9]', '', 'g'), '')::bigint,
     'w', nullif(regexp_replace(coalesce(a ->> 'w', ''), '[^0-9]', '', 'g'), '')::int,
-    'h', nullif(regexp_replace(coalesce(a ->> 'h', ''), '[^0-9]', '', 'g'), '')::int));
+    'h', nullif(regexp_replace(coalesce(a ->> 'h', ''), '[^0-9]', '', 'g'), '')::int,
+    'g', case when coalesce(a ->> 'g', '') ~ '^[0-9a-f]{8,32}$' then a ->> 'g' end));   -- g: 한꺼번에 보낸 사진 묶음 (카톡처럼 모아서 보여요)
 end $$;
 
 -- 손님: 파일 메시지 남기기 — Edge Function 'chat-file' 만 불러요 (파일을 올린 직후 · service_role)
 -- p = { att, body(같이 쓴 글, 없어도 됨), t, bt, uid, name, contact, lang, page }
 create or replace function public.chat_send_att(p jsonb) returns jsonb
 language plpgsql security definer set search_path = public as $$
-declare th chat_threads; b bookings; n int; a jsonb; body text; bcode text; img boolean;
+declare th chat_threads; b bookings; n int; a jsonb; body text; bcode text; img boolean; quiet boolean; gn int;
 begin
   a := chat_att_clean(p -> 'att', 'g');
   img := (a ->> 'm') like 'image/%';
@@ -59,15 +60,19 @@ begin
     select count(*) into n from chat_messages where thread_id = th.id and sender = 'guest' and created_at > now() - interval '10 minutes';
     if n >= 30 then raise exception '잠시 뒤에 다시 보내 주세요'; end if;
     select count(*) into n from chat_messages where thread_id = th.id and sender = 'guest' and att is not null and created_at > now() - interval '1 hour';
-    if n >= 20 then raise exception '파일은 1시간에 20개까지 보낼 수 있어요'; end if;
+    if n >= 40 then raise exception '파일은 1시간에 40개까지 보낼 수 있어요'; end if;
   end if;
+  -- 묶음의 두 번째 사진부터는 슬랙 알림을 또 보내지 않아요 (첫 장에서 "사진 N장" 으로 한 번만)
+  quiet := (a ? 'g') and exists (select 1 from chat_messages where thread_id = th.id and att ->> 'g' = a ->> 'g');
   insert into chat_messages (thread_id, sender, body, att) values (th.id, 'guest', body, a);
   perform chat_greet(th.id, th.lang);
   update chat_threads set last_at = now(), last_from = 'guest', last_body = left(case when body = '📷' then '📷 사진' when body like '📄 %' then body when img then '📷 ' || body else '📄 ' || body end, 200), status = 'open', guest_seen_at = now() where id = th.id;
   select * into th from chat_threads where id = th.id;
+  if quiet then return chat_view(th, 0); end if;
+  gn := least(greatest(coalesce(nullif(regexp_replace(coalesce(p ->> 'gn', ''), '[^0-9]', '', 'g'), '')::int, 1), 1), 30);
   select code into bcode from bookings where id = th.booking_id;
   perform slack_send('chat', '💬 사이트 채팅 · *' || coalesce(th.name, '손님') || '*' || coalesce(' (' || bcode || ')', '')
-    || E'\n> 📎 ' || case when img then '사진을 보냈어요' else '파일을 보냈어요: ' || (a ->> 'n') end
+    || E'\n> 📎 ' || case when img and gn > 1 then '사진 ' || gn || '장을 보냈어요' when img then '사진을 보냈어요' else '파일을 보냈어요: ' || (a ->> 'n') end
     || case when body not in ('📷') and body not like '📄 %' then E'\n> ' || replace(left(body, 300), E'\n', E'\n> ') else '' end
     || E'\n<https://www.uncleday.com/admin.html#chat/' || th.id || '|👉 이 손님 대화 바로 열기>');
   return chat_view(th, 0);

@@ -1,6 +1,7 @@
 // 📎 채팅 사진 · 파일 (손님용) — SQL universe40 먼저 실행
 //  POST (multipart/form-data): 손님이 사진 · PDF 를 보내요
-//    file (필수, 10MB까지 · jpg/png/webp/gif/pdf), t (대화 열쇠), bt (예약확인증 열쇠), body (같이 쓴 글), name, contact, lang, page, w, h
+//    file (필수, 10MB까지 · jpg/png/webp/gif/pdf), t (대화 열쇠), bt (예약확인증 열쇠), body (같이 쓴 글), name, contact, lang, page, w, h,
+//    grp (한꺼번에 보낸 사진 묶음 번호) · gn (묶음 사진 수 — 슬랙 알림 한 번에 'N장')
 //    → 비공개 저장소 chat/g/<임의 32자>/<파일 이름> 에 올리고 chat_send_att 로 메시지를 남겨요. 답: chat_get 과 같은 모양 (token, messages …)
 //  GET ?t=…|bt=…&id=<메시지 번호>: 그 대화방 손님인지 확인한 뒤 10분짜리 비공개 주소로 보내요 (사진 <img>, PDF 링크에 그대로 써요)
 //  설정: 이 함수는 "Verify JWT" 를 꺼야 해요 (손님 화면의 <img> 는 로그인 정보를 못 보내요). 대신 아래에서 대화 열쇠로 직접 확인해요.
@@ -60,9 +61,9 @@ Deno.serve(async (req) => {
   const path = `g/${hex32()}/${safeName(file.name, ext)}`;
   const up = await db.storage.from("chat").upload(path, file, { contentType: file.type, upsert: false });
   if (up.error) return out({ error: "올리지 못했어요: " + up.error.message }, 400);
-  const att = { p: path, n: (file.name || "file").slice(0, 120), m: file.type, s: file.size, w: str("w", 6), h: str("h", 6) };
+  const att = { p: path, n: (file.name || "file").slice(0, 120), m: file.type, s: file.size, w: str("w", 6), h: str("h", 6), g: str("grp", 32) };
   const { data, error } = await db.rpc("chat_send_att", { p: { att, body: str("body", 2000), t: str("t", 100), bt: str("bt", 100), uid,
-    name: str("name", 60), contact: str("contact", 100), lang: str("lang", 8), page: str("page", 80) } });
+    name: str("name", 60), contact: str("contact", 100), lang: str("lang", 8), page: str("page", 80), gn: str("gn", 3) } });
   if (error) { await db.storage.from("chat").remove([path]); return out({ error: error.message }, 400); }
   return out(data);
 });

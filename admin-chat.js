@@ -98,6 +98,30 @@ async function ctrFill() {
   if (CHAT_CUR === cur) drawThread();
 }
 // 📎 첨부 (universe40): 비공개 저장소 'chat' → 1시간짜리 주소를 모아서 받아 둬요
+let CGAL = [];   // 사진 보기 묶음 (그릴 때마다 새로)
+// 한꺼번에 보낸 사진(att.g 같음 · 같은 사람 · 연달아)은 한 칸에 모아요 (카톡처럼)
+function chatRows() {   // 사이에 자동 인사 같은 메시지가 끼어도 같은 묶음은 첫 사진 자리에 모아요
+  const isImg = m => m.att && m.att.g && /^image\//.test(m.att.m), key = m => m.sender + "|" + m.att.g, by = {}, out = [];
+  CHAT_MSGS.forEach(m => { if (isImg(m)) (by[key(m)] = by[key(m)] || []).push(m); });
+  CHAT_MSGS.forEach(m => { if (!isImg(m)) out.push([m]); else if (by[key(m)][0] === m) out.push(by[key(m)]); });
+  return out;
+}
+function chatGridHtml(grp) {
+  const us = grp.map(x => CATT[x.att.p] && CATT[x.att.p].u);
+  if (us.some(u => !u)) return `<span class="hint">📷 사진 ${grp.length}장 …</span>`;
+  const gi = CGAL.push(us) - 1, n = grp.length, cols = n === 2 || n === 4 ? 2 : 3;
+  return `<div class="cm-grid" style="--c:${cols}">${us.map((u, k) => `<a href="${esc(u)}" target="_blank" rel="noopener" data-gal="${gi}" data-k="${k}"><img src="${esc(u)}" alt="" loading="lazy"></a>`).join("")}</div>`;
+}
+// 🖼️ 사진 보기: ‹ › · 키보드 ← → · Esc
+function chatGallery(urls, k) {
+  let i = k || 0; const z = document.createElement("div"); z.className = "cm-zoom";
+  const show = () => { z.innerHTML = `<img src="${esc(urls[i])}" alt="">${urls.length > 1 ? `<button type="button" class="zp">‹</button><button type="button" class="zn">›</button><span class="zc">${i + 1} / ${urls.length}</span>` : ""}<a class="zd" href="${esc(urls[i])}" target="_blank" rel="noopener">원본 새 창</a><button type="button" class="zx">✕</button>`; };
+  const go = d => { i = (i + d + urls.length) % urls.length; show(); };
+  const close = () => { z.remove(); document.removeEventListener("keydown", key); };
+  const key = e => { if (e.key === "Escape") close(); else if (e.key === "ArrowLeft") go(-1); else if (e.key === "ArrowRight") go(1); };
+  z.onclick = e => { if (e.target.closest(".zd")) return; if (e.target.closest(".zp")) go(-1); else if (e.target.closest(".zn")) go(1); else if (!e.target.closest("img") || e.target.closest(".zx")) close(); };
+  document.addEventListener("keydown", key); show(); document.body.appendChild(z);
+}
 let CHAT_UP = () => {};   // 지금 열린 대화에 파일 보내기 (drawThread 가 채워요)
 const CATT = {};   // 경로 → { u: 주소, x: 만료 시각 }
 async function chatAttSign() {
@@ -111,7 +135,7 @@ const chatAttPh = m => m.att && (m.body === "📷" || m.body === "📄 " + m.att
 function chatAttHtml(m) {
   const a = m.att; if (!a) return ""; const u = CATT[a.p] && CATT[a.p].u;
   if (!u) return `<span class="hint">📎 ${esc(a.n)} …</span>`;
-  if (/^image\//.test(a.m)) return `<a class="cm-img" href="${esc(u)}" target="_blank" rel="noopener" data-zoom="${esc(u)}"><img src="${esc(u)}" alt="" loading="lazy"${a.w && a.h ? ` width="${a.w}" height="${a.h}"` : ""}></a>`;
+  if (/^image\//.test(a.m)) return `<a class="cm-img" href="${esc(u)}" target="_blank" rel="noopener" data-gal="${CGAL.push([u]) - 1}" data-k="0"><img src="${esc(u)}" alt="" loading="lazy"${a.w && a.h ? ` width="${a.w}" height="${a.h}"` : ""}></a>`;
   return `<a class="cm-file" href="${esc(u)}" target="_blank" rel="noopener">📄 <b>${esc(a.n)}</b>${a.s ? ` <small>${a.s > 1048576 ? (a.s / 1048576).toFixed(1) + "MB" : Math.max(1, Math.round(a.s / 1024)) + "KB"}</small>` : ""} <small>· 열기</small></a>`;
 }
 // 사진은 올리기 전에 줄이고(긴 쪽 1600px) 위치 정보를 지워요 · GIF · PDF 는 그대로
@@ -159,9 +183,9 @@ function drawThread() {
       <span>내가 볼 말</span><select data-ctr="me">${["ko", "vi", "en"].map(l => `<option value="${l}" ${CTR.me === l ? "selected" : ""}>${ctrName(l)}</option>`).join("")}</select>
       <span class="hint">손님 말: <b>${esc(ctrName(ctrGuestLang(th)))}</b>${CTR.on && ctrGuestLang(th) !== CTR.me ? ` · 내 답장은 ${esc(ctrName(ctrGuestLang(th)))}로 바꿔서 보내요` : ""}</span>
       ${CTR.fail ? `<span class="cm-trerr">번역이 안 돼요: ${esc(CTR.fail)} <button type="button" class="btn sm" data-ctr="retry">다시</button></span>` : ""}</div>
-    <div class="cm-list">${CHAT_MSGS.map(m => `<div class="cm ${m.sender === "admin" ? "us" : "them"}">${chatAttHtml(m)}${chatAttPh(m) ? "" : ctrMsgHtml(m)}<time>${m.sender === "admin" ? esc(m.author || "") + " · " : ""}${esc(dt(m.created_at))}</time></div>`).join("")}
+    <div class="cm-list">${(CGAL = [], chatRows()).map(grp => { const m = grp[0], z = grp[grp.length - 1]; return `<div class="cm ${m.sender === "admin" ? "us" : "them"}">${grp.length > 1 ? chatGridHtml(grp) : chatAttHtml(m)}${chatAttPh(m) ? "" : ctrMsgHtml(m)}<time>${m.sender === "admin" ? esc(m.author || "") + " · " : ""}${grp.length > 1 ? "📷 " + grp.length + "장 · " : ""}${esc(dt(z.created_at))}</time></div>`; }).join("")}
       ${lastAdmin ? `<div class="cm-read">${read ? "✓ 손님이 읽었어요" : "손님이 아직 안 읽었어요"}</div>` : ""}</div>
-    <form class="cm-form"><button type="button" class="btn cm-att" title="사진 · PDF 보내기 (10MB까지)">📎</button><input type="file" class="cm-fi" accept="image/*,application/pdf" hidden><textarea rows="2" placeholder="${chatPh(th)}">${esc(typed)}</textarea><button class="btn main">보내기</button></form>
+    <form class="cm-form"><button type="button" class="btn cm-att" title="사진 · PDF 보내기 (10MB까지)">📎</button><input type="file" class="cm-fi" accept="image/*,application/pdf" multiple hidden><textarea rows="2" placeholder="${chatPh(th)}">${esc(typed)}</textarea><button class="btn main">보내기</button></form>
     ${lastAdmin && !read ? `<div class="cm-ping"><span>손님이 사이트를 닫았으면 답장을 못 봐요 →</span>
       ${phone ? `<button class="btn sm" data-ping="sms">📱 답장 알림 문자 (${esc(phone)})</button>` : ""}<button class="btn sm" data-ping="copy">📋 알림 메시지 복사 (카톡 등)</button></div>` : ""}`;
   const list = box.querySelector(".cm-list"); list.scrollTop = list.scrollHeight;
@@ -197,34 +221,43 @@ function drawThread() {
   ta.onkeydown = e => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); f.requestSubmit(); } };
   // 📎 사진 · PDF 보내기 → 저장소 chat/a/… 에 올리고 chat_reply_att
   const fi = f.querySelector(".cm-fi"); f.querySelector(".cm-att").onclick = () => fi.click();
-  fi.onchange = () => { const file = fi.files && fi.files[0]; fi.value = ""; if (file) CHAT_UP(file); };
-  ta.addEventListener("paste", e => { const it = [...((e.clipboardData && e.clipboardData.files) || [])][0]; if (it) { e.preventDefault(); CHAT_UP(it); } });   // 붙여넣기(Ctrl+V)
+  fi.onchange = () => { const fl = [...(fi.files || [])]; fi.value = ""; if (fl.length) CHAT_UP(fl); };
+  ta.addEventListener("paste", e => { const fl = [...((e.clipboardData && e.clipboardData.files) || [])]; if (fl.length) { e.preventDefault(); CHAT_UP(fl); } });   // 붙여넣기(Ctrl+V)
   // 끌어다 놓기: 대화 화면 위에 사진 · PDF 를 놓으면 바로 보내요 (한 번만 연결)
   if (!box.dataset.drop) { box.dataset.drop = "1";
     box.addEventListener("dragover", e => { if ([...((e.dataTransfer && e.dataTransfer.types) || [])].includes("Files")) { e.preventDefault(); box.classList.add("cm-drop"); } });
     box.addEventListener("dragleave", e => { if (!box.contains(e.relatedTarget)) box.classList.remove("cm-drop"); });
-    box.addEventListener("drop", e => { const fl = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]; box.classList.remove("cm-drop"); if (fl && CHAT_CUR) { e.preventDefault(); CHAT_UP(fl); } }); }
-  CHAT_UP = async file => {
-    if (!file || f.dataset.busy) return;
-    if (!/^image\//.test(file.type) && file.type !== "application/pdf") { toast("사진이나 PDF만 보낼 수 있어요"); return; }
-    f.dataset.busy = "1"; const ab = f.querySelector(".cm-att"); ab.disabled = true; ab.textContent = "⏳";
-    try {
-      const x = await chatShrink(file);
-      if (x.blob.size > 10 * 1048576) throw new Error("파일이 너무 커요 (10MB까지)");
-      const ext = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif", "application/pdf": "pdf" }[x.type];
-      if (!ext) throw new Error("사진(jpg · png · webp · gif)이나 PDF만 보낼 수 있어요");
-      const rnd = [...crypto.getRandomValues(new Uint8Array(16))].map(b => b.toString(16).padStart(2, "0")).join("");
-      const base = (x.name || "file").replace(/\.[^.]*$/, "").normalize("NFKD").replace(/[^A-Za-z0-9_-]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 60) || "file";
-      const path = `a/${rnd}/${base}.${ext}`;
-      const up = await sb.storage.from("chat").upload(path, x.blob, { contentType: x.type, upsert: false });
-      if (up.error) throw new Error(up.error.message);
-      const r = await sb.rpc("chat_reply_att", { thread: th.id, att: { p: path, n: (x.name || file.name || "file").slice(0, 120), m: x.type, s: x.blob.size, w: x.w || null, h: x.h || null }, body: null });
-      if (r.error) { await sb.storage.from("chat").remove([path]); throw new Error(r.error.message); }
-      await loadMsgs(); drawChat();
-    } catch (er) { toast("보내지 못했어요: " + er.message, 4000); }
-    delete f.dataset.busy; const ab2 = $("chatMain") && $("chatMain").querySelector(".cm-att"); if (ab2) { ab2.disabled = false; ab2.textContent = "📎"; }
+    box.addEventListener("drop", e => { const fl = [...((e.dataTransfer && e.dataTransfer.files) || [])]; box.classList.remove("cm-drop"); if (fl.length && CHAT_CUR) { e.preventDefault(); CHAT_UP(fl); } }); }
+  // 여러 장 한꺼번에 (최대 10개) · 사진 2장 이상이면 한 묶음(g) → 손님 화면에서도 카톡처럼 모아서 보여요
+  CHAT_UP = async list => {
+    if (f.dataset.busy) return;
+    let files = list.filter(x => /^image\//.test(x.type) || x.type === "application/pdf");
+    if (!files.length) { toast("사진이나 PDF만 보낼 수 있어요"); return; }
+    if (files.length > 10) { toast("한 번에 10개까지 보낼 수 있어요. 앞의 10개만 보낼게요.", 3500); files = files.slice(0, 10); }
+    const imgs = files.filter(x => /^image\//.test(x.type)).length;
+    const grp = imgs > 1 ? [...crypto.getRandomValues(new Uint8Array(8))].map(b => b.toString(16).padStart(2, "0")).join("") : null;
+    f.dataset.busy = "1"; const ab = f.querySelector(".cm-att"); ab.disabled = true; let ok = 0;
+    for (let k = 0; k < files.length; k++) {
+      const file = files[k]; ab.textContent = files.length > 1 ? `${k + 1}/${files.length}` : "⏳";
+      try {
+        const x = await chatShrink(file);
+        if (x.blob.size > 10 * 1048576) throw new Error("파일이 너무 커요 (10MB까지)");
+        const ext = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif", "application/pdf": "pdf" }[x.type];
+        if (!ext) throw new Error("사진(jpg · png · webp · gif)이나 PDF만 보낼 수 있어요");
+        const rnd = [...crypto.getRandomValues(new Uint8Array(16))].map(b => b.toString(16).padStart(2, "0")).join("");
+        const base = (x.name || "file").replace(/\.[^.]*$/, "").normalize("NFKD").replace(/[^A-Za-z0-9_-]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 60) || "file";
+        const path = `a/${rnd}/${base}.${ext}`;
+        const up = await sb.storage.from("chat").upload(path, x.blob, { contentType: x.type, upsert: false });
+        if (up.error) throw new Error(up.error.message);
+        const r = await sb.rpc("chat_reply_att", { thread: th.id, att: { p: path, n: (x.name || file.name || "file").slice(0, 120), m: x.type, s: x.blob.size, w: x.w || null, h: x.h || null, g: grp && /^image\//.test(x.type) ? grp : null }, body: null });
+        if (r.error) { await sb.storage.from("chat").remove([path]); throw new Error(r.error.message); }
+        ok++;
+      } catch (er) { toast(`${file.name}: 보내지 못했어요 — ${er.message}`, 4000); }
+    }
+    delete f.dataset.busy; if (ok) { await loadMsgs(); drawChat(); }
+    const ab2 = $("chatMain") && $("chatMain").querySelector(".cm-att"); if (ab2) { ab2.disabled = false; ab2.textContent = "📎"; }
   };
-  box.querySelectorAll(".cm-img[data-zoom]").forEach(x => x.onclick = e => { e.preventDefault(); const z = document.createElement("div"); z.className = "cm-zoom"; z.innerHTML = `<img src="${esc(x.dataset.zoom)}" alt="">`; z.onclick = () => z.remove(); document.body.appendChild(z); });
+  box.querySelectorAll("[data-gal]").forEach(x => x.onclick = e => { e.preventDefault(); chatGallery(CGAL[+x.dataset.gal], +x.dataset.k); });
   f.onsubmit = async e => {
     // 번역 · 보내는 중에 Enter 를 여러 번 눌러도 한 번만 보내요
     e.preventDefault(); if (f.dataset.busy) return; const v = ta.value.trim(); if (!v) return;

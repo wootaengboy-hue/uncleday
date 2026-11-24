@@ -18,7 +18,7 @@ const CHAT = (() => {
   const isPh = (m) => m.att && (m.body === "📷" || m.body === "📄 " + m.att.n);
   function attHtml(m) {
     const a = m.att; if (!a) return "";
-    if (/^image\//.test(a.m)) return `<button type="button" class="cb-img" data-zoom="${esc(attUrl(m))}"><img src="${esc(attUrl(m))}" alt="" loading="lazy"${a.w && a.h ? ` width="${a.w}" height="${a.h}"` : ""}></button>`;
+    if (/^image\//.test(a.m)) return `<button type="button" class="cb-img" data-gal="${GAL.push([attUrl(m)]) - 1}" data-k="0"><img src="${esc(attUrl(m))}" alt="" loading="lazy"${a.w && a.h ? ` width="${a.w}" height="${a.h}"` : ""}></button>`;
     return `<a class="cb-file" href="${esc(attUrl(m))}" target="_blank" rel="noopener"><b>📄 ${esc(a.n)}</b><small>${a.s ? kb(a.s) + " · " : ""}${t("open")}</small></a>`;
   }
   // 사진은 보내기 전에 줄이고(긴 쪽 1600px) 위치 정보를 지워요 (다시 그리면 EXIF 가 빠져요) · GIF 는 그대로
@@ -33,9 +33,29 @@ const CHAT = (() => {
     } catch (e) {}
     return { blob: file, name: file.name };
   }
-  function zoom(src) {
-    const z = document.createElement("div"); z.className = "cb-zoom"; z.innerHTML = `<img src="${esc(src)}" alt=""><button type="button" aria-label="close">✕</button>`;
-    z.onclick = () => z.remove(); document.body.appendChild(z);
+  // 🖼️ 사진 보기 (카톡처럼): 묶음 안에서 ‹ › · 키보드 ← → · 휴대폰은 옆으로 밀기
+  let GAL = [];
+  function gallery(urls, k) {
+    let i = k || 0; const z = document.createElement("div"); z.className = "cb-zoom";
+    const show = () => { z.innerHTML = `<img src="${esc(urls[i])}" alt="">${urls.length > 1 ? `<button type="button" class="zp" aria-label="prev">‹</button><button type="button" class="zn" aria-label="next">›</button><span class="zc">${i + 1} / ${urls.length}</span>` : ""}<button type="button" class="zx" aria-label="close">✕</button>`; };
+    const go = d => { i = (i + d + urls.length) % urls.length; show(); };
+    const close = () => { z.remove(); document.removeEventListener("keydown", key); };
+    const key = e => { if (e.key === "Escape") close(); else if (e.key === "ArrowLeft") go(-1); else if (e.key === "ArrowRight") go(1); };
+    z.onclick = e => { if (e.target.closest(".zp")) go(-1); else if (e.target.closest(".zn")) go(1); else if (!e.target.closest("img") || e.target.closest(".zx")) close(); };
+    let sx = null; z.addEventListener("touchstart", e => { sx = e.touches[0].clientX; }, { passive: true });
+    z.addEventListener("touchend", e => { if (sx == null) return; const dx = e.changedTouches[0].clientX - sx; sx = null; if (Math.abs(dx) > 40 && urls.length > 1) go(dx < 0 ? 1 : -1); });
+    document.addEventListener("keydown", key); show(); document.body.appendChild(z);
+  }
+  // 메시지 묶기: 한꺼번에 보낸 사진(att.g 같음 · 같은 사람 · 연달아)은 한 칸에 모아서 보여요
+  function rows() {   // 사이에 자동 인사 같은 메시지가 끼어도 같은 묶음은 첫 사진 자리에 모아요
+    const isImg = m => m.att && m.att.g && /^image\//.test(m.att.m), key = m => m.from + "|" + m.att.g, by = {}, out = [];
+    msgs.forEach(m => { if (isImg(m)) (by[key(m)] = by[key(m)] || []).push(m); });
+    msgs.forEach(m => { if (!isImg(m)) out.push([m]); else if (by[key(m)][0] === m) out.push(by[key(m)]); });
+    return out;
+  }
+  function gridHtml(grp) {
+    const gi = GAL.push(grp.map(attUrl)) - 1, n = grp.length, cols = n === 2 || n === 4 ? 2 : 3;
+    return `<div class="cb-grid" style="--c:${cols}">${grp.map((x, k) => `<button type="button" class="cb-gi" data-gal="${gi}" data-k="${k}"><img src="${esc(attUrl(x))}" alt="" loading="lazy"></button>`).join("")}</div>`;
   }
   const put = v => { try { v ? localStorage.setItem(KEY, v) : localStorage.removeItem(KEY); } catch (e) {} };
   // 문자로 받은 "?chat=열쇠" 링크로 들어오면 그 대화를 이어가요
@@ -66,16 +86,17 @@ const CHAT = (() => {
     return m <= 60 ? t("subMin", { n: m }) : m <= 24 * 60 ? t("subHr", { n: Math.ceil(m / 60) }) : t("sub");
   }
   function draw() {
+    GAL = [];
     const fmt = d => { try { return new Date(d).toLocaleTimeString(L(), { hour: "numeric", minute: "2-digit" }); } catch (e) { return ""; } };
     const showForm = !known && !(typeof ACCT !== "undefined" && ACCT.user()) && !onVoucher;
     box.innerHTML = `<div class="cb-head"><div><b>${t("title")}</b><small>${subText()}</small></div><button type="button" class="cb-x" aria-label="close">✕</button></div>
       <div class="cb-list">
         <div class="cb-m us"><span>${booking ? `<b>${esc(t("bk", { c: booking }))}</b><br>` : ""}${esc(t("hello")).replace(/\n/g, "<br>")}</span></div>
-        ${msgs.map(m => `<div class="cb-m ${m.from === "admin" ? "us" : "me"}">${attHtml(m)}${isPh(m) ? "" : `<span>${linkify(esc(m.body)).replace(/\n/g, "<br>")}</span>`}<time>${m.auto ? "🌐 " + ({ ko: "자동 번역", vi: "Tự động dịch" }[document.documentElement.lang] || "Auto-translated") + " · " : ""}${fmt(m.at)}</time></div>`).join("")}
+        ${rows().map(grp => { const m = grp[0], z = grp[grp.length - 1]; return `<div class="cb-m ${m.from === "admin" ? "us" : "me"}">${grp.length > 1 ? gridHtml(grp) : attHtml(m)}${isPh(m) ? "" : `<span>${linkify(esc(m.body)).replace(/\n/g, "<br>")}</span>`}<time>${m.auto ? "🌐 " + ({ ko: "자동 번역", vi: "Tự động dịch" }[document.documentElement.lang] || "Auto-translated") + " · " : ""}${grp.length > 1 ? "📷 " + grp.length + " · " : ""}${fmt(z.at)}</time></div>`; }).join("")}
       </div>
       <form class="cb-form">
         ${showForm ? `<div class="cb-who"><input name="name" placeholder="${t("name")}" maxlength="60" autocomplete="name"><input name="contact" placeholder="${t("contact")}" maxlength="100" autocomplete="tel"></div>` : ""}
-        <div class="cb-row"><button type="button" class="cb-att" aria-label="${esc(t("attach"))}" title="${esc(t("attach"))}">📎</button><input type="file" class="cb-fi" accept="image/*,application/pdf" hidden><textarea name="body" rows="1" placeholder="${t("ph")}" maxlength="2000"></textarea><button class="cb-send" type="submit">${t("send")}</button></div>
+        <div class="cb-row"><button type="button" class="cb-att" aria-label="${esc(t("attach"))}" title="${esc(t("attach"))}">📎</button><input type="file" class="cb-fi" accept="image/*,application/pdf" multiple hidden><textarea name="body" rows="1" placeholder="${t("ph")}" maxlength="2000"></textarea><button class="cb-send" type="submit">${t("send")}</button></div>
         <div class="cb-up" hidden></div>
         <div class="cb-foot">${msgs.length ? `<span>${t("keep")}</span>` : ""}
           ${typeof ACCT !== "undefined" && ACCT.on && !ACCT.user() ? `<button type="button" class="cb-link" data-login>${t("login")}</button>` : ""}
@@ -85,10 +106,10 @@ const CHAT = (() => {
     box.querySelector(".cb-x").onclick = () => toggle(false);
     const lg = box.querySelector("[data-login]"); if (lg) lg.onclick = () => ACCT.openLogin();
     const f = box.querySelector(".cb-form"), ta = f.body;
-    box.querySelectorAll("[data-zoom]").forEach(x => x.onclick = () => zoom(x.dataset.zoom));
+    box.querySelectorAll("[data-gal]").forEach(x => x.onclick = () => gallery(GAL[+x.dataset.gal], +x.dataset.k));
     const fi = box.querySelector(".cb-fi"); box.querySelector(".cb-att").onclick = () => fi.click();
-    fi.onchange = () => { const file = fi.files && fi.files[0]; fi.value = ""; if (file) sendFile(file); };
-    ta.onpaste = e => { const it = [...((e.clipboardData && e.clipboardData.files) || [])][0]; if (it) { e.preventDefault(); sendFile(it); } };   // 붙여넣기(Ctrl+V)로도 보내요
+    fi.onchange = () => { const fl = [...(fi.files || [])]; fi.value = ""; if (fl.length) sendFiles(fl); };
+    ta.onpaste = e => { const fl = [...((e.clipboardData && e.clipboardData.files) || [])]; if (fl.length) { e.preventDefault(); sendFiles(fl); } };   // 붙여넣기(Ctrl+V)로도 보내요
     ta.oninput = () => { ta.style.height = "auto"; ta.style.height = Math.min(120, ta.scrollHeight) + "px"; };
     ta.onkeydown = e => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); f.requestSubmit(); } };
     f.onsubmit = async e => {
@@ -102,27 +123,38 @@ const CHAT = (() => {
       sending = false; const sb = box.querySelector(".cb-send"); if (sb) sb.disabled = false;
     };
   }
-  async function sendFile(file) {
-      const f = box.querySelector(".cb-form"), ta = f && f.body; if (!f || !file || sending) return;
-      if (!/^image\//.test(file.type) && file.type !== "application/pdf") { alert(t("type")); return; }
-      const up = box.querySelector(".cb-up"); sending = true; up.hidden = false; up.textContent = "📎 " + t("upl");
+  // 여러 장을 한꺼번에 (최대 10개): 사진이 2장 이상이면 한 묶음(g)으로 보내서 카톡처럼 모아 보여요
+  async function sendFiles(list) {
+    const f = box.querySelector(".cb-form"), ta = f && f.body; if (!f || sending) return;
+    let files = list.filter(x => /^image\//.test(x.type) || x.type === "application/pdf");
+    if (!files.length) { alert(t("type")); return; }
+    if (files.length > 10) { alert(t("max")); files = files.slice(0, 10); }
+    const imgs = files.filter(x => /^image\//.test(x.type)).length;
+    const grp = imgs > 1 ? [...crypto.getRandomValues(new Uint8Array(8))].map(b => b.toString(16).padStart(2, "0")).join("") : "";
+    const up = box.querySelector(".cb-up"); sending = true; up.hidden = false;
+    let last = null, cap = ta.value.trim(), fail = 0;
+    for (let k = 0; k < files.length; k++) {
+      const file = files[k]; up.textContent = "📎 " + t("upl") + (files.length > 1 ? ` ${k + 1}/${files.length}` : "");
       try {
         const s1 = await shrink(file);
         if (s1.blob.size > 10 * 1048576) throw new Error(t("big"));
         const fd = new FormData(); fd.append("file", s1.blob, s1.name);
-        const add = (k, v) => { if (v) fd.append(k, v); };
+        const add = (k2, v) => { if (v) fd.append(k2, v); };
         add("t", get()); add("bt", bt()); add("lang", L()); add("page", (location.hash.match(/#\/shop\/([^/?]+)/) || [])[1] || (onVoucher ? "voucher" : "home"));
-        add("name", f.name ? f.name.value.trim() : ""); add("contact", f.contact ? f.contact.value.trim() : ""); add("body", ta.value.trim()); if (s1.w) { add("w", String(s1.w)); add("h", String(s1.h)); }
+        add("name", f.name ? f.name.value.trim() : ""); add("contact", f.contact ? f.contact.value.trim() : ""); if (k === 0) add("body", cap);
+        if (s1.w) { add("w", String(s1.w)); add("h", String(s1.h)); }
+        if (grp && /^image\//.test(file.type)) { add("grp", grp); add("gn", String(imgs)); }
         const hd = { apikey: SUPA.key, Authorization: "Bearer " + (window.UD_TOKEN || SUPA.key) };
         const r = await fetch(`${SUPA.url}/functions/v1/chat-file`, { method: "POST", headers: hd, body: fd });
         const j = await r.json().catch(() => ({}));
         if (!r.ok || j.error) throw new Error(j.error || t("err"));
         if (j.token && !bt()) put(j.token);
-        known = true; take(j, true); ta.value = ""; draw();
-        if (typeof LIVE.track === "function") LIVE.track("chat");
-      } catch (err) { alert(err.message || t("err")); }
-      sending = false; const u2 = box.querySelector(".cb-up"); if (u2) u2.hidden = true;
+        last = j; known = true; if (k === 0) ta.value = "";
+      } catch (err) { fail++; if (files.length === 1) alert(err.message || t("err")); else if (fail === 1) alert(file.name + ": " + (err.message || t("err"))); }
     }
+    if (last) { take(last, true); draw(); if (typeof LIVE.track === "function") LIVE.track("chat"); }
+    sending = false; const u2 = box.querySelector(".cb-up"); if (u2) u2.hidden = true;
+  }
   function take(r, reset) {
     if (!r) return;
     if (r.booking) booking = r.booking;
@@ -149,7 +181,7 @@ const CHAT = (() => {
   // 끌어다 놓기: 채팅 창 위에 사진 · PDF 를 놓으면 바로 보내요
   box.addEventListener("dragover", e => { if ([...(e.dataTransfer && e.dataTransfer.types || [])].includes("Files")) { e.preventDefault(); box.classList.add("cb-drop"); } });
   box.addEventListener("dragleave", e => { if (!box.contains(e.relatedTarget)) box.classList.remove("cb-drop"); });
-  box.addEventListener("drop", e => { const fl = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]; box.classList.remove("cb-drop"); if (fl) { e.preventDefault(); sendFile(fl); } });
+  box.addEventListener("drop", e => { const fl = [...((e.dataTransfer && e.dataTransfer.files) || [])]; box.classList.remove("cb-drop"); if (fl.length) { e.preventDefault(); sendFiles(fl); } });
   fab.onclick = () => toggle(!open);
   // 상단 "상담하기"·업체 화면 아래 "상담" 버튼 → 사이트 채팅 열기
   document.addEventListener("click", e => {
