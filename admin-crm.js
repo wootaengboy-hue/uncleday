@@ -127,7 +127,7 @@ async function openCustomer(cid) {
       <div class="kpi"><small>자주 간 업체</small><b style="font-size:15px">${s.fav ? esc(shopById(s.fav) ? shopById(s.fav).name.ko : s.fav) : "-"}</b></div></div>
     <div class="crm-cols">
       <div>
-        <div class="box"><h3>🏷️ 태그</h3><div class="crm-tagpick">${[...new Set([...CRM_TAGS, ...(c.tags || [])])].map(t => `<button class="chip ${(c.tags || []).includes(t) ? "on" : ""}" data-tag="${esc(t)}">${esc(t)}</button>`).join("")}</div>
+        <div class="box"><h3>🏷️ 태그 <small class="hint">누르면 붙고, 다시 누르면 빠져요</small></h3><div class="crm-tagpick">${[...new Set([...CRM_TAGS, ...(c.tags || [])])].map(t => `<button type="button" class="chip ${(c.tags || []).includes(t) ? "on" : ""}" aria-pressed="${(c.tags || []).includes(t)}" data-tag="${esc(t)}">${esc(t)}</button>`).join("")}</div>
           <input id="cuNewTag" placeholder="+ 새 태그 입력 후 Enter" class="at-in" style="width:100%"></div>
         <div class="box"><h3>📝 메모 <small class="hint">손님 취향·주의할 점 (팀만 봐요)</small></h3><textarea id="cuMemo" rows="4" style="width:100%;box-sizing:border-box">${esc(c.memo || "")}</textarea></div>
         <div class="box"><h3>📒 시술 기록 <small class="hint">손님은 모든 가게 기록을 보고, 각 가게는 자기 가게 기록만 봐요</small></h3>
@@ -142,13 +142,21 @@ async function openCustomer(cid) {
         <div class="crm-tl">${tl.map(x => `<div class="tl-row">${x.html}</div>`).join("") || `<p class="hint">기록이 없어요</p>`}</div></div>
     </div>
     </div>
-    <div class="btns crm-foot"><span class="hint" style="margin-right:auto">태그 · 메모 · 이름 · 안내 동의는 '저장'을 눌러야 반영돼요</span><button class="btn" data-no>닫기</button><button class="btn main" id="cuSave">저장</button></div></div>`;
+    <div class="btns crm-foot"><span class="hint" style="margin-right:auto">태그는 누르면 바로 저장돼요 · 메모 · 이름 · 안내 동의는 '저장'을 눌러야 반영돼요</span><button class="btn" data-no>닫기</button><button class="btn main" id="cuSave">저장</button></div></div>`;
   document.body.appendChild(d);
   let tags = [...(c.tags || [])];
-  const drawTags = () => d.querySelectorAll("[data-tag]").forEach(b => b.classList.toggle("on", tags.includes(b.dataset.tag)));
-  d.querySelectorAll("[data-tag]").forEach(b => b.onclick = () => { const t = b.dataset.tag; tags = tags.includes(t) ? tags.filter(x => x !== t) : [...tags, t]; drawTags(); });
+  // 태그는 누르면 바로 붙고(초록 ✓) 다시 누르면 빠져요 — '저장' 안 눌러도 바로 저장
+  const drawTags = () => d.querySelectorAll("[data-tag]").forEach(b => { const on = tags.includes(b.dataset.tag); b.classList.toggle("on", on); b.setAttribute("aria-pressed", on); });
+  const saveTags = async (t, added) => {
+    const r = await sb.from("customers").update({ tags, updated_at: new Date().toISOString() }).eq("id", cid);
+    if (r.error) { tags = [...(c.tags || [])]; drawTags(); return dbErr(r.error); }
+    c.tags = [...tags]; toast(added ? `'${t}' 태그를 붙였어요` : `'${t}' 태그를 뺐어요`);
+  };
+  const toggleTag = t => { const added = !tags.includes(t); tags = added ? [...tags, t] : tags.filter(x => x !== t); drawTags(); saveTags(t, added); };
+  d.querySelectorAll("[data-tag]").forEach(b => b.onclick = () => toggleTag(b.dataset.tag));
   d.querySelector("#cuNewTag").onkeydown = e => { if (e.key !== "Enter" || e.isComposing) return; e.preventDefault(); const t = e.target.value.trim().slice(0, 20); if (!t) return;
-    if (!tags.includes(t)) tags.push(t); e.target.value = ""; const box = d.querySelector(".crm-tagpick"); if (!box.querySelector(`[data-tag="${CSS.escape(t)}"]`)) { const b = document.createElement("button"); b.className = "chip on"; b.dataset.tag = t; b.textContent = t; b.onclick = () => { tags = tags.includes(t) ? tags.filter(x => x !== t) : [...tags, t]; drawTags(); }; box.appendChild(b); } drawTags(); };
+    e.target.value = ""; const box = d.querySelector(".crm-tagpick"); if (!box.querySelector(`[data-tag="${CSS.escape(t)}"]`)) { const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.dataset.tag = t; b.textContent = t; b.onclick = () => toggleTag(t); box.appendChild(b); }
+    if (!tags.includes(t)) toggleTag(t); };
   d.querySelectorAll("[data-bk]").forEach(a => a.onclick = e => { e.preventDefault(); d.remove(); showTab("bk"); openBooking(a.dataset.bk); });
   d.querySelectorAll("[data-cp-use]").forEach(b => b.onclick = () => useCoupon(b.dataset.cpUse, () => { d.remove(); openCustomer(cid); }));
   d.querySelectorAll("[data-cp-void]").forEach(b => b.onclick = () => voidCoupon(b.dataset.cpVoid, () => { d.remove(); openCustomer(cid); }));
