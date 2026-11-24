@@ -47,9 +47,9 @@ p{margin:0;font-size:16px;line-height:1.55}
 .pill{display:inline-block;align-self:flex-start;background:var(--or);color:var(--navy);font-weight:800;padding:10px 18px;border-radius:999px;font-size:15px}
 .big{font-size:56px;font-weight:800;color:var(--g);line-height:1;letter-spacing:-1px}
 .src{font-size:12px;color:var(--sub)}
-.mk{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.mk>div{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:8px 6px;display:grid;justify-items:center;gap:1px;text-align:center}.mk span{font-size:20px;line-height:1.1}.mk b{font-size:13px}.mk em{font-style:normal;font-size:12px;color:var(--g);font-weight:800}
+.mk{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.mk>div{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:8px 6px;display:grid;justify-items:center;gap:1px;text-align:center}.mk span{font-size:20px;line-height:1.1;height:22px;display:flex;align-items:center}.mk .fl{width:29px;height:22px;border-radius:3px;box-shadow:0 0 0 1px rgba(0,0,0,.08);object-fit:cover}.mk b{font-size:13px}.mk em{font-style:normal;font-size:12px;color:var(--g);font-weight:800}
 .cards{display:grid;gap:10px}
-.card{background:var(--paper);color:var(--navy);border:1px solid var(--line);border-radius:18px;padding:14px 16px;display:grid;grid-template-columns:40px 1fr;gap:4px 12px;align-items:start}
+.card{background:var(--paper);color:var(--navy);border:1px solid var(--line);border-radius:18px;padding:14px 16px;display:grid;grid-template-columns:40px 1fr;gap:4px 12px;align-items:start;align-content:start}
 .card .ic{grid-row:span 2;font-size:28px;line-height:1.1}
 .card b{font-size:17px;line-height:1.35}
 .card small{font-size:14.5px;color:var(--sub);line-height:1.5}
@@ -80,6 +80,8 @@ td:first-child{font-weight:800;width:40%;padding-right:10px}
   h1{font-size:44px}h2{font-size:32px}p{font-size:18px}.lead{font-size:21px}.big{font-size:80px}
   .cards.c3{grid-template-columns:repeat(3,1fr)}.cards.c4{grid-template-columns:repeat(2,1fr)}
   .sl{justify-content:center}
+  .cards.c3 .card{grid-template-columns:1fr;gap:8px}.cards.c3 .card .n,.cards.c3 .card .ic{grid-row:auto}
+  .phs.c3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;overflow:visible}.phs.c3 .ph{width:200px}
   .split{display:grid;grid-template-columns:1fr 260px;gap:32px;align-items:center}
 }
 </style>
@@ -94,7 +96,7 @@ td:first-child{font-weight:800;width:40%;padding-right:10px}
   "use strict";
   var LANG = (function () { try { var q = new URLSearchParams(location.search).get("lang"); if (q === "ko" || q === "vi") return q; } catch (e) {} return "vi"; })();
   function T(vi, ko) { return { vi: vi, ko: ko }; }
-  var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
+  var esc = function (s) { return String(s).replace(/ ([·—]) /g, "\u00a0$1 ").replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
   var UI = { prev: T("‹ Trước", "‹ 이전"), next: T("Tiếp ›", "다음 ›"), done: T("Xong ✓", "끝 ✓") };
   var card = function (ic, t, d, hi) { return { ic: ic, t: t, d: d, hi: hi }; };
   // 슬라이드 내용 (VI · KO)
@@ -105,8 +107,8 @@ td:first-child{font-weight:800;width:40%;padding-right:10px}
       pill: T("Chỉ trả phí khi khách đã đến và thanh toán", "손님이 실제로 와서 결제했을 때만 비용이 생겨요") },
     { eb: T("KHÁCH QUỐC TẾ", "외국인 손님"), h2: T("Khách quốc tế đến Việt Nam ngày càng nhiều — từ khắp thế giới", "베트남을 찾는 외국인 손님이 전 세계에서 늘고 있어요"),
       big: "17,7 " + "triệu", bigd: T("lượt khách quốc tế đến Việt Nam trong 9 tháng 2026 (+14,5%)", "2026년 1~9월 베트남을 찾은 외국인 (+14.5%)"),
-      mk: [["🇨🇳", T("Trung Quốc", "중국"), "3,9 tr"], ["🇰🇷", T("Hàn Quốc", "한국"), "3 tr"], ["🇷🇺", T("Nga", "러시아"), "1,1 tr · +160%"], ["🌏", T("Đài Loan (TQ)", "대만"), "964 n"],
-        ["🇺🇸", T("Mỹ", "미국"), "764 n"], ["🇯🇵", T("Nhật Bản", "일본"), "674 n"], ["🇮🇳", T("Ấn Độ", "인도"), "505 n · +33%"], ["🇪🇺", T("Châu Âu", "유럽"), "+55%"]],
+      mk: [["cn", T("Trung Quốc", "중국"), "3,9 tr"], ["kr", T("Hàn Quốc", "한국"), "3 tr"], ["ru", T("Nga", "러시아"), "1,1 tr · +160%"], ["🌏", T("Đài Loan (TQ)", "대만"), "964 n"],
+        ["us", T("Mỹ", "미국"), "764 n"], ["jp", T("Nhật Bản", "일본"), "674 n"], ["in", T("Ấn Độ", "인도"), "505 n · +33%"], ["eu", T("Châu Âu", "유럽"), "+55%"]],
       sub: T("Nhưng khách nước ngoài thường ngại vì:", "하지만 외국인 손님은 이런 게 불편해요"),
       steps: [card(0, T("Không đọc được menu tiếng Việt, không biết giá trước", "베트남어 메뉴를 못 읽고, 가격을 미리 몰라요")), card(0, T("Khó nói chuyện với nhân viên khi làm dịch vụ", "시술 중에 직원과 말이 안 통해요")), card(0, T("Muốn đặt lịch trước bằng ngôn ngữ của mình, đến là làm ngay", "자기 나라 말로 미리 예약하고, 가면 바로 받고 싶어요"))],
       src: T("Nguồn: VietnamPlus, 03/10/2026 (9 tháng đầu năm 2026) · tr = triệu lượt, n = nghìn lượt", "출처: VietnamPlus 2026-10-03 (2026년 1~9월) · tr = 백만 명, n = 천 명") },
@@ -127,8 +129,8 @@ td:first-child{font-weight:800;width:40%;padding-right:10px}
         card("🗓️", T("Lúc đầu: theo từng lượt khách", "처음엔 건별 정산"), T("Mỗi lượt khách đến, Uncle Day báo số tiền hoa hồng qua Zalo, cửa hàng chuyển khoản. Khi lịch đặt nhiều lên, hai bên thỏa thuận chuyển sang đối soát cuối tháng.", "손님 1건마다 엉클데이가 수수료를 잘로로 알려 드리면 계좌이체해요. 예약이 많아지면 협의해서 월말 정산으로 바꿔요."))],
       lead: T("Giá trên Uncle Day là đúng giá của cửa hàng — khách không phải trả thêm.", "엉클데이 가격 = 가게 가격이에요. 손님이 더 내지 않아요.") },
     { eb: T("CỬA HÀNG ĐƯỢC THÊM — MIỄN PHÍ", "가게가 덤으로 얻는 것 — 무료"), h2: T("Cửa hàng hiện rõ hơn với khách nước ngoài", "외국인 손님에게 더 잘 보여요"), c: 3,
-      steps: [card(0, T("Trang giới thiệu 13 ngôn ngữ", "13개 언어 소개 페이지"), T("Hiện trên Google ở nhiều nước — khách đã tìm thấy Uncle Day từ Việt Nam, Hàn Quốc, Úc, Malaysia, Bỉ, Brazil, Canada…", "여러 나라 구글에 노출 — 베트남 · 한국 · 호주 · 말레이시아 · 벨기에 · 브라질 · 캐나다에서 엉클데이를 찾았어요")),
-        card(0, T("Thẻ QR menu theo ngôn ngữ của khách", "손님 말로 보는 메뉴 QR 카드"), T("Khách quét là thấy menu và giá bằng ngôn ngữ của mình — nhân viên chỉ cần nhìn món khách chỉ", "손님이 찍으면 자기 나라 말로 메뉴 · 가격 — 직원은 손님이 가리키는 메뉴만 보면 돼요")),
+      steps: [card(0, T("Trang giới thiệu 13 ngôn ngữ", "13개 언어 소개 페이지"), T("Hiện trên Google ở nhiều nước — khách đã tìm thấy Uncle Day từ Việt Nam, Hàn Quốc, Úc, Malaysia, Bỉ, Brazil, Canada…", "여러 나라 구글에 나와요. 베트남 · 한국 · 호주 · 말레이시아 · 벨기에 · 브라질 · 캐나다에서 엉클데이를 찾아왔어요")),
+        card(0, T("Thẻ QR menu theo ngôn ngữ của khách", "손님 말로 보는 메뉴 QR 카드"), T("Khách quét là thấy menu và giá bằng ngôn ngữ của mình — nhân viên chỉ cần nhìn món khách chỉ", "손님이 찍으면 자기 나라 말로 메뉴 · 가격이 보여요. 직원은 손님이 가리키는 메뉴만 보면 돼요")),
         card(0, T("Thêm đánh giá Google", "구글 후기"), T("Sau khi đánh giá trên Uncle Day, khách thấy nút “Đánh giá trên Google”", "엉클데이 후기를 쓴 손님에게 '구글 후기 남기기' 버튼이 보여요"))],
       shots: [["shop", T("Trang cửa hàng", "가게 페이지")], ["qr", T("Quét QR → menu", "QR → 메뉴")], ["grv", T("Nút đánh giá Google", "구글 후기 버튼")]] },
     { eb: T("TRANG QUẢN LÝ CỬA HÀNG — MIỄN PHÍ", "사장님 페이지 — 무료"), h2: T("Quản lý lịch hẹn, phòng và nhân viên trên điện thoại", "예약 · 방 · 직원을 휴대폰으로 관리"),
@@ -163,7 +165,7 @@ td:first-child{font-weight:800;width:40%;padding-right:10px}
     if (s.h1) h += '<h1>' + esc(L(s.h1)) + '</h1>';
     if (s.h2) h += '<h2>' + esc(L(s.h2)) + '</h2>';
     if (s.big) h += '<div><p class="big">' + s.big + '</p><p style="font-weight:800;margin-top:6px">' + esc(L(s.bigd)) + '</p></div>';
-    if (s.mk) h += '<div class="mk">' + s.mk.map(function (m) { return '<div><span>' + m[0] + '</span><b>' + esc(L(m[1])) + '</b><em>' + esc(m[2]) + '</em></div>'; }).join("") + '</div>';
+    if (s.mk) h += '<div class="mk">' + s.mk.map(function (m) { return '<div><span>' + (/^[a-z]{2}$/.test(m[0]) ? '<img class="fl" src="images/flags/' + m[0] + '.svg" alt="">' : m[0]) + '</span><b>' + esc(L(m[1])) + '</b><em>' + esc(m[2]) + '</em></div>'; }).join("") + '</div>';
     if (s.sub) h += '<p style="font-weight:800;color:var(--ord)">' + esc(L(s.sub)) + '</p>';
     if (s.img) {
       h += '<div class="split"><div class="cards">' + s.checks.map(function (c) { return '<div class="card"><span class="n">✓</span><b style="font-weight:600">' + esc(L(c)) + '</b></div>'; }).join("") + '</div>'
@@ -171,7 +173,7 @@ td:first-child{font-weight:800;width:40%;padding-right:10px}
     }
     if (s.cards) h += '<div class="cards c' + (s.c || 1) + '">' + s.cards.map(function (c) { return '<div class="card' + (c.hi ? " hi" : "") + '"><span class="ic">' + c.ic + '</span><b>' + esc(L(c.t)) + '</b><small>' + esc(L(c.d)) + '</small></div>'; }).join("") + '</div>';
     if (s.steps) h += '<div class="cards c' + (s.c || 1) + '">' + s.steps.map(function (c, i) { var who = c.ic ? '<span class="who">' + esc(L(c.ic)) + '</span>' : ''; return '<div class="card"><span class="n">' + (i + 1) + '</span><b>' + who + esc(L(c.t)) + '</b>' + (c.d ? '<small>' + esc(L(c.d)) + '</small>' : '<small></small>') + '</div>'; }).join("") + '</div>';
-    if (s.shots) h += '<div class="phs">' + s.shots.map(function (x) { return '<figure><div class="ph"><img src="images/intro/' + x[0] + '.webp" alt="' + esc(L(x[1])) + '" loading="lazy"></div><figcaption>' + esc(L(x[1])) + '</figcaption></figure>'; }).join("") + '</div>';
+    if (s.shots) h += '<div class="phs' + (s.steps && s.c === 3 ? ' c3' : '') + '">' + s.shots.map(function (x) { return '<figure><div class="ph"><img src="images/intro/' + x[0] + '.webp" alt="' + esc(L(x[1])) + '" loading="lazy"></div><figcaption>' + esc(L(x[1])) + '</figcaption></figure>'; }).join("") + '</div>';
     if (s.faq) h += '<table>' + s.faq.map(function (r) { return '<tr><td>' + esc(L(r[0])) + '</td><td>' + esc(L(r[1])) + '</td></tr>'; }).join("") + '</table>';
     if (s.lead) h += '<p class="lead">' + esc(L(s.lead)) + '</p>';
     if (s.pill) h += '<p class="pill">' + esc(L(s.pill)) + '</p>';
