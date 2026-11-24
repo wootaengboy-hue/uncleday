@@ -48,7 +48,7 @@ const CHAT = (() => {
   }
   // 메시지 묶기: 한꺼번에 보낸 사진(att.g 같음 · 같은 사람 · 연달아)은 한 칸에 모아서 보여요
   function rows() {   // 사이에 자동 인사 같은 메시지가 끼어도 같은 묶음은 첫 사진 자리에 모아요
-    const isImg = m => m.att && m.att.g && /^image\//.test(m.att.m), key = m => m.from + "|" + m.att.g, by = {}, out = [];
+    const isImg = m => m.att && m.att.g && (m.del || /^image\//.test(m.att.m)), key = m => m.from + "|" + m.att.g + (m.del ? "|d" : ""), by = {}, out = [];
     msgs.forEach(m => { if (isImg(m)) (by[key(m)] = by[key(m)] || []).push(m); });
     msgs.forEach(m => { if (!isImg(m)) out.push([m]); else if (by[key(m)][0] === m) out.push(by[key(m)]); });
     return out;
@@ -92,7 +92,10 @@ const CHAT = (() => {
     box.innerHTML = `<div class="cb-head"><div><b>${t("title")}</b><small>${subText()}</small></div><button type="button" class="cb-x" aria-label="close">✕</button></div>
       <div class="cb-list">
         <div class="cb-m us"><span>${booking ? `<b>${esc(t("bk", { c: booking }))}</b><br>` : ""}${esc(t("hello")).replace(/\n/g, "<br>")}</span></div>
-        ${rows().map(grp => { const m = grp[0], z = grp[grp.length - 1]; return `<div class="cb-m ${m.from === "admin" ? "us" : "me"}">${grp.length > 1 ? gridHtml(grp) : attHtml(m)}${isPh(m) ? "" : `<span>${linkify(esc(m.body)).replace(/\n/g, "<br>")}</span>`}<time>${m.auto ? "🌐 " + ({ ko: "자동 번역", vi: "Tự động dịch" }[document.documentElement.lang] || "Auto-translated") + " · " : ""}${grp.length > 1 ? "📷 " + grp.length + " · " : ""}${fmt(z.at)}</time></div>`; }).join("")}
+        ${rows().map(grp => { const m = grp[0], z = grp[grp.length - 1];
+          if (m.del) return `<div class="cb-m ${m.from === "admin" ? "us" : "me"}"><span class="cb-del">🚫 ${esc(t("deleted"))}</span><time>${fmt(m.at)}</time></div>`;
+          const un = m.from !== "admin" && Date.now() - Date.parse(z.at) < 5 * 60e3 ? `<button type="button" class="cb-un" data-un="${m.id}">${esc(t("unsend"))}</button> · ` : "";
+          return `<div class="cb-m ${m.from === "admin" ? "us" : "me"}">${grp.length > 1 ? gridHtml(grp) : attHtml(m)}${isPh(m) ? "" : `<span>${linkify(esc(m.body)).replace(/\n/g, "<br>")}</span>`}<time>${un}${m.auto ? "🌐 " + ({ ko: "자동 번역", vi: "Tự động dịch" }[document.documentElement.lang] || "Auto-translated") + " · " : ""}${grp.length > 1 ? "📷 " + grp.length + " · " : ""}${fmt(z.at)}</time></div>`; }).join("")}
       </div>
       <form class="cb-form">
         ${showForm ? `<div class="cb-who"><input name="name" placeholder="${t("name")}" maxlength="60" autocomplete="name"><input name="contact" placeholder="${t("contact")}" maxlength="100" autocomplete="tel"></div>` : ""}
@@ -107,6 +110,19 @@ const CHAT = (() => {
     const lg = box.querySelector("[data-login]"); if (lg) lg.onclick = () => ACCT.openLogin();
     const f = box.querySelector(".cb-form"), ta = f.body;
     box.querySelectorAll("[data-gal]").forEach(x => x.onclick = () => gallery(GAL[+x.dataset.gal], +x.dataset.k));
+    // 🚫 보내기 취소 (보낸 지 5분 안 · universe41): 글은 바로, 사진 · 파일은 chat-file 이 저장소에서도 지워요
+    box.querySelectorAll("[data-un]").forEach(x => x.onclick = async () => {
+      const m = msgs.find(y => y.id === +x.dataset.un); if (!m || !confirm(t("unsendQ"))) return;
+      x.disabled = true;
+      try {
+        let v;
+        if (m.att) {
+          const r = await fetch(`${SUPA.url}/functions/v1/chat-file`, { method: "POST", headers: { apikey: SUPA.key, Authorization: "Bearer " + (window.UD_TOKEN || SUPA.key), "Content-Type": "application/json" }, body: JSON.stringify({ unsend: m.id, t: get() || null, bt: bt() }) });
+          v = await r.json().catch(() => ({})); if (!r.ok || v.error) throw new Error(v.error || t("err"));
+        } else v = (await LIVE.rpc("chat_unsend", { t: get() || null, bt: bt(), mid: m.id })).view;
+        take(v, true); draw();
+      } catch (er) { alert(/5 minutes/.test(er.message) ? t("unsendLate") : er.message || t("err")); x.disabled = false; }
+    });
     const fi = box.querySelector(".cb-fi"); box.querySelector(".cb-att").onclick = () => fi.click();
     fi.onchange = () => { const fl = [...(fi.files || [])]; fi.value = ""; if (fl.length) sendFiles(fl); };
     ta.onpaste = e => { const fl = [...((e.clipboardData && e.clipboardData.files) || [])]; if (fl.length) { e.preventDefault(); sendFiles(fl); } };   // 붙여넣기(Ctrl+V)로도 보내요
@@ -132,9 +148,11 @@ const CHAT = (() => {
     const imgs = files.filter(x => /^image\//.test(x.type)).length;
     const grp = imgs > 1 ? [...crypto.getRandomValues(new Uint8Array(8))].map(b => b.toString(16).padStart(2, "0")).join("") : "";
     const up = box.querySelector(".cb-up"); sending = true; up.hidden = false;
-    let last = null, cap = ta.value.trim(), fail = 0;
+    let last = null, cap = ta.value.trim(), fail = 0, stopUp = false, ac = null;   // 보내는 중 '취소' → 남은 파일은 안 보내요
     for (let k = 0; k < files.length; k++) {
-      const file = files[k]; up.textContent = "📎 " + t("upl") + (files.length > 1 ? ` ${k + 1}/${files.length}` : "");
+      if (stopUp) break;
+      const file = files[k]; up.innerHTML = `📎 ${esc(t("upl"))}${files.length > 1 ? ` ${k + 1}/${files.length}` : ""} <button type="button" class="cb-un" data-stop>${esc(t("cancel"))}</button>`;
+      up.querySelector("[data-stop]").onclick = () => { stopUp = true; if (ac) ac.abort(); };
       try {
         const s1 = await shrink(file);
         if (s1.blob.size > 10 * 1048576) throw new Error(t("big"));
@@ -145,21 +163,23 @@ const CHAT = (() => {
         if (s1.w) { add("w", String(s1.w)); add("h", String(s1.h)); }
         if (grp && /^image\//.test(file.type)) { add("grp", grp); add("gn", String(imgs)); }
         const hd = { apikey: SUPA.key, Authorization: "Bearer " + (window.UD_TOKEN || SUPA.key) };
-        const r = await fetch(`${SUPA.url}/functions/v1/chat-file`, { method: "POST", headers: hd, body: fd });
+        ac = new AbortController();
+        const r = await fetch(`${SUPA.url}/functions/v1/chat-file`, { method: "POST", headers: hd, body: fd, signal: ac.signal });
         const j = await r.json().catch(() => ({}));
         if (!r.ok || j.error) throw new Error(j.error || t("err"));
         if (j.token && !bt()) put(j.token);
         last = j; known = true; if (k === 0) ta.value = "";
-      } catch (err) { fail++; if (files.length === 1) alert(err.message || t("err")); else if (fail === 1) alert(file.name + ": " + (err.message || t("err"))); }
+      } catch (err) { if (stopUp) break; fail++; if (files.length === 1) alert(err.message || t("err")); else if (fail === 1) alert(file.name + ": " + (err.message || t("err"))); }
     }
     if (last) { take(last, true); draw(); if (typeof LIVE.track === "function") LIVE.track("chat"); }
     sending = false; const u2 = box.querySelector(".cb-up"); if (u2) u2.hidden = true;
   }
+  let changed = false;   // 상대가 보내기 취소한 메시지가 생기면 다시 그려요
   function take(r, reset) {
     if (!r) return;
     if (r.booking) booking = r.booking;
     if (r.token) known = true;
-    if (reset) { msgs = r.messages || []; } else (r.messages || []).forEach(m => { if (!msgs.some(x => x.id === m.id)) msgs.push(m); });
+    if (reset) { msgs = r.messages || []; } else (r.messages || []).forEach(m => { const i = msgs.findIndex(x => x.id === m.id); if (i < 0) msgs.push(m); else if (m.del && !msgs[i].del) { msgs[i] = m; changed = true; } });
     last = msgs.length ? msgs[msgs.length - 1].id : 0;
     fab.querySelector(".cf-dot").hidden = open || !(r.unread > 0);
   }
@@ -169,7 +189,7 @@ const CHAT = (() => {
       const r = await LIVE.rpc("chat_get", { t: get() || null, bt: bt(), since: full ? 0 : last, seen: open });
       if (r && r.token && !bt() && !get()) put(r.token);
       const before = msgs.length; take(r, full);
-      if (open && (full || msgs.length !== before)) draw();
+      if (open && (full || msgs.length !== before || changed)) draw(); changed = false;
     } catch (e) {}
   }
   function toggle(v) {

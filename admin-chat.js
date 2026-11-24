@@ -47,7 +47,7 @@ async function openThread(id) {
   const th = THREADS.find(x => x.id === id);
   if (th && chatUnread(th)) { th.admin_seen_at = new Date().toISOString(); sb.from("chat_threads").update({ admin_seen_at: th.admin_seen_at }).eq("id", id).then(() => {}); chatCount(); }
   await loadMsgs(); drawChat(); if (TAB === "chat") { NAV_QUIET = true; navSync(); NAV_QUIET = false; }
-  clearInterval(CHAT_TIMER); CHAT_TIMER = setInterval(async () => { if (TAB !== "chat" || CHAT_CUR !== id) { clearInterval(CHAT_TIMER); return; } const n = CHAT_MSGS.length; await loadMsgs(); if (CHAT_MSGS.length !== n) drawThread(); }, 5000);
+  clearInterval(CHAT_TIMER); CHAT_TIMER = setInterval(async () => { if (TAB !== "chat" || CHAT_CUR !== id) { clearInterval(CHAT_TIMER); return; } const sig = () => CHAT_MSGS.length + "|" + CHAT_MSGS.filter(m => m.deleted_at).length; const n = sig(); await loadMsgs(); if (sig() !== n) drawThread(); }, 5000);
 }
 async function loadMsgs() {
   if (!CHAT_CUR) return;
@@ -82,7 +82,7 @@ async function ctrCall(items) {
 // 아직 내 말로 번역 안 된 손님 글을 모아서 번역 → 저장 → 다시 그리기
 async function ctrFill() {
   if (!CTR.on || CTR.busy || !CHAT_CUR || !CTR.me) return;
-  const need = CHAT_MSGS.filter(m => m.sender === "guest" && !chatAttPh(m) && !(m.tr && m.tr[CTR.me]) && m.src_lang !== CTR.me && !m._trFail).slice(-20);
+  const need = CHAT_MSGS.filter(m => m.sender === "guest" && !m.deleted_at && !chatAttPh(m) && !(m.tr && m.tr[CTR.me]) && m.src_lang !== CTR.me && !m._trFail).slice(-20);
   if (!need.length) return;
   CTR.busy = true; const cur = CHAT_CUR;
   try {
@@ -101,7 +101,7 @@ async function ctrFill() {
 let CGAL = [];   // 사진 보기 묶음 (그릴 때마다 새로)
 // 한꺼번에 보낸 사진(att.g 같음 · 같은 사람 · 연달아)은 한 칸에 모아요 (카톡처럼)
 function chatRows() {   // 사이에 자동 인사 같은 메시지가 끼어도 같은 묶음은 첫 사진 자리에 모아요
-  const isImg = m => m.att && m.att.g && /^image\//.test(m.att.m), key = m => m.sender + "|" + m.att.g, by = {}, out = [];
+  const isImg = m => m.att && m.att.g && (m.deleted_at || /^image\//.test(m.att.m)), key = m => m.sender + "|" + m.att.g + (m.deleted_at ? "|d" : ""), by = {}, out = [];
   CHAT_MSGS.forEach(m => { if (isImg(m)) (by[key(m)] = by[key(m)] || []).push(m); });
   CHAT_MSGS.forEach(m => { if (!isImg(m)) out.push([m]); else if (by[key(m)][0] === m) out.push(by[key(m)]); });
   return out;
@@ -122,7 +122,7 @@ function chatGallery(urls, k) {
   z.onclick = e => { if (e.target.closest(".zd")) return; if (e.target.closest(".zp")) go(-1); else if (e.target.closest(".zn")) go(1); else if (!e.target.closest("img") || e.target.closest(".zx")) close(); };
   document.addEventListener("keydown", key); show(); document.body.appendChild(z);
 }
-let CHAT_UP = () => {};   // 지금 열린 대화에 파일 보내기 (drawThread 가 채워요)
+let CHAT_UP = () => {}, CHAT_STOP = false;   // 지금 열린 대화에 파일 보내기 (drawThread 가 채워요)
 const CATT = {};   // 경로 → { u: 주소, x: 만료 시각 }
 async function chatAttSign() {
   const need = [...new Set(CHAT_MSGS.filter(m => m.att && m.att.p && !(CATT[m.att.p] && CATT[m.att.p].x > Date.now() + 60000)).map(m => m.att.p))];
@@ -183,7 +183,10 @@ function drawThread() {
       <span>내가 볼 말</span><select data-ctr="me">${["ko", "vi", "en"].map(l => `<option value="${l}" ${CTR.me === l ? "selected" : ""}>${ctrName(l)}</option>`).join("")}</select>
       <span class="hint">손님 말: <b>${esc(ctrName(ctrGuestLang(th)))}</b>${CTR.on && ctrGuestLang(th) !== CTR.me ? ` · 내 답장은 ${esc(ctrName(ctrGuestLang(th)))}로 바꿔서 보내요` : ""}</span>
       ${CTR.fail ? `<span class="cm-trerr">번역이 안 돼요: ${esc(CTR.fail)} <button type="button" class="btn sm" data-ctr="retry">다시</button></span>` : ""}</div>
-    <div class="cm-list">${(CGAL = [], chatRows()).map(grp => { const m = grp[0], z = grp[grp.length - 1]; return `<div class="cm ${m.sender === "admin" ? "us" : "them"}">${grp.length > 1 ? chatGridHtml(grp) : chatAttHtml(m)}${chatAttPh(m) ? "" : ctrMsgHtml(m)}<time>${m.sender === "admin" ? esc(m.author || "") + " · " : ""}${grp.length > 1 ? "📷 " + grp.length + "장 · " : ""}${esc(dt(z.created_at))}</time></div>`; }).join("")}
+    <div class="cm-list">${(CGAL = [], chatRows()).map(grp => { const m = grp[0], z = grp[grp.length - 1];
+      if (m.deleted_at) return `<div class="cm ${m.sender === "admin" ? "us" : "them"}"><span class="cm-del">🚫 ${m.sender === "admin" ? "보내기 취소한 메시지" : "손님이 보내기 취소한 메시지"}</span><time>${m.sender === "admin" ? esc(m.author || "") + " · " : ""}${esc(dt(m.created_at))}</time></div>`;
+      const un = m.sender === "admin" && Date.now() - Date.parse(z.created_at) < 24 * 3600e3 ? `<button type="button" class="cm-un" data-un="${m.id}">보내기 취소</button> · ` : "";
+      return `<div class="cm ${m.sender === "admin" ? "us" : "them"}">${grp.length > 1 ? chatGridHtml(grp) : chatAttHtml(m)}${chatAttPh(m) ? "" : ctrMsgHtml(m)}<time>${un}${m.sender === "admin" ? esc(m.author || "") + " · " : ""}${grp.length > 1 ? "📷 " + grp.length + "장 · " : ""}${esc(dt(z.created_at))}</time></div>`; }).join("")}
       ${lastAdmin ? `<div class="cm-read">${read ? "✓ 손님이 읽었어요" : "손님이 아직 안 읽었어요"}</div>` : ""}</div>
     <form class="cm-form"><button type="button" class="btn cm-att" title="사진 · PDF 보내기 (10MB까지)">📎</button><input type="file" class="cm-fi" accept="image/*,application/pdf" multiple hidden><textarea rows="2" placeholder="${chatPh(th)}">${esc(typed)}</textarea><button class="btn main">보내기</button></form>
     ${lastAdmin && !read ? `<div class="cm-ping"><span>손님이 사이트를 닫았으면 답장을 못 봐요 →</span>
@@ -220,7 +223,7 @@ function drawThread() {
   const f = box.querySelector(".cm-form"), ta = f.querySelector("textarea");
   ta.onkeydown = e => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); f.requestSubmit(); } };
   // 📎 사진 · PDF 보내기 → 저장소 chat/a/… 에 올리고 chat_reply_att
-  const fi = f.querySelector(".cm-fi"); f.querySelector(".cm-att").onclick = () => fi.click();
+  const fi = f.querySelector(".cm-fi"); f.querySelector(".cm-att").onclick = () => { if (f.dataset.busy) { CHAT_STOP = true; toast("남은 파일은 보내지 않을게요"); } else fi.click(); };   // 보내는 중에 누르면 취소
   fi.onchange = () => { const fl = [...(fi.files || [])]; fi.value = ""; if (fl.length) CHAT_UP(fl); };
   ta.addEventListener("paste", e => { const fl = [...((e.clipboardData && e.clipboardData.files) || [])]; if (fl.length) { e.preventDefault(); CHAT_UP(fl); } });   // 붙여넣기(Ctrl+V)
   // 끌어다 놓기: 대화 화면 위에 사진 · PDF 를 놓으면 바로 보내요 (한 번만 연결)
@@ -236,9 +239,10 @@ function drawThread() {
     if (files.length > 10) { toast("한 번에 10개까지 보낼 수 있어요. 앞의 10개만 보낼게요.", 3500); files = files.slice(0, 10); }
     const imgs = files.filter(x => /^image\//.test(x.type)).length;
     const grp = imgs > 1 ? [...crypto.getRandomValues(new Uint8Array(8))].map(b => b.toString(16).padStart(2, "0")).join("") : null;
-    f.dataset.busy = "1"; const ab = f.querySelector(".cm-att"); ab.disabled = true; let ok = 0;
+    f.dataset.busy = "1"; const ab = f.querySelector(".cm-att"); ab.title = "누르면 보내기 취소"; let ok = 0; CHAT_STOP = false;
     for (let k = 0; k < files.length; k++) {
-      const file = files[k]; ab.textContent = files.length > 1 ? `${k + 1}/${files.length}` : "⏳";
+      if (CHAT_STOP) break;
+      const file = files[k]; ab.textContent = files.length > 1 ? `${k + 1}/${files.length} ✕` : "⏳ ✕";
       try {
         const x = await chatShrink(file);
         if (x.blob.size > 10 * 1048576) throw new Error("파일이 너무 커요 (10MB까지)");
@@ -258,6 +262,13 @@ function drawThread() {
     const ab2 = $("chatMain") && $("chatMain").querySelector(".cm-att"); if (ab2) { ab2.disabled = false; ab2.textContent = "📎"; }
   };
   box.querySelectorAll("[data-gal]").forEach(x => x.onclick = e => { e.preventDefault(); chatGallery(CGAL[+x.dataset.gal], +x.dataset.k); });
+  // 🚫 보내기 취소 (내가 보낸 지 24시간 안 · universe41): 손님 화면에서도 '삭제된 메시지' 로 바뀌고 파일도 지워요
+  box.querySelectorAll("[data-un]").forEach(x => x.onclick = () => confirmBox("이 메시지를 지울까요?", async () => {
+    const r = await sb.rpc("chat_unsend_admin", { mid: +x.dataset.un });
+    if (r.error) return dbErr(r.error, "보내기 취소");
+    if ((r.data || []).length) await sb.storage.from("chat").remove(r.data);
+    toast("지웠어요"); await loadMsgs(); drawChat();
+  }, "손님 화면에서도 '삭제된 메시지'로 바뀌고, 사진 · 파일도 지워져요. 이미 간 슬랙 알림은 그대로예요.", "지우기"));
   f.onsubmit = async e => {
     // 번역 · 보내는 중에 Enter 를 여러 번 눌러도 한 번만 보내요
     e.preventDefault(); if (f.dataset.busy) return; const v = ta.value.trim(); if (!v) return;

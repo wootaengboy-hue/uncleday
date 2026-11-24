@@ -4,6 +4,7 @@
 //    grp (한꺼번에 보낸 사진 묶음 번호) · gn (묶음 사진 수 — 슬랙 알림 한 번에 'N장')
 //    → 비공개 저장소 chat/g/<임의 32자>/<파일 이름> 에 올리고 chat_send_att 로 메시지를 남겨요. 답: chat_get 과 같은 모양 (token, messages …)
 //  GET ?t=…|bt=…&id=<메시지 번호>: 그 대화방 손님인지 확인한 뒤 10분짜리 비공개 주소로 보내요 (사진 <img>, PDF 링크에 그대로 써요)
+//  POST (JSON) { unsend, t | bt }: 🚫 보내기 취소 — 손님이 5분 안에 보낸 사진 · 파일 지우기 (universe41)
 //  설정: 이 함수는 "Verify JWT" 를 꺼야 해요 (손님 화면의 <img> 는 로그인 정보를 못 보내요). 대신 아래에서 대화 열쇠로 직접 확인해요.
 //  비밀값은 따로 필요 없어요 (SUPABASE_URL · SUPABASE_SERVICE_ROLE_KEY 는 Supabase 가 자동으로 넣어 줘요). 키는 채팅 · 코드에 적지 않아요.
 import { createClient } from "jsr:@supabase/supabase-js@2";
@@ -42,6 +43,17 @@ Deno.serve(async (req) => {
     return new Response(null, { status: 302, headers: { ...h, Location: s.data.signedUrl, "Cache-Control": "private, max-age=300" } });
   }
   if (req.method !== "POST") return out({ error: "GET or POST only" }, 405);
+
+  // 🚫 보내기 취소 (universe41): { unsend: 메시지 번호, t | bt } → 5분 안이면 메시지와 파일을 지워요
+  if ((req.headers.get("content-type") || "").includes("application/json")) {
+    const j = await req.json().catch(() => ({}));
+    if (!j.unsend) return out({ error: "unsend" }, 400);
+    const { data, error } = await db.rpc("chat_unsend", { t: j.t || null, bt: j.bt || null, mid: Number(j.unsend) });
+    if (error) return out({ error: error.message }, 400);
+    const paths = (data && data.paths) || [];
+    if (paths.length) await db.storage.from("chat").remove(paths);
+    return out(data.view);
+  }
 
   // 보내기
   let f: FormData;
