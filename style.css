@@ -845,3 +845,10 @@ footer .foot-priv, footer .foot-priv:visited { color: #fff; }
 .vh-empty { margin: 0 0 6px; color: var(--sub, #667); font-size: 13.5px; }
 .vh-share { display: flex; gap: 10px; align-items: flex-start; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #CFE6D7; cursor: pointer; }
 .vh-share input { margin-top: 4px; width: 18px; height: 18px; flex: none; } .vh-share b { display: block; font-size: 14px; } .vh-share small { display: block; color: var(--sub, #667); font-size: 12.5px; line-height: 1.5; margin-top: 2px; }
+.vh-show { margin-top: 12px; width: 100%; border: 0; border-radius: 12px; padding: 12px; background: #11624A; color: #fff; font: inherit; font-weight: 800; font-size: 15px; cursor: pointer; }
+.vh-hint { display: block; color: var(--sub, #667); font-size: 12.5px; line-height: 1.5; margin-top: 6px; }
+.vh-ov { position: fixed; inset: 0; z-index: 10000; background: #F4FAF6; overflow: auto; }
+.vh-full { max-width: 640px; margin: 0 auto; padding: 22px 18px 40px; position: relative; text-align: left; }
+.vh-full h2 { margin: 2px 0 4px; font-size: 24px; } .vh-k { margin: 0; color: #11624A; font-weight: 800; } .vh-s { margin: 0 0 14px; color: var(--sub, #667); font-size: 14px; }
+.vh-full .vh-row b { font-size: 17px; } .vh-full .vh-row p { font-size: 16px; } .vh-full .vh-d { width: 96px; font-size: 14px; }
+.vh-x { position: absolute; top: 14px; right: 14px; width: 42px; height: 42px; border-radius: 50%; border: 1px solid #CFE6D7; background: #fff; font-size: 18px; cursor: pointer; }

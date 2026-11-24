@@ -116,10 +116,11 @@ async function openCustomer(cid) {
     ...(logs.data || []).map(l => ({ at: l.at, html: `<span class="tl-ic">${{ note: "📝", message: "💬", coupon: "🎟", consent: "✅", edit: "✏️" }[l.kind] || "•"}</span><div>${esc(l.body || "").replace(/\n/g, "<br>")}<br><small class="hint">${dt(l.at)} · ${esc(typeof who === "function" ? who(String(l.actor || "").replace(/^관리자 /, "")) : l.actor || "")}</small></div>` }))
   ].sort((a, b) => String(b.at).localeCompare(String(a.at)));
   const d = document.createElement("div"); d.className = "overlay center";
-  d.innerHTML = `<div class="modal" style="width:min(980px,calc(100% - 32px))">
+  d.innerHTML = `<div class="modal crm-modal" style="width:min(1040px,calc(100% - 32px))">
     <div class="crm-head"><div><h2 style="margin:0">👤 <input id="cuName" class="cu-name" value="${esc(c.name || "")}" placeholder="이름"></h2>
       <div class="hint">${esc(c.contact || "")} · ${LANG_KO[c.lang] || c.lang || ""} · 처음 ${dt(c.first_at)} · 최근 ${dt(c.last_at)}</div></div>
       <div class="btn-row" style="margin:0"><button class="btn main" id="cuMsg">💬 메시지</button><button class="btn" id="cuCoupon">🎟 쿠폰 발급</button></div></div>
+    <div class="crm-body">
     <div class="kpis crm-kpis">
       <div class="kpi"><small>예약</small><b>${s.all}건</b></div><div class="kpi"><small>방문</small><b>${s.done}회</b></div>
       <div class="kpi"><small>결제 합계</small><b>${s.paid ? vnd(s.paid) : "-"}</b></div><div class="kpi"><small>취소·노쇼</small><b>${s.cancel}건</b></div>
@@ -129,7 +130,7 @@ async function openCustomer(cid) {
         <div class="box"><h3>🏷️ 태그</h3><div class="crm-tagpick">${[...new Set([...CRM_TAGS, ...(c.tags || [])])].map(t => `<button class="chip ${(c.tags || []).includes(t) ? "on" : ""}" data-tag="${esc(t)}">${esc(t)}</button>`).join("")}</div>
           <input id="cuNewTag" placeholder="+ 새 태그 입력 후 Enter" class="at-in" style="width:100%"></div>
         <div class="box"><h3>📝 메모 <small class="hint">손님 취향·주의할 점 (팀만 봐요)</small></h3><textarea id="cuMemo" rows="4" style="width:100%;box-sizing:border-box">${esc(c.memo || "")}</textarea></div>
-        <div class="box"><h3>📒 시술 기록 <small class="hint">${c.share_history ? `✅ 다른 가게 공유 동의 · ${dt(c.share_at)}` : "다른 가게 공유: 동의 안 함 (그 가게 내역만 보여요)"}</small></h3>
+        <div class="box"><h3>📒 시술 기록 <small class="hint">손님은 모든 가게 기록을 보고, 각 가게는 자기 가게 기록만 봐요</small></h3>
           ${visits.length ? visits.map(b => { const v = VN[b.id]; return `<div class="vn-row"><span class="hint">${esc(b.visit_date || "")}</span><div><b>${esc(shopById(b.shop_id) ? shopById(b.shop_id).name.ko : b.shop_name || "")}</b> · ${esc(b.menu_name || "")}
             ${v && v.pub ? `<p>🧾 ${esc(v.pub)}${v.pub_tr && v.pub_tr.ko && v.lang !== "ko" ? `<br><small class="hint">🌐 ${esc(v.pub_tr.ko)}</small>` : ""}</p>` : ""}${v && v.priv ? `<p class="vn-priv">🔒 ${esc(v.priv)}</p>` : ""}${!v ? `<p class="hint">가게 기록 없음</p>` : ""}</div></div>`; }).join("") : `<p class="hint">아직 방문 완료된 예약이 없어요</p>`}</div>
         <div class="box"><h3>📣 쿠폰·이벤트 안내</h3>
@@ -140,7 +141,8 @@ async function openCustomer(cid) {
         <div style="display:flex;gap:6px;margin-bottom:10px"><input id="cuNote" placeholder="기록 남기기 (예: 카톡으로 재방문 문의함)" style="flex:1;padding:8px 10px;border:1px solid var(--line);border-radius:9px"><button class="btn sm" id="cuNoteAdd">기록</button></div>
         <div class="crm-tl">${tl.map(x => `<div class="tl-row">${x.html}</div>`).join("") || `<p class="hint">기록이 없어요</p>`}</div></div>
     </div>
-    <div class="btns"><button class="btn" data-no>닫기</button><button class="btn main" id="cuSave">저장</button></div></div>`;
+    </div>
+    <div class="btns crm-foot"><span class="hint" style="margin-right:auto">태그 · 메모 · 이름 · 안내 동의는 '저장'을 눌러야 반영돼요</span><button class="btn" data-no>닫기</button><button class="btn main" id="cuSave">저장</button></div></div>`;
   document.body.appendChild(d);
   let tags = [...(c.tags || [])];
   const drawTags = () => d.querySelectorAll("[data-tag]").forEach(b => b.classList.toggle("on", tags.includes(b.dataset.tag)));

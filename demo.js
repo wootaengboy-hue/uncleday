@@ -53,6 +53,7 @@
   /* ---------- 안내 단계 ---------- */
   // who: guest 손님 · ud 엉클데이 운영 · owner 업체 사장님 · staff 테라피스트 · all 공통
   const P = (vi, ko, en) => [vi, ko, en];
+  const PL = (vi, ko, en) => [vi, ko, en][li()];
   const STEPS_ALL = [
     { who: "all", tab: null, key: "intro", intro: true,
       h: P("Uncle Day vận hành thế nào? · 4 góc nhìn", "엉클데이는 이렇게 돌아가요 · 4개의 입장", "How Uncle Day runs · 4 points of view"),
@@ -98,6 +99,10 @@
       h: P("Khách đánh giá từng kỹ thuật viên", "손님: 테라피스트별 후기", "Guest reviews each therapist"),
       p: P("Sau khi về, khách nhận lời mời đánh giá từng kỹ thuật viên đã làm cho mình. Chỉ khách đã thực sự đến mới viết được.", "방문이 끝나면 손님이 담당 테라피스트마다 후기를 남겨요. 실제로 방문한 손님만 쓸 수 있어요.", "After the visit the guest reviews each therapist. Only real visitors can review."),
       act: P("Chấm sao cho từng kỹ thuật viên → Gửi đánh giá", "테라피스트마다 별점을 고르고 '후기 보내기'를 눌러 보세요", "Rate each therapist → Send review") },
+    { who: "guest", tab: "cust", key: "hist",
+      h: P("Lịch sử dịch vụ: khách cho bạn xem", "시술 기록: 손님이 사장님께 보여 줘요", "Treatment history: the guest shows you"),
+      p: P("Khách thấy lịch sử dịch vụ ở mọi cửa hàng Uncle Day, kèm ghi chú cửa hàng viết. Bạn chỉ thấy lịch sử ở cửa hàng mình — muốn biết khách từng làm gì ở nơi khác thì hãy hỏi: “Cho tôi xem lịch sử dịch vụ Uncle Day nhé”. Khách bấm một nút là hiện bằng tiếng Việt.", "손님은 엉클데이 모든 가게의 시술 기록과 가게 메모를 봐요. 사장님은 우리 가게 기록만 보여요 — 다른 가게에서 뭘 받았는지 궁금하면 \"엉클데이 시술 기록 보여 주세요\" 하고 물어보세요. 손님이 버튼 하나로 베트남어 화면을 보여 줘요.", "Guests see their history from every Uncle Day shop, with shop notes. You only see your own shop's history — to know what they had elsewhere, just ask: “May I see your Uncle Day treatment history?” One tap shows it in Vietnamese."),
+      act: P("Bấm “🇻🇳 Cho chủ cửa hàng xem”", "'🇻🇳 사장님께 보여 주기'를 눌러 보세요", "Tap “🇻🇳 Show the shop owner”") },
     { who: "staff", tab: "staff", key: "srev",
       h: P("Kỹ thuật viên nhận đánh giá và thưởng", "테라피스트: 후기 · 보너스 확인", "Therapist sees reviews and bonus"),
       p: P("Mỗi đánh giá thật (đã xác nhận khách có đến) được thưởng như nhau, không phụ thuộc số sao. Kỹ thuật viên có mã QR riêng để mời khách đánh giá.", "진짜 후기(방문 확인됨) 1건마다 별점과 상관없이 같은 금액의 보너스가 있어요. 테라피스트마다 후기 부탁용 QR도 있어요.", "Every verified review earns the same bonus regardless of stars. Each therapist has a QR to invite reviews.") },
@@ -320,6 +325,7 @@
     form: ["Chọn giờ và số người. Số điện thoại/Kakao của khách chỉ Uncle Day giữ.", "시간과 인원을 골라요. 손님 연락처는 엉클데이만 가지고 있어요.", "Pick time and party size. Only Uncle Day keeps the guest's contact."],
     wait: ["Yêu cầu đã gửi. Giờ đến lượt cửa hàng: xem tab 📩 Đặt lịch.", "요청을 보냈어요. 이제 매장 차례예요: 📩 예약 탭을 보세요.", "Request sent. Now it's the shop's turn: see the 📩 Bookings tab."],
     ok: ["Cửa hàng bấm Nhận → khách nhận tin xác nhận bằng tiếng Hàn ngay, kèm địa chỉ và nhắc lịch.", "매장이 수락하면 손님에게 바로 한국어 확정 안내가 가요. 주소와 방문 전 알림도 같이요.", "Once the shop accepts, the guest instantly gets a Korean confirmation with address and a reminder."],
+    hist: ["Sau khi đánh giá, khách thấy 📒 Lịch sử dịch vụ ở mọi cửa hàng, kèm ghi chú bạn viết (tự dịch sang tiếng Hàn). Khi bạn hỏi, khách bấm “🇻🇳 Cho chủ cửa hàng xem” — bạn đọc bằng tiếng Việt và gợi ý dịch vụ hợp hơn.", "후기를 쓰면 손님은 모든 가게의 📒 시술 기록과 사장님이 남긴 메모(한국어로 번역)를 봐요. 사장님이 물어보면 손님이 '🇻🇳 사장님께 보여 주기'를 눌러 베트남어로 보여 줘요 — 더 잘 맞는 시술을 추천할 수 있어요.", "After reviewing, the guest sees 📒 treatment history from every shop with your notes (translated to Korean). When you ask, they tap “🇻🇳 Show the shop owner” so you can read it in Vietnamese and suggest better."],
     rev: ["Sau khi xong, khách đánh giá từng kỹ thuật viên. Đánh giá chỉ đến từ khách đã thực sự đến.", "방문이 끝나면 손님이 테라피스트별로 후기를 남겨요. 실제로 방문한 손님만 쓸 수 있어요.", "After the visit the guest reviews each therapist. Only real visitors can review."],
   };
   function renderCust() {
@@ -354,14 +360,32 @@
         <div class="ph-msg"><b>[엉클데이] 예약이 확정됐어요 ✅</b><br>Spa Mẫu<br>📅 오늘 ${esc(b.time)} · ${b.people}명<br>💆 ${esc(b.menu_ko)}<br>🔖 예약번호 ${esc(b.code)}<br>📍 12 Võ Nguyên Giáp, Đà Nẵng<br><span class="ph-link">지도 보기 · 택시 기사님께 보여 주기</span></div>
         <div class="ph-msg">⏰ 방문 1시간 전에 한 번 더 알려 드릴게요. 늦거나 못 가게 되면 여기로 말씀해 주세요.</div></div>`;
     else { const names = tps.length ? tps : ["Linh"];
-      ph = bar("후기 쓰기") + (c.reviewed ? `<div class="ph-pad ph-c"><div class="ph-big">💝</div><h4>후기 고마워요!</h4><p>후기는 Spa Mẫu 페이지에 올라가요.<br>담당 테라피스트에게도 전달돼요.</p></div>`
+      ph = c.hvi ? histVi() : bar(c.reviewed ? "📒 내 시술 기록" : "후기 쓰기") + (c.reviewed ? histKo()
         : (() => { const all = names.every(n => c.stars[n]); return `<div class="ph-pad"><h4>오늘 Spa Mẫu 어떠셨어요?</h4><p class="ph-sub">담당 테라피스트마다 별점을 남겨 주세요</p>
         ${names.map(n => `<div class="ph-tp"><b>${esc(n)}</b><div class="ph-stars">${[1, 2, 3, 4, 5].map(k => `<button class="${k <= (c.stars[n] || 0) ? "on" : ""}" data-star="${k}" data-tp="${esc(n)}" aria-label="${k}">★</button>`).join("")}</div></div>`).join("")}
         <div class="ph-in ta">${all ? "압이 딱 좋았어요. 다음에도 또 올게요!" : "한 줄 후기 (선택)"}</div>
         <button class="ph-go ${all ? "pulse" : ""}" data-rev ${all ? "" : "disabled"}>후기 보내기</button></div>`; })()); }
+    if (k === "rev" && c.reviewed) k = "hist";
     m.innerHTML = `<div class="dm-cust"><div class="dm-phone"><div class="ph-notch"></div><div class="ph-scr">${ph}</div></div>
       <div class="dm-cap"><span class="dm-cap-k">🇰🇷 ${["Màn hình của khách (tiếng Hàn)", "손님 화면 (한국어)", "Guest's screen (Korean)"][li()]}</span><p>${esc(CAP[k][li()])}</p>
 </div></div>`;
+  }
+  // 손님 화면: 📒 내 시술 기록 (모든 가게) → 🇻🇳 사장님께 보여 주기
+  const HIST_PAST = { d: "10/2026", shop: "Lotus Spa", ko: "발 마사지 60분", vi: "Massage chân 60′", nko: "발 피로가 심했어요. 다음엔 전신 아로마 추천", nvi: "Chân mỏi nhiều. Lần sau nên thử massage body tinh dầu." };
+  const noteKo = () => S.note == null || S.note === NOTE_VI ? NOTE_KO : S.note;
+  function histKo() {
+    const b = S.bookings.find(x => x.id === "b1");
+    return `<div class="ph-pad"><p class="ph-sub">💝 후기 고마워요! 가게가 남긴 시술 기록이 여기에 쌓여요.</p>
+      <div class="ph-hrow"><small>오늘</small><div><b>${esc(b.menu_ko)}</b><small>Spa Mẫu</small><p>🧾 ${esc(noteKo())}</p></div></div>
+      <div class="ph-hrow"><small>${HIST_PAST.d}</small><div><b>${HIST_PAST.ko}</b><small>${HIST_PAST.shop}</small><p>🧾 ${HIST_PAST.nko}</p></div></div>
+      <button class="ph-go pulse" data-hvi>🇻🇳 사장님께 보여 주기</button>
+      <p class="ph-lock">가게에는 자기 가게 기록만 보여요. 다른 가게 기록은 내가 이 화면을 보여 줄 때만 볼 수 있어요.</p></div>`;
+  }
+  function histVi() {
+    const b = S.bookings.find(x => x.id === "b1");
+    return `<div class="ph-bar"><button class="ph-back" data-hvi>‹</button><b>Uncle Day</b></div><div class="ph-pad"><h4>Lịch sử dịch vụ của khách</h4><p class="ph-sub">Khách cho bạn xem để bạn gợi ý dịch vụ phù hợp</p>
+      <div class="ph-hrow"><small>Hôm nay</small><div><b>${esc(b.menu_name)}</b><small>Spa Mẫu</small><p>🧾 ${esc(S.note == null ? NOTE_VI : S.note)}</p></div></div>
+      <div class="ph-hrow"><small>${HIST_PAST.d}</small><div><b>${HIST_PAST.vi}</b><small>${HIST_PAST.shop}</small><p>🧾 ${HIST_PAST.nvi}</p></div></div></div>`;
   }
   /* ---------- 자동 진행 (앞 단계를 건너뛸 때) ---------- */
   const b1 = () => S.bookings.find(x => x.id === "b1");
@@ -497,7 +521,20 @@
         <div class="dm-bk-g"><span>🕒 ${t("today")} ${esc(b.time)}</span><span>👥 ${t("people", { n: b.people })}</span><span>💆 ${esc(lang === "ko" ? b.menu_ko : b.menu_name)}</span><span>💵 ${won(b.price)}</span></div>
         ${b.status === "requested" ? `<div class="dm-bk-b"><button class="dm-btn l" data-dec="${b.id}">${t("decline")}</button><button class="dm-btn pulse" data-acc="${b.id}">${t("accept")}</button></div>`
           : `<div class="dm-st ${st}">${b.status === "declined" ? t("declined") : b.status === "visited" ? "✓ " + ["Đã đến", "방문 완료", "Visited"][li()] : b.status === "shop_ok" ? "⏳ " + t("waitUd") : "✓ " + t("accepted")}</div>`}</div>`;
-    }).join("")}<p class="dm-note">${t("noContact")}</p></div>`;
+    }).join("")}${histCard()}<p class="dm-note">${t("noContact")}</p></div>`;
+  }
+  // 📒 손님 시술 기록 (체험판): 우리 가게 기록 + 이번 시술 메모 · 다른 가게 기록은 손님이 직접 보여 줘요
+  const NOTE_VI = "Massage đá nóng, lực vừa. Lần sau nên thử chăm sóc da mặt.", NOTE_KO = "핫스톤 마사지, 중간 강도. 다음엔 얼굴 관리를 추천해요.";
+  function histCard() {
+    const b = S.bookings.find(x => x.id === "b1"); if (!b || ["none", "requested", "declined"].includes(b.status)) return "";
+    const nv = S.note == null ? NOTE_VI : S.note;
+    return `<div class="dm-hist"><h3>📒 ${PL("Lịch sử dịch vụ của khách · " + esc(b.name), "손님 시술 내역 · " + esc(b.name), "Guest's treatment history · " + esc(b.name))}</h3>
+      <p class="dm-h-first">✨ ${PL("Lần đầu đến cửa hàng mình", "우리 가게 첫 방문이에요", "First visit to your shop")}</p>
+      <p class="dm-h-l">🧾 ${PL("Ghi chú lần này — khách sẽ thấy (tự dịch sang tiếng Hàn)", "이번 시술 기록 — 손님도 봐요 (한국어로 자동 번역)", "Notes for this visit — the guest sees it (auto-translated)")}</p>
+      <textarea id="dmNote" rows="2">${esc(nv)}</textarea>
+      <p class="dm-h-l">🔒 ${PL("Chỉ cửa hàng xem", "가게만 보기", "Shop only")}</p><textarea id="dmPriv" rows="1">${esc(S.priv == null ? PL("Thích phòng yên tĩnh", "조용한 방 선호", "Prefers a quiet room") : S.priv)}</textarea>
+      <button class="dm-btn" data-note>${PL("Lưu ghi chú", "기록 저장", "Save notes")}</button>
+      <p class="dm-h-ask">💡 ${PL("Khách từng làm ở nơi khác? Hãy nhờ khách mở phiếu Uncle Day → “📒 Lịch sử dịch vụ” → “🇻🇳 Cho chủ cửa hàng xem”.", "다른 가게 시술이 궁금하면 손님에게 '📒 내 시술 기록 → 🇻🇳 사장님께 보여 주기'를 보여 달라고 하세요.", "Curious about other shops? Ask the guest to open “📒 My treatment history → 🇻🇳 Show the shop owner”.")}</p></div>`;
   }
   function renderSettle() {
     const m = $("#dmMain"); if (tab !== "settle") return;
@@ -575,6 +612,8 @@
     if (b.hasAttribute("data-send")) { sendBooking(); renderCust(); toast(["🔔 Điện thoại chủ cửa hàng: có yêu cầu đặt lịch mới", "🔔 사장님 휴대폰: 새 예약 요청이 왔어요", "🔔 Owner's phone: new booking request"][li()]); return; }
     if (b.dataset.star) { S.cust.stars[b.dataset.tp] = +b.dataset.star; renderCust(); return; }
     if (b.hasAttribute("data-rev")) { S.cust.reviewed = true; mark("review"); renderCust(); return; }
+    if (b.hasAttribute("data-hvi")) { S.cust.hvi = !S.cust.hvi; if (S.cust.hvi) mark("hist"); renderCust(); return; }
+    if (b.hasAttribute("data-note")) { const n = document.getElementById("dmNote"), q = document.getElementById("dmPriv"); S.note = n ? n.value : S.note; S.priv = q ? q.value : S.priv; toast(PL("Đã lưu ✅ Khách sẽ thấy ghi chú này", "저장했어요 ✅ 손님 시술 기록에 보여요", "Saved ✅ The guest will see it")); return; }
     if (b.dataset.stab) { S.stab = b.dataset.stab; renderStaff(); return; }
     if (b.dataset.sclock) { const l = linh(); if (b.dataset.sclock === "in") { clockIn(); mark("clockin"); toast(["Đã chấm công vào · Bảng điều hành cập nhật", "출근했어요 · 매장 현황판에 바로 반영돼요", "Clocked in · the shop board updated"][li()]); } else { l.out_at = new Date().toISOString(); } renderStaff(); return; }
     if (b.dataset.sday) { S.sday = S.sday === b.dataset.sday ? null : b.dataset.sday; renderStaff(); return; }

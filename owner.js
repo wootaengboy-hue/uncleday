@@ -12,7 +12,7 @@
     hiTitle: ["📒 Lịch sử dịch vụ của khách", "📒 손님 시술 내역", "📒 Guest's treatment history"],
     hiFirst: ["Lần đầu đến cửa hàng mình", "우리 가게 첫 방문이에요", "First visit to your shop"],
     hiHere: ["Ở cửa hàng mình", "우리 가게에서", "At your shop"],
-    hiOther: ["Ở nơi khác trên Uncle Day (khách đồng ý chia sẻ)", "엉클데이 다른 가게에서 (손님이 공유에 동의)", "At other shops on Uncle Day (guest agreed to share)"],
+    hiAsk: ["💡 Muốn biết khách từng làm gì ở nơi khác? Hãy nhờ khách mở phiếu đặt lịch Uncle Day → “📒 Lịch sử dịch vụ” → “🇻🇳 Cho chủ cửa hàng xem”. Màn hình hiện bằng tiếng Việt.", "💡 다른 가게에서 받은 시술이 궁금하면 손님에게 엉클데이 예약확인증 → '📒 내 시술 기록' → '🇻🇳 사장님께 보여 주기'를 보여 달라고 하세요. 베트남어 화면으로 나와요.", "💡 Want to know what the guest had elsewhere? Ask them to open their Uncle Day booking page → “📒 My treatment history” → “🇻🇳 Show the shop owner”. It shows in Vietnamese."],
     hiNote: ["🧾 Ghi chú dịch vụ lần này", "🧾 이번 시술 기록", "🧾 Notes for this visit"],
     hiPub: ["Cho khách xem: dịch vụ đã làm · gợi ý lần sau (tự dịch sang tiếng của khách)", "손님용: 받은 시술 · 다음 추천 (손님 말로 자동 번역돼요)", "For the guest: what was done · next suggestion (auto-translated)"],
     hiPubPh: ["VD: Massage đá nóng, lực vừa. Lần sau nên thử chăm sóc da cổ vai.", "예: 핫스톤 마사지, 중간 강도. 다음엔 목 · 어깨 집중 관리 추천", "e.g. Hot stone massage, medium pressure. Next time try the neck & shoulder care."],
@@ -332,7 +332,7 @@
     const row = (x, mine) => `<div class="hi-row"><span class="hi-d">${esc(dShort(x.date))}</span><div><b>${mine ? "" : (CAT_IC[x.cat] || "•") + " "}${esc(mnOf(x))}</b>${x.pub ? `<p>${esc(x.pub)}</p>` : ""}${x.priv ? `<p class="hi-priv">🔒 ${esc(x.priv)}</p>` : ""}</div></div>`;
     return `<div class="card hist"><b style="display:block;margin-bottom:6px">${t("hiTitle")}</b>
       ${h.own && h.own.length ? `<p class="lbl">${t("hiHere")} · ${h.own.length}</p>${h.own.slice(0, 10).map(x => row(x, true)).join("")}` : `<p class="hi-first">✨ ${t("hiFirst")}</p>`}
-      ${h.other && h.other.length ? `<p class="lbl" style="margin-top:10px">${t("hiOther")} · ${h.other.length}</p>${h.other.slice(0, 10).map(x => row(x, false)).join("")}` : ""}
+      <p class="hi-ask">${t("hiAsk")}</p>
       ${canNote ? `<div class="hi-note"><p class="lbl" style="margin-top:12px">${t("hiNote")}</p>
         <label class="hi-l">${t("hiPub")}<textarea class="inp" id="hiPub" rows="3" maxlength="1000" placeholder="${esc(t("hiPubPh"))}">${esc(tx.pub)}</textarea></label>
         <label class="hi-l">${t("hiPriv")}<textarea class="inp" id="hiPriv" rows="2" maxlength="1000">${esc(tx.priv)}</textarea></label>

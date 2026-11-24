@@ -284,3 +284,4 @@ textarea.inp { min-height: 64px; resize: vertical; }
 .hi-d{flex:none;width:62px;font-size:12.5px;color:#5b6676;padding-top:2px}.hi-row b{font-size:14px}.hi-row p{margin:3px 0 0;font-size:13.5px;line-height:1.45}
 .hi-priv{color:#8A5A00}.hi-first{margin:2px 0;color:#11624A;font-weight:700}
 .hi-l{display:grid;gap:4px;font-size:12.5px;color:#5b6676;font-weight:600;margin:6px 0}.hi-l textarea{width:100%;box-sizing:border-box;resize:vertical;font:inherit;font-size:14px}
+.hi-ask{margin:10px 0 0;padding:9px 11px;border-radius:10px;background:#F3F8FF;border:1px solid #D5E4F7;font-size:13px;line-height:1.5;color:#2A3D55}

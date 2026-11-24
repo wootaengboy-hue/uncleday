@@ -336,27 +336,48 @@ function svTranslate(t) {
   } catch (e) {}
 }
 
-// 📒 내 시술 기록 (universe42): 가게가 남긴 손님용 메모 (손님 말로 번역) + 다른 가게와 공유 동의
+// 📒 내 시술 기록 (universe42): 모든 가게 시술 + 가게가 남긴 손님용 메모 (손님 말로 번역)
+//  가게 사장님에게는 자기 가게 기록만 보여요 → 현장에서 '🇻🇳 사장님께 보여 주기' 로 손님이 직접 보여 줘요
+let VH = null;
 async function vhInit(t, again) {
   const el = document.getElementById("vhBox"); if (!el || typeof LIVE === "undefined" || !LIVE.on) return;
   let h; try { h = await LIVE.rpc("customer_history", { t }); } catch (e) { return; }
   if (!h) return;
+  VH = h;
   const list = h.list || [], L = typeof lang !== "undefined" ? lang : "ko";
-  const mn = x => (x.mn && typeof x.mn === "object" ? tx(x.mn) : "") || x.menu || "";
-  const noteOf = x => !x.pub ? "" : (x.lang && x.lang === L) ? x.pub : (x.tr && x.tr[L]) || x.pub;
   el.hidden = false;
   el.innerHTML = `<h3>${ui("vh_title")}</h3>
-    ${list.length ? list.map(x => `<div class="vh-row"><span class="vh-d">${esc(x.date || "")}</span><div><b>${esc(mn(x))}</b><small>${esc(x.shop && typeof x.shop === "object" ? tx(x.shop) : x.shop || "")}</small>
-      ${x.pub ? `<p>🧾 ${esc(noteOf(x))}</p>` : ""}</div></div>`).join("") : `<p class="vh-empty">${ui("vh_empty")}</p>`}
-    <label class="vh-share"><input type="checkbox" id="vhShare" ${h.share ? "checked" : ""}><span><b>${ui("vh_share")}</b><small>${ui("vh_shareD")}</small></span></label>`;
-  const cb = document.getElementById("vhShare");
-  cb.onchange = async () => { cb.disabled = true; try { await LIVE.rpc("customer_history_share", { t, on_: cb.checked }); toastV(ui(cb.checked ? "vh_on" : "vh_off")); } catch (e) { cb.checked = !cb.checked; toastV(e.message); } cb.disabled = false; };
-  // 아직 손님 말로 번역 안 된 메모가 있으면 한 번 번역해서 다시 그려요 (Edge Function chat-tr · 실패해도 원문은 보여요)
-  if (!again && list.some(x => x.pub && x.lang !== L && !(x.tr && x.tr[L]))) {
-    try {
-      const hd = { apikey: SUPA.key, "Content-Type": "application/json" }; if (/^eyJ/.test(SUPA.key)) hd.Authorization = "Bearer " + SUPA.key;
-      const r = await fetch(`${SUPA.url}/functions/v1/chat-tr`, { method: "POST", headers: hd, body: JSON.stringify({ visit: t, to: L }) });
-      const j = await r.json().catch(() => ({})); if (j && j.n) vhInit(t, true);
-    } catch (e) {}
-  }
+    ${list.length ? list.map(x => vhRow(x, L)).join("") : `<p class="vh-empty">${ui("vh_empty")}</p>`}
+    ${list.length ? `<button type="button" class="vh-show" id="vhShow">🇻🇳 ${ui("vh_show")}</button><small class="vh-hint">${ui("vh_showD")}</small>` : ""}`;
+  const sh = document.getElementById("vhShow"); if (sh) sh.onclick = () => vhShow(t);
+  if (!again && list.some(x => x.pub && x.lang !== L && !(x.tr && x.tr[L]))) { if (await vhTr(t, L)) vhInit(t, true); }
+}
+function vhMn(x, l) { const n = x.mn; return (n && typeof n === "object" ? n[l] || n.en || n.ko : "") || x.menu || ""; }
+function vhShop(x, l) { const n = x.shop; return n && typeof n === "object" ? n[l] || n.en || n.ko || "" : n || ""; }
+function vhNote(x, l) { return !x.pub ? "" : (x.lang && x.lang === l) ? x.pub : (x.tr && x.tr[l]) || x.pub; }
+function vhRow(x, l) {
+  return `<div class="vh-row"><span class="vh-d">${esc(x.date || "")}</span><div><b>${esc(vhMn(x, l))}</b><small>${esc(vhShop(x, l))}</small>
+    ${x.pub ? `<p>🧾 ${esc(vhNote(x, l))}</p>` : ""}</div></div>`;
+}
+// 가게 메모를 손님 말(또는 베트남어)로 번역 (Edge Function chat-tr · 실패해도 원문은 보여요)
+async function vhTr(t, l) {
+  try {
+    const hd = { apikey: SUPA.key, "Content-Type": "application/json" }; if (/^eyJ/.test(SUPA.key)) hd.Authorization = "Bearer " + SUPA.key;
+    const r = await fetch(`${SUPA.url}/functions/v1/chat-tr`, { method: "POST", headers: hd, body: JSON.stringify({ visit: t, to: l }) });
+    const j = await r.json().catch(() => ({})); return !!(j && j.n);
+  } catch (e) { return false; }
+}
+// 🇻🇳 사장님께 보여 주기: 화면 가득 베트남어로 (날짜 · 가게 · 시술 · 가게 메모)
+async function vhShow(t) {
+  const draw = h => {
+    const list = (h && h.list) || [];
+    z.innerHTML = `<div class="vh-full"><button type="button" class="vh-x" aria-label="close">✕</button>
+      <p class="vh-k">Uncle Day</p><h2>Lịch sử dịch vụ của khách</h2><p class="vh-s">${list.length} lần · khách cho bạn xem để bạn gợi ý dịch vụ phù hợp</p>
+      ${list.map(x => `<div class="vh-row"><span class="vh-d">${esc(x.date ? x.date.slice(8, 10) + "/" + x.date.slice(5, 7) + "/" + x.date.slice(0, 4) : "")}</span><div><b>${esc(vhMn(x, "vi"))}</b><small>${esc(vhShop(x, "vi"))}</small>
+        ${x.pub ? `<p>🧾 ${esc(vhNote(x, "vi"))}</p>` : ""}</div></div>`).join("")}</div>`;
+    z.querySelector(".vh-x").onclick = () => z.remove();
+  };
+  const z = document.createElement("div"); z.className = "vh-ov"; document.body.appendChild(z);
+  draw(VH);
+  if (VH && (VH.list || []).some(x => x.pub && x.lang !== "vi" && !(x.tr && x.tr.vi)) && await vhTr(t, "vi")) { try { VH = await LIVE.rpc("customer_history", { t }); } catch (e) {} if (z.isConnected) draw(VH); }
 }
