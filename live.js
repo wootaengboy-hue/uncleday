@@ -8,6 +8,7 @@ const LIVE = (() => {
     if (!d || !Array.isArray(d.shops) || !d.shops.length) return false;
     SHOPS.length = 0; SHOPS.push(...d.shops);
     if (typeof window.I18N_APPLY === "function") window.I18N_APPLY();   // 🌐 일본어 · 중국어 등 번역 다시 입히기
+    window.SEARCH_SYN = Array.isArray(d.syn) ? d.syn : [];   // 🔎 검색 동의어 (universe44)
     if (d.cat && typeof CAT_IMGS !== "undefined") { Object.keys(CAT_IMGS).forEach(k => delete CAT_IMGS[k]); Object.assign(CAT_IMGS, d.cat); }
     return true;
   }
@@ -24,11 +25,12 @@ const LIVE = (() => {
   }
   const ready = !on ? Promise.resolve(false) : (async () => {
     try {
-      const [sh, st] = await Promise.all([
+      const [sh, st, syn] = await Promise.all([
         fetch(`${SUPA.url}/rest/v1/shops?select=data&order=sort.asc,id.asc`, { headers }).then(r => r.ok ? r.json() : Promise.reject(r.status)),
-        fetch(`${SUPA.url}/rest/v1/settings?select=key,value&key=eq.cat_imgs`, { headers }).then(r => r.ok ? r.json() : []).catch(() => [])
+        fetch(`${SUPA.url}/rest/v1/settings?select=key,value&key=eq.cat_imgs`, { headers }).then(r => r.ok ? r.json() : []).catch(() => []),
+        fetch(`${SUPA.url}/rest/v1/search_synonyms?select=kind,target,words`, { headers }).then(r => r.ok ? r.json() : []).catch(() => [])
       ]);
-      const d = { shops: sh.map(x => x.data), cat: (st[0] || {}).value || null };
+      const d = { shops: sh.map(x => x.data), cat: (st[0] || {}).value || null, syn: syn.filter(x => (x.words || []).length) };
       const text = JSON.stringify(d);
       if (!d.shops.length || text === cached) return false;
       try { localStorage.setItem(KEY, text); } catch (e) {}

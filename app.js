@@ -100,6 +100,19 @@ function drawCats() {
   $("subs").innerHTML = cur ? cur.sub.map(s => `<span class="chip">${tx(s)}</span>`).join("") : "";
 }
 
+// 🔎 검색 동의어: 관리자가 업체 · 카테고리에 붙인 다른 이름 (universe44)
+function synOf(s) {
+  const L = window.SEARCH_SYN || []; if (!L.length) return "";
+  return L.filter(x => (x.kind === "shop" && x.target === s.id) || (x.kind === "cat" && x.target === s.cat)).map(x => (x.words || []).join(" ")).join(" ");
+}
+let missT = null, missLast = "";
+function missLater(q) {
+  clearTimeout(missT);
+  missT = setTimeout(() => {   // 다 친 다음(1.5초 멈춤)에 한 번만
+    const w = String(q || "").trim().toLowerCase(); if (w.length < 2 || w === missLast || state.q.trim().toLowerCase() !== w) return;
+    missLast = w; if (typeof LIVE !== "undefined" && LIVE.on && !LIVE.bot) LIVE.rpc("search_miss", { q: w, lg: typeof lang !== "undefined" ? lang : "" }).catch(() => {});
+  }, 1500);
+}
 function drawShops() {
   // 검색: 띄어쓰기·대소문자·베트남어 성조 무시, 여러 단어는 모두 들어간 업체만
   const norm = t => String(t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/\s+/g, "");
@@ -108,7 +121,7 @@ function drawShops() {
   const textOf = s => {
     const cat = catDetail(s.cat) || {}, grp = catGroup(s.cat);
     const city = CITIES.find(c => c.id === s.city) || {};
-    return norm(JSON.stringify([s.name, s.tags, s.menu.map(m => m.name), s.desc, s.recommend, s.address, cat.name, cat.sub, grp.name, city.name]));
+    return norm(JSON.stringify([s.name, s.tags, s.menu.map(m => m.name), s.desc, s.recommend, s.address, cat.name, cat.sub, grp.name, city.name, synOf(s)]));
   };
   // 검색어 전체가 그대로 들어간 업체가 있으면 그것만, 없으면 단어별로 모두 들어간 업체
   const wholeHit = full && SHOPS.some(s => textOf(s).includes(full));
@@ -135,6 +148,8 @@ function drawShops() {
   const grid = arr => `<div class="shop-grid">${arr.map(card).join("")}</div>`;
   // 도시를 골랐고 그 도시 안내 글이 있으면 목록 위에 띠 하나
   const gb = $("cityGuide"); if (gb) gb.innerHTML = state.city !== "all" ? guideBar(state.city) : "";
+  // 🔎 아무 업체에도 없는 말이면 '못 찾은 검색어'로 세요 (관리자 → 검색어 탭에서 동의어로 붙여요)
+  if (full && !SHOPS.some(s => { const t = textOf(s); return t.includes(full) || words.every(w => t.includes(w)); })) missLater(state.q);
   if (!list.length) { $("shopGrid").innerHTML = `<p class="empty">${state.openNow ? ui("op_none") : state.q ? ui("empty") : ui("comingSoon")}</p>`; return; }
   // 카테고리를 고르지 않았으면 카테고리별로 묶어서 보여줘요
   if (state.from) {

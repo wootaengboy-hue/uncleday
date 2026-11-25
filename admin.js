@@ -137,14 +137,14 @@ window.addEventListener("popstate", () => {
   try { if (t === "home") { PORTAL.view = v || "home"; if (TAB !== "home") showTab("home"); else portalGo(PORTAL.view, true); } else if (t === "chat" && v) { showTab("chat"); if (CHAT_CUR !== v) openThread(v).then(() => $("tab-chat").scrollIntoView({ block: "start" })); } else if (TABS_ALL.includes(t)) { if (t === "chat") CHAT_CUR = null; showTab(t); } }
   finally { NAV_QUIET = false; }
 });
-const TABS_ALL = ["home", "dash", "work", "bk", "chat", "crm", "settle", "shops", "rv", "uni", "acc"];
+const TABS_ALL = ["home", "dash", "work", "bk", "chat", "crm", "settle", "shops", "syn", "rv", "uni", "acc"];
 function showTab(t) {
   if (IS_FIELD() && !FIELD_TABS.includes(t)) t = "home";
   TAB = t;
   document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
   document.querySelectorAll("[data-pane]").forEach(p => p.hidden = p.dataset.pane !== t);
   navSync();
-  ({ home: drawPortal, dash: drawDash, work: drawWork, bk: drawBookings, chat: drawChat, crm: drawCrm, settle: drawSettle, shops: drawList, rv: drawReviews, uni: drawUniverse, acc: drawAccount })[t]();
+  ({ home: drawPortal, dash: drawDash, work: drawWork, bk: drawBookings, chat: drawChat, crm: drawCrm, settle: drawSettle, shops: drawList, syn: drawSyn, rv: drawReviews, uni: drawUniverse, acc: drawAccount })[t]();
   drawCounts();
 }
 function drawCounts() {
