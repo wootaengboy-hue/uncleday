@@ -814,6 +814,7 @@ function shopPmDraw(s) {
 function shopSvDraw(s) {
   const el = $("svEdit"); if (!el || typeof SURVEY_TPL === "undefined") return;
   const sv = s.survey || {}, off = sv.off || [], cu = sv.custom || [];
+  if (sv.req === undefined && ["derma", "surgery", "skin"].includes(s.cat)) sv.req = true;   // 피부 · 의료 가게는 기본으로 꼭 작성 (universe45)
   const base = (SURVEY_TPL[s.cat] || SURVEY_TPL.package).concat(["note"]).filter((x, i, a) => a.indexOf(x) === i);
   el.innerHTML = `<details ${cu.some(c => !(c.q && c.q.ko && c.q.en)) ? "open" : ""}><summary><b>📋 방문 전 질문</b> <span class="hint">${sv.on === false ? "꺼짐" : "켜짐"}${sv.req ? " · 꼭 작성" : ""} · 질문 ${surveyQs(s).length}개${cu.some(c => !(c.q && c.q.ko && c.q.en)) ? " · <b class='err-text'>번역 필요</b>" : ""}</span></summary>
     <p class="hint">예약이 확정되면 손님이 예약확인증에서 답해요 (건강 정보라 동의 필수 · 방문 30일 뒤 자동 삭제). 답은 이 가게 사장님 페이지와 관리자 예약 상세에서만 보여요.</p>
