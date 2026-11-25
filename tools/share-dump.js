@@ -17,6 +17,16 @@ eval(read("config.js") + read("data.js") + read("shops.js") + read("catimgs.js")
     const s = await fetch(`${SUPA.url}/rest/v1/settings?select=value&key=eq.cat_imgs`, { headers: h }).then(r => r.ok ? r.json() : []);
     if (s[0] && s[0].value) cat = { ...cat, ...s[0].value };
   } catch (e) { console.error("DB 읽기 실패, shops.js 사용:", e.message); }
+  // 🔎 해시태그: 검색 동의어 중 '보이기'를 켠 말 (universe44 · 46) → 업체 페이지에 #해시태그로
+  try {
+    const h = { apikey: SUPA.key }; if (/^eyJ/.test(SUPA.key)) h.Authorization = "Bearer " + SUPA.key;
+    const r = await fetch(`${SUPA.url}/rest/v1/search_synonyms?select=target,words,shown&kind=eq.shop`, { headers: h });
+    if (r.ok) { const syn = await r.json(); let n = 0;
+      shops = shops.map(x => { const y = syn.find(z => z.target === x.id); const w = y ? (y.shown || []).filter(t => (y.words || []).includes(t)).slice(0, 12) : [];
+        if (w.length) { n++; return { ...x, _hash: w }; } return x; });
+      console.log("해시태그 있는 업체", n, "곳"); }
+    else console.error("해시태그 없음 (universe46.sql 실행 전?)", r.status);
+  } catch (e) { console.error("해시태그 읽기 실패:", e.message); }
   // 관리자가 숨긴 미입점 가게 (universe20.sql)
   let hidden = [];
   try {

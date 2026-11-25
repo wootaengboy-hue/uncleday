@@ -28,9 +28,10 @@ const LIVE = (() => {
       const [sh, st, syn] = await Promise.all([
         fetch(`${SUPA.url}/rest/v1/shops?select=data&order=sort.asc,id.asc`, { headers }).then(r => r.ok ? r.json() : Promise.reject(r.status)),
         fetch(`${SUPA.url}/rest/v1/settings?select=key,value&key=eq.cat_imgs`, { headers }).then(r => r.ok ? r.json() : []).catch(() => []),
-        fetch(`${SUPA.url}/rest/v1/search_synonyms?select=kind,target,words`, { headers }).then(r => r.ok ? r.json() : []).catch(() => [])
+        fetch(`${SUPA.url}/rest/v1/search_synonyms?select=kind,target,words,shown`, { headers }).then(r => r.ok ? r.json()
+          : fetch(`${SUPA.url}/rest/v1/search_synonyms?select=kind,target,words`, { headers }).then(r => r.ok ? r.json() : [])).catch(() => [])
       ]);
-      const d = { shops: sh.map(x => x.data), cat: (st[0] || {}).value || null, syn: syn.filter(x => (x.words || []).length) };
+      const d = { shops: sh.map(x => x.data), cat: (st[0] || {}).value || null, syn: syn.filter(x => (x.words || []).length).map(x => ({ ...x, shown: (x.shown || []).filter(w => (x.words || []).includes(w)) })) };
       const text = JSON.stringify(d);
       if (!d.shops.length || text === cached) return false;
       try { localStorage.setItem(KEY, text); } catch (e) {}

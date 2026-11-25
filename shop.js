@@ -3,6 +3,13 @@
 const shopLink = id => `/s/${encodeURIComponent(id)}/`;
 
 // 업체 화면에서 '상담하기'를 누르면: 이 업체 문의 문구를 보여 주고 복사한 뒤, 카톡을 열어요 (카톡 창에 붙여넣기)
+// 🔎 해시태그: 관리자 검색어 탭에서 '👁 보이기'를 켠 동의어 (universe46) — 한국어 화면에서만
+function hashOf(shop) {
+  if (typeof lang !== "undefined" && lang !== "ko") return "";
+  const x = (window.SEARCH_SYN || []).find(y => y.kind === "shop" && y.target === shop.id);
+  const w = ((x && x.shown) || []).filter(Boolean).slice(0, 12); if (!w.length) return "";
+  return `<div class="hash-tags" aria-label="이렇게도 찾아요">${w.map(t => `<a class="hash" href="/?q=${encodeURIComponent(t)}">#${esc(t)}</a>`).join("")}</div>`;
+}
 function copyText(text) {
   let ok = false;
   try {
@@ -135,6 +142,7 @@ if (!shop) {
         <button type="button" class="tag share-btn" id="shareBtn">🔗 ${ui("shareBtn")}</button></div>
       <h1>${tx(shop.name)}${shop.best ? ` <span class="best-badge"><i>✦</i>${ui("certBadge")}<i>✦</i></span>` : ""}</h1>
       <div class="tags">${shop.tags.map(t => `<span class="tag">#${tx(t)}</span>`).join("")}</div>
+      ${hashOf(shop)}
     </div>
 
     <h2>${ui("overview")}</h2>

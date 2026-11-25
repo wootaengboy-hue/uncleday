@@ -3,6 +3,8 @@ window.SPA = true;
 const HOME_TITLE = document.title;
 const state = { cat: "", city: "all", q: "", from: null, fromName: "", openNow: false, outcall: false };
 // 도시 모아보기(c/<도시>/)에서 들어오면 그 도시를 먼저 보여 줘요: /?city=danang
+// 🔎 해시태그(#빈펄 …)를 누르면 /?q=빈펄 로 와요 → 그 말로 검색한 결과
+try { const qq = new URLSearchParams(location.search).get("q"); if (qq) state.q = qq.trim().slice(0, 60); } catch (e) {}
 try { const qc = new URLSearchParams(location.search).get("city"); if (qc && typeof CITIES !== "undefined" && CITIES.some(c => c.id === qc)) state.city = qc; } catch (e) {}
 
 // 두 지점 사이 거리(km)
@@ -168,6 +170,7 @@ function drawShops() {
   }
 }
 
+if (state.q) { $("search").value = state.q; setTimeout(() => { const g = $("shopGrid"); if (g) g.scrollIntoView({ block: "start" }); }, 300); }
 $("search").oninput = e => { state.q = e.target.value.trim(); if (!$("detail").hidden) location.hash = ""; drawShops(); };
 
 $("steps").innerHTML = STEPS.map(s => `<div class="card"><div class="big">${s.icon}</div><b>${tx(s.title)}</b><p>${tx(s.desc)}</p></div>`).join("");

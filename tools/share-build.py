@@ -1,6 +1,7 @@
 """공유 미리보기 만들기 2단계: 업체마다
    s/<id>/index.html (카톡·네이버가 읽는 미리보기 정보) 과 og/<id>.jpg (1200x630 미리보기 그림)을 만들어요.
    사용: python3 tools/share-build.py share.json"""
+from urllib.parse import quote
 import json, sys, os, io, html, hashlib, re, urllib.request, shutil
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
@@ -171,7 +172,9 @@ def build_page(shop, sid, title, desc, url, img):
     # 구조화 데이터 (schema.org) — 구글 정보는 넣지 않고 우리가 확인한 정보만
     ld = {"@context": "https://schema.org", "@type": SCHEMA_TYPE.get(shop.get("cat"), "HealthAndBeautyBusiness"),
           "name": name, "url": url, "image": img, "description": re.sub(r"\s+", " ", tx(shop.get("desc"))).strip() or desc}
-    if en and en != name: ld["alternateName"] = en
+    hashes = [h for h in (shop.get("_hash") or []) if h and h.strip()][:12]   # 🔎 검색 동의어 중 '보이기'를 켠 말
+    alts = ([en] if en and en != name else []) + [h for h in hashes if norm_n(h) != norm_n(name)]
+    if alts: ld["alternateName"] = alts[0] if len(alts) == 1 else alts
     if addr_ok: ld["address"] = {"@type": "PostalAddress", "streetAddress": addr_vi or addr_ko, "addressLocality": CITY_EN.get(shop.get("city"), ""), "addressCountry": "VN"}
     if shop.get("geo"): ld["geo"] = {"@type": "GeoCoordinates", "latitude": shop["geo"][0], "longitude": shop["geo"][1]}
     if shop.get("open") and shop.get("close"):
@@ -199,6 +202,7 @@ def build_page(shop, sid, title, desc, url, img):
 <p class="seo-sum" lang="en">{esc(sum_en)}</p>
 <p class="seo-date">정보 확인: {checked(shop)} · <a href="/c/{esc(shop.get('city') or '')}/">{esc(tx(city.get('name')))} 업체 모두 보기</a> · <a href="/en/s/{esc(sid)}/" lang="en" hreflang="en">English</a></p>
 <p>{esc(tx(city.get('name')))} · {esc(tx(cat.get('name')))}{' · ' + ' · '.join('#' + esc(tx(t)) for t in (shop.get('tags') or [])) if shop.get('tags') else ''}</p>
+{('<p class="seo-hash"><b>이렇게도 찾아요:</b> ' + ' '.join(f'<a href="/?q={quote(h)}">#{esc(h)}</a>' for h in hashes) + '</p>') if hashes else ''}
 {f'<p>{esc(tx(shop.get("desc")))}</p>' if tx(shop.get("desc")) else ''}
 {f'<p><b>이런 분께 추천해요:</b> {esc(tx(shop.get("recommend")))}</p>' if tx(shop.get("recommend")) else ''}
 <ul>{f'<li>📍 주소: {esc(addr_ko)}</li>' if addr_ok else ''}{f'<li>🕒 영업시간: {esc(hours)}</li>' if hours else ''}{f'<li>🗣️ 응대 언어: {esc(", ".join(langs.get(l, l) for l in shop["staffLangs"]))}</li>' if shop.get("staffLangs") else ''}<li>💬 한국어 카카오톡 상담 · 추가 요금 없이 업체 가격 그대로</li></ul>

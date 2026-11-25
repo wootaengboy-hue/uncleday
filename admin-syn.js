@@ -7,6 +7,8 @@ const SYN_STATE = {};   // "kind:target" → "wait" | "ok" | "fail"
 const synNorm = t => String(t || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d").replace(/\s+/g, "");
 const synKey = (k, t) => k + ":" + t;
 const synWords = (k, t) => ((SYN.find(x => x.kind === k && x.target === t) || {}).words || []);
+const synShown = (k, t) => ((SYN.find(x => x.kind === k && x.target === t) || {}).shown || []).filter(w => synWords(k, t).includes(w));
+const SYN_SHOW_MAX = 10;   // 업체 한 곳 해시태그는 10개까지 (너무 많으면 검색엔진이 도배로 봐요)
 
 async function synLoad() {
   SYN_ERR = "";
@@ -53,7 +55,8 @@ async function drawSyn() {
   const missOpts = T.map(t => `<option value="${t.kind}:${esc(t.id)}">${t.kind === "cat" ? "📁 " : ""}${esc(t.ko)}${t.en && t.en !== t.ko ? " · " + esc(t.en) : ""}</option>`).join("");
   SYN_MISS_V = miss;
   box.innerHTML = `<div class="syn">
-    <div class="syn-head"><h2>🔎 검색 동의어</h2><p>업체 · 카테고리의 다른 이름을 등록해요. 손님이 그 말로 검색해도 해당 업체가 나와요. <small>(띄어쓰기 · 대소문자 · 베트남어 성조는 원래 무시돼요)</small></p></div>
+    <div class="syn-head"><h2>🔎 검색 동의어</h2><p>업체 · 카테고리의 다른 이름을 등록해요. 손님이 그 말로 검색해도 해당 업체가 나와요. <small>(띄어쓰기 · 대소문자 · 베트남어 성조는 원래 무시돼요)</small></p>
+      <p class="syn-howto"><b>#</b> 표시가 붙은 초록 칩은 업체 상세 화면과 구글 · 네이버용 업체 페이지에 <b>#해시태그</b>로 보여요. 칩 앞 <b>👁</b>을 누르면 켜고 꺼요. 오타 · 줄임말은 끄고, <b>‘나트랑 커플 스파’</b>처럼 실제 검색어 모양을 켜 두면 외부 검색에 잘 걸려요. (업체마다 ${SYN_SHOW_MAX}개까지)</p></div>
     ${miss.length ? `<div class="syn-miss"><div class="syn-miss-h"><b>🙈 손님이 검색했는데 못 찾은 말</b><small>최근 30일 · 많은 순 · 눌러서 동의어로 붙이기</small></div>
       <div class="syn-miss-list">${miss.slice(0, 40).map((m, i) => `<button type="button" class="syn-mchip" data-mi="${i}">${esc(m.q)} <i>${m.n}회</i></button>`).join("")}</div>
       <div class="syn-pick" id="synPick" hidden><span>‘<b id="synPickW"></b>’ 를 어디에 붙일까요?</span><select id="synPickT"><option value="">고르기…</option>${missOpts}</select><button class="btn main" id="synPickGo">붙이기</button><button class="btn" id="synPickX">닫기</button></div></div>` : ""}
@@ -70,20 +73,23 @@ async function drawSyn() {
 
 function synRow(t) {
   const w = synWords(t.kind, t.id), st = SYN_STATE[synKey(t.kind, t.id)];
+  const sh = synShown(t.kind, t.id);
   const where = t.kind === "cat" ? ["홈 검색 · 이 카테고리 업체 전부", "검색 결과 · 업체"] : ["홈 검색 · 이 업체", "검색 결과 · 업체"];
   const mark = st === "wait" ? `<i class="wait">◌</i>` : st === "fail" ? `<i class="fail">!</i>` : `<i class="ok">✓</i>`;
   return `<div class="syn-tr" data-k="${t.kind}" data-t="${esc(t.id)}">
     <div class="syn-name"><small>${t.kind === "cat" ? "카테고리" : "업체"}</small><b>${esc(t.ko)}</b>${t.en && t.en !== t.ko ? `<span>${esc(t.en)}</span>` : ""}<small class="syn-sub">${esc(t.sub)}</small>${t.hangulMissing && !w.length ? `<em class="syn-tip">한글 이름이 없어요 · 한글로 검색할 말을 붙여 주세요</em>` : ""}</div>
-    <div class="syn-chips">${w.map(x => `<span class="syn-chip">${esc(x)}<button type="button" data-del="${esc(x)}" aria-label="${esc(x)} 지우기">×</button></span>`).join("")}
+    <div class="syn-chips">${w.map(x => { const on = t.kind === "shop" && sh.includes(x);
+        return `<span class="syn-chip ${on ? "shown" : ""}">${t.kind === "shop" ? `<button type="button" class="syn-eye" data-eye="${esc(x)}" title="${on ? "업체 페이지에 #해시태그로 보여요 · 누르면 숨김" : "사이트 안 검색에만 써요 · 누르면 #해시태그로 보이기"}" aria-pressed="${on}">${on ? "#" : "👁"}</button>` : ""}${esc(x)}<button type="button" data-del="${esc(x)}" aria-label="${esc(x)} 지우기">×</button></span>`; }).join("")}
       <span class="syn-add"><button type="button" class="syn-addb">＋ 추가</button><input class="syn-in" placeholder="새 이름 · Enter (쉼표로 여러 개)" hidden></span></div>
-    <div class="syn-where">${w.length ? where.map(x => `<span>${mark} ${x}</span>`).join("") : `<span class="hint">동의어 없음</span>`}</div>
+    <div class="syn-where">${w.length ? where.map(x => `<span>${mark} ${x}</span>`).join("") + (t.kind === "shop" ? (sh.length ? `<span>${mark} 업체 페이지 · #해시태그 ${sh.length}개 <small>(구글 · 네이버)</small></span>` : `<span class="hint">#해시태그 없음</span>`) : "") : `<span class="hint">동의어 없음</span>`}</div>
     <div>${w.length ? `<button type="button" class="syn-clear" title="동의어 모두 지우기">🗑</button>` : ""}</div></div>`;
 }
 
-async function synSave(kind, target, words, msg) {
+async function synSave(kind, target, words, msg, shown) {
   const k = synKey(kind, target); SYN_STATE[k] = "wait";
   const old = SYN.find(x => x.kind === kind && x.target === target);
-  const row = { kind, target, words, updated_at: new Date().toISOString(), updated_by: (ME && ME.email) || null };
+  const sh = (shown || synShown(kind, target)).filter(x => words.includes(x));
+  const row = { kind, target, words, shown: sh, updated_at: new Date().toISOString(), updated_by: (ME && ME.email) || null };
   if (old) Object.assign(old, row); else SYN.push(row);
   drawSyn();
   const r = await sb.from("search_synonyms").upsert(row);
@@ -125,6 +131,11 @@ function synBind(box) {
       if (e.key === "Enter") { e.preventDefault(); const v = inp.value; inp.value = ""; if (v.trim()) synAddWords(kind, target, v); }
     };
     inp.onblur = () => { if (!inp.value.trim()) { inp.hidden = true; b.hidden = false; } };
+    row.querySelectorAll("[data-eye]").forEach(x => x.onclick = () => {
+      const w = x.dataset.eye, cur = synShown(kind, target), on = cur.includes(w);
+      if (!on && cur.length >= SYN_SHOW_MAX) return toast(`해시태그는 업체마다 ${SYN_SHOW_MAX}개까지예요 · 너무 많으면 검색엔진이 도배로 봐요`, 4200);
+      synSave(kind, target, synWords(kind, target), on ? `‘${w}’ 해시태그를 숨겼어요 (검색에는 계속 써요)` : `‘${w}’ 를 #해시태그로 보여요`, on ? cur.filter(y => y !== w) : cur.concat(w));
+    });
     row.querySelectorAll("[data-del]").forEach(x => x.onclick = () => synSave(kind, target, synWords(kind, target).filter(w => w !== x.dataset.del), `‘${x.dataset.del}’ 뺐어요`));
     const c = row.querySelector(".syn-clear");
     if (c) c.onclick = () => confirmBox("이 항목의 동의어를 모두 지울까요?", () => synSave(kind, target, [], "동의어를 모두 지웠어요"), synWords(kind, target).join(", "));
