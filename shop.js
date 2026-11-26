@@ -248,6 +248,7 @@ if (!shop) {
       <label>${ui("fNote")}<textarea name="note" rows="3"></textarea></label>
       <label>${ui("fCoupon")}<input name="coupon" maxlength="20" autocomplete="off" style="text-transform:uppercase" placeholder="UD……"></label>
       <label class="mk-ok"><input type="checkbox" name="marketing" value="1"><span>${ui("fMarketing")}</span></label>
+      <div class="bk-total" id="bkTotal" hidden></div>
       <button class="btn big-btn" type="submit">${ui("bookBtn")}</button>
       <small>${ui("notice")}</small>
     </form>
@@ -400,8 +401,16 @@ ${f.text}
     if (pe) { pe.hidden = !pf && !ex.length && !tips.length; const L = [];
       if (pf) L.push("🎁 " + pmLine(pf.p, shop) + (pf.cut && !ex.length ? " → " + ui("pm_est") + ": " + money(pf.price * n) : ""));
       tips.forEach(p => L.push("💡 " + pmLine(p, shop)));
-      if (ex.length && base) L.push(`💵 ${ui("ex_total")}: ₫${base.toLocaleString("en-US")}${ex.map(x => ` + ${x.n} ₫${x.v.toLocaleString("en-US")}`).join("")}${n > 1 ? ` × ${n}` : ""} = ${money((base + ex.reduce((a, x) => a + x.v, 0)) * n)}`);
-      pe.textContent = L.join("\n"); pe.style.whiteSpace = "pre-line"; }
+      pe.textContent = L.join("\n"); pe.style.whiteSpace = "pre-line"; pe.hidden = !L.length; }
+    // 🧾 예상 결제 금액 (가격이 정해진 메뉴만 · 상담 후 안내 메뉴는 안 보여요)
+    const bt = $("bkTotal"), list = +m0.price || 0;
+    if (bt) { bt.hidden = !list; if (list) { const f = v => "₫" + Math.round(v).toLocaleString("en-US"), cut = pf && pf.cut ? pf.cut : 0, exs = ex.reduce((a, x) => a + x.v, 0), tot = (list - cut + exs) * n;
+      bt.innerHTML = `<b class="bt-h">🧾 ${ui("tot_title")}</b>
+        <div class="bt-r"><span>${esc(tx(m0.name))}${m0.min ? ` · ${m0.min} ${ui("min")}` : ""}</span><span>${f(list)}${n > 1 ? ` × ${n}` : ""} = ${f(list * n)}</span></div>
+        ${cut ? `<div class="bt-r cut"><span>🎁 ${esc(pmName(pf.p) || ui("tot_disc"))} (${esc(pmTag(pf.p))})</span><span>− ${f(cut * n)}</span></div>` : ""}
+        ${ex.map(x => `<div class="bt-r ex"><span>+ ${esc(x.n)} <small>${ui("ex_noDisc")}</small></span><span>${f(x.v)}${n > 1 ? ` × ${n}` : ""} = ${f(x.v * n)}</span></div>`).join("")}
+        <div class="bt-r sum"><span>${ui("tot_sum")}</span><span>${money(tot)}</span></div>
+        <small class="bt-n">${ui("tot_note")}</small>`; } }
   }
   function drawCal() {
     const y = view.getFullYear(), m = view.getMonth();
