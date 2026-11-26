@@ -227,6 +227,7 @@ function mqDraw() {
         ${(MQ.pasted || []).length ? `<div class="mq-uprow"><button class="btn main" id="mqPasteGo">붙여 넣은 ${MQ.pasted.length}장 검수에 올리기</button><button class="btn" id="mqPasteX">모두 비우기</button></div>` : ""}`
       : `<div class="mq-uprow"><input id="mqUrl" placeholder="이미지 주소 붙여넣기 (https://… .jpg · .png · .webp) · 여러 개면 줄바꿈이나 띄어쓰기로"><button class="btn main" id="mqUrlGo">가져와서 검수에 올리기</button></div>
         <small class="hint">사진 위에서 오른쪽 클릭 → '이미지 주소 복사'로 얻은 주소를 넣어요. 엉클데이 저장소로 복사해 와서 원본 · 작업본을 만들어요 (원래 주소도 함께 기록).</small>`}
+      <label class="mq-stamp"><input type="checkbox" id="mqStampOn" ${mqStampOn() ? "checked" : ""}> 🏷️ 작업본에 <b>업체명 + 엉클데이 로고</b> 넣기 <small>(원본은 그대로 · 손님에게는 작업본이 나가요)</small></label>
       <small class="mq-rule">ℹ️ <b>홈페이지 후보</b>는 검수만 하고 공개되지 않아요. 업체가 허락하면 카드에서 출처를 <b>업체 제공</b>으로 바꾸면 공개할 수 있어요.</small>
     </div>
     <div class="vf-bar"><select id="mqShop"><option value="">모든 업체</option>${shopOpts}</select>
@@ -248,7 +249,7 @@ function mqCard(m) {
     <div class="mq-act">
       <div class="mq-iss">${Object.entries(MQ_ISS).map(([k, t]) => `<label class="${(m.issues || []).includes(k) ? "on" : ""}"><input type="checkbox" data-mqis="${k}" ${(m.issues || []).includes(k) ? "checked" : ""}>${t}</label>`).join("")}</div>
       ${m.note ? `<p class="mq-note">🤖 ${esc(m.note)}</p>` : ""}
-      <div class="mq-btns">${m.work_url ? `<button class="btn sm" data-mqai ${MQ.busy[m.id] ? "disabled" : ""}>${MQ.busy[m.id] ? "검사 중…" : "🤖 AI 검사"}</button>` : ""}
+      <div class="mq-btns">${m.orig_url && m.orig_url.includes("/object/public/images/") ? `<button class="btn sm" data-mqstamp title="원본에서 작업본을 다시 만들어요">🏷️ 로고 다시 넣기</button>` : ""}${m.work_url ? `<button class="btn sm" data-mqai ${MQ.busy[m.id] ? "disabled" : ""}>${MQ.busy[m.id] ? "검사 중…" : "🤖 AI 검사"}</button>` : ""}
         <button class="btn sm ${m.verdict === "pass" ? "main" : ""}" data-mqv="pass">✓ 통과</button><button class="btn sm ${m.verdict === "issue" ? "bad" : ""}" data-mqv="issue">⚠ 문제</button><button class="btn sm" data-mqv="hold">⏸ 보류</button>
         <span style="flex:1"></span>${can && !main ? `<button class="btn sm main" data-mqmain>★ 대표 사진으로</button>` : ""}${main ? `<button class="btn sm" data-mqunmain>대표에서 내리기</button>` : ""}<button class="btn sm" data-mqdel title="기록 지우기">🗑</button></div>
     </div></div>`;
@@ -282,9 +283,40 @@ async function mqMain(m, on) {
 }
 
 // 사진 한 장 → 원본(긴 쪽 2400) · 작업본(1600) 저장 → 검수 목록에
+// 🏷️ 작업본에 업체명 + 엉클데이 로고 넣기 (원본은 그대로 · 실제 노출은 작업본)
+let MQ_LOGO = null;
+const mqLogo = () => MQ_LOGO || (MQ_LOGO = new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => no(new Error("로고를 못 불러왔어요")); i.src = "images/logo-t.png"; }));
+function mqLoadImg(src) { return new Promise((ok, no) => { const i = new Image(); i.crossOrigin = "anonymous"; i.onload = () => ok(i); i.onerror = () => no(new Error("사진을 열지 못했어요")); i.src = src; }); }
+async function mqStamp(blob, shopName) {
+  const u = URL.createObjectURL(blob);
+  try {
+    const [img, logo] = await Promise.all([mqLoadImg(u), mqLogo()]);
+    const w = img.width, h = img.height, cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+    const x = cv.getContext("2d"); x.drawImage(img, 0, 0);
+    const u0 = Math.min(w, h) / 100;                    // 기준 크기 (짧은 쪽의 1%)
+    const pad = 3.2 * u0, bandH = 14 * u0;
+    // 아래쪽 어둡게 (글자가 잘 보이게)
+    const g = x.createLinearGradient(0, h - bandH * 1.9, 0, h); g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,0,.62)");
+    x.fillStyle = g; x.fillRect(0, h - bandH * 1.9, w, bandH * 1.9);
+    // 오른쪽 아래: 하얀 바탕 위 엉클데이 로고
+    const lh = 8.2 * u0, lw = lh * logo.width / logo.height, lx = w - pad - lw - 1.6 * u0, ly = h - pad - lh - 1.2 * u0;
+    x.fillStyle = "rgba(255,255,255,.92)"; const r = 1.8 * u0, bx = lx - 1.6 * u0, by = ly - 1.2 * u0, bw = lw + 3.2 * u0, bh = lh + 2.4 * u0;
+    x.beginPath(); x.moveTo(bx + r, by); x.arcTo(bx + bw, by, bx + bw, by + bh, r); x.arcTo(bx + bw, by + bh, bx, by + bh, r); x.arcTo(bx, by + bh, bx, by, r); x.arcTo(bx, by, bx + bw, by, r); x.fill();
+    x.drawImage(logo, lx, ly, lw, lh);
+    // 왼쪽 아래: 업체명
+    let fs = 5.4 * u0; x.font = `800 ${fs}px "Pretendard","Noto Sans KR","Apple SD Gothic Neo",sans-serif`;
+    const maxW = lx - pad * 2.4; while (x.measureText(shopName).width > maxW && fs > 2.6 * u0) { fs -= 0.3 * u0; x.font = `800 ${fs}px "Pretendard","Noto Sans KR","Apple SD Gothic Neo",sans-serif`; }
+    x.fillStyle = "#fff"; x.shadowColor = "rgba(0,0,0,.55)"; x.shadowBlur = 1.2 * u0; x.textBaseline = "alphabetic";
+    x.fillText(shopName, pad, h - pad - 0.8 * u0, maxW);
+    return await new Promise((ok, no) => cv.toBlob(b => b ? ok(b) : no(new Error("작업본을 만들지 못했어요")), "image/jpeg", 0.86));
+  } finally { URL.revokeObjectURL(u); }
+}
+const mqStampOn = () => { try { return localStorage.getItem("mqStamp") !== "0"; } catch (e) { return true; } };
+
 async function mqUpOne(file, p, from) {
   const tag = `media/${p.shop}/${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
-  const [o, w] = await Promise.all([mqShrink(file, 2400), mqShrink(file, 1600)]);
+  let [o, w] = await Promise.all([mqShrink(file, 2400), mqShrink(file, 1600)]);
+  if (mqStampOn()) { const s = vfShop(p.shop); try { w = await mqStamp(w, s ? vfName(s) : p.shop); } catch (e) { toast("로고를 넣지 못해 원래 사진으로 올려요: " + e.message, 4000); } }
   const [ou, wu] = await Promise.all([mqPut(o, tag + "-o.jpg"), mqPut(w, tag + "-w.jpg")]);
   return mqAdd({ shop_id: p.shop, source: p.src, orig_url: ou, work_url: wu, note: from ? (/^https?:/.test(from) ? "원래 주소: " + from : from) : null });
 }
@@ -309,6 +341,7 @@ function mqBind(el) {
   // 사진 크기 표시
   el.querySelectorAll("img[data-wh]").forEach(im => { const f = () => { const w = im.closest("div").parentElement.querySelector(".mq-wh"); if (w && im.naturalWidth) w.textContent = `${im.naturalWidth}×${im.naturalHeight}${im.naturalWidth < 800 ? " · 작아요" : ""}`; }; if (im.complete) f(); else im.onload = f; });
   el.querySelectorAll("[data-mqmode]").forEach(b => b.onclick = () => { MQ.mode = b.dataset.mqmode; MQ.src = ""; try { sessionStorage.setItem("mqMode", MQ.mode); } catch (e) {} mqDraw(); });
+  const st = el.querySelector("#mqStampOn"); if (st) st.onchange = () => { try { localStorage.setItem("mqStamp", st.checked ? "1" : "0"); } catch (e) {} };
   const us = el.querySelector("#mqUpSrc"); if (us) us.onchange = () => { MQ.src = us.value; };
   const us2 = el.querySelector("#mqUpShop"); if (us2) us2.onchange = () => { MQ.upShop = us2.value; };
   if (MQ.upShop && us2) us2.value = MQ.upShop;
@@ -364,7 +397,7 @@ function mqBind(el) {
       const v = b.dataset.mqv;
       if (v === "issue" && !(m.issues || []).length) return toast("어떤 문제인지 아래에서 하나 이상 골라 주세요");
       if (v === "pass" && (m.issues || []).some(k => ["fake", "watermark", "body", "off"].includes(k))) return toast("‘날조 · 워터마크 · 노출 · 관계없음’ 표시가 있으면 통과할 수 없어요", 4200);
-      MQ.keep.add(m.id); mqUpd(m, { verdict: v }, MQ_V[v][0] + " 으로 판정했어요");
+      MQ.keep.add(m.id); mqUpd(m, { verdict: v }, `${MQ_V[v][0]} 으로 판정했어요 · 다른 탭을 누르면 '${{ pass: "통과", issue: "문제", hold: "보류" }[v]}' 탭에서 볼 수 있어요`);
       if (v !== "pass") { const s = vfShop(m.shop_id); if (s && s.img === m.work_url) mqMain(m, false); }
     });
     card.querySelectorAll("[data-mqis]").forEach(c => c.onchange = () => { const k = c.dataset.mqis; const is = new Set(m.issues || []); c.checked ? is.add(k) : is.delete(k); mqUpd(m, { issues: [...is] }); });
@@ -372,6 +405,17 @@ function mqBind(el) {
       if (sc.value === "owner" && !vfSrc(m.shop_id).photo_ok) toast("업체 제공으로 바꿨어요 · 업체 정보 검수에서 '사진 사용 허락'을 체크해야 공개돼요", 4500);
       mqUpd(m, { source: sc.value }, `출처를 ${MQ_SRC[sc.value][1]} 로 바꿨어요`);
       if (sc.value === "site") { const s2 = vfShop(m.shop_id); if (s2 && s2.img === m.work_url) mqMain(m, false); } };
+    const rs = card.querySelector("[data-mqstamp]"); if (rs) rs.onclick = async () => {
+      rs.disabled = true; rs.textContent = "만드는 중…";
+      try {
+        const s2 = vfShop(m.shop_id), blob = await (await fetch(m.orig_url)).blob();
+        const w = await mqStamp(await mqShrink(blob, 1600), s2 ? vfName(s2) : m.shop_id);
+        const wu = await mqPut(w, `media/${m.shop_id}/${Date.now().toString(36)}-w.jpg`), old = m.work_url, wasMain = s2 && s2.img === old;
+        await mqUpd(m, { work_url: wu }, "작업본을 다시 만들었어요 (업체명 + 로고)");
+        if (wasMain) { s2.img = wu; try { await dbSaveShop(s2); } catch (e) { dbErr(e, "대표 사진 바꾸기"); } }
+        if (old && old.includes("/object/public/images/media/")) sb.storage.from("images").remove([old.split("/object/public/images/")[1]]);
+      } catch (e) { dbErr(e, "작업본 다시 만들기"); mqDraw(); }
+    };
     const ai = card.querySelector("[data-mqai]"); if (ai) ai.onclick = () => mqAi(m);
     const mm = card.querySelector("[data-mqmain]"); if (mm) mm.onclick = () => mqMain(m, true);
     const um = card.querySelector("[data-mqunmain]"); if (um) um.onclick = () => mqMain(m, false);
