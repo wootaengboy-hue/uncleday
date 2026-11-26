@@ -408,7 +408,10 @@ async function vfExtract(s, url, isImg) {
     const c = isImg ? { ...prev, menu: (prev.menu || []).concat((j.menu || []).filter(m => !(prev.menu || []).some(o => o.name === m.name && o.minutes === m.minutes && o.price === m.price))), src: (prev.src || []).concat(j.src || []), note: [prev.note, j.note].filter(Boolean).join(" · ") }
       : vfMerge(prev, vfCrawled(j, url));
     delete VF.busy;
-    await vfSave(s.id, { crawled: c, crawled_at: new Date().toISOString(), review: "todo" }, (!isImg && !(j.menu || []).length && (c.menu || []).length) ? `이번엔 메뉴를 못 찾아서 예전에 모은 메뉴 ${c.menu.length}개를 그대로 뒀어요 — 메뉴 페이지 링크나 📋 가격표 캡처로 다시 해 보세요` : `가져왔어요 · 메뉴 ${(j.menu || []).length}개${j.hours ? " · 영업시간" : ""}${j.address ? " · 주소" : ""} — 비교해서 넣어 주세요`);
+    // 홈페이지 링크가 아직 없으면, 정보를 실제로 가져온 사이트 주소를 홈페이지로 같이 저장해요 (페이스북 · 인스타 · 우리 저장소 사진은 빼요)
+    const xs = vfSrc(s.id), got = (j.menu || []).length || j.hours || j.address || j.phone;
+    let web = null; try { if (!isImg && !xs.web && got && !/facebook\.com|fb\.com|fb\.me|instagram\.com|supabase\.co/i.test(url)) web = new URL(url).origin + "/"; } catch (e) {}
+    await vfSave(s.id, { crawled: c, crawled_at: new Date().toISOString(), review: "todo", ...(web ? { web } : {}) }, (web ? `🌐 홈페이지 링크도 저장했어요 (${web.replace(/^https?:\/\//, "")}) · ` : "") + ((!isImg && !(j.menu || []).length && (c.menu || []).length) ? `이번엔 메뉴를 못 찾아서 예전에 모은 메뉴 ${c.menu.length}개를 그대로 뒀어요 — 메뉴 페이지 링크나 📋 가격표 캡처로 다시 해 보세요` : `가져왔어요 · 메뉴 ${(j.menu || []).length}개${j.hours ? " · 영업시간" : ""}${j.address ? " · 주소" : ""} — 비교해서 넣어 주세요`));
   } catch (e) { delete VF.busy; vfDraw(); toast("가져오기 실패: " + e.message, 6000); }
 }
 
