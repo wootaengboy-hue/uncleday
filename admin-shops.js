@@ -364,7 +364,7 @@ function openEditor(id, preset, opts = {}) {
     // 칸에 맞추기 미리 보기 (손님 화면과 같은 규칙)
     [$("fpCard"), $("fpHero")].forEach(im => { im.dataset.fit = s.imgFit || ""; im.style.objectFit = ""; im.style.background = ""; const go = () => { if (typeof udFitImg === "function") udFitImg(im); }; if (im.complete) go(); else im.onload = go; });
     { const im = $("focusImg"), f = () => { if (!im.naturalWidth) return; const r = im.naturalWidth / im.naturalHeight, loss = Math.round((1 - Math.min(r / (16 / 9), (16 / 9) / r)) * 100);
-        $("fitInfo").textContent = `사진 ${im.naturalWidth}×${im.naturalHeight} · 상세 화면(16:9)에 꽉 채우면 ${loss}% 잘려요${loss >= 22 && !s.imgFit ? " → 자동으로 전체 보이기" : ""}`; }; if (im.complete) f(); else im.addEventListener("load", f, { once: true }); }
+        $("fitInfo").textContent = `사진 ${im.naturalWidth}×${im.naturalHeight} · 상세 화면(16:9)에 꽉 채우면 ${loss}% 잘려요${loss >= 22 && !s.imgFit ? " → 자동: 사진이면 꽉 채우고, 로고 · 그래픽이면 전체 보이기" : ""}`; }; if (im.complete) f(); else im.addEventListener("load", f, { once: true }); }
     const [x, y] = pos.split(" ");
     $("focusDot").style.left = x; $("focusDot").style.top = y;
   }

@@ -229,23 +229,31 @@ async function grvPlace(shopId) {
     const j = r.ok ? await r.json() : []; return (j[0] && j[0].gp) || null; } catch (e) { return null; }
 }
 
-// 🖼️ 사진 비율 맞추기 — 칸(16:9 · 카드)과 사진 비율이 많이 다르면 (로고 · 정사각 · 세로 사진) 자르지 않고 전체를 보여 주고,
-//    남는 여백은 사진 가장자리 색으로 채워요. 손님 화면 대표 사진 · 목록 카드 · 예약 화면에 모두 적용
-function udFitColor(src) {
-  return new Promise(ok => { const i = new Image(); i.crossOrigin = "anonymous";
-    i.onload = () => { try { const c = document.createElement("canvas"), W = 24, H = 24; c.width = W; c.height = H; const x = c.getContext("2d"); x.drawImage(i, 0, 0, W, H);
-      const d = x.getImageData(0, 0, W, H).data; let r = 0, g = 0, b = 0, n = 0;
-      for (let y = 0; y < H; y++) for (let k = 0; k < W; k++) { if (y > 1 && y < H - 2 && k > 1 && k < W - 2) continue; const p = (y * W + k) * 4; r += d[p]; g += d[p + 1]; b += d[p + 2]; n++; }
-      ok(`rgb(${Math.round(r / n)},${Math.round(g / n)},${Math.round(b / n)})`); } catch (e) { ok(null); } };
+// 🖼️ 사진 비율 맞추기 — 칸(16:9 · 카드)에 꽉 채우는 게 기본이에요 (사진은 조금 잘려도 꽉 찬 게 보기 좋아요).
+//    단, 많이 잘리는 '로고 · 그래픽'(색이 적고 바탕이 한 색)만 자르지 않고 전체를 보여 주고, 남는 여백은 로고 바탕색으로 채워요.
+//    업체 편집 '칸에 맞추기'에서 항상 전체(contain) · 항상 꽉(cover)을 고르면 그대로 따라요.
+const UD_FIT = {};
+function udFitLook(src) {
+  if (UD_FIT[src]) return UD_FIT[src];
+  return UD_FIT[src] = new Promise(ok => { const i = new Image(); i.crossOrigin = "anonymous";
+    i.onload = () => { try { const c = document.createElement("canvas"), N = 48; c.width = N; c.height = N; const x = c.getContext("2d"); x.drawImage(i, 0, 0, N, N);
+      const d = x.getImageData(0, 0, N, N).data, q = new Set(); let r = 0, g = 0, b = 0, n = 0;
+      for (let k = 0; k < d.length; k += 4) q.add((d[k] >> 4) * 256 + (d[k + 1] >> 4) * 16 + (d[k + 2] >> 4));
+      for (let y = 0; y < N; y++) for (let k = 0; k < N; k++) { if (y > 1 && y < N - 2 && k > 1 && k < N - 2) continue; const p = (y * N + k) * 4; r += d[p]; g += d[p + 1]; b += d[p + 2]; n++; }
+      r /= n; g /= n; b /= n; let same = 0; for (let k = 0; k < d.length; k += 4) if (Math.abs(d[k] - r) + Math.abs(d[k + 1] - g) + Math.abs(d[k + 2] - b) < 60) same++;
+      const bg = same / (N * N); ok({ logo: (q.size < 140 && bg > 0.35) || q.size < 70, edge: `rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})` }); } catch (e) { ok(null); } };
     i.onerror = () => ok(null); i.src = src; });
 }
+function udContain(im, color) { im.dataset.fit = "done"; im.style.objectFit = "contain"; im.style.objectPosition = "50% 50%"; im.style.background = color || "#f3efe6"; }
 function udFitImg(im) {
-  if (!im || !im.naturalWidth || im.dataset.fit === "done" || im.dataset.fit === "cover") return;
+  if (!im || !im.naturalWidth || im.dataset.fit === "done" || im.dataset.fit === "cover" || im.dataset.fit === "look") return;
+  const src = im.currentSrc || im.src;
+  if (im.dataset.fit === "contain") { udContain(im); udFitLook(src).then(a => { if (a) im.style.background = a.edge; }); return; }
   const W = im.clientWidth, H = im.clientHeight; if (!W || !H) return;
   const nr = im.naturalWidth / im.naturalHeight, tr = W / H, loss = 1 - Math.min(nr / tr, tr / nr);
-  if (loss < 0.22 && im.dataset.fit !== "contain") return;   // 22% 넘게 잘리면 전체 보이기
-  im.dataset.fit = "done"; im.style.objectFit = "contain"; im.style.objectPosition = "50% 50%"; im.style.background = "#f3efe6";
-  udFitColor(im.currentSrc || im.src).then(c => { if (c) im.style.background = c; });
+  if (loss < 0.22) return;   // 조금 잘리는 건 꽉 채워요
+  im.dataset.fit = "look";
+  udFitLook(src).then(a => { if (a && a.logo) udContain(im, a.edge); else im.dataset.fit = ""; });
 }
 document.addEventListener("load", e => { const t = e.target; if (t && t.tagName === "IMG" && t.matches(".hero, .shop img, .shop-media img, .v-img, .mq-lv img, .fp img")) udFitImg(t); }, true);
-window.addEventListener("resize", () => document.querySelectorAll(".hero, .shop-media img, .v-img").forEach(im => { if (im.dataset.fit !== "done") udFitImg(im); }));
+window.addEventListener("resize", () => document.querySelectorAll(".hero, .shop-media img, .v-img").forEach(im => { if (!im.dataset.fit) udFitImg(im); }));
