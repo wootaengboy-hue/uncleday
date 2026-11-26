@@ -121,7 +121,7 @@ if (!shop) {
   { const other = lang === "ko" ? (shop.name.en || "") : (shop.name.ko || ""), main = tx(shop.name);
     if (!(window.SHOP_ID && lang === "ko")) document.title = main + (other && other.replace(/\s/g, "").toLowerCase() !== main.replace(/\s/g, "").toLowerCase() ? ` (${other})` : "") + " | " + tx(SITE.name); }
   const cat = catGroup(shop.cat);
-  const img = shop.img ? `<img class="hero" src="${shop.img}" alt="" decoding="async" style="object-position:${shop.imgPos || "50% 50%"}">` : phCard(shop, true);
+  const img = shop.img ? `<img class="hero" src="${shop.img}" alt="" decoding="async" data-fit="${shop.imgFit || ""}" style="object-position:${shop.imgPos || "50% 50%"}">` : phCard(shop, true);
   const closed = shop.closed.length ? shop.closed.map(d => ui("days")[d]).join(", ") : ui("none");
   const staff = shop.staffLangs.length ? shop.staffLangs.map(l => ui("lang_" + l)).join(", ") : ui("tbd");
   const revs = (shop.userReviews || []).slice().sort((a, b) => (b.date || "").localeCompare(a.date || ""));

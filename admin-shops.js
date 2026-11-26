@@ -222,6 +222,8 @@ function openEditor(id, preset, opts = {}) {
             <div><small>상세 화면에서는</small><div class="fp hero"><img id="fpHero" alt=""></div></div>
             <button class="btn sm" id="focusReset" type="button">가운데로 되돌리기</button>
           </div>
+          <div class="fit-row"><b>칸에 맞추기</b>${[["", "자동 (많이 잘리면 전체 보이기)"], ["contain", "🖼️ 항상 전체 보이기"], ["cover", "✂️ 항상 꽉 채우기 (잘림)"]].map(([k, t]) => `<label><input type="radio" name="imgFit" value="${k}" ${(s.imgFit || "") === k ? "checked" : ""}> ${t}</label>`).join("")}</div>
+          <small class="hint" id="fitInfo"></small>
         </div>
         <label class="f"><span>또는 사진 주소 직접 입력</span><input data-k="img" id="imgPath" value="${esc(s.img)}" placeholder="https://… 또는 images/파일명.jpg"></label>
       </div>
@@ -359,6 +361,10 @@ function openEditor(id, preset, opts = {}) {
     const src = imgSrc(s.img);
     if ($("focusImg").getAttribute("src") !== src) { $("focusImg").src = src; $("fpCard").src = src; $("fpHero").src = src; }
     $("fpCard").style.objectPosition = pos; $("fpHero").style.objectPosition = pos;
+    // 칸에 맞추기 미리 보기 (손님 화면과 같은 규칙)
+    [$("fpCard"), $("fpHero")].forEach(im => { im.dataset.fit = s.imgFit || ""; im.style.objectFit = ""; im.style.background = ""; const go = () => { if (typeof udFitImg === "function") udFitImg(im); }; if (im.complete) go(); else im.onload = go; });
+    { const im = $("focusImg"), f = () => { if (!im.naturalWidth) return; const r = im.naturalWidth / im.naturalHeight, loss = Math.round((1 - Math.min(r / (16 / 9), (16 / 9) / r)) * 100);
+        $("fitInfo").textContent = `사진 ${im.naturalWidth}×${im.naturalHeight} · 상세 화면(16:9)에 꽉 채우면 ${loss}% 잘려요${loss >= 22 && !s.imgFit ? " → 자동으로 전체 보이기" : ""}`; }; if (im.complete) f(); else im.addEventListener("load", f, { once: true }); }
     const [x, y] = pos.split(" ");
     $("focusDot").style.left = x; $("focusDot").style.top = y;
   }
@@ -369,6 +375,7 @@ function openEditor(id, preset, opts = {}) {
     s.imgPos = `${x}% ${y}%`; drawImg();
   };
   $("focusReset").onclick = () => { delete s.imgPos; drawImg(); };
+  document.querySelectorAll('input[name="imgFit"]').forEach(r => r.onchange = () => { if (r.value) s.imgFit = r.value; else delete s.imgFit; drawImg(); });
   drawImg();
   $("imgIn").onchange = async () => {
     const file = $("imgIn").files[0]; if (!file) return;
@@ -813,7 +820,7 @@ async function importCSV(file) {
   d.querySelector("[data-no]").onclick = () => d.remove();
   d.querySelector("[data-yes]").onclick = async () => {
     const btn = d.querySelector("[data-yes]"); btn.disabled = true; btn.textContent = "저장 중…";
-    upd.forEach(s => { const o = shops.find(x => x.id === s.id); if (!s.img) s.img = o.img; if (o.imgPos && s.img === o.img) s.imgPos = o.imgPos; if (o.menuImgs) s.menuImgs = o.menuImgs; if (o.userReviews) { s.userReviews = o.userReviews; s.rating = o.rating; s.reviews = o.reviews; } if (o.best) s.best = true; if (!s.geo && o.geo) { s.geo = o.geo; if (o.geoApprox) s.geoApprox = true; } if (!s.review && o.review) s.review = o.review; if (o.checks) s.checks = o.checks; });
+    upd.forEach(s => { const o = shops.find(x => x.id === s.id); if (!s.img) s.img = o.img; if (o.imgPos && s.img === o.img) s.imgPos = o.imgPos; if (o.imgFit && s.img === o.img) s.imgFit = o.imgFit; if (o.menuImgs) s.menuImgs = o.menuImgs; if (o.userReviews) { s.userReviews = o.userReviews; s.rating = o.rating; s.reviews = o.reviews; } if (o.best) s.best = true; if (!s.geo && o.geo) { s.geo = o.geo; if (o.geoApprox) s.geoApprox = true; } if (!s.review && o.review) s.review = o.review; if (o.checks) s.checks = o.checks; });
     let sort = Math.max(0, ...Object.values(META).map(m => m.sort || 0));
     add.forEach(s => { META[s.id] = { published: true, sort: ++sort }; });
     let ok = 0;

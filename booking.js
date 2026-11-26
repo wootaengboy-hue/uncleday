@@ -78,7 +78,7 @@ function draw(b) {
     ${checkin ? `<div class="ci-box"><b>📍 ${ui("ciTitle")}</b><p>${ui("ciDesc")}</p><button class="btn big-btn" id="vCheckin">${ui("ciBtn")}</button></div>` : ""}
     ${inside ? `<p class="v-ok">✅ ${ui("ciDone")}</p>` : ""}
     ${rate ? `<div class="rate-box"><b>${ui("rateTitle")}</b><div class="rate-stars">${[1, 2, 3, 4, 5].map(n => `<button type="button" data-rate="${n}" aria-label="${n}">★</button>`).join("")}</div><small>${ui("rateHint")}</small></div>` : ""}
-    ${s.img ? `<img class="v-img" src="${esc(s.img)}" alt="" style="object-position:${esc(s.imgPos || "50% 50%")}">` : ""}
+    ${s.img ? `<img class="v-img" src="${esc(s.img)}" alt="" data-fit="${esc(s.imgFit || "")}" style="object-position:${esc(s.imgPos || "50% 50%")}">` : ""}
     <dl class="v-info">
       <dt>${ui("vShop")}</dt><dd><b>${esc(s.name ? tx(s.name) : b.shop_name)}</b>${s.address ? `<br><small>${esc(tx(s.address))}</small>` : ""}${s.map ? ` <a href="${esc(s.map)}" target="_blank" rel="noopener">${ui("vMap")}</a>` : ""}</dd>
       <dt>${ui("vDate")}</dt><dd>${esc(fmtDate(b.visit_date, b.visit_time))}</dd>

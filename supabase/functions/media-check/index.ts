@@ -29,6 +29,7 @@ const SYSTEM = `당신은 베트남 마사지 · 스파 · 뷰티 · 클리닉 �
 - fake: AI 로 만든 것 같거나 과하게 보정해 실제 가게와 달라 보일 수 있음
 - stock: 인터넷에서 흔히 쓰는 스톡 사진 같음 (실제 가게 사진이 아닐 수 있음)
 - off: 가게와 관계없어 보이는 사진 (음식 · 풍경 · 제품만 등)
+- logo: 가게 사진이 아니라 로고 · 간판 그림 · 홍보 그래픽 (대표 사진으로 쓰면 잘리거나 어색해요)
 반드시 아래 JSON 하나만 출력해요:
 {"issues": ["코드", ...], "what": "무엇이 찍혔는지 한 줄 (한국어)", "note": "문제가 있으면 이유 한두 줄, 없으면 빈 문자열"}`;
 
@@ -90,7 +91,7 @@ Deno.serve(async (req) => {
   const m = text.match(/\{[\s\S]*\}/);
   try {
     const d = JSON.parse(m ? m[0] : text);
-    const OK = ["text", "watermark", "face", "body", "blur", "distort", "fake", "stock", "off"];
+    const OK = ["text", "watermark", "face", "body", "blur", "distort", "fake", "stock", "off", "logo"];
     return out({ issues: (Array.isArray(d.issues) ? d.issues : []).filter((x: string) => OK.includes(x)),
       what: String(d.what || "").slice(0, 120), note: String(d.note || "").slice(0, 300), model: MODEL });
   } catch (_) { return out({ error: "AI 답을 읽지 못했어요. 한 번 더 눌러 주세요" }, 502); }
