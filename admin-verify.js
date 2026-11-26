@@ -56,7 +56,7 @@ function vfDraw() {
   if (!VF.src) { el.innerHTML = `<p class="hint">불러오는 중…</p>`; vfLoad(); return; }
   if (VF.err === "setup") { el.innerHTML = `<div class="uni-err">먼저 Supabase SQL 편집기에서 <b>supabase/universe48.sql</b> 을 실행해 주세요. 홈페이지 · 페이스북 링크 41곳이 함께 들어가요.</div>`; return; }
   if (VF.err) { el.innerHTML = `<div class="uni-err">${esc(VF.err)}</div>`; return; }
-  const S = (typeof shops !== "undefined" ? shops : []).filter(isPub);
+  const S = (typeof shops !== "undefined" ? shops : []);   // 숨긴(공개 전 새) 업체도 검수할 수 있게
   const rows = S.map(s => ({ s, x: vfSrc(s.id) }));
   const has = x => x.crawled && ((x.crawled.menu || []).length || x.crawled.hours || x.crawled.address);
   const cnt = { all: rows.length, todo: rows.filter(r => r.x.review === "todo").length, done: rows.filter(r => r.x.review === "done").length,
@@ -72,7 +72,7 @@ function vfDraw() {
       const c = x.crawled || {}, nm = (c.menu || []).length;
       const st = x.review === "done" ? `<span class="vf-st g">✓ 검수 완료</span>` : x.review === "todo" ? `<span class="vf-st w">검수 대기</span>` : `<span class="vf-st">${x.web || x.fb ? "모아 온 정보 없음" : "링크 없음 · 현장 확인"}</span>`;
       return `<div class="vf-row ${VF.open === s.id ? "open" : ""}" data-vfid="${esc(s.id)}">
-        <div class="vf-h" data-vfo="${esc(s.id)}"><div class="vf-nm"><b>${esc(vfName(s))}</b><small>${esc(cityName(s.city))} · ${esc(catName(s.cat))}${s.name.en && s.name.en !== vfName(s) ? " · " + esc(s.name.en) : ""}</small></div>
+        <div class="vf-h" data-vfo="${esc(s.id)}"><div class="vf-nm"><b>${esc(vfName(s))}</b><small>${isPub(s) ? "" : "<em class='vf-hid'>숨김 · 공개 전</em> "}${esc(cityName(s.city))} · ${esc(catName(s.cat))}${s.name.en && s.name.en !== vfName(s) ? " · " + esc(s.name.en) : ""}</small></div>
           <div class="vf-lks">${vfLinks(s, x)}</div>
           <div class="vf-meta">${st}<small>${has(x) ? `모아 온 정보: ${c.hours ? "영업시간 · " : ""}${c.address ? "주소 · " : ""}메뉴 ${nm}개` : ""}${x.photo_ok ? " · 📷 사진 허락" : ""}</small></div><span class="vf-arr">${VF.open === s.id ? "▲" : "▼"}</span></div>
         ${VF.open === s.id ? vfDetail(s, x) : ""}</div>`; }).join("") || `<p class="hint" style="padding:14px">해당하는 업체가 없어요</p>`}</div></div>`;
@@ -86,6 +86,12 @@ function vfDetail(s, x) {
   const addr = (s.address && (s.address.vi || s.address.en)) || "";
   const usd = menu.some(m => /usd|\$/i.test(m.price || ""));
   return `<div class="vf-d">
+    <div class="vf-get">
+      <div class="vf-get-r"><label>🌐 홈페이지</label><input id="vfWeb" value="${esc(x.web || "")}" placeholder="https://…"><label>📘 페이스북</label><input id="vfFb" value="${esc(x.fb || "")}" placeholder="https://facebook.com/…"><button class="btn sm" id="vfLinkSave">링크 저장</button></div>
+      <div class="vf-get-r"><label>📥 가져올 주소</label><input id="vfUrl" value="${esc(VF.url && VF.url[s.id] || x.web || "")}" placeholder="홈페이지 · 메뉴(가격) 페이지 · 가격표 사진 주소"><button class="btn main sm" id="vfGet" ${VF.busy ? "disabled" : ""}>${VF.busy ? "가져오는 중… (30초쯤)" : "가져오기"}</button></div>
+      <div class="vf-paste" id="vfPaste" tabindex="0">📋 가격표가 그림이거나 페이스북만 있으면 → 가격표를 <b>캡처해서 여기에 붙여 넣기</b> (Ctrl+V · 맥 ⌘+V) · 사진 파일을 끌어다 놓아도 돼요</div>
+      <small class="hint">가져온 내용은 아래 '모아 온 정보'(초안)로 들어가요. 손님 화면에는 [넣기]를 누르거나 오른쪽 '엉클데이 지금'에서 직접 고쳐야 나가요.</small>
+    </div>
     <div class="vf-src">${(c.src || []).length ? `출처: ${(c.src || []).slice(0, 4).map(u => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(u.replace(/^https?:\/\/(www\.)?/, "").slice(0, 48))}</a>`).join(" · ")}` : ""}${x.crawled_at ? ` · ${esc(String(x.crawled_at).slice(0, 10))} 모음` : ""}${c.note ? `<br><span class="hint">📝 ${esc(c.note)}</span>` : ""}</div>
     <div class="vf-cmp"><div class="vf-th"><span>항목</span><span>모아 온 정보 (원문)</span><span>엉클데이 지금</span><span></span></div>
       <div class="vf-tr"><span>🕘 영업시간</span><span>${esc(c.hours || "—")}</span><span>${esc(cur)}</span><span>${hrs && (hrs.open !== s.open || hrs.close !== s.close) ? `<button class="btn sm" data-vfhr="${hrs.open}-${hrs.close}">${hrs.open}~${hrs.close} 넣기</button>` : hrs ? "<i class='ok'>같아요</i>" : ""}</span></div>
@@ -95,9 +101,11 @@ function vfDetail(s, x) {
     <h5>💰 메뉴 · 가격 <small>모아 온 메뉴 ${menu.length}개 · 엉클데이 메뉴 ${(s.menu || []).length}개${usd ? " · 달러 가격은 동으로 바꿔서 직접 넣어 주세요" : ""}</small></h5>
     <div class="vf-menu">
       <div class="vf-mcol"><small>모아 온 정보</small>${menu.map((m, i) => { const v = vfVnd(m.price);
-        return `<div class="vf-mi"><span><b>${esc(m.name)}</b>${m.minutes ? ` · ${m.minutes}분` : ""}</span><span class="pr">${esc(m.price || "가격 없음")}</span>
+        return `<div class="vf-mi"><span><b>${esc(m.name)}</b>${m.name_ko ? ` <small class="ko">${esc(m.name_ko)}</small>` : ""}${m.minutes ? ` · ${m.minutes}분` : ""}</span><span class="pr">${esc(m.price || "가격 없음")}</span>
           <span class="vf-mact">${v ? `<select data-vfto="${i}"><option value="">어디에 넣을까요?</option>${(s.menu || []).map((x, j) => `<option value="${j}" ${vfGuess(x, m) ? "selected" : ""}>${esc(vfTx(x.name).slice(0, 34))}${x.min ? " · " + x.min + "분" : ""}${x.price ? " · " + vfMoney(x.price) : " · 가격 없음"}</option>`).join("")}<option value="new">＋ 새 메뉴로 추가</option></select><button class="btn sm" data-vfmi="${i}">${vfMoney(v)} 넣기</button>` : ""}</span></div>`; }).join("") || `<p class="hint">모아 온 메뉴가 없어요${x.fb && !x.web ? " · 페이스북만 있는 곳은 사람이 보고 넣어 주세요" : ""}</p>`}</div>
-      <div class="vf-mcol"><small>엉클데이 지금</small>${(s.menu || []).map(m => `<div class="vf-mi"><span><b>${esc(vfTx(m.name))}</b>${m.min ? ` · ${m.min}분` : ""}</span><span class="pr ${m.price ? "" : "none"}">${m.price ? vfMoney(m.price) : "가격 없음"}</span></div>`).join("") || `<p class="hint">메뉴가 없어요</p>`}</div>
+      <div class="vf-mcol"><small>엉클데이 지금 <span class="hint">· 숫자를 바로 고치면 저장돼요 (동 · 분)</span></small>${(s.menu || []).map((m, j) => `<div class="vf-mi ed"><span><b>${esc(vfTx(m.name))}</b></span>
+          <span class="vf-ed"><input type="number" min="0" step="1" data-vfmin="${j}" value="${m.min || ""}" placeholder="분" aria-label="시간(분)">분 <input type="number" min="0" step="1000" data-vfpr="${j}" value="${m.price || ""}" placeholder="가격 없음" aria-label="가격(동)" class="${m.price ? "" : "none"}">동</span></div>`).join("") || `<p class="hint">메뉴가 없어요</p>`}
+        <div class="vf-hr"><label>🕘 영업시간</label><input type="time" id="vfOpen" value="${esc(s.open || "")}"> ~ <input type="time" id="vfClose" value="${esc(s.close || "")}"></div></div>
     </div>
     <div class="vf-foot">
       <label class="vf-ph"><input type="checkbox" id="vfPh" ${x.photo_ok ? "checked" : ""}> 📷 업체가 사진 사용을 허락했어요</label><input id="vfPhN" placeholder="허락 받은 방법 · 날짜 (예: 11/26 잘로로 동의)" value="${esc(x.photo_note || "")}">
@@ -125,14 +133,56 @@ function vfBind(el) {
   row.querySelectorAll("[data-vfmi]").forEach(b => b.onclick = () => {
     const i = +b.dataset.vfmi, m = (c.menu || [])[i], v = vfVnd(m.price), to = row.querySelector(`[data-vfto="${i}"]`).value;
     if (!to) return toast("어느 메뉴에 넣을지 골라 주세요");
-    if (to === "new") { s.menu = (s.menu || []).concat({ name: { ko: m.name, en: m.name, vi: m.name }, min: +m.minutes || 0, price: v }); vfShopSave(s, `‘${m.name}’ 를 새 메뉴로 넣었어요 · 한국어 이름은 업체 편집에서 다듬어 주세요`); }
+    if (to === "new") { s.menu = (s.menu || []).concat({ name: { ko: m.name_ko || m.name, en: m.name, vi: m.name }, min: +m.minutes || 0, price: v }); vfShopSave(s, `‘${m.name}’ 를 새 메뉴로 넣었어요 · 한국어 이름은 업체 편집에서 다듬어 주세요`); }
     else { const t = s.menu[+to]; t.price = v; if (!t.min && m.minutes) t.min = +m.minutes; vfShopSave(s, `${vfTx(t.name)} 가격을 ${vfMoney(v)} 로 넣었어요`); }
   });
   const ph = row.querySelector("#vfPh"), pn = row.querySelector("#vfPhN");
   if (ph) ph.onchange = () => vfSave(id, { photo_ok: ph.checked, photo_note: pn.value.trim() || null }, ph.checked ? "사진 사용 허락으로 표시했어요 · 통과한 사진이 공개될 수 있어요" : "사진 허락을 껐어요 · 업체 제공 · 홈페이지 사진은 공개 안 돼요");
   if (pn) pn.onchange = () => vfSave(id, { photo_note: pn.value.trim() || null }, "메모를 저장했어요");
+  // 링크 저장
+  const ls = row.querySelector("#vfLinkSave"); if (ls) ls.onclick = () => { const w = row.querySelector("#vfWeb").value.trim(), f = row.querySelector("#vfFb").value.trim();
+    if ([w, f].some(u => u && !/^https?:\/\/\S+$/.test(u))) return toast("링크는 https:// 로 시작해야 해요");
+    vfSave(id, { web: w || null, fb: f || null }, "링크를 저장했어요 · 손님 화면의 직원 버튼에도 바로 나와요"); };
+  // 가져오기 (주소 → 서버가 읽고 AI 가 정리)
+  const gu = row.querySelector("#vfUrl"); if (gu) gu.oninput = () => { VF.url = VF.url || {}; VF.url[id] = gu.value; };
+  const gb = row.querySelector("#vfGet"); if (gb) gb.onclick = () => { const u = gu.value.trim(); if (!/^https?:\/\/\S+$/.test(u)) return toast("가져올 주소(https://…)를 넣어 주세요"); vfExtract(s, u); };
+  // 가격표 캡처 붙여넣기 · 끌어다 놓기 → 저장소에 올리고 그 사진에서 가져오기
+  const pz = row.querySelector("#vfPaste");
+  if (pz) {
+    const go = async f => { if (!f || !/^image\//.test(f.type)) return toast("사진만 붙여 넣을 수 있어요");
+      try { toast("가격표 사진을 올리는 중…"); const u = await mqPut(await mqShrink(f, 2400), `media/${id}/price-${Date.now().toString(36)}.jpg`); vfExtract(s, u, true); } catch (e) { dbErr(e, "가격표 올리기"); } };
+    pz.onpaste = e => { const it = [...((e.clipboardData || {}).items || [])].find(i => /^image\//.test(i.type)); e.preventDefault(); if (!it) return toast("붙여 넣은 것 중에 사진이 없어요"); go(it.getAsFile()); };
+    pz.ondragover = e => { e.preventDefault(); pz.classList.add("over"); }; pz.ondragleave = () => pz.classList.remove("over");
+    pz.ondrop = e => { e.preventDefault(); pz.classList.remove("over"); go([...e.dataTransfer.files][0]); };
+  }
+  // 엉클데이 지금: 가격 · 시간 · 영업시간 직접 고치기
+  row.querySelectorAll("[data-vfpr],[data-vfmin]").forEach(inp => inp.onchange = () => {
+    const j = +(inp.dataset.vfpr ?? inp.dataset.vfmin), t = s.menu[j], v = Math.max(0, Math.round(+inp.value || 0));
+    if (inp.dataset.vfpr !== undefined) { if (v && v < 10000) return toast("가격은 동(VND)으로 넣어 주세요 (예: 550000)"); t.price = v; vfShopSave(s, `${vfTx(t.name)} 가격 ${v ? vfMoney(v) : "없음"} 저장`); }
+    else { t.min = v; vfShopSave(s, `${vfTx(t.name)} ${v}분 저장`); }
+  });
+  const oo = row.querySelector("#vfOpen"), oc = row.querySelector("#vfClose");
+  if (oo) [oo, oc].forEach(inp => inp.onchange = () => { if (!oo.value || !oc.value) return; s.open = oo.value; s.close = oc.value; vfShopSave(s, `영업시간 ${s.open}~${s.close} 저장`); });
   const rv = row.querySelector("[data-vfrv]"); if (rv) rv.onclick = () => vfSave(id, { review: rv.dataset.vfrv, reviewed_at: new Date().toISOString(), reviewed_by: ME.email }, rv.dataset.vfrv === "done" ? `${vfName(s)} 검수 완료` : "다시 검수 대기로 돌렸어요");
   const ig = row.querySelector("[data-vfimg]"); if (ig) ig.onclick = () => { MQ.shop = id; MQ.f = "all"; portalGo("imgqa"); mqDraw(); };
+}
+
+// 📥 가져오기: Edge Function 'shop-extract' (홈페이지 · 메뉴 페이지 · 가격표 사진 → 영업시간 · 주소 · 메뉴 가격)
+async function vfExtract(s, url, isImg) {
+  VF.busy = 1; vfDraw();
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    const r = await fetch(`${SUPA.url}/functions/v1/shop-extract`, { method: "POST", headers: { "Content-Type": "application/json", apikey: SUPA.key, Authorization: "Bearer " + (session && session.access_token) },
+      body: JSON.stringify({ url, shop: vfName(s) }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || (r.status === 404 ? "Edge Function 'shop-extract' 을 먼저 배포해 주세요" : "error " + r.status));
+    const prev = vfSrc(s.id).crawled || {};
+    // 가격표 사진에서 가져오면 메뉴만 더하고, 페이지에서 가져오면 새로 바꿔요
+    const c = isImg ? { ...prev, menu: (prev.menu || []).concat((j.menu || []).filter(m => !(prev.menu || []).some(o => o.name === m.name && o.minutes === m.minutes && o.price === m.price))), src: (prev.src || []).concat(j.src || []), note: [prev.note, j.note].filter(Boolean).join(" · ") }
+      : { hours: j.hours, address: j.address, phone: j.phone, menu: j.menu || [], features: j.features || [], note: j.note || "", src: j.src || [url] };
+    delete VF.busy;
+    await vfSave(s.id, { crawled: c, crawled_at: new Date().toISOString(), review: "todo" }, `가져왔어요 · 메뉴 ${(j.menu || []).length}개${j.hours ? " · 영업시간" : ""}${j.address ? " · 주소" : ""} — 비교해서 넣어 주세요`);
+  } catch (e) { delete VF.busy; vfDraw(); toast("가져오기 실패: " + e.message, 6000); }
 }
 
 /* ===================== 🖼️ 이미지 검수 ===================== */

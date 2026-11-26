@@ -201,6 +201,7 @@ function openEditor(id, preset, opts = {}) {
           <div class="img-prev" id="imgPrev"></div>
           <div style="display:grid;gap:8px">
             <label class="btn" style="justify-content:center">📷 사진 올리기<input type="file" id="imgIn" accept="image/*" hidden></label>
+            <div class="url-in"><input id="imgUrl" placeholder="🔗 이미지 링크 붙여넣기 (https://…)"><button class="btn sm" id="imgUrlGo" type="button">링크로 넣기</button></div>
             <button class="btn sm danger" id="imgDel" type="button">사진 빼기</button>
           </div>
         </div>
@@ -259,7 +260,8 @@ function openEditor(id, preset, opts = {}) {
 
       <div class="box"><h3>가격표 사진<small>업체에서 받은 코스별 가격표를 올려요. 여러 장 한 번에 올릴 수 있어요</small></h3>
         <div class="mb-grid" id="mbList"></div>
-        <div><label class="btn" style="display:inline-flex">📄 가격표 사진 올리기<input type="file" id="mbIn" accept="image/*" multiple hidden></label></div>
+        <div class="url-row"><label class="btn" style="display:inline-flex">📄 가격표 사진 올리기<input type="file" id="mbIn" accept="image/*" multiple hidden></label>
+          <div class="url-in"><input id="mbUrl" placeholder="🔗 가격표 이미지 링크 (여러 개면 띄어쓰기로)"><button class="btn sm" id="mbUrlGo" type="button">링크로 넣기</button></div></div>
         <div class="hint">글씨가 잘 보이도록 크게 저장해요. 손님은 상세 화면에서 눌러서 크게 볼 수 있어요. 사진마다 이름(예: 마사지 코스, 패키지)을 달아 두면 찾기 쉬워요.</div>
       </div>
 
@@ -367,6 +369,15 @@ function openEditor(id, preset, opts = {}) {
     } catch (e) { dbErr(e, "사진 올리기"); }
     $("imgIn").value = "";
   };
+  // 🔗 이미지 링크로 넣기: 사진을 엉클데이 저장소로 복사해 와요 (다른 사이트가 막으면 media-check 가 대신 가져와요)
+  //    출처 기록은 🖼️ 이미지 검수의 '출처 확인 필요'에 모여요 → 거기서 현장 · 업체 제공으로 표시
+  const fromUrl = async u => { if (typeof mqFetch !== "function") throw new Error("이미지 검수 기능이 아직 안 불러와졌어요"); return mqFetch(u); };
+  $("imgUrlGo").onclick = async () => {
+    const u = $("imgUrl").value.trim(); if (!/^https?:\/\/\S+$/.test(u)) return toast("이미지 링크(https://…)를 넣어 주세요");
+    toast("링크에서 사진을 가져오는 중…");
+    try { const url = await uploadImg(await fromUrl(u), "shops/" + (slug($("idIn").value) || "shop")); s.img = url; delete s.imgPos; $("imgPath").value = url; $("imgUrl").value = ""; drawImg(); toast("사진을 넣었어요. '저장'을 눌러 주세요 · 이미지 검수에서 출처를 표시해 주세요", 4500); }
+    catch (e) { toast("가져오지 못했어요: " + e.message, 5000); }
+  };
   $("imgDel").onclick = () => { s.img = ""; delete s.imgPos; $("imgPath").value = ""; drawImg(); };
 
   // 태그
@@ -452,6 +463,14 @@ function openEditor(id, preset, opts = {}) {
       } catch (e) { dbErr(e, `${f.name} 올리기`); }
     }
     drawBoards(); if (n) toast(`가격표 ${n}장을 올렸어요. 이름을 달고 '저장'을 눌러 주세요.`);
+  };
+
+  $("mbUrlGo").onclick = async () => {
+    const urls = $("mbUrl").value.split(/\s+/).map(x => x.trim()).filter(Boolean);
+    if (!urls.length || urls.some(u => !/^https?:\/\/\S+$/.test(u))) return toast("가격표 이미지 링크(https://…)를 넣어 주세요");
+    const base = slug($("idIn").value) || "shop"; let n = 0; toast("링크에서 가격표를 가져오는 중…");
+    for (const u of urls.slice(0, 10)) { try { const url = await uploadImg(await fromUrl(u), `shops/${base}-menu`, 2000, 0.85); s.menuImgs.push({ src: url, cap: "" }); n++; } catch (e) { toast(`가져오지 못했어요: ${u.slice(0, 50)} (${e.message})`, 5000); } }
+    if (n) { $("mbUrl").value = ""; drawBoards(); toast(`가격표 ${n}장을 넣었어요. 이름을 달고 '저장'을 눌러 주세요.`); }
   };
 
   // 닫기·적용

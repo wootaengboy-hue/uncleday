@@ -31,6 +31,14 @@
    "title": "Edge Function 'media-check' 배포 (이미지 AI 검사)",
    "note": "Supabase → Edge Functions → Deploy a new function → 이름 media-check → supabase/functions/media-check/index.ts 붙여넣기 (Verify JWT 켬) · 비밀값은 블로그 AI와 같은 ANTHROPIC_API_KEY",
    "memo": ""
+  },
+  {
+   "group": "관리자",
+   "priority": 1,
+   "status": "todo",
+   "title": "Edge Function 'shop-extract' 배포 (업체 정보 가져오기)",
+   "note": "Supabase → Edge Functions → Deploy a new function → 이름 shop-extract → supabase/functions/shop-extract/index.ts (Verify JWT 는 media-check 와 같게) · 비밀값은 ANTHROPIC_API_KEY 그대로",
+   "memo": ""
   }
  ]
 }
