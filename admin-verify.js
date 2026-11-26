@@ -524,7 +524,13 @@ function mqDraw() {
   const cnt = { all: L.length, todo: L.filter(m => m.verdict === "none").length, pass: L.filter(m => m.verdict === "pass").length, issue: L.filter(m => m.verdict === "issue").length, hold: L.filter(m => m.verdict === "hold").length };
   const F = { todo: m => m.verdict === "none", pass: m => m.verdict === "pass", issue: m => m.verdict === "issue", hold: m => m.verdict === "hold", all: () => true };
   const list = L.filter(m => (F[MQ.f] || F.all)(m) || MQ.keep.has(m.id)).filter(m => !MQ.shop || m.shop_id === MQ.shop);
-  const shopOpts = S.map(s => `<option value="${esc(s.id)}" ${MQ.shop === s.id ? "selected" : ""}>${esc(vfName(s))} · ${esc(cityName(s.city))}</option>`).join("");
+  // 업체 고르기: 통과한 사진이 있는 업체는 ✅ 묶음 맨 위에 (대표 사진 공개 중이면 ★)
+  const st = x => { const ms = L.filter(m => m.shop_id === x.id), c = k => ms.filter(m => m.verdict === k).length, live = !!x.img && ms.some(m => m.work_url === x.img && mqCan(m));
+    return { n: ms.length, pass: c("pass"), todo: c("none"), issue: c("issue"), hold: c("hold"), live }; };
+  const opt = x => { const t = st(x), bits = [t.pass ? `✅ 통과 ${t.pass}` : "", t.live ? "★ 대표 공개" : "", t.todo ? `⏳ 검사 전 ${t.todo}` : "", t.issue ? `⚠️ 문제 ${t.issue}` : "", t.hold ? `⏸ 보류 ${t.hold}` : ""].filter(Boolean);
+    return `<option value="${esc(x.id)}" ${MQ.shop === x.id ? "selected" : ""}>${t.pass ? "✅ " : ""}${esc(vfName(x))} · ${esc(cityName(x.city))}${bits.length ? " — " + bits.join(" · ") : ""}</option>`; };
+  const G = [["✅ 통과한 사진이 있는 업체", S.filter(x => st(x).pass)], ["⏳ 검사 중 (통과 전)", S.filter(x => { const t = st(x); return !t.pass && t.n; })], ["📷 아직 사진 없음", S.filter(x => !st(x).n)]];
+  const shopOpts = G.filter(g => g[1].length).map(([lb, xs]) => `<optgroup label="${lb} · ${xs.length}곳">${xs.map(opt).join("")}</optgroup>`).join("");
   el.innerHTML = `<div class="mq">
     <div class="vf-tiles"><div><small>전체 사진</small><b>${cnt.all}</b></div><div><small>판정 대기</small><b class="w">${cnt.todo}</b></div><div><small>통과</small><b class="g">${cnt.pass}</b></div><div><small>문제 표시</small><b class="r">⚠ ${cnt.issue}</b></div><div><small>사진 공개 중인 업체</small><b>${live} / ${S.length}</b></div></div>
     ${(() => { const ex = (typeof shops !== "undefined" ? shops : []).filter(x => typeof isExtImg === "function" && (isExtImg(x.img) || (x.menuImgs || []).some(m => isExtImg(m.src))));
