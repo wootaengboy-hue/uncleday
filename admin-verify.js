@@ -551,9 +551,13 @@ function mqDraw() {
       <small class="mq-rule">ℹ️ <b>홈페이지 후보</b>는 검수만 하고 공개되지 않아요. 업체가 허락하면 카드에서 출처를 <b>업체 제공</b>으로 바꾸면 공개할 수 있어요.</small>
     </div>
     <div class="vf-bar"><select id="mqShop"><option value="">모든 업체</option>${shopOpts}</select>${MQ.shop && vfShop(MQ.shop) ? `<span class="mq-uplk">${vfSrc(MQ.shop).web ? `<a class="vf-lk" href="${esc(vfSrc(MQ.shop).web)}" target="_blank" rel="noopener">🌐 홈페이지</a>` : ""}${vfSrc(MQ.shop).fb ? `<a class="vf-lk fb" href="${esc(vfSrc(MQ.shop).fb)}" target="_blank" rel="noopener">📘 페이스북</a>` : ""}</span>${mqPerm(MQ.shop)}` : ""}
-      ${[["todo", "판정 대기"], ["pass", "통과"], ["issue", "문제"], ["hold", "보류"], ["all", "전체"]].map(([k, t]) => `<button class="chip ${MQ.f === k ? "on" : ""}" data-mqf="${k}">${t} ${cnt[k]}</button>`).join("")}</div>
+      ${(() => { const LS = MQ.shop ? L.filter(m => m.shop_id === MQ.shop) : L, cs = { all: LS.length, todo: LS.filter(m => m.verdict === "none").length, pass: LS.filter(m => m.verdict === "pass").length, issue: LS.filter(m => m.verdict === "issue").length, hold: LS.filter(m => m.verdict === "hold").length };
+        // 업체를 골랐으면 숫자도 그 업체 것만 (예전엔 모든 업체 숫자라 '판정 대기 1'인데 목록이 비어 보였어요)
+        return [["todo", "판정 대기"], ["pass", "통과"], ["issue", "문제"], ["hold", "보류"], ["all", "전체"]].map(([k, t]) => `<button class="chip ${MQ.f === k ? "on" : ""}" data-mqf="${k}">${t} ${cs[k]}</button>`).join("")
+          + (MQ.shop && cnt.todo > cs.todo ? `<span class="hint" style="margin-left:6px">다른 업체에 판정 대기 ${cnt.todo - cs.todo}장 <button class="btn sm" id="mqAllShops">모든 업체 보기</button></span>` : ""); })()}</div>
     <div class="mq-list">${list.map(mqCard).join("") || `<p class="hint" style="padding:16px">${MQ.shop ? "이 업체 사진이 아직 없어요 · 위에서 올려 주세요" : "사진이 없어요 · 위에서 올려 주세요"}</p>`}</div></div>`;
   mqBind(el);
+  const as = el.querySelector("#mqAllShops"); if (as) as.onclick = () => { MQ.shop = ""; MQ.f = "todo"; mqDraw(); };
 }
 function mqCard(m) {
   const s = vfShop(m.shop_id) || { id: m.shop_id, name: { ko: m.shop_id }, cat: "" }, x = vfSrc(m.shop_id), [ic, sn, sd] = MQ_SRC[m.source] || ["", m.source, ""];
