@@ -374,7 +374,7 @@ function vfMerge(prev, n) {
   if (keep.length) { o.src = [...new Set((n.src || []).concat(prev.src || []))]; o.note = [n.note, `이번에 못 찾은 ${keep.join(" · ")} 은(는) 예전에 모은 것을 그대로 뒀어요`].filter(Boolean).join(" · "); }
   return o;
 }
-const vfCrawled = (j, url) => ({ hours: j.hours, address: j.address, phone: j.phone, menu: j.menu || [], features: j.features || [], note: j.note || "", src: j.src || [url] });
+const vfCrawled = (j, url) => ({ hours: j.hours, address: j.address, phone: j.phone, menu: j.menu || [], features: j.features || [], deals: j.deals || [], note: j.note || "", src: j.src || [url] });
 // 📥 한꺼번에: 링크 있는 업체를 차례로 가져와요 (멈추기 가능)
 async function vfBulk(f) {
   const S = (typeof shops !== "undefined" ? shops : []).filter(s => { const x = vfSrc(s.id); return x.web && (f === "all" || (f === "todo" && x.review !== "done") || (f === "new" && !x.crawled)); });
@@ -422,7 +422,11 @@ async function vfExtract(s, url, isImg) {
     if (!r.ok) throw new Error(j.error || (r.status === 404 ? "Edge Function 'shop-extract' 을 먼저 배포해 주세요" : "error " + r.status));
     const prev = vfSrc(s.id).crawled || {};
     // 가격표 사진에서 가져오면 메뉴만 더하고, 페이지에서 가져오면 새로 바꿔요
-    const c = isImg ? { ...prev, menu: (prev.menu || []).concat((j.menu || []).filter(m => !(prev.menu || []).some(o => o.name === m.name && o.minutes === m.minutes && o.price === m.price))), src: (prev.src || []).concat(j.src || []), note: [prev.note, j.note].filter(Boolean).join(" · ") }
+    // 가격표 사진: 같은 메뉴(이름 · 시간)가 이미 있으면 빈 칸(설명 · 분류 · 팁 · 가격)만 채우고, 없으면 더해요
+    const fill = (o, m) => { const r = { ...o }; Object.keys(m).forEach(k => { if (m[k] != null && m[k] !== "" && (r[k] == null || r[k] === "")) r[k] = m[k]; }); return r; };
+    const same = (o, m) => String(o.name || "").trim().toLowerCase() === String(m.name || "").trim().toLowerCase() && (+o.minutes || 0) === (+m.minutes || 0);
+    const mergeImg = () => { const out = (prev.menu || []).slice(); (j.menu || []).forEach(m => { const k = out.findIndex(o => same(o, m)); if (k >= 0) out[k] = fill(out[k], m); else out.push(m); }); return out; };
+    const c = isImg ? { ...prev, menu: mergeImg(), deals: [...new Set((prev.deals || []).concat(j.deals || []))], src: [...new Set((prev.src || []).concat(j.src || []))], note: [prev.note, j.note].filter(Boolean).join(" · ") }
       : vfMerge(prev, vfCrawled(j, url));
     delete VF.busy;
     // 홈페이지 링크가 아직 없으면, 정보를 실제로 가져온 사이트 주소를 홈페이지로 같이 저장해요 (페이스북 · 인스타 · 우리 저장소 사진은 빼요)
