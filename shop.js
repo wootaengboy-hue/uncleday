@@ -180,10 +180,10 @@ if (!shop) {
     ${pms.length ? `<div class="pm-box"><b class="pm-h">${ui("pm_title")}</b><ul>${pms.map(p => `<li>${esc(pmLine(p, shop))}</li>`).join("")}</ul><small>${ui("pm_note")}</small></div>` : ""}
     <div id="menuList">${mGroups.map(g => { if (g.items.length > 1) return `
       <div class="menu-row menu-grp"><div class="mg-h"><b>${esc(g.n)}</b><small>${ui("mgPick")}</small></div>
-      <div class="mg-opts">${g.items.map(i => { const m = shop.menu[i], pf = promoFor(shop, i), cut = pf && pf.cut; return `<${pending ? "span" : "button type=\"button\""} class="mg-opt${pending ? "" : " pick"}" data-i="${i}"><span class="mg-t">${m.min ? `${m.min} ${ui("min")}` : "-"}</span>${cut ? `<s>₫${m.price.toLocaleString("en-US")}</s>` : ""}${(t => { const k = t.indexOf(" ("); return k < 0 ? `<b>${t}</b>` : `<b>${t.slice(0, k)}</b><small class="mg-ap">${t.slice(k + 1)}</small>`; })(money(cut ? pf.price : m.price))}${cut ? `<span class="pm-tag">${esc(pmTag(pf.p))}</span>` : ""}</${pending ? "span" : "button"}>`; }).join("")}</div></div>`;
+      <div class="mg-opts">${g.items.map(i => { const m = shop.menu[i], pf = promoFor(shop, i), cut = pf && pf.cut; return `<${pending ? "span" : "button type=\"button\""} class="mg-opt${pending ? "" : " pick"}" data-i="${i}"><span class="mg-t">${m.min ? `${m.min} ${ui("min")}` : "-"}</span>${cut ? `<s>₫${m.price.toLocaleString("en-US")}</s>` : ""}${(t => { const k = t.indexOf(" ("); return k < 0 ? `<b>${t}</b>` : `<b>${t.slice(0, k)}</b><small class="mg-ap">${t.slice(k + 1)}</small>`; })(money(cut ? pf.price : m.price))}${cut ? `<span class="pm-tag">${esc(pmTag(pf.p))}</span>` : ""}${extrasFor(shop, i).map(x => `<small class="mg-x">+ ${esc(x.n)} ₫${x.v.toLocaleString("en-US")}</small>`).join("")}</${pending ? "span" : "button"}>`; }).join("")}</div></div>`;
       const i = g.items[0], m = shop.menu[i], pf = promoFor(shop, i); return `
       <div class="menu-row${pf && pf.cut ? " pm-row" : ""}"><div><b>${tx(m.name)}</b>${m.min ? `<br><small>${m.min} ${ui("min")}</small>` : ""}</div>
-      <div class="price${pf && pf.cut ? " pm" : ""}">${pf && pf.cut ? `<s>₫${m.price.toLocaleString("en-US")}</s><span class="pm-tag">${esc(pmTag(pf.p))}</span><br>${money(pf.price)}` : money(m.price)}</div>
+      <div class="price${pf && pf.cut ? " pm" : ""}">${pf && pf.cut ? `<s>₫${m.price.toLocaleString("en-US")}</s><span class="pm-tag">${esc(pmTag(pf.p))}</span><br>${money(pf.price)}` : money(m.price)}${extrasFor(shop, i).map(x => `<br><small class="mg-x">+ ${esc(x.n)} ₫${x.v.toLocaleString("en-US")}</small>`).join("")}</div>
       ${pending ? "" : `<button class="chip pick" data-i="${i}">${ui("bookBtn")}</button>`}</div>`; }).join("")}
     </div>` : ""}
 
@@ -382,7 +382,11 @@ ${f.text}
     $("bkSumT").textContent = fDate.value && fTime.value ? `${fmtDate(fDate.value)} ${fmtTime(fTime.value)}` : fDate.value ? `${fmtDate(fDate.value)} · ${ui("pickTime")}` : ui("pickDT");
     $("bkSum").classList.toggle("set", !!(fDate.value && fTime.value));
     const pe = $("pmEst"), pf = pe && promoFor(shop, +fMenu.value, fDate.value || undefined), n = +$("fPeople").value || 1;   // 🎁 고른 날짜 · 메뉴의 할인
-    if (pe) { pe.hidden = !pf; if (pf) pe.textContent = "🎁 " + pmLine(pf.p, shop) + (pf.cut ? " → " + ui("pm_est") + ": " + money(pf.price * n) : ""); }
+    const ex = extrasFor(shop, +fMenu.value), base = pf ? pf.price : (shop.menu[+fMenu.value] || {}).price || 0;
+    if (pe) { pe.hidden = !pf && !ex.length; const L = [];
+      if (pf) L.push("🎁 " + pmLine(pf.p, shop) + (pf.cut && !ex.length ? " → " + ui("pm_est") + ": " + money(pf.price * n) : ""));
+      if (ex.length && base) L.push(`💵 ${ui("ex_total")}: ₫${base.toLocaleString("en-US")}${ex.map(x => ` + ${x.n} ₫${x.v.toLocaleString("en-US")}`).join("")}${n > 1 ? ` × ${n}` : ""} = ${money((base + ex.reduce((a, x) => a + x.v, 0)) * n)}`);
+      pe.textContent = L.join("\n"); pe.style.whiteSpace = "pre-line"; }
   }
   function drawCal() {
     const y = view.getFullYear(), m = view.getMonth();

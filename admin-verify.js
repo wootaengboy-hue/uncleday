@@ -321,7 +321,7 @@ function vfBind(el) {
     if (rv.dataset.vfrv !== "done") return vfSave(id, { review: "todo" }, "다시 검수 대기로 돌렸어요");
     const pub = row.querySelector("#vfPub"), goPub = pub && pub.checked, F = c.draft ? vfFinal(s, D) : null;
     if (F && F.menu.some(m => !vfTx(m.name).trim())) return toast("이름이 빈 메뉴가 있어요 · 이름을 넣거나 🗑 로 빼 주세요");
-    const n = F ? F.n : 0, pm = (s.promos || []).some(p => (p.menus || []).length);
+    const n = F ? F.n : 0, pm = (s.promos || []).concat(s.extras || []).some(p => (p.menus || []).length);
     const go = async () => { rv.disabled = true;
       try {
         if (n) { s.menu = F.menu; s.open = F.open; s.close = F.close; if (F.address) s.address = F.address; }
@@ -333,7 +333,7 @@ function vfBind(el) {
         if (typeof drawStats === "function") try { drawStats(); } catch (e) {}
       } catch (e) { rv.disabled = false; dbErr(e, "검수 완료 반영"); } };
     const left = c.draft ? vfChanges(s, D).length - n : 0;
-    if (pm && n && F.menu.length !== (s.menu || []).length) return confirmBox("메뉴 순서가 바뀌어요 · 일부 메뉴에만 거는 🎁 할인 이벤트가 있어요", go, "반영한 뒤 업체 편집 → 할인 이벤트에서 적용 메뉴를 다시 확인해 주세요", "반영하기", false);
+    if (pm && n && F.menu.length !== (s.menu || []).length) return confirmBox("메뉴 순서가 바뀌어요 · 일부 메뉴에만 거는 🎁 할인 이벤트나 ➕ 추가 요금이 있어요", go, "반영한 뒤 업체 편집 → 할인 이벤트 · 추가 요금에서 적용 메뉴를 다시 확인해 주세요", "반영하기", false);
     if (left > 0) return confirmBox(`☑ 안 한 ${left}개는 버리고 ${n}개만 반영할까요?`, go, "☑ 안 한 것은 지금 손님 화면 그대로 남아요", "반영하기", false);
     go();
   };

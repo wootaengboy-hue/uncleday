@@ -80,6 +80,15 @@ function promoFor(shop, i, d) {   // 그 메뉴에 맞는 가장 큰 할인 (서
   promosOn(shop, d).filter(p => pmFits(p, i)).forEach(p => { if (p.kind === "text") { txt = txt || p; return; } const c = pmCut(p, m && m.price); if (c > bc) { bc = c; best = p; } });
   return best ? { p: best, cut: bc, price: m.price - bc } : txt ? { p: txt, cut: 0, price: m && m.price } : null;
 }
+// ➕ 추가 요금 (shop.extras) — 관리사 팁처럼 할인 없이 가게에서 함께 내는 돈 (엉클데이 정산 대상 아님)
+// { id, t: {vi, ko, en}, amt: 모든 메뉴 같은 금액, mins: { "60": 50000, … } 시간별 금액(있으면 우선), menus: [메뉴 번호…] (비면 전 메뉴) }
+function extrasFor(shop, i) {
+  const m = shop && shop.menu && shop.menu[i]; if (!m) return [];
+  return ((shop.extras) || []).filter(e => !(e.menus && e.menus.length) || e.menus.includes(i)).map(e => {
+    const v = e.mins && e.mins[m.min] != null && e.mins[m.min] !== "" ? +e.mins[m.min] : +e.amt || 0;
+    return { n: tx(e.t) || ui("ex_fee"), v };
+  }).filter(x => x.v > 0);
+}
 const pmName = p => { const t = p.t || {}; return t[lang] || (lang === "vi" ? "" : t.en || (lang === "ko" ? t.ko : "")) || (p.kind === "text" ? t.en || t.ko || t.vi || "" : ""); };
 const pmOff = p => p.kind === "pct" ? ui("pm_pct", { v: p.v }) : p.kind === "amt" ? ui("pm_amt", { v: "₫" + Number(p.v).toLocaleString("en-US") }) : "";
 const pmTag = p => p.kind === "pct" ? "-" + p.v + "%" : p.kind === "amt" ? "-₫" + Number(p.v).toLocaleString("en-US") : "🎁";

@@ -147,6 +147,7 @@ function openEditor(id, preset, opts = {}) {
         <label class="switch best-sw ${s.best ? "on" : ""}" id="bSw"><input type="checkbox" id="bChk" ${s.best ? "checked" : ""}>
           <div><b>✦ 엉클 인증업체 배지 달기</b><div class="hint">켜면 손님 화면의 업체 사진과 이름 옆에 반짝이는 '엉클 인증업체' 배지가 붙고, 목록에서 맨 앞에 보여요.</div></div></label>
         <div class="sv-edit" id="pmEdit"></div>
+        <div class="sv-edit" id="exEdit"></div>
         <div class="sv-edit" id="svEdit"></div>
         <label class="switch ${s.outcall ? "on" : ""}" id="ocSw"><input type="checkbox" id="ocChk" ${s.outcall ? "checked" : ""}>
           <div><b>🏨 호텔 출장 가능</b><div class="hint">사장님께 <b>직접 확인한 경우에만</b> 켜요. 켜면 손님 화면에 '호텔 출장 가능' 표시가 붙고, '🏨 호텔 출장' 필터에 나와요. 출장 가격 · 지역은 메뉴나 소개 글에 적어 주세요.</div></div></label>
@@ -326,7 +327,7 @@ function openEditor(id, preset, opts = {}) {
   if ($("revDone")) $("revDone").onclick = () => { delete s.review; $("revBox").remove(); toast("배너를 지웠어요. '저장'을 눌러 주세요."); };
   const drawChk = () => { const [n, t] = chkCount(s); $("chkSum").textContent = `확인 ${n} / ${t}` + (n === t ? " · 모두 확인됐어요" : ""); };
   $("bChk").onchange = () => { if ($("bChk").checked) s.best = true; else delete s.best; $("bSw").classList.toggle("on", !!s.best); };
-  shopSvDraw(s); shopPmDraw(s);
+  shopSvDraw(s); shopPmDraw(s); shopExDraw(s);
   $("ocChk").onchange = () => { if ($("ocChk").checked) s.outcall = true; else delete s.outcall; $("ocSw").classList.toggle("on", !!s.outcall); };
   $("vChk").onchange = () => { s.verified = $("vChk").checked; $("vSw").classList.toggle("on", s.verified); drawChk(); };
   $("chkList").querySelectorAll("[data-chk]").forEach(el => el.onchange = () => {
@@ -413,9 +414,9 @@ function openEditor(id, preset, opts = {}) {
   }
   drawMenu();
   $("menuAdd").onclick = () => { s.menu.push({ name: { ko: "", en: "", vi: "" }, min: 60, price: 0 }); drawMenu(); };
-  $("menuGrid").onclick = () => vfGrid(s.menu, {}, (out, n) => { const pm = (s.promos || []).some(p => (p.menus || []).length);
+  $("menuGrid").onclick = () => vfGrid(s.menu, {}, (out, n) => { const pm = (s.promos || []).concat(s.extras || []).some(p => (p.menus || []).length);
     s.menu = out.map(m => ({ ...m, name: { ko: m.name.ko || "", en: m.name.en || "", vi: m.name.vi || "" } })); drawMenu();
-    toast(`메뉴 ${n}줄을 만들었어요 · 영어 · 베트남어 이름을 확인하고 [저장]을 눌러 주세요${pm ? " · 일부 메뉴 할인 이벤트의 적용 메뉴도 다시 확인해 주세요" : ""}`, 6000); });
+    toast(`메뉴 ${n}줄을 만들었어요 · 영어 · 베트남어 이름을 확인하고 [저장]을 눌러 주세요${pm ? " · 일부 메뉴 할인 이벤트 · 추가 요금의 적용 메뉴도 다시 확인해 주세요" : ""}`, 6000); });
 
   // 이용후기
   s.userReviews = s.userReviews || [];
@@ -491,6 +492,11 @@ function openEditor(id, preset, opts = {}) {
     s.tags = s.tags.filter(t => t.ko.trim() || t.en.trim() || (t.vi || "").trim());
     s.menu = s.menu.filter(m => m.name.ko.trim() || m.name.en.trim());
     if (!s.menuImgs.length) delete s.menuImgs;
+    if (s.extras) {   // ➕ 추가 요금 정리: 이름 · 금액 없는 건 빼요
+      s.extras = s.extras.filter(e => (e.t && (e.t.ko || e.t.en || e.t.vi)) && (+e.amt > 0 || Object.values(e.mins || {}).some(v => +v > 0)))
+        .map(({ _pick, ...e }) => ({ ...e, menus: (e.menus || []).filter(k => k < s.menu.length) }));
+      if (!s.extras.length) delete s.extras;
+    }
     if (s.promos) {   // 🎁 할인 이벤트 정리: 크기 없는 할인 · 이름 없는 문구 이벤트는 빼요
       const bad = s.promos.filter(p => p.kind === "text" ? !(p.t && (p.t.vi || p.t.ko || p.t.en)) : !(p.v > 0));
       if (bad.length) toast(`할인 크기나 이름이 빈 이벤트 ${bad.length}개는 빼고 저장했어요`, 3500);
@@ -815,7 +821,7 @@ function shopPmDraw(s) {
         ${p.kind === "text" ? "" : `<input data-pv="${i}" inputmode="numeric" style="width:110px" placeholder="${p.kind === "amt" ? "50000" : "20"}" value="${p.v || ""}">${p.kind === "amt" ? "₫" : "%"}`}
         <span class="hint">기간</span><input type="date" data-pf="${i}" value="${esc(p.from || "")}"><span>~</span><input type="date" data-pe="${i}" value="${esc(p.to || "")}"><span class="hint">(비우면 제한 없음)</span></div>
       <label class="sv-r"><input type="checkbox" data-pall="${i}" ${all ? "checked" : ""}> 전 메뉴</label>
-      ${all ? "" : menu.map((m, k) => `<label class="sv-r" style="padding-left:18px"><input type="checkbox" data-pm="${i}" data-k="${k}" ${(p.menus || []).includes(k) ? "checked" : ""}> ${esc((m.name && (m.name.ko || m.name.vi)) || "메뉴 " + (k + 1))}${m.price ? " · ₫" + m.price.toLocaleString("en-US") : ""}</label>`).join("")}
+      ${all ? "" : shopMenuGroups(menu).map(g => `<label class="sv-r" style="padding-left:18px"><input type="checkbox" data-pm="${i}" data-k="${g.ks.join(",")}" ${g.ks.every(k => (p.menus || []).includes(k)) ? "checked" : ""}> ${esc(g.n || "메뉴 " + (g.ks[0] + 1))}${g.ks.length > 1 ? ` · ${g.ks.map(k => (menu[k].min || "?") + "분").join(" · ")}` : menu[g.ks[0]].price ? " · ₫" + menu[g.ks[0]].price.toLocaleString("en-US") : ""}</label>`).join("")}
     </div>`; }).join("")}
     ${list.length < 10 ? `<button class="btn sm" type="button" data-padd>+ 이벤트 더하기</button>` : ""}
     <p class="hint">이름은 베트남어 · 한국어 · 영어를 채워 주세요 (손님 언어에 맞춰 보여요 — 비어 있으면 '전 메뉴 20% 할인'처럼 자동 문구가 나와요). 바꾼 뒤 위쪽 <b>저장</b>을 눌러야 반영돼요.</p></details>`;
@@ -828,7 +834,7 @@ function shopPmDraw(s) {
   el.querySelectorAll("[data-pf]").forEach(x => x.onchange = () => { const p = list[+x.dataset.pf]; if (x.value) p.from = x.value; else delete p.from; });
   el.querySelectorAll("[data-pe]").forEach(x => x.onchange = () => { const p = list[+x.dataset.pe]; if (x.value) p.to = x.value; else delete p.to; });
   el.querySelectorAll("[data-pall]").forEach(x => x.onchange = () => { const p = list[+x.dataset.pall]; if (x.checked) { p.menus = []; delete p._pick; } else p._pick = true; redraw(); });
-  el.querySelectorAll("[data-pm]").forEach(x => x.onchange = () => { const p = list[+x.dataset.pm], k = +x.dataset.k, ms = new Set(p.menus || []); if (x.checked) ms.add(k); else ms.delete(k); p.menus = [...ms].sort((a, b) => a - b); });
+  el.querySelectorAll("[data-pm]").forEach(x => x.onchange = () => { const p = list[+x.dataset.pm], ks = x.dataset.k.split(",").map(Number), ms = new Set(p.menus || []); ks.forEach(k => x.checked ? ms.add(k) : ms.delete(k)); p.menus = [...ms].sort((a, b) => a - b); });
   el.querySelectorAll("[data-px]").forEach(x => x.onclick = () => { list.splice(+x.dataset.px, 1); redraw(); });
   const add = el.querySelector("[data-padd]"); if (add) add.onclick = () => { list.push({ id: "p" + Date.now().toString(36), on: true, kind: "pct", v: 0, menus: [], t: {} }); redraw(); };
 }
@@ -857,4 +863,39 @@ function shopSvDraw(s) {
   el.querySelectorAll("[data-svt]").forEach(x => x.onchange = () => { cu[+x.dataset.svt].type = x.value; set(); });
   el.querySelectorAll("[data-svx]").forEach(x => x.onclick = () => { cu.splice(+x.dataset.svx, 1); set(); shopSvDraw(s); });
   const add = el.querySelector("[data-svadd]"); if (add) add.onclick = () => { cu.push({ id: "c" + Date.now().toString(36), type: "yn", q: {} }); set(); shopSvDraw(s); el.querySelector("details").open = true; };
+}
+
+// 이름이 같은 메뉴(시간만 다른 것)를 묶어요 → [{ n, ks: [메뉴 번호…] }]
+function shopMenuGroups(menu) {
+  const out = []; (menu || []).forEach((m, k) => { const n = (m.name && (m.name.ko || m.name.vi || m.name.en)) || ""; let g = out.find(x => x.n === n && n); if (!g) out.push(g = { n, ks: [] }); g.ks.push(k); }); return out;
+}
+// ➕ 업체 편집: 추가 요금 (관리사 팁 등) — 할인 없이 가게에서 함께 내는 돈. 손님 화면 메뉴 · 예약 폼에 '+ 관리사 팁 ₫50,000'으로 보여요 (엉클데이 정산 금액에는 안 들어가요)
+//  { id, t: {vi, ko, en}, amt, mins: { "60": 50000 … }, menus: [메뉴 번호…] (비면 전 메뉴) }
+function shopExDraw(s) {
+  const el = $("exEdit"); if (!el) return;
+  const list = s.extras = (s.extras || []).slice(0, 5), menu = s.menu || [], groups = shopMenuGroups(menu);
+  const durs = [...new Set(menu.map(m => +m.min || 0).filter(Boolean))].sort((a, b) => a - b);
+  el.innerHTML = `<details ${list.length ? "open" : ""}><summary><b>➕ 추가 요금 (관리사 팁 등)</b> <span class="hint">${list.length ? list.map(e => esc((e.t && e.t.ko) || "이름 없음")).join(" · ") : "없음"}</span></summary>
+    <p class="hint">할인이 <b>적용되지 않고</b> 손님이 가게에서 함께 내는 돈이에요. 손님 화면 메뉴 가격 밑에 '+ 관리사 팁 ₫50,000'으로 나오고, 예약 폼에 '가게에서 낼 금액 = 할인가 + 팁'이 보여요. 엉클데이 정산(수수료) 금액에는 들어가지 않아요.</p>
+    ${list.map((e, i) => { const all = !(e.menus && e.menus.length) && !e._pick, byMin = !!e.mins; return `<div class="sv-c" style="display:block;border:1px solid var(--line);border-radius:10px;padding:8px;margin:6px 0">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr) auto;gap:4px;margin-bottom:6px">${["ko", "en", "vi"].map(l => `<input data-xt="${i}" data-l="${l}" placeholder="이름 ${l.toUpperCase()}${l === "ko" ? " (예: 관리사 팁)" : l === "en" ? " (Therapist tip)" : " (Tiền tip KTV)"}" value="${esc((e.t && e.t[l]) || "")}">`).join("")}<button class="btn sm" type="button" data-xx="${i}">✕ 삭제</button></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:6px"><label class="sv-r" style="margin:0"><input type="radio" name="xm${i}" data-xm="${i}" value="all" ${byMin ? "" : "checked"}> 모든 메뉴 같은 금액</label><label class="sv-r" style="margin:0"><input type="radio" name="xm${i}" data-xm="${i}" value="min" ${byMin ? "checked" : ""}> 시간별 금액</label></div>
+      ${byMin ? `<div style="display:flex;gap:10px;flex-wrap:wrap">${(durs.length ? durs : [60, 90, 120]).map(d => `<label class="sv-r" style="margin:0">${d}분 <input data-xd="${i}" data-m="${d}" inputmode="numeric" style="width:100px" placeholder="0" value="${(e.mins && e.mins[d]) || ""}">₫</label>`).join("")}</div>`
+        : `<label class="sv-r" style="margin:0">금액 <input data-xa="${i}" inputmode="numeric" style="width:110px" placeholder="50000" value="${e.amt || ""}">₫</label>`}
+      <label class="sv-r"><input type="checkbox" data-xall="${i}" ${all ? "checked" : ""}> 전 메뉴</label>
+      ${all ? "" : groups.map(g => `<label class="sv-r" style="padding-left:18px"><input type="checkbox" data-xk="${i}" data-k="${g.ks.join(",")}" ${g.ks.every(k => (e.menus || []).includes(k)) ? "checked" : ""}> ${esc(g.n || "메뉴 " + (g.ks[0] + 1))}${g.ks.length > 1 ? ` · ${g.ks.length}개 시간` : ""}</label>`).join("")}
+    </div>`; }).join("")}
+    ${list.length < 5 ? `<button class="btn sm" type="button" data-xtip>+ 관리사 팁 (시간별)</button> <button class="btn sm" type="button" data-xadd>+ 다른 추가 요금</button>` : ""}
+    <p class="hint">바꾼 뒤 위쪽 <b>저장</b>을 눌러야 반영돼요.</p></details>`;
+  const redraw = () => { shopExDraw(s); el.querySelector("details").open = true; };
+  const num = v => +String(v).replace(/[^0-9]/g, "") || 0;
+  el.querySelectorAll("[data-xt]").forEach(x => x.oninput = () => { const e = list[+x.dataset.xt]; e.t = { ...(e.t || {}), [x.dataset.l]: x.value.trim() }; });
+  el.querySelectorAll("[data-xm]").forEach(x => x.onchange = () => { const e = list[+x.dataset.xm]; if (x.value === "min") { e.mins = e.mins || {}; delete e.amt; } else { delete e.mins; } redraw(); });
+  el.querySelectorAll("[data-xd]").forEach(x => x.oninput = () => { const e = list[+x.dataset.xd]; e.mins = { ...(e.mins || {}), [x.dataset.m]: num(x.value) }; });
+  el.querySelectorAll("[data-xa]").forEach(x => x.oninput = () => { list[+x.dataset.xa].amt = num(x.value); });
+  el.querySelectorAll("[data-xall]").forEach(x => x.onchange = () => { const e = list[+x.dataset.xall]; if (x.checked) { e.menus = []; delete e._pick; } else e._pick = true; redraw(); });
+  el.querySelectorAll("[data-xk]").forEach(x => x.onchange = () => { const e = list[+x.dataset.xk], ks = x.dataset.k.split(",").map(Number), ms = new Set(e.menus || []); ks.forEach(k => x.checked ? ms.add(k) : ms.delete(k)); e.menus = [...ms].sort((a, b) => a - b); });
+  el.querySelectorAll("[data-xx]").forEach(x => x.onclick = () => { list.splice(+x.dataset.xx, 1); redraw(); });
+  const tip = el.querySelector("[data-xtip]"); if (tip) tip.onclick = () => { list.push({ id: "x" + Date.now().toString(36), t: { ko: "관리사 팁", en: "Therapist tip", vi: "Tiền tip KTV" }, mins: {}, menus: [] }); redraw(); };
+  const add = el.querySelector("[data-xadd]"); if (add) add.onclick = () => { list.push({ id: "x" + Date.now().toString(36), t: {}, amt: 0, menus: [] }); redraw(); };
 }

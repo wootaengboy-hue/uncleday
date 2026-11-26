@@ -909,4 +909,6 @@ button.mg-opt:hover, .mg-opt.on { border-color: #B23A1E; background: #fff5f1; }
 .mg-opt b { font-size: 14px; white-space: nowrap; }
 .mg-opt s { color: #98a0aa; font-size: 11px; }
 .mg-opt .mg-ap { color: #8a8f98; font-size: 10.5px; }
+.mg-x { display: block; color: #6b5d3f; font-size: 11px; font-weight: 600; margin-top: 2px; white-space: nowrap; }
+.menu-row .price .mg-x { display: inline; }
 .mg-opt .pm-tag { display: inline-block; background: #B23A1E; color: #fff; border-radius: 6px; padding: 0 5px; font-size: 10.5px; font-weight: 800; }
