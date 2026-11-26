@@ -8,10 +8,11 @@ const AI_PRICE0 = {
   "claude-sonnet-5-5": { in: 2, out: 10, cw: 2.5, cr: 0.1 },
   "claude-haiku-5-5": { in: 0.1, out: 0.5, cw: 0.125, cr: 0.01, long: { in: 0.5, out: 2.5, cw: 0.625, cr: 0.05 } },   // 입력 10만 토큰 넘으면 long
 };
-const AI_FN = { "shop-extract": "📥 업체 정보 가져오기", "media-check": "🖼️ 이미지 AI 검사", "blog-ai": "📝 블로그 AI", "i18n-tr": "🌐 다국어 번역", "chat-tr": "💬 채팅 · 질문 번역" };
+const AI_FN = { "shop-extract": "📥 업체 정보 가져오기", "media-check": "🖼️ 이미지 AI 검사", "blog-ai": "📝 블로그 AI", "i18n-tr": "🌐 다국어 번역", "chat-tr": "💬 채팅 · 질문 번역", "console-past": "📊 콘솔 기록 (기능 구분 없음)" };
 const AI_KRW = 1400;   // 대략 원화 (1$ ≈ 1,400원)
 const aiPrice = m => ({ ...AI_PRICE0, ...(AI.price || {}) })[m] || null;
 function aiCost(r) {
+  if (r.usd != null) return +r.usd;   // 콘솔에서 옮겨 온 지난 기록 (universe53) — 금액이 정해져 있어요
   let p = aiPrice(r.model); if (!p) return null;
   if (p.long && (r.input_tokens + r.cache_read + r.cache_write) > 100000) p = p.long;
   return (r.input_tokens * p.in + r.output_tokens * p.out + r.cache_write * (p.cw ?? p.in * 1.25) + r.cache_read * (p.cr ?? p.in * 0.1)) / 1e6;
@@ -68,9 +69,9 @@ function aiDraw() {
     <h4>📅 최근 14일 <span class="hint">하루 사용액</span></h4>
     <div class="ai-days">${days.map(x => `<div title="${x.d} · ${aiUsd(x.v)}"><i style="height:${Math.max(2, Math.round(x.v / dmax * 70))}px" class="${x.d === today ? "t" : ""}"></i><small>${+x.d.slice(8)}</small></div>`).join("")}</div>
     <h4>🧩 기능별 (이번 달)</h4>
-    ${byFn.length ? `<table class="ai-t"><tr><th>기능</th><th>호출</th><th>읽은 양</th><th>쓴 양</th><th>금액</th></tr>${byFn.map(x => `<tr><td>${esc(AI_FN[x.f] || x.f)}</td><td>${x.n}</td><td>${aiTok(x.i)}</td><td>${aiTok(x.o)}</td><td><b>${aiUsd(x.c)}</b> <small>${aiWon(x.c)}</small></td></tr>`).join("")}</table>` : `<p class="hint">이번 달 기록이 아직 없어요 · Edge Function 을 최신 코드로 다시 배포하면 그 뒤부터 쌓여요</p>`}
+    ${byFn.length ? `<table class="ai-t"><tr><th>기능</th><th>호출</th><th>읽은 양</th><th>쓴 양</th><th>금액</th></tr>${byFn.map(x => `<tr><td>${esc(AI_FN[x.f] || x.f)}</td><td>${x.n}</td><td>${x.f === "console-past" ? "—" : aiTok(x.i)}</td><td>${x.f === "console-past" ? "—" : aiTok(x.o)}</td><td><b>${aiUsd(x.c)}</b> <small>${aiWon(x.c)}</small></td></tr>`).join("")}</table>` : `<p class="hint">이번 달 기록이 아직 없어요 · Edge Function 을 최신 코드로 다시 배포하면 그 뒤부터 쌓여요</p>`}
     <h4>🕘 최근 호출 30개</h4>
-    <div class="ai-recent">${R.slice(0, 30).map(r => `<div><span>${esc(aiAt(r.at))}</span><span>${esc(AI_FN[r.fn] || r.fn)}</span><span class="ref">${esc(r.ref || "")}</span><span>${aiTok(r.input_tokens + r.cache_read + r.cache_write)} → ${aiTok(r.output_tokens)}</span><b>${aiUsd(aiCost(r))}</b></div>`).join("") || `<p class="hint">기록이 없어요</p>`}</div>
+    <div class="ai-recent">${R.slice(0, 30).map(r => `<div><span>${esc(aiAt(r.at))}</span><span>${esc(AI_FN[r.fn] || r.fn)}</span><span class="ref">${esc(r.ref || "")}</span><span>${r.usd != null ? "금액만 (콘솔)" : `${aiTok(r.input_tokens + r.cache_read + r.cache_write)} → ${aiTok(r.output_tokens)}`}</span><b>${aiUsd(aiCost(r))}</b></div>`).join("") || `<p class="hint">기록이 없어요</p>`}</div>
     ${unknown.length ? `<div class="uni-err">단가를 모르는 모델이 있어요: ${unknown.map(esc).join(", ")} · 아래 단가에 넣어 주세요 (금액 계산에서 빠져요)</div>` : ""}
     <details class="ai-price"><summary>⚙️ 모델 단가 ($ / 100만 토큰)</summary>
       <p class="hint">Anthropic 가격표 기준 (11/26). 가격이 바뀌면 여기서 고쳐요 · 읽기 = 입력, 쓰기 = 출력. Haiku 는 한 번에 입력 10만 토큰이 넘으면 더 비싼 단가가 붙어요.</p>
