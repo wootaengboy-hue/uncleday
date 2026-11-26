@@ -228,6 +228,15 @@ async function vfCall(url, shopName) {
   if (!r.ok) throw new Error(j.error || (r.status === 404 ? "Edge Function 'shop-extract' 을 먼저 배포해 주세요" : "error " + r.status));
   return j;
 }
+// 새로 가져온 게 비어 있으면 예전에 모은 걸 지우지 않아요 (메뉴 0개 · 영업시간 없음 → 예전 것 유지)
+function vfMerge(prev, n) {
+  const keep = []; const o = { ...n };
+  if (!(n.menu || []).length && (prev.menu || []).length) { o.menu = prev.menu; keep.push(`메뉴 ${prev.menu.length}개`); }
+  ["hours", "address", "phone"].forEach(k => { if (!n[k] && prev[k]) { o[k] = prev[k]; keep.push({ hours: "영업시간", address: "주소", phone: "전화" }[k]); } });
+  if (!(n.features || []).length && (prev.features || []).length) o.features = prev.features;
+  if (keep.length) { o.src = [...new Set((n.src || []).concat(prev.src || []))]; o.note = [n.note, `이번에 못 찾은 ${keep.join(" · ")} 은(는) 예전에 모은 것을 그대로 뒀어요`].filter(Boolean).join(" · "); }
+  return o;
+}
 const vfCrawled = (j, url) => ({ hours: j.hours, address: j.address, phone: j.phone, menu: j.menu || [], features: j.features || [], note: j.note || "", src: j.src || [url] });
 // 📥 한꺼번에: 링크 있는 업체를 차례로 가져와요 (멈추기 가능)
 async function vfBulk(f) {
@@ -237,7 +246,7 @@ async function vfBulk(f) {
   for (const s of S) {
     if (VF.bulk.stop) break;
     try { const x = vfSrc(s.id), j = await vfCall(x.web, vfName(s));
-      await vfSave(s.id, { crawled: vfCrawled(j, x.web), crawled_at: new Date().toISOString(), review: x.review === "done" ? "done" : "todo" }); VF.bulk.ok++; }
+      await vfSave(s.id, { crawled: vfMerge(x.crawled || {}, vfCrawled(j, x.web)), crawled_at: new Date().toISOString(), review: x.review === "done" ? "done" : "todo" }); VF.bulk.ok++; }
     catch (e) { VF.bulk.bad.push(vfName(s)); if (/배포/.test(e.message)) { toast(e.message, 6000); break; } }
     VF.bulk.n++; vfDraw();
   }
@@ -277,7 +286,7 @@ async function vfExtract(s, url, isImg) {
     const prev = vfSrc(s.id).crawled || {};
     // 가격표 사진에서 가져오면 메뉴만 더하고, 페이지에서 가져오면 새로 바꿔요
     const c = isImg ? { ...prev, menu: (prev.menu || []).concat((j.menu || []).filter(m => !(prev.menu || []).some(o => o.name === m.name && o.minutes === m.minutes && o.price === m.price))), src: (prev.src || []).concat(j.src || []), note: [prev.note, j.note].filter(Boolean).join(" · ") }
-      : { hours: j.hours, address: j.address, phone: j.phone, menu: j.menu || [], features: j.features || [], note: j.note || "", src: j.src || [url] };
+      : vfMerge(prev, vfCrawled(j, url));
     delete VF.busy;
     await vfSave(s.id, { crawled: c, crawled_at: new Date().toISOString(), review: "todo" }, `가져왔어요 · 메뉴 ${(j.menu || []).length}개${j.hours ? " · 영업시간" : ""}${j.address ? " · 주소" : ""} — 비교해서 넣어 주세요`);
   } catch (e) { delete VF.busy; vfDraw(); toast("가져오기 실패: " + e.message, 6000); }

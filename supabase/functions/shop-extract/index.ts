@@ -34,18 +34,47 @@ const SYSTEM = `당신은 베트남 마사지 · 스파 · 뷰티 · 클리닉 �
  "features": ["..."], "note": "확인이 필요한 점 한두 줄 (없으면 빈 문자열)"}`;
 
 const BLOCK = /^https?:\/\/(localhost|127\.|10\.|192\.168\.|169\.254\.|0\.|\[)/i;
-function pageText(html: string) {
-  // 가격표 그림일 수 있는 사진 주소도 따로 모아요 (이름에 menu · price · bang-gia · bảng giá 등)
+// 베트남어 글자가 &#7845; 같은 숫자 표기로 들어 있는 사이트가 많아요 → 진짜 글자로 바꿔요 (안 바꾸면 "Võ Nguyên" 이 "V Nguy n" 처럼 깨져요)
+const NAMED: Record<string, string> = { nbsp: " ", amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", ndash: "–", mdash: "—", hellip: "…", rsquo: "’", lsquo: "‘", ldquo: "“", rdquo: "”", middot: "·", times: "×", deg: "°",
+  agrave: "à", aacute: "á", acirc: "â", atilde: "ã", egrave: "è", eacute: "é", ecirc: "ê", igrave: "ì", iacute: "í", ograve: "ò", oacute: "ó", ocirc: "ô", otilde: "õ", ugrave: "ù", uacute: "ú", yacute: "ý",
+  Agrave: "À", Aacute: "Á", Acirc: "Â", Atilde: "Ã", Egrave: "È", Eacute: "É", Ecirc: "Ê", Igrave: "Ì", Iacute: "Í", Ograve: "Ò", Oacute: "Ó", Ocirc: "Ô", Otilde: "Õ", Ugrave: "Ù", Uacute: "Ú", Yacute: "Ý" };
+function decode(t: string) {
+  return t.replace(/&#x([0-9a-f]+);/gi, (_, h) => { try { return String.fromCodePoint(parseInt(h, 16)); } catch (_e) { return " "; } })
+    .replace(/&#(\d+);/g, (_, d) => { try { return String.fromCodePoint(+d); } catch (_e) { return " "; } })
+    .replace(/&([a-z]+);/gi, (m, n) => NAMED[n] ?? " ");
+}
+const PRICEY = /menu|price|pricing|bang-?gia|banggia|gia-|pricelist|brochure|service|program|treatment|lieu-trinh|dich-vu|spa-menu|massage|goi|package|combo/;
+function pageText(html: string, base: string) {
+  // 가격표 그림일 수 있는 사진 (이름 · 설명에 menu · price · bảng giá 등)
   const imgs: string[] = [];
-  for (const m of html.matchAll(/<img[^>]+(?:data-src|src)=["']([^"']+)["'][^>]*>/gi)) {
+  for (const m of html.matchAll(/<img[^>]+(?:data-src|data-lazy-src|src)=["']([^"']+)["'][^>]*>/gi)) {
     const tag = m[0].toLowerCase(), src = m[1];
-    if (/menu|price|bang-?gia|banggia|gia-|pricelist|brochure|service/.test(src.toLowerCase() + tag)) imgs.push(src);
+    if (/\.svg|logo|icon|avatar|flag/.test(src.toLowerCase())) continue;
+    if (PRICEY.test(decodeURIComponent(src).toLowerCase() + tag)) imgs.push(src);
   }
-  const t = html.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
-    .replace(/<(br|\/p|\/div|\/li|\/tr|\/h\d)[^>]*>/gi, "\n").replace(/<[^>]+>/g, " ")
-    .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&#8363;|&#x20ab;/gi, "₫").replace(/&[a-z#0-9]+;/gi, " ")
+  // 같은 사이트 안의 메뉴 · 가격 · 연락처 페이지 링크
+  const links: string[] = []; let host = ""; try { host = new URL(base).host; } catch (_) {}
+  for (const m of html.matchAll(/<a[^>]+href=["']([^"'#]+)["'][^>]*>([\s\S]*?)<\/a>/gi)) {
+    let u = ""; try { u = new URL(m[1], base).toString(); } catch (_) { continue; }
+    if (!u.startsWith("http") || new URL(u).host !== host) continue;
+    const label = decode(m[2].replace(/<[^>]+>/g, " ")).toLowerCase(), path = decodeURIComponent(u).toLowerCase();
+    if (/\.(jpg|jpeg|png|webp|pdf|zip)(\?|$)/.test(path)) continue;
+    let sc = 0;
+    if (/menu|price|pricing|bang-?gia|banggia|gia|program|treatment|lieu-trinh|dich-vu|service|spa-menu|massage|goi|package|combo/.test(path)) sc += 2;
+    if (/menu|price|가격|메뉴|프로그램|bảng giá|giá|dịch vụ|liệu trình|treatment|service|program|massage/.test(label)) sc += 2;
+    if (/contact|lien-he|about|gioi-thieu|location|chi-nhanh|branch/.test(path) || /contact|liên hệ|연락|오시는|location/.test(label)) sc += 1;
+    if (sc) links.push(sc + "|" + u.replace(/#.*$/, ""));
+  }
+  const top = [...new Set(links.sort((a, b) => +b.split("|")[0] - +a.split("|")[0]).map(x => x.slice(x.indexOf("|") + 1)))].filter(u => u.replace(/\/$/, "") !== base.replace(/\/$/, ""));
+  const t = decode(html.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
+    .replace(/<(br|\/p|\/div|\/li|\/tr|\/h\d|\/td)[^>]*>/gi, "\n").replace(/<[^>]+>/g, " "))
     .replace(/[ \t]+/g, " ").replace(/\n\s*\n+/g, "\n").trim();
-  return { text: t.slice(0, 60000), imgs: [...new Set(imgs)].slice(0, 6) };
+  return { text: t, imgs: [...new Set(imgs)], links: top };
+}
+async function getPage(u: string, ms = 15000) {
+  const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), ms);
+  try { const r = await fetch(u, { signal: ctl.signal, redirect: "follow", headers: { "User-Agent": "Mozilla/5.0 (UncleDay shop info review)", "Accept-Language": "vi,en;q=0.8,ko;q=0.6" } }); return r; }
+  finally { clearTimeout(tm); }
 }
 
 Deno.serve(async (req) => {
@@ -65,36 +94,43 @@ Deno.serve(async (req) => {
 
   // 1) 주소 열기
   let r: Response;
-  try {
-    const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 20000);
-    r = await fetch(url, { signal: ctl.signal, redirect: "follow", headers: { "User-Agent": "Mozilla/5.0 (UncleDay shop info review)", "Accept-Language": "vi,en;q=0.8,ko;q=0.6" } });
-    clearTimeout(tm);
-  } catch (_) { return out({ error: "페이지를 열지 못했어요 (시간 초과 · 주소 확인)" }, 502); }
+  try { r = await getPage(url, 20000); } catch (_) { return out({ error: "페이지를 열지 못했어요 (시간 초과 · 주소 확인)" }, 502); }
   if (!r.ok) return out({ error: `사이트가 페이지를 주지 않았어요 (${r.status})` }, 502);
   const ct = r.headers.get("content-type") || "";
 
-  // 2) Claude 에게 보낼 내용: 사진이면 사진 그대로, 페이지면 글 + 가격표로 보이는 사진 최대 3장
+  // 2) Claude 에게 보낼 내용
+  //    사진이면 사진 그대로
+  //    페이지면: 첫 페이지 + 같은 사이트의 메뉴 · 가격 · 연락처 페이지 최대 4개를 더 읽고, 가격표로 보이는 사진 최대 4장
   const content: unknown[] = [];
-  let imgsUsed: string[] = [];
+  let imgsUsed: string[] = [], pagesRead: string[] = [];
   if (/^image\//i.test(ct)) {
     content.push({ type: "image", source: { type: "url", url } }, { type: "text", text: `이 사진은 업체 가격표예요. 업체: ${String(b.shop || "").slice(0, 80)}` });
   } else {
-    const html = (await r.text()).slice(0, 2_000_000);
-    const { text, imgs } = pageText(html);
-    const abs = imgs.map(s => { try { return new URL(s, r.url || url).toString(); } catch (_) { return ""; } }).filter(s => /^https:\/\//.test(s) && !BLOCK.test(s));
-    imgsUsed = abs.slice(0, 3);
+    const base = r.url || url;
+    const first = pageText((await r.text()).slice(0, 2_000_000), base);
+    const more = await Promise.all(first.links.slice(0, 4).map(async u => {
+      try { const x = await getPage(u, 12000); if (!x.ok || !/html/i.test(x.headers.get("content-type") || "")) return null;
+        return { u, ...pageText((await x.text()).slice(0, 1_500_000), x.url || u) }; } catch (_) { return null; } }));
+    const pages = [{ u: base, ...first }, ...more.filter(Boolean) as { u: string; text: string; imgs: string[] }[]];
+    pagesRead = pages.map(p => p.u);
+    let budget = 70000; const parts: string[] = [];
+    for (const p of pages) { const piece = p.text.slice(0, Math.max(0, Math.min(budget, p === pages[0] ? 30000 : 20000))); budget -= piece.length; parts.push(`--- 페이지: ${p.u} ---\n${piece || "(글이 거의 없어요)"}`); if (budget <= 0) break; }
+    const allImgs = pages.flatMap(p => p.imgs.map(s => { try { return new URL(s, p.u).toString(); } catch (_) { return ""; } })).filter(s => /^https:\/\//.test(s) && !BLOCK.test(s));
+    imgsUsed = [...new Set(allImgs)].slice(0, 4);
     for (const s of imgsUsed) content.push({ type: "image", source: { type: "url", url: s } });
-    content.push({ type: "text", text: `업체: ${String(b.shop || "").slice(0, 80)}\n주소: ${url}\n${imgsUsed.length ? `(위 사진 ${imgsUsed.length}장은 페이지 안의 가격표로 보이는 사진이에요)\n` : ""}--- 페이지 글 ---\n${text || "(글이 거의 없어요)"}` });
+    content.push({ type: "text", text: `업체: ${String(b.shop || "").slice(0, 80)}\n처음 주소: ${url}\n읽은 페이지 ${pages.length}개${imgsUsed.length ? ` · 위 사진 ${imgsUsed.length}장은 페이지 안의 메뉴 · 가격표로 보이는 사진이에요 (사진 속 가격도 읽어 주세요)` : ""}\n\n${parts.join("\n\n")}` });
   }
 
-  const ai = await fetch("https://api.anthropic.com/v1/messages", {
+  const ask = (c: unknown[]) => fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: { "x-api-key": KEY, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-    body: JSON.stringify({ model: MODEL, max_tokens: 4000, system: SYSTEM, messages: [{ role: "user", content }] }),
+    body: JSON.stringify({ model: MODEL, max_tokens: 4000, system: SYSTEM, messages: [{ role: "user", content: c }] }),
   });
+  let ai = await ask(content);
+  // 사진 하나라도 못 읽으면 (사이트가 막음 · 너무 큼) 글만으로 한 번 더
+  if (!ai.ok && imgsUsed.length && content.some((x: any) => x.type === "text")) { imgsUsed = []; ai = await ask(content.filter((x: any) => x.type === "text")); }
   const j = await ai.json().catch(() => ({}));
   if (!ai.ok) {
-    // 사진을 못 읽었으면 글만으로 한 번 더
     if (imgsUsed.length) return out({ error: "AI 호출 실패 (사진을 읽지 못함): " + ((j.error && j.error.message) || ai.status) + " · 가격표 사진 주소를 따로 넣어 보세요" }, 502);
     return out({ error: "AI 호출 실패: " + ((j.error && j.error.message) || ai.status) }, 502);
   }
@@ -107,7 +143,7 @@ Deno.serve(async (req) => {
       name: s(d.name, 100), name_ko: s(d.name_ko, 60), hours: s(d.hours, 120), address: s(d.address, 240), phone: s(d.phone, 60),
       menu: (Array.isArray(d.menu) ? d.menu : []).slice(0, 30).map((x: any) => ({ name: String(x.name || "").slice(0, 120), name_ko: s(x.name_ko, 80), minutes: +x.minutes || null, price: s(x.price, 60) })).filter((x: any) => x.name),
       features: (Array.isArray(d.features) ? d.features : []).slice(0, 3).map((x: unknown) => String(x).slice(0, 80)),
-      note: s(d.note, 300) || "", src: [url, ...imgsUsed], model: MODEL,
+      note: s(d.note, 300) || "", src: [...new Set([url, ...pagesRead, ...imgsUsed])].slice(0, 10), model: MODEL,
     });
   } catch (_) { return out({ error: "AI 답을 읽지 못했어요. 한 번 더 눌러 주세요" }, 502); }
 });
