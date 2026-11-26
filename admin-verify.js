@@ -348,7 +348,7 @@ function mqCard(m) {
       ${m.note ? `<p class="mq-note">🤖 ${esc(m.note)}</p>` : ""}
       <div class="mq-btns">${m.orig_url && m.orig_url.includes("/object/public/images/") ? `<button class="btn sm" data-mqstamp title="원본에서 작업본을 다시 만들어요 (16:9 · 글자 · 로고 없이)">🔄 작업본 다시 만들기</button>` : ""}${m.work_url ? `<button class="btn sm" data-mqai ${MQ.busy[m.id] ? "disabled" : ""}>${MQ.busy[m.id] ? "검사 중…" : "🤖 AI 검사"}</button>` : ""}
         <button class="btn sm ${m.verdict === "pass" ? "main" : ""}" data-mqv="pass">✓ 통과</button><button class="btn sm ${m.verdict === "issue" ? "bad" : ""}" data-mqv="issue">⚠ 문제</button><button class="btn sm" data-mqv="hold">⏸ 보류</button>
-        <span style="flex:1"></span>${can && !main ? `<button class="btn sm main" data-mqmain>★ 대표 사진으로</button>` : ""}${main ? `<button class="btn sm" data-mqunmain>대표에서 내리기</button>` : ""}<button class="btn sm" data-mqdel title="기록 지우기">🗑</button></div>
+        <span style="flex:1"></span>${main ? "" : can ? `<button class="btn sm main" data-mqmain>★ 대표 사진으로</button>` : `<span class="mq-nomain" title="${esc(why)}">★ 대표 사진으로 <em>— ${esc(why.replace(/ \(.*\)$/, ""))}</em></span>`}${main ? `<button class="btn sm" data-mqunmain>대표에서 내리기</button>` : ""}<button class="btn sm" data-mqdel title="기록 지우기">🗑</button></div>
     </div></div>`;
 }
 
