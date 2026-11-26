@@ -31,11 +31,17 @@ const SYSTEM = `당신은 베트남 마사지 · 스파 · 뷰티 · 클리닉 �
 - 인원 · 시간대 · 재방문 · 첫 방문 · 리뷰 같은 조건 할인이 적혀 있으면 deals 에 한국어 한 줄씩 (예: "2인 방문 20% 할인", "11:00-13:00 2인 이상 40% 할인"). 5개까지.
 - 메뉴는 대표적인 것 위주로 40개까지.
 - features 는 사실만 한국어 짧은 문장 (예: "무료 픽업", "한국어 응대") 3개까지. 광고 문구는 빼요.
+- about 은 업체 소개글에서 '사실'만 뽑아 엉클데이가 새로 쓰는 소개예요. 원문 문장을 그대로 옮기거나 살짝 바꿔 베끼지 말고, 광고 표현(최고 · 완벽한 · 예술 등)은 빼요.
+  facts: 사실 한국어 짧게 6개까지 (예: "임산부 마사지 있음", "유기농 오일 사용", "네일 서비스 함께 운영", "짐 보관 · 샤워실")
+  desc_ko: 엉클데이 말투(~예요 · ~해요)로 2~3문장, 여행객이 고를 때 도움이 되는 사실 위주 (120자 안쪽)
+  desc_en · desc_vi: desc_ko 와 같은 뜻의 영어 · 베트남어
+  reco_ko: "이런 분께 좋아요" 한 줄 (예: "임신 중이거나 아이와 함께 가는 가족"), reco_en · reco_vi 도
+  소개글이 없으면 about 은 null.
 - 반영구 화장 · 문신(phun xăm) 시술이 있으면 note 에 꼭 적어요.
 반드시 아래 JSON 하나만 출력해요:
 {"name": "업체 이름 (원문 · 간판에 쓰는 이름)" 또는 null, "name_ko": "한국어로 읽는 이름" 또는 null, "hours": "09:00 - 22:00" 또는 null, "address": 문자열 또는 null, "phone": 문자열 또는 null,
  "menu": [{"name": "...", "name_ko": "...", "minutes": 숫자 또는 null, "price": "..." 또는 null, "tip": "..." 또는 null, "section": "..." 또는 null, "section_ko": "..." 또는 null, "desc": "..." 또는 null, "desc_ko": "..." 또는 null}],
- "features": ["..."], "deals": ["..."], "note": "확인이 필요한 점 한두 줄 (없으면 빈 문자열)"}`;
+ "features": ["..."], "deals": ["..."], "about": {"facts": ["..."], "desc_ko": "...", "desc_en": "...", "desc_vi": "...", "reco_ko": "...", "reco_en": "...", "reco_vi": "..."} 또는 null, "note": "확인이 필요한 점 한두 줄 (없으면 빈 문자열)"}`;
 
 const BLOCK = /^https?:\/\/(localhost|127\.|10\.|192\.168\.|169\.254\.|0\.|\[)/i;
 // 베트남어 글자가 &#7845; 같은 숫자 표기로 들어 있는 사이트가 많아요 → 진짜 글자로 바꿔요 (안 바꾸면 "Võ Nguyên" 이 "V Nguy n" 처럼 깨져요)
@@ -149,6 +155,8 @@ Deno.serve(async (req) => {
         tip: s(x.tip, 40), section: s(x.section, 40), section_ko: s(x.section_ko, 30), desc: s(x.desc, 200), desc_ko: s(x.desc_ko, 160) })).filter((x: any) => x.name),
       deals: (Array.isArray(d.deals) ? d.deals : []).slice(0, 5).map((x: unknown) => String(x).slice(0, 80)),
       features: (Array.isArray(d.features) ? d.features : []).slice(0, 3).map((x: unknown) => String(x).slice(0, 80)),
+      about: d.about && typeof d.about === "object" ? { facts: (Array.isArray(d.about.facts) ? d.about.facts : []).slice(0, 6).map((x: unknown) => String(x).slice(0, 60)),
+        desc_ko: s(d.about.desc_ko, 240), desc_en: s(d.about.desc_en, 400), desc_vi: s(d.about.desc_vi, 400), reco_ko: s(d.about.reco_ko, 80), reco_en: s(d.about.reco_en, 140), reco_vi: s(d.about.reco_vi, 140) } : null,
       note: s(d.note, 300) || "", src: [...new Set([url, ...pagesRead, ...imgsUsed])].slice(0, 10), model: MODEL,
     });
   } catch (_) { return out({ error: "AI 답을 읽지 못했어요. 한 번 더 눌러 주세요" }, 502); }

@@ -109,6 +109,13 @@ function vfDetail(s, x) {
         <span class="vf-tin"><input id="vfAddr" value="${esc(addr)}" placeholder="주소">${ac ? `<small class="was">지금 손님 화면: ${esc(liveAddr || "없음")}</small>` : ""}</span>
         <span>${ac ? `<label class="vf-on"><input type="checkbox" data-vfon="addr" ${vfOn(D, "addr") ? "checked" : ""}> 반영</label>` : c.address ? "<i class='ok'>같아요</i>" : ""}</span></div>
       ${(c.features || []).length ? `<div class="vf-tr"><span>✨ 특징</span><span>${(c.features || []).map(esc).join(" · ")}</span><span>${(s.tags || []).map(t => "#" + esc(t.ko || t.en || "")).join(" ")}</span><span class="hint">태그는 업체 편집에서</span></div>` : ""}
+      ${(() => { const ab = c.about || null, dc = ch.find(k => k.key === "desc"), rc = ch.find(k => k.key === "reco"); if (!ab && !D.desc && !s.desc) return "";
+        return `<div class="vf-tr ${dc ? "chg" : ""}"><span>📝 소개</span><span>${ab ? `${(ab.facts || []).length ? `<small class="vf-facts">${ab.facts.map(f => "· " + esc(f)).join("<br>")}</small>` : ""}${ab.desc_ko ? `<small class="was">엉클데이 말투로 새로 쓴 소개 (원문을 베끼지 않아요):</small>${esc(ab.desc_ko)} <button class="btn sm" data-vfab="desc">이 소개 넣기</button>` : ""}` : "—"}</span>
+          <span class="vf-tin"><textarea id="vfDesc" rows="3" placeholder="소개 (한국어)">${esc((D.desc && D.desc.ko) || "")}</textarea>${dc ? `<small class="was">지금 손님 화면: ${esc(((s.desc && s.desc.ko) || "없음").slice(0, 80))}…</small>` : ""}</span>
+          <span>${dc ? `<label class="vf-on"><input type="checkbox" data-vfon="desc" ${vfOn(D, "desc") ? "checked" : ""}> 반영</label>` : ""}</span></div>
+        <div class="vf-tr ${rc ? "chg" : ""}"><span>👍 추천</span><span>${ab && ab.reco_ko ? `${esc(ab.reco_ko)} <button class="btn sm" data-vfab="reco">넣기</button>` : "—"}</span>
+          <span class="vf-tin"><input id="vfReco" value="${esc((D.reco && D.reco.ko) || "")}" placeholder="이런 분께 좋아요 (한국어)">${rc ? `<small class="was">지금 손님 화면: ${esc((s.recommend && s.recommend.ko) || "없음")}</small>` : ""}</span>
+          <span>${rc ? `<label class="vf-on"><input type="checkbox" data-vfon="reco" ${vfOn(D, "reco") ? "checked" : ""}> 반영</label>` : ""}</span></div>`; })()}
     </div>
     <h5>💰 메뉴 · 가격 <small>모아 온 메뉴 ${menu.length}개 · 엉클데이 메뉴 ${D.menu.length}개${usd ? " · 달러 가격은 동으로 바꿔서 넣어 주세요" : ""}</small></h5>
     <div class="vf-menu3">
@@ -151,6 +158,8 @@ const vfP = m => m.vnd != null ? +m.vnd || 0 : vfVnd(m.price);
 // 엉클데이 쪽 초안 (검수 완료 전까지 손님 화면에 안 나가요) · 줄마다 _o = 원래 몇 번째 메뉴였는지 (새 메뉴는 null)
 function vfDraftOf(s, c) {
   const D = c.draft || { menu: JSON.parse(JSON.stringify(s.menu || [])).map((m, j) => ({ ...m, _o: j, _k: "o" + j })), open: s.open || "", close: s.close || "", address: s.address || null, ck: {} };
+  if (D.desc === undefined) D.desc = s.desc ? JSON.parse(JSON.stringify(s.desc)) : null;   // 📝 소개 · 👍 추천 (검수 완료 때 반영)
+  if (D.reco === undefined) D.reco = s.recommend ? JSON.parse(JSON.stringify(s.recommend)) : null;
   D.ck = D.ck || {}; const old = !D.menu.some(m => m._k);   // 예전 초안: 순서대로 원래 메뉴로 봐요
   D.menu.forEach((m, j) => { if (!m._k) { m._o = old && j < (s.menu || []).length ? j : m._o != null ? m._o : null; m._k = (m._o != null ? "o" : "n") + j; } });
   return D;
@@ -163,6 +172,9 @@ function vfChanges(s, D) {
   live.forEach((o, j) => { if (!seen.has(j)) out.push({ key: "d" + j, kind: "del", o, j }); });
   if ((s.open || "") !== (D.open || "") || (s.close || "") !== (D.close || "")) out.push({ key: "hours", kind: "hours" });
   if (vfAddr(s.address).trim() !== vfAddr(D.address).trim()) out.push({ key: "addr", kind: "addr" });
+  const tri = o => JSON.stringify(["ko", "en", "vi"].map(l => ((o && o[l]) || "").trim()));
+  if (D.desc !== undefined && tri(s.desc) !== tri(D.desc)) out.push({ key: "desc", kind: "desc" });
+  if (D.reco !== undefined && tri(s.recommend) !== tri(D.reco)) out.push({ key: "reco", kind: "reco" });
   (D.deals || []).forEach(t => { if (!(s.promos || []).some(p => p.t && p.t.ko === t)) out.push({ key: "deal:" + t, kind: "deal", t }); });
   return out;
 }
@@ -176,7 +188,7 @@ function vfFinal(s, D) {
     else if (c.kind === "new") { if (on(m._k)) rows.push([m._o != null ? m._o : j, clean(m)]); }
     else rows.push([m._o, on(m._k) ? clean(m) : live[m._o]]); });
   ch.filter(c => c.kind === "del" && !on(c.key)).forEach(c => { const at = rows.findIndex(r => r[0] > c.j); rows.splice(at < 0 ? rows.length : at, 0, [c.j, live[c.j]]); });
-  return { menu: rows.map(r => r[1]), open: on("hours") ? D.open : s.open, close: on("hours") ? D.close : s.close, address: on("addr") ? D.address : s.address, deals: ch.filter(c => c.kind === "deal").map(c => c.t), n: ch.filter(c => on(c.key)).length };
+  return { menu: rows.map(r => r[1]), open: on("hours") ? D.open : s.open, close: on("hours") ? D.close : s.close, address: on("addr") ? D.address : s.address, desc: ch.some(c => c.key === "desc") && on("desc") ? D.desc : s.desc, recommend: ch.some(c => c.key === "reco") && on("reco") ? D.reco : s.recommend, deals: ch.filter(c => c.kind === "deal").map(c => c.t), n: ch.filter(c => on(c.key)).length };
 }
 // 모아 온 메뉴 i → 엉클데이 메뉴 j (이름 · 시간이 비슷하면)
 function vfTargets(D, menu) {
@@ -347,6 +359,12 @@ function vfBind(el) {
     if (inp.dataset.vfpr !== undefined) { if (v && v < 10000) return toast("가격은 동(VND)으로 넣어 주세요 (예: 550000)"); t.price = v; } else t.min = v;
     saveD(); });
   row.querySelectorAll("[data-vfdel]").forEach(b => b.onclick = () => { const j = +b.dataset.vfdel, m = D.menu[j]; D.menu.splice(j, 1); saveD(`‘${vfTx(m.name)}’ 를 뺐어요 · 검수 완료 전까지 손님 화면은 그대로예요`); });
+  // 📝 소개 · 👍 추천: [넣기]는 한 · 영 · 베 세 언어를 함께, 직접 고치면 한국어만 (영어 · 베트남어는 업체 편집에서)
+  row.querySelectorAll("[data-vfab]").forEach(b => b.onclick = () => { const ab = c.about || {}, k = b.dataset.vfab;
+    if (k === "desc") D.desc = { ko: ab.desc_ko || "", en: ab.desc_en || "", vi: ab.desc_vi || "" }; else D.reco = { ko: ab.reco_ko || "", en: ab.reco_en || "", vi: ab.reco_vi || "" };
+    saveD(k === "desc" ? "소개를 넣었어요 (한 · 영 · 베) · 검수 완료 때 반영" : "추천 문구를 넣었어요 · 검수 완료 때 반영"); });
+  const dsc = row.querySelector("#vfDesc"); if (dsc) dsc.onchange = () => { D.desc = { ...(D.desc || {}), ko: dsc.value.trim() }; saveD("소개(한국어)를 고쳤어요 · 영어 · 베트남어는 업체 편집에서 확인해 주세요"); };
+  const rco = row.querySelector("#vfReco"); if (rco) rco.onchange = () => { D.reco = { ...(D.reco || {}), ko: rco.value.trim() }; saveD(); };
   const aa = row.querySelector("#vfAddr"); if (aa) aa.onchange = () => { const v = aa.value.trim(), o = D.address || {}, same = !o.ko || o.ko === o.vi;
     D.address = { ...o, vi: v, en: !o.en || o.en === o.vi ? v : o.en, ko: same ? v : o.ko }; saveD(); };
   const oo = row.querySelector("#vfOpen"), oc = row.querySelector("#vfClose");
@@ -361,7 +379,7 @@ function vfBind(el) {
     const n = F ? F.n : 0, pm = (s.promos || []).concat(s.extras || []).some(p => (p.menus || []).length);
     const go = async () => { rv.disabled = true;
       try {
-        if (n) { s.menu = F.menu; s.open = F.open; s.close = F.close; if (F.address) s.address = F.address;
+        if (n) { s.menu = F.menu; s.open = F.open; s.close = F.close; if (F.address) s.address = F.address; if (F.desc) s.desc = F.desc; if (F.recommend) s.recommend = F.recommend;
           const dl = (F.deals || []).filter(t => vfOn(D, "deal:" + t)); if (dl.length) s.promos = (s.promos || []).concat(dl.map(t => ({ id: "p" + Math.random().toString(36).slice(2, 9), on: true, kind: "text", menus: [], t: { ko: t } }))).slice(0, 10); }
         if (goPub) META[id] = { ...(META[id] || {}), published: true };
         if (n || goPub) await dbSaveShop(s);
@@ -392,10 +410,11 @@ function vfMerge(prev, n) {
   if (!(n.menu || []).length && (prev.menu || []).length) { o.menu = prev.menu; keep.push(`메뉴 ${prev.menu.length}개`); }
   ["hours", "address", "phone"].forEach(k => { if (!n[k] && prev[k]) { o[k] = prev[k]; keep.push({ hours: "영업시간", address: "주소", phone: "전화" }[k]); } });
   if (!(n.features || []).length && (prev.features || []).length) o.features = prev.features;
+  if (!n.about && prev.about) o.about = prev.about;
   if (keep.length) { o.src = [...new Set((n.src || []).concat(prev.src || []))]; o.note = [n.note, `이번에 못 찾은 ${keep.join(" · ")} 은(는) 예전에 모은 것을 그대로 뒀어요`].filter(Boolean).join(" · "); }
   return o;
 }
-const vfCrawled = (j, url) => ({ hours: j.hours, address: j.address, phone: j.phone, menu: j.menu || [], features: j.features || [], deals: j.deals || [], note: j.note || "", src: j.src || [url] });
+const vfCrawled = (j, url) => ({ hours: j.hours, address: j.address, phone: j.phone, menu: j.menu || [], features: j.features || [], deals: j.deals || [], about: j.about || null, note: j.note || "", src: j.src || [url] });
 // 📥 한꺼번에: 링크 있는 업체를 차례로 가져와요 (멈추기 가능)
 async function vfBulk(f) {
   const S = (typeof shops !== "undefined" ? shops : []).filter(s => { const x = vfSrc(s.id); return x.web && (f === "all" || (f === "todo" && x.review !== "done") || (f === "new" && !x.crawled)); });
@@ -447,7 +466,7 @@ async function vfExtract(s, url, isImg) {
     const fill = (o, m) => { const r = { ...o }; Object.keys(m).forEach(k => { if (m[k] != null && m[k] !== "" && (r[k] == null || r[k] === "")) r[k] = m[k]; }); return r; };
     const same = (o, m) => String(o.name || "").trim().toLowerCase() === String(m.name || "").trim().toLowerCase() && (+o.minutes || 0) === (+m.minutes || 0);
     const mergeImg = () => { const out = (prev.menu || []).slice(); (j.menu || []).forEach(m => { const k = out.findIndex(o => same(o, m)); if (k >= 0) out[k] = fill(out[k], m); else out.push(m); }); return out; };
-    const c = isImg ? { ...prev, menu: mergeImg(), deals: [...new Set((prev.deals || []).concat(j.deals || []))], src: [...new Set((prev.src || []).concat(j.src || []))], note: [prev.note, j.note].filter(Boolean).join(" · ") }
+    const c = isImg ? { ...prev, menu: mergeImg(), deals: [...new Set((prev.deals || []).concat(j.deals || []))], about: prev.about || j.about || null, src: [...new Set((prev.src || []).concat(j.src || []))], note: [prev.note, j.note].filter(Boolean).join(" · ") }
       : vfMerge(prev, vfCrawled(j, url));
     delete VF.busy;
     // 홈페이지 링크가 아직 없으면, 정보를 실제로 가져온 사이트 주소를 홈페이지로 같이 저장해요 (페이스북 · 인스타 · 우리 저장소 사진은 빼요)
