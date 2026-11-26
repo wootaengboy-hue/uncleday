@@ -434,7 +434,7 @@ async function vfBulk(f) {
 async function vfNewShop(url, city, cat) {
   if (!/^https?:\/\/\S+$/.test(url)) return toast("새 업체 홈페이지 주소(https://…)를 넣어 주세요");
   const dup = (VF.src || []).find(x => x.web && x.web.replace(/\/$/, "") === url.replace(/\/$/, ""));
-  if (dup) { VF.open = dup.shop_id; VF.f = "all"; vfDraw(); return toast("이미 등록된 업체 링크예요 · 그 업체를 열었어요", 4500); }
+  if (dup) { VF.open = dup.shop_id; VF.f = "all"; VF.q = ""; VF._scroll = null; vfDraw(); return toast("이미 등록된 업체 링크예요 · 그 업체를 열었어요", 4500); }
   VF.busy = "new"; vfDraw();
   try {
     const j = await vfCall(url, "");
@@ -447,8 +447,9 @@ async function vfNewShop(url, city, cat) {
     META[id] = { published: false, sort: 999 };
     await dbSaveShop(s); shops.push(s);
     await vfSave(id, { web: url, crawled: vfCrawled(j, url), crawled_at: new Date().toISOString(), review: "todo" });
-    delete VF.busy; VF.f = "todo"; VF.open = id; VF._scroll = null; vfDraw();
-    toast(`‘${vfName(s)}’ 업체를 숨김으로 만들었어요 · 메뉴 ${s.menu.length}개 · 확인 후 업체 편집에서 공개해 주세요`, 7000);
+    delete VF.busy; VF.f = "todo"; VF.q = ""; VF.open = id; VF._scroll = null; vfDraw();   // 검색어가 남아 있으면 새 업체가 목록에서 안 보여서 지워요
+    const got = [s.menu.length ? `메뉴 ${s.menu.length}개` : "", s.menu.some(m => m.price) ? "" : "가격 없음", j.hours ? "영업시간" : "", j.address ? "주소" : ""].filter(Boolean).join(" · ");
+    toast(`‘${vfName(s)}’ 업체를 숨김으로 만들었어요 (목록 맨 아래 · 펼쳐 둠) · ${got}${s.menu.some(m => m.price) ? "" : " — 가격표 페이지 링크나 📋 캡처로 한 번 더 가져와 주세요"}`, 9000);
   } catch (e) { delete VF.busy; vfDraw(); toast("새 업체 만들기 실패: " + e.message, 6000); }
 }
 // 📥 가져오기: Edge Function 'shop-extract' (홈페이지 · 메뉴 페이지 · 가격표 사진 → 영업시간 · 주소 · 메뉴 가격)

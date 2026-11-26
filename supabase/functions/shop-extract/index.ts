@@ -131,7 +131,17 @@ Deno.serve(async (req) => {
   } else {
     const base = r.url || url;
     const first = pageText((await r.text()).slice(0, 2_000_000), base);
-    const more = await Promise.all(first.links.slice(0, 4).map(async u => {
+    // 첫 화면에 가격표 링크가 없으면 흔한 가격표 주소를 몇 개 더 찾아봐요 (예: /bang-gia-dich-vu/ — 첫 화면 메뉴에 없는 사이트가 많아요)
+    let picks = first.links.slice(0, 4);
+    if (!picks.some(u => /bang-?gia|banggia|price|pricing|menu/i.test(decodeURIComponent(u)))) {
+      const o = new URL(base).origin;
+      const guess = ["/bang-gia/", "/bang-gia-dich-vu/", "/bang-gia-dich-vu", "/price/", "/menu/", "/pricing/"].map(x => o + x);
+      const hit = (await Promise.all(guess.map(async u => { try { const x = await getPage(u, 6000); return x.ok && /html/i.test(x.headers.get("content-type") || "") ? (x.url || u) : null; } catch (_) { return null; } })))
+        .filter(Boolean) as string[];
+      const found = [...new Set(hit)].filter(u => u.replace(/\/$/, "") !== base.replace(/\/$/, "") && new URL(u).pathname !== "/").slice(0, 2);
+      picks = [...found, ...picks.filter(u => !found.includes(u))].slice(0, 4);
+    }
+    const more = await Promise.all(picks.map(async u => {
       try { const x = await getPage(u, 12000); if (!x.ok || !/html/i.test(x.headers.get("content-type") || "")) return null;
         return { u, ...pageText((await x.text()).slice(0, 1_500_000), x.url || u) }; } catch (_) { return null; } }));
     const pages = [{ u: base, ...first }, ...more.filter(Boolean) as { u: string; text: string; imgs: string[] }[]];
