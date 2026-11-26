@@ -539,6 +539,9 @@ function mqDraw() {
     ${(() => { const ex = (typeof shops !== "undefined" ? shops : []).filter(x => typeof isExtImg === "function" && (isExtImg(x.img) || (x.menuImgs || []).some(m => isExtImg(m.src))));
       return ex.length ? `<div class="mq-ext"><b>🔗 바깥 사이트 사진 주소를 쓰는 업체 ${ex.length}곳</b> <small>대표 · 가격표 사진이 다른 사이트 주소 그대로예요 (그 사이트가 지우거나 막으면 깨져요). 엉클데이 저장소로 옮겨 우리 주소로 바꿔요.</small>
         <button class="btn sm main" id="mqExtGo" ${MQ.extBusy ? "disabled" : ""}>${MQ.extBusy ? esc(MQ.extBusy) : `🔄 ${ex.length}곳 모두 엉클데이로 옮기기`}</button></div>` : ""; })()}
+    ${(() => { const C = MQ.cut || {}, n = (C.list || []).length;
+      return `<div class="mq-ext mq-cut"><b>✂️ 예전에 올린 사진 중 잘린 작업본</b> <small>${C.done == null ? "예전엔 작업본을 무조건 16:9 가운데로 잘랐어요. 로고 · 정사각 · 세로 사진이 잘렸는지 모두 살펴봐요 (원본은 그대로 남아 있어요)" : n ? `${C.done}장 중 <b>${n}장</b>이 많이 잘렸어요 (로고 · 그래픽 ${C.list.filter(x => x.logo).length}장) — 원본에서 '전체 보이기'로 다시 만들어요` : `${C.done}장 모두 괜찮아요${C.fixed ? ` · 방금 ${C.fixed}장 고쳤어요` : ""}`}</small>
+        ${n ? `<button class="btn sm main" id="mqCutFix" ${C.busy ? "disabled" : ""}>${C.busy ? esc(C.busy) : `🖼️ ${n}장 모두 전체 보이기로 다시 만들기`}</button>` : `<button class="btn sm" id="mqCutGo" ${C.busy ? "disabled" : ""}>${C.busy ? esc(C.busy) : C.done == null ? "🔍 잘린 사진 찾기" : "🔍 다시 찾기"}</button>`}</div>`; })()}
     ${orphan.length ? `<div class="mq-orph"><b>🔎 출처 확인 필요 ${orphan.length}곳</b> <small>지금 손님 화면에 나오는데 어디서 온 사진인지 기록이 없어요. 우리가 찍었거나 허락받은 사진이면 출처를 고르고, 아니면 내려 주세요.</small>
       <div class="mq-orl">${orphan.map(s => `<div class="mq-oi"><img src="${esc(s.img)}" alt="" loading="lazy"><b>${esc(vfName(s))}</b><div><select data-mqos="${esc(s.id)}"><option value="">출처 고르기…</option><option value="field">📷 현장 사진 (우리가 찍음)</option><option value="owner">🤝 업체 제공 · 허락</option></select><button class="btn sm" data-mqdown="${esc(s.id)}">내리기</button></div></div>`).join("")}</div></div>` : ""}
     <div class="mq-up">
@@ -710,6 +713,8 @@ async function mqFetch(u) {
   const b = await r.blob(); if (!/^image\//.test(b.type)) throw new Error("사진 파일이 아니에요"); return b;
 }
 function mqBind(el) {
+  const cg = el.querySelector("#mqCutGo"); if (cg) cg.onclick = () => mqScanCut();
+  const cf = el.querySelector("#mqCutFix"); if (cf) cf.onclick = () => confirmBox(`${MQ.cut.list.length}장을 원본에서 '전체 보이기'로 다시 만들까요?`, () => mqFixCut(), "자르지 않고 전체가 보이게 · 대표 사진이면 손님 화면도 바뀌어요 · 원본은 그대로", "다시 만들기", false);
   const eg = el.querySelector("#mqExtGo"); if (eg) eg.onclick = async () => {
     const ex = shops.filter(x => isExtImg(x.img) || (x.menuImgs || []).some(m => isExtImg(m.src))); let ok = 0, bad = [];
     for (const [k, x] of ex.entries()) { MQ.extBusy = `옮기는 중… ${k + 1}/${ex.length}`; mqDraw();
@@ -801,13 +806,7 @@ function mqBind(el) {
     card.querySelectorAll("[data-mqstamp]").forEach(rs => rs.onclick = async () => {
       const [mode, ay] = rs.dataset.mqstamp.split(":");
       card.querySelectorAll("[data-mqstamp]").forEach(b => b.disabled = true); rs.textContent = "만드는 중…";
-      try {
-        const s2 = vfShop(m.shop_id), blob = await (await fetch(m.orig_url)).blob();
-        const w = await mqStamp(await mqShrink(blob, 2400), s2 ? vfName(s2) : m.shop_id, mqStampOn(), mode, ay != null ? +ay : null);
-        const wu = await mqPut(w, `media/${m.shop_id}/${Date.now().toString(36)}-w.jpg`), old = m.work_url, wasMain = s2 && s2.img === old;
-        await mqUpd(m, { work_url: wu }, mode === "fit" ? "작업본을 다시 만들었어요 · 자르지 않고 전체가 보여요" : "작업본을 다시 만들었어요 · 고른 쪽을 남기고 16:9로 잘랐어요");
-        if (wasMain) { s2.img = wu; try { await dbSaveShop(s2); } catch (e) { dbErr(e, "대표 사진 바꾸기"); } }
-        if (old && old.includes("/object/public/images/media/")) sb.storage.from("images").remove([old.split("/object/public/images/")[1]]);
+      try { await mqRemake(m, mode, ay != null ? +ay : null); toast(mode === "fit" ? "작업본을 다시 만들었어요 · 자르지 않고 전체가 보여요" : "작업본을 다시 만들었어요 · 고른 쪽을 남기고 16:9로 잘랐어요"); mqDraw();
       } catch (e) { dbErr(e, "작업본 다시 만들기"); mqDraw(); }
     });
     const ai = card.querySelector("[data-mqai]"); if (ai) ai.onclick = () => mqAi(m);
@@ -820,6 +819,31 @@ function mqBind(el) {
       if (paths.length) await sb.storage.from("images").remove(paths);
       MQ.list = MQ.list.filter(x => x.id !== m.id); toast("지웠어요"); mqDraw(); }, "올린 사진 파일도 함께 지워요");
   });
+}
+// 🔄 원본에서 작업본 다시 만들기 (대표 사진이면 업체 사진도 새 작업본으로 바꿔요)
+async function mqRemake(m, mode, ay) {
+  const s2 = vfShop(m.shop_id), blob = await (await fetch(m.orig_url)).blob();
+  const w = await mqStamp(await mqShrink(blob, 2400), s2 ? vfName(s2) : m.shop_id, mqStampOn(), mode, ay);
+  const wu = await mqPut(w, `media/${m.shop_id}/${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}-w.jpg`), old = m.work_url, wasMain = s2 && s2.img === old;
+  const r = await sb.from("shop_media").update({ work_url: wu }).eq("id", m.id).select().single(); if (r.error) throw r.error; Object.assign(m, r.data);
+  if (wasMain) { s2.img = wu; await dbSaveShop(s2); }
+  if (old && old.includes("/object/public/images/media/")) sb.storage.from("images").remove([old.split("/object/public/images/")[1]]);
+}
+// 🔍 예전에 올린 사진 중 잘린 작업본 찾기 → 한꺼번에 '전체 보이기'로
+async function mqScanCut() {
+  const L = (MQ.list || []).filter(m => m.orig_url && m.work_url && m.orig_url.includes("/object/public/images/"));
+  MQ.cut = { busy: `살펴보는 중… 0/${L.length}`, list: [] }; mqDraw(); let i = 0;
+  for (const m of L) { i++;
+    try { const [img, wk] = await Promise.all([mqLoadImg(m.orig_url), mqLoadImg(m.work_url)]); const a = mqAnalyze(img);
+      if ((a.logo || a.loss > 0.3) && !mqIsFit(wk, a, img)) MQ.cut.list.push({ id: m.id, pct: Math.round(a.loss * 100), logo: a.logo }); } catch (e) {}
+    if (i % 3 === 0 || i === L.length) { MQ.cut.busy = `살펴보는 중… ${i}/${L.length}`; const b = document.getElementById("mqCutGo"); if (b) b.textContent = MQ.cut.busy; } }
+  MQ.cut.busy = ""; MQ.cut.done = L.length; mqDraw();
+}
+async function mqFixCut() {
+  const ids = (MQ.cut && MQ.cut.list || []).map(x => x.id); let n = 0, k = 0;
+  for (const id of ids) { k++; const m = MQ.list.find(x => x.id === id); if (!m) continue; MQ.cut.busy = `다시 만드는 중… ${k}/${ids.length}`; const b = document.getElementById("mqCutFix"); if (b) b.textContent = MQ.cut.busy;
+    try { await mqRemake(m, "fit", null); n++; } catch (e) { dbErr(e, "작업본 다시 만들기"); } }
+  MQ.cut = { list: [], done: MQ.cut.done, fixed: n }; toast(`${n}장을 '전체 보이기'로 다시 만들었어요 · 대표 사진이던 건 손님 화면도 바로 바뀌어요`, 6000); mqDraw();
 }
 async function mqAi(m) {
   MQ.busy[m.id] = 1; mqDraw();
