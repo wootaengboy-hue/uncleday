@@ -877,6 +877,7 @@ function shopPmDraw(s) {
         <span style="flex-basis:100%;height:0"></span>
         <span class="hint">기간</span><input type="date" data-pf="${i}" value="${esc(p.from || "")}"><span>~</span><input type="date" data-pe="${i}" value="${esc(p.to || "")}"><span class="hint">(비우면 제한 없음)</span></div>
       <label class="sv-r"><input type="checkbox" data-pall="${i}" ${all ? "checked" : ""}> 전 메뉴</label>
+      ${all ? "" : shopSecChips(menu, p.menus || [], "data-psec", i)}
       ${all ? "" : shopMenuGroups(menu).map(g => `<label class="sv-r" style="padding-left:18px"><input type="checkbox" data-pm="${i}" data-k="${g.ks.join(",")}" ${g.ks.every(k => (p.menus || []).includes(k)) ? "checked" : ""}> ${esc(g.n || "메뉴 " + (g.ks[0] + 1))}${g.ks.length > 1 ? ` · ${g.ks.map(k => (menu[k].min || "?") + "분").join(" · ")}` : menu[g.ks[0]].price ? " · ₫" + menu[g.ks[0]].price.toLocaleString("en-US") : ""}</label>`).join("")}
     </div>`; }).join("")}
     ${list.length < 10 ? `<button class="btn sm" type="button" data-padd>+ 이벤트 더하기</button>` : ""}
@@ -892,7 +893,9 @@ function shopPmDraw(s) {
   el.querySelectorAll("[data-pf]").forEach(x => x.onchange = () => { const p = list[+x.dataset.pf]; if (x.value) p.from = x.value; else delete p.from; });
   el.querySelectorAll("[data-pe]").forEach(x => x.onchange = () => { const p = list[+x.dataset.pe]; if (x.value) p.to = x.value; else delete p.to; });
   el.querySelectorAll("[data-pall]").forEach(x => x.onchange = () => { const p = list[+x.dataset.pall]; if (x.checked) { p.menus = []; delete p._pick; } else p._pick = true; redraw(); });
-  el.querySelectorAll("[data-pm]").forEach(x => x.onchange = () => { const p = list[+x.dataset.pm], ks = x.dataset.k.split(",").map(Number), ms = new Set(p.menus || []); ks.forEach(k => x.checked ? ms.add(k) : ms.delete(k)); p.menus = [...ms].sort((a, b) => a - b); });
+  el.querySelectorAll("[data-pm]").forEach(x => x.onchange = () => { const p = list[+x.dataset.pm], ks = x.dataset.k.split(",").map(Number), ms = new Set(p.menus || []); ks.forEach(k => x.checked ? ms.add(k) : ms.delete(k)); p.menus = [...ms].sort((a, b) => a - b); redraw(); });
+  el.querySelectorAll("[data-psec]").forEach(b => b.onclick = () => { const p = list[+b.dataset.psec], ks = b.dataset.ks.split(",").map(Number), ms = new Set(p.menus || []), on = ks.every(k => ms.has(k));
+    ks.forEach(k => on ? ms.delete(k) : ms.add(k)); p.menus = [...ms].sort((a, b) => a - b); redraw(); });
   el.querySelectorAll("[data-px]").forEach(x => x.onclick = () => { list.splice(+x.dataset.px, 1); redraw(); });
   const add = el.querySelector("[data-padd]"); if (add) add.onclick = () => { list.push({ id: "p" + Date.now().toString(36), on: true, kind: "pct", v: 0, menus: [], t: {} }); redraw(); };
 }
@@ -941,6 +944,7 @@ function shopExDraw(s) {
       ${byMin ? `<div style="display:flex;gap:10px;flex-wrap:wrap">${(durs.length ? durs : [60, 90, 120]).map(d => `<label class="sv-r" style="margin:0">${d}분 <input data-xd="${i}" data-m="${d}" inputmode="numeric" style="width:100px" placeholder="0" value="${(e.mins && e.mins[d]) || ""}">₫</label>`).join("")}</div>`
         : `<label class="sv-r" style="margin:0">금액 <input data-xa="${i}" inputmode="numeric" style="width:110px" placeholder="50000" value="${e.amt || ""}">₫</label>`}
       <label class="sv-r"><input type="checkbox" data-xall="${i}" ${all ? "checked" : ""}> 전 메뉴</label>
+      ${all ? "" : shopSecChips(menu, e.menus || [], "data-xsec", i)}
       ${all ? "" : groups.map(g => `<label class="sv-r" style="padding-left:18px"><input type="checkbox" data-xk="${i}" data-k="${g.ks.join(",")}" ${g.ks.every(k => (e.menus || []).includes(k)) ? "checked" : ""}> ${esc(g.n || "메뉴 " + (g.ks[0] + 1))}${g.ks.length > 1 ? ` · ${g.ks.length}개 시간` : ""}</label>`).join("")}
     </div>`; }).join("")}
     ${list.length < 5 ? `<button class="btn sm" type="button" data-xtip>+ 관리사 팁 (시간별)</button> <button class="btn sm" type="button" data-xadd>+ 다른 추가 요금</button>` : ""}
@@ -953,7 +957,19 @@ function shopExDraw(s) {
   el.querySelectorAll("[data-xa]").forEach(x => x.oninput = () => { list[+x.dataset.xa].amt = num(x.value); });
   el.querySelectorAll("[data-xall]").forEach(x => x.onchange = () => { const e = list[+x.dataset.xall]; if (x.checked) { e.menus = []; delete e._pick; } else e._pick = true; redraw(); });
   el.querySelectorAll("[data-xk]").forEach(x => x.onchange = () => { const e = list[+x.dataset.xk], ks = x.dataset.k.split(",").map(Number), ms = new Set(e.menus || []); ks.forEach(k => x.checked ? ms.add(k) : ms.delete(k)); e.menus = [...ms].sort((a, b) => a - b); });
+  el.querySelectorAll("[data-xsec]").forEach(b => b.onclick = () => { const e = list[+b.dataset.xsec], ks = b.dataset.ks.split(",").map(Number), ms = new Set(e.menus || []), on = ks.every(k => ms.has(k));
+    ks.forEach(k => on ? ms.delete(k) : ms.add(k)); e.menus = [...ms].sort((a, b) => a - b); redraw(); });
   el.querySelectorAll("[data-xx]").forEach(x => x.onclick = () => { list.splice(+x.dataset.xx, 1); redraw(); });
   const tip = el.querySelector("[data-xtip]"); if (tip) tip.onclick = () => { list.push({ id: "x" + Date.now().toString(36), t: { ko: "관리사 팁", en: "Therapist tip", vi: "Tiền tip KTV" }, mins: {}, menus: [] }); redraw(); };
   const add = el.querySelector("[data-xadd]"); if (add) add.onclick = () => { list.push({ id: "x" + Date.now().toString(36), t: {}, amt: 0, menus: [] }); redraw(); };
 }
+
+// 📂 할인 이벤트 · 추가 요금의 적용 메뉴를 분류로 한 번에 고르기 (대분류 '네일' · 소분류 '네일 > 여성')
+function shopSecPick(menu) {
+  const top = x => String(x).split(/\s*>\s*/)[0].trim(), out = [], seen = {};
+  menu.forEach((m, k) => { const sc = m.sec && m.sec.ko ? String(m.sec.ko).replace(/\s*>\s*/g, " > ").trim() : ""; if (!sc) return;
+    [top(sc), sc].forEach(key => { if (!seen[key]) out.push(seen[key] = { key, ks: [] }); if (!seen[key].ks.includes(k)) seen[key].ks.push(k); }); });
+  return out;
+}
+const shopSecChips = (menu, sel, attr, i) => { const ps = shopSecPick(menu); if (!ps.length) return "";
+  return `<div class="pm-secs"><span class="hint">📂 분류로 고르기</span>${ps.map(p => { const on = p.ks.every(k => sel.includes(k)); return `<button type="button" class="${on ? "on" : ""} ${p.key.includes(">") ? "sub" : ""}" ${attr}="${i}" data-ks="${p.ks.join(",")}">${on ? "✓ " : ""}${esc(p.key)} <i>${p.ks.length}</i></button>`; }).join("")}</div>`; };
