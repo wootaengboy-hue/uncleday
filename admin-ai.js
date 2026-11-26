@@ -71,7 +71,7 @@ function aiDraw() {
     <h4>🧩 기능별 (이번 달)</h4>
     ${byFn.length ? `<table class="ai-t"><tr><th>기능</th><th>호출</th><th>읽은 양</th><th>쓴 양</th><th>금액</th></tr>${byFn.map(x => `<tr><td>${esc(AI_FN[x.f] || x.f)}</td><td>${x.n}</td><td>${x.f === "console-past" ? "—" : aiTok(x.i)}</td><td>${x.f === "console-past" ? "—" : aiTok(x.o)}</td><td><b>${aiUsd(x.c)}</b> <small>${aiWon(x.c)}</small></td></tr>`).join("")}</table>` : `<p class="hint">이번 달 기록이 아직 없어요 · Edge Function 을 최신 코드로 다시 배포하면 그 뒤부터 쌓여요</p>`}
     <h4>🕘 최근 호출 30개</h4>
-    <div class="ai-recent">${R.slice(0, 30).map(r => `<div><span>${esc(aiAt(r.at))}</span><span>${esc(AI_FN[r.fn] || r.fn)}</span><span class="ref">${esc(r.ref || "")}</span><span>${r.usd != null ? "금액만 (콘솔)" : `${aiTok(r.input_tokens + r.cache_read + r.cache_write)} → ${aiTok(r.output_tokens)}`}</span><b>${aiUsd(aiCost(r))}</b></div>`).join("") || `<p class="hint">기록이 없어요</p>`}</div>
+    <div class="ai-recent">${R.slice(0, 30).map(r => `<div><span>${esc(aiAt(r.at))}</span><span class="fn">${esc(r.fn === "console-past" ? "📊 콘솔 기록" : AI_FN[r.fn] || r.fn)}</span><span class="ref">${esc(r.ref || "")}</span><span>${r.usd != null ? "토큰 정보 없음" : `${aiTok(r.input_tokens + r.cache_read + r.cache_write)} → ${aiTok(r.output_tokens)}`}</span><b>${aiUsd(aiCost(r))}</b></div>`).join("") || `<p class="hint">기록이 없어요</p>`}</div>
     ${unknown.length ? `<div class="uni-err">단가를 모르는 모델이 있어요: ${unknown.map(esc).join(", ")} · 아래 단가에 넣어 주세요 (금액 계산에서 빠져요)</div>` : ""}
     <details class="ai-price"><summary>⚙️ 모델 단가 ($ / 100만 토큰)</summary>
       <p class="hint">Anthropic 가격표 기준 (11/26). 가격이 바뀌면 여기서 고쳐요 · 읽기 = 입력, 쓰기 = 출력. Haiku 는 한 번에 입력 10만 토큰이 넘으면 더 비싼 단가가 붙어요.</p>
