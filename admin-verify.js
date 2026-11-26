@@ -193,27 +193,37 @@ function vfGrid(menu, seed, onApply) {
   const kinds = [], seen = new Set();
   (seed.kinds || menu.map(m => vfBase(vfTx(m.name)))).forEach(k => { if (k && !seen.has(k)) { seen.add(k); kinds.push(k); } });
   let rows = (seed.rows && seed.rows.length ? seed.rows : [{ min: 60 }, { min: 90 }, { min: 120 }]).slice(0, 8);
+  const sel = new Set(seed.sel || []); let extra = "";   // 고른 종류 · 새로 쓴 종류
+  const has = k => menu.filter(m => vfBase(vfTx(m.name)) === k);
+  const getK = () => kinds.filter(k => sel.has(k)).concat(extra.split(/\n|,/).map(x => x.trim()).filter(x => x && !kinds.includes(x)));
   const d = document.createElement("div"); d.className = "overlay center"; d.style.zIndex = 70;
   const draw = () => {
     d.innerHTML = `<div class="modal vf-grid"><h2>⏱ 시간별 가격표로 메뉴 만들기</h2>
       <p class="hint">업체 가격표처럼 <b>종류는 여러 개, 가격은 시간으로만</b> 정해질 때 써요. 종류 × 시간만큼 메뉴가 한 줄씩 만들어지고, 손님 화면에서는 종류 하나에 시간 버튼(60분 · 90분 …)으로 묶여 보여요.</p>
-      <div class="vf-g2"><label><b>종류</b> <small>한 줄에 하나 · 손님 화면에 나갈 한국어 이름</small><textarea id="vgK" rows="7">${esc(kinds.join("\n"))}</textarea></label>
+      <div class="vf-g2"><div><b>종류</b> <small>시간별로 만들 메뉴를 ☑ 골라요 · 없으면 아래에 새로 써요</small>
+        <div class="vg-ks">${kinds.length ? `<label class="vg-all"><input type="checkbox" id="vgAll" ${kinds.length && kinds.every(k => sel.has(k)) ? "checked" : ""}> 전체</label>` : ""}${kinds.map((k, i) => { const h = has(k); return `<label class="${sel.has(k) ? "on" : ""}"><input type="checkbox" data-vgk="${i}" ${sel.has(k) ? "checked" : ""}> <span>${esc(k)}</span><small>${h.map(m => m.min ? m.min + "분" : "시간 없음").join(" · ")}</small></label>`; }).join("") || `<p class="hint">지금 메뉴가 없어요 · 아래에 새로 써요</p>`}</div>
+        <textarea id="vgK" rows="2" placeholder="새 종류 (한 줄에 하나 · 예: 드라이 마사지)">${esc(extra)}</textarea></div>
         <div><b>시간 · 가격</b> <small>정상가(동) · 할인은 🎁 할인 이벤트로</small>
           <div id="vgR">${rows.map((r, i) => `<div class="vg-r"><input type="number" min="0" step="5" data-vgm="${i}" value="${r.min || ""}" placeholder="분">분 <input type="number" min="0" step="1000" data-vgp="${i}" value="${r.price || ""}" placeholder="가격">동 <button type="button" class="lnk" data-vgx="${i}">✕</button></div>`).join("")}</div>
           <button type="button" class="btn sm" id="vgAdd">＋ 시간 추가</button></div></div>
-      <label class="vf-on" style="margin-bottom:6px">분류 <input id="vgS" placeholder="선택 · 예: 스파 / 네일 · 여성" style="padding:5px 8px;border:1px solid var(--line);border-radius:7px;font:inherit;font-size:13px;min-width:220px"> <small class="hint">손님 화면에서 이 제목 아래로 모여요</small></label>
+      <label class="vf-on" style="margin-bottom:6px">분류 <input id="vgS" placeholder="선택 · 예: 스파 · 네일 > 여성" style="padding:5px 8px;border:1px solid var(--line);border-radius:7px;font:inherit;font-size:13px;min-width:220px"> <small class="hint">손님 화면에서 이 제목 아래로 모여요</small></label>
       <label class="vf-on"><input type="checkbox" id="vgRep" checked> 같은 이름의 지금 메뉴는 지우고 이걸로 바꾸기 (예: '아로마 마사지 (60·90·120분)' 한 줄 → 60 · 90 · 120분 세 줄)</label>
       <p class="vg-sum" id="vgSum"></p>
       <div class="btns"><button class="btn" data-no>취소</button><button class="btn main" data-yes>만들기</button></div></div>`;
-    const sum = () => { const k = d.querySelector("#vgK").value.split(/\n|,/).map(x => x.trim()).filter(Boolean), r = rows.filter(x => +x.min > 0);
+    const sum = () => { extra = d.querySelector("#vgK").value; const k = getK(), r = rows.filter(x => +x.min > 0);
       d.querySelector("#vgSum").textContent = `종류 ${k.length}개 × 시간 ${r.length}개 = 메뉴 ${k.length * r.length}줄을 만들어요${r.some(x => !+x.price) ? " · 가격이 빈 시간은 '가격 없음'으로 들어가요" : ""}`; };
     d.querySelectorAll("[data-vgm],[data-vgp]").forEach(inp => inp.oninput = () => { const i = +(inp.dataset.vgm ?? inp.dataset.vgp); rows[i][inp.dataset.vgm !== undefined ? "min" : "price"] = Math.max(0, Math.round(+inp.value || 0)); sum(); });
-    d.querySelectorAll("[data-vgx]").forEach(b => b.onclick = () => { kinds.splice(0, kinds.length, ...d.querySelector("#vgK").value.split("\n")); rows.splice(+b.dataset.vgx, 1); draw(); });
-    d.querySelector("#vgAdd").onclick = () => { kinds.splice(0, kinds.length, ...d.querySelector("#vgK").value.split("\n")); rows.push({ min: "" }); draw(); };
+    d.querySelectorAll("[data-vgx]").forEach(b => b.onclick = () => { extra = d.querySelector("#vgK").value; rows.splice(+b.dataset.vgx, 1); draw(); });
+    d.querySelector("#vgAdd").onclick = () => { extra = d.querySelector("#vgK").value; rows.push({ min: "" }); draw(); };
+    d.querySelectorAll("[data-vgk]").forEach(c => c.onchange = () => { const k = kinds[+c.dataset.vgk]; extra = d.querySelector("#vgK").value;
+      if (c.checked) { sel.add(k); const h = has(k).filter(m => +m.min);   // 처음 고른 종류의 시간 · 가격을 미리 채워요 (가격 칸이 비어 있을 때만)
+        if (h.length && !rows.some(r => +r.price)) rows = h.map(m => ({ min: +m.min, price: +m.price || "" })).sort((a, b) => a.min - b.min); }
+      else sel.delete(k); draw(); });
+    const va = d.querySelector("#vgAll"); if (va) va.onchange = () => { extra = d.querySelector("#vgK").value; kinds.forEach(k => va.checked ? sel.add(k) : sel.delete(k)); draw(); };
     d.querySelector("#vgK").oninput = sum; sum();
     d.querySelector("[data-no]").onclick = () => d.remove();
     d.querySelector("[data-yes]").onclick = () => {
-      const k = d.querySelector("#vgK").value.split(/\n|,/).map(x => x.trim()).filter(Boolean), r = rows.filter(x => +x.min > 0).sort((a, b) => a.min - b.min);
+      extra = d.querySelector("#vgK").value; const k = getK(), r = rows.filter(x => +x.min > 0).sort((a, b) => a.min - b.min);
       if (!k.length || !r.length) return toast("종류와 시간을 하나 이상 넣어 주세요");
       if (r.some(x => +x.price && +x.price < 10000)) return toast("가격은 동(VND)으로 넣어 주세요 (예: 640000)");
       const rep = d.querySelector("#vgRep").checked, ks = new Set(k), sc = d.querySelector("#vgS").value.trim();
