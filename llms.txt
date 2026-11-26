@@ -5,21 +5,21 @@
 - 손님은 엉클데이 사이트 채팅이나 카카오톡으로 한국어 상담을 하고, 엉클데이가 매장에 확인한 뒤 예약을 확정해요.
 - 엉클데이를 통해도 매장 가격 그대로예요. 손님이 엉클데이에 내는 추가 요금은 없고, 결제는 시술 후 매장에서 직접 해요.
 - 후기는 실제로 예약하고 방문한 손님만 남길 수 있어요.
-- 등록 업체 59곳 · 정보 업데이트 2026-11-26
+- 등록 업체 60곳 · 정보 업데이트 2026-11-26
 
 ## 도시별 모아보기
 - [호치민 (Ho Chi Minh City) 7곳](https://www.uncleday.com/c/hcm/): 마사지 · 스파 · 뷰티 업체 목록과 자주 묻는 질문
 - [호치민 마사지 · 스파 가이드 2026 — 가격, 팁, 고르는 법, 성형 · 피부과 상담까지](https://www.uncleday.com/c/hcm/guide/): 가격 · 팁 · 마사지 종류 · 동네 · 예약 방법 (출처 포함)
 - [하노이 (Hanoi) 5곳](https://www.uncleday.com/c/hanoi/): 마사지 · 스파 · 뷰티 업체 목록과 자주 묻는 질문
 - [하노이 마사지 · 스파 가이드 2026 — 가격, 팁, 고르는 법, 예약 방법](https://www.uncleday.com/c/hanoi/guide/): 가격 · 팁 · 마사지 종류 · 동네 · 예약 방법 (출처 포함)
-- [다낭 (Da Nang) 35곳](https://www.uncleday.com/c/danang/): 마사지 · 스파 · 뷰티 업체 목록과 자주 묻는 질문
+- [다낭 (Da Nang) 36곳](https://www.uncleday.com/c/danang/): 마사지 · 스파 · 뷰티 업체 목록과 자주 묻는 질문
 - [다낭 마사지 · 스파 가이드 2026 — 가격, 팁, 고르는 법, 예약 방법](https://www.uncleday.com/c/danang/guide/): 가격 · 팁 · 마사지 종류 · 동네 · 예약 방법 (출처 포함)
 - [나트랑 (Nha Trang) 12곳](https://www.uncleday.com/c/nhatrang/): 마사지 · 스파 · 뷰티 업체 목록과 자주 묻는 질문
 - [나트랑 마사지 · 스파 가이드 2026 — 가격, 팁, 고르는 법, 예약 방법](https://www.uncleday.com/c/nhatrang/guide/): 가격 · 팁 · 마사지 종류 · 동네 · 예약 방법 (출처 포함)
 - 호치민 주제별: [짐 보관 되는 마사지 2곳](https://www.uncleday.com/c/hcm/luggage/) · [핫스톤 마사지 2곳](https://www.uncleday.com/c/hcm/hotstone/) · [발 마사지 2곳](https://www.uncleday.com/c/hcm/foot/) · [사우나 있는 스파 2곳](https://www.uncleday.com/c/hcm/sauna/) · [팁 포함 마사지 2곳](https://www.uncleday.com/c/hcm/tipfree/) · [한국어 상담 되는 성형 · 피부과 4곳](https://www.uncleday.com/c/hcm/clinic/)
 - 하노이 주제별: [타이 · 건식 마사지 3곳](https://www.uncleday.com/c/hanoi/thai/) · [발 마사지 3곳](https://www.uncleday.com/c/hanoi/foot/) · [한국어 상담 되는 성형 · 피부과 2곳](https://www.uncleday.com/c/hanoi/clinic/)
-- 다낭 주제별: [한국어 되는 마사지 8곳](https://www.uncleday.com/c/danang/korean/) · [밤늦게 하는 마사지 5곳](https://www.uncleday.com/c/danang/late/) · [짐 보관 되는 마사지 6곳](https://www.uncleday.com/c/danang/luggage/) · [픽업 되는 마사지 5곳](https://www.uncleday.com/c/danang/pickup/) · [가족이 함께 받는 마사지 7곳](https://www.uncleday.com/c/danang/family/) · [아이랑 받는 키즈 마사지 6곳](https://www.uncleday.com/c/danang/kids/) · [임산부 마사지 4곳](https://www.uncleday.com/c/danang/pregnant/) · [핫스톤 마사지 7곳](https://www.uncleday.com/c/danang/hotstone/) · [포핸드 마사지 2곳](https://www.uncleday.com/c/danang/fourhands/) · [타이 · 건식 마사지 3곳](https://www.uncleday.com/c/danang/thai/) · [발 마사지 6곳](https://www.uncleday.com/c/danang/foot/) · [사우나 있는 스파 3곳](https://www.uncleday.com/c/danang/sauna/) · [네일 · 속눈썹 3곳](https://www.uncleday.com/c/danang/nail/) · [한국어 상담 되는 성형 · 피부과 23곳](https://www.uncleday.com/c/danang/clinic/)
-- 다낭 시술별 가격 (엉클데이 업체 실제 메뉴): [마사지 400,000동~2,116,000동](https://www.uncleday.com/c/danang/price/massage/) · [발 마사지 100,000동~782,000동](https://www.uncleday.com/c/danang/price/foot/) · [페이셜 · 피부관리 399,000동~1,500,000동](https://www.uncleday.com/c/danang/price/facial/) · [헤어 (커트 · 펌 · 염색) 100,000동~1,012,000동](https://www.uncleday.com/c/danang/price/hair/)
+- 다낭 주제별: [한국어 되는 마사지 8곳](https://www.uncleday.com/c/danang/korean/) · [밤늦게 하는 마사지 5곳](https://www.uncleday.com/c/danang/late/) · [짐 보관 되는 마사지 6곳](https://www.uncleday.com/c/danang/luggage/) · [픽업 되는 마사지 5곳](https://www.uncleday.com/c/danang/pickup/) · [가족이 함께 받는 마사지 7곳](https://www.uncleday.com/c/danang/family/) · [아이랑 받는 키즈 마사지 6곳](https://www.uncleday.com/c/danang/kids/) · [임산부 마사지 4곳](https://www.uncleday.com/c/danang/pregnant/) · [핫스톤 마사지 7곳](https://www.uncleday.com/c/danang/hotstone/) · [포핸드 마사지 2곳](https://www.uncleday.com/c/danang/fourhands/) · [타이 · 건식 마사지 3곳](https://www.uncleday.com/c/danang/thai/) · [발 마사지 6곳](https://www.uncleday.com/c/danang/foot/) · [사우나 있는 스파 3곳](https://www.uncleday.com/c/danang/sauna/) · [네일 · 속눈썹 3곳](https://www.uncleday.com/c/danang/nail/) · [한국어 상담 되는 성형 · 피부과 24곳](https://www.uncleday.com/c/danang/clinic/)
+- 다낭 시술별 가격 (엉클데이 업체 실제 메뉴): [마사지 400,000동~2,116,000동](https://www.uncleday.com/c/danang/price/massage/) · [발 마사지 100,000동~782,000동](https://www.uncleday.com/c/danang/price/foot/) · [페이셜 · 피부관리 399,000동~30,000,000동](https://www.uncleday.com/c/danang/price/facial/) · [헤어 (커트 · 펌 · 염색) 100,000동~1,012,000동](https://www.uncleday.com/c/danang/price/hair/)
 - 나트랑 주제별: [한국어 되는 마사지 3곳](https://www.uncleday.com/c/nhatrang/korean/) · [짐 보관 되는 마사지 2곳](https://www.uncleday.com/c/nhatrang/luggage/) · [가족이 함께 받는 마사지 3곳](https://www.uncleday.com/c/nhatrang/family/) · [아이랑 받는 키즈 마사지 3곳](https://www.uncleday.com/c/nhatrang/kids/) · [임산부 마사지 3곳](https://www.uncleday.com/c/nhatrang/pregnant/) · [핫스톤 마사지 4곳](https://www.uncleday.com/c/nhatrang/hotstone/) · [발 마사지 4곳](https://www.uncleday.com/c/nhatrang/foot/) · [네일 · 속눈썹 4곳](https://www.uncleday.com/c/nhatrang/nail/) · [한국어 상담 되는 성형 · 피부과 4곳](https://www.uncleday.com/c/nhatrang/clinic/)
 - 나트랑 시술별 가격 (엉클데이 업체 실제 메뉴): [젤네일 200,000동~550,000동](https://www.uncleday.com/c/nhatrang/price/nail/)
 
@@ -75,6 +75,7 @@
 - [다낭 제모소 (Waxing Đà Nẵng)](https://www.uncleday.com/s/waxing-danang/): 다낭에 있는 바디케어 숍이에요. 특징: 브라질리언 왁싱, 남녀 전신 왁싱, 한국인 후기 많음. 엉클데이에서 한국어로 상담하고, 추가 요금 없이 매장 가격 그대로 예약할 수 있어요.
 - [응우온 스파](https://www.uncleday.com/s/nguon-spa/): 다낭에 있는 피부관리 숍이에요. 특징: 베트남식 헤드스파, 밤 11시까지, 구글 후기 1500개 이상. 엉클데이에서 한국어로 상담하고, 추가 요금 없이 매장 가격 그대로 예약할 수 있어요.
 - [냐 스파](https://www.uncleday.com/s/nha-spa/): 다낭에 있는 피부관리 숍이에요. 특징: 헤드스파, 피부관리. 엉클데이에서 한국어로 상담하고, 추가 요금 없이 매장 가격 그대로 예약할 수 있어요.
+- [탐안 메디컬](https://www.uncleday.com/s/tam-an-medical/): 다낭에 있는 성형외과예요. 메뉴는 한국식 코 성형 등 40가지이고, 가격은 700,000동부터예요 (엉클데이 확인 참고가). 엉클데이에서 한국어로 상담하고, 추가 요금 없이 매장 가격 그대로 예약할 수 있어요.
 
 ## 나트랑 업체
 - [화이트 스파 앤 네일](https://www.uncleday.com/s/white-spa-nail/): 나트랑에 있는 스파예요. 메뉴는 무제한 아트 젤네일 (약 55만동) 등 6가지이고, 가격은 550,000동부터예요 (엉클데이 확인 참고가). 특징: 한국인 사장, 손·발 동시 시술, 짐 보관. 엉클데이에서 한국어로 상담하고, 추가 요금 없이 매장 가격 그대로 예약할 수 있어요.
@@ -116,15 +117,15 @@ Shop and city pages translated from Uncle Day's own data (shop names, descriptio
 
 ## 블로그 (엉클데이 업체 데이터로 쓴 글)
 - [마사지 · 스파에서 쓰는 베트남어](https://www.uncleday.com/blog/vietnamese-for-spa/): 세기 조절 · 아픈 곳 · 수건 · 결제 표현과 읽는 법
-- [커플 · 가족 여행에 좋은 다낭 뷰티샵 추천 (피부 · 네일 · 헤어) — 가격 · 영업시간 · 위치 정리 (2026)](https://www.uncleday.com/blog/danang-guide-1/): 업체 10곳 · 정보 확인 2026-11-25
+- [커플 · 가족 여행에 좋은 다낭 뷰티샵 추천 (피부 · 네일 · 헤어) — 가격 · 영업시간 · 위치 정리 (2026)](https://www.uncleday.com/blog/danang-guide-1/): 업체 10곳 · 정보 확인 2026-11-26
 - [다낭 용다리 근처 마사지 — 가까운 순 · 실제 가격 정리 (2026)](https://www.uncleday.com/blog/danang-dragon-bridge-2/): 업체 9곳 · 정보 확인 2026-11-26
 - [한시장 근처 마사지 추천 — 가까운 순 · 실제 가격 정리 (2026)](https://www.uncleday.com/blog/danang-han-market-3/): 업체 9곳 · 정보 확인 2026-11-26
 - [출국 전 받기 좋은 다낭 공항 근처 마사지 추천 — 가까운 순 · 실제 가격 정리 (2026)](https://www.uncleday.com/blog/danang-danang-airport-6/): 업체 4곳 · 정보 확인 2026-11-26
-- [가족 · 친구끼리 여행에 좋은 다낭 뷰티샵 추천 (피부 · 네일 · 헤어) — 가격 · 영업시간 · 위치 정리 (2026)](https://www.uncleday.com/blog/danang-guide-7/): 업체 10곳 · 정보 확인 2026-11-25
+- [가족 · 친구끼리 여행에 좋은 다낭 뷰티샵 추천 (피부 · 네일 · 헤어) — 가격 · 영업시간 · 위치 정리 (2026)](https://www.uncleday.com/blog/danang-guide-7/): 업체 10곳 · 정보 확인 2026-11-26
 - [다낭 미케 비치 근처 마사지 추천 — 가까운 순 · 실제 가격 정리 (2026)](https://www.uncleday.com/blog/danang-my-khe-8/): 업체 9곳 · 정보 확인 2026-11-26
-- [다낭 한국어 상담 되는 피부과 · 성형 추천 — 가격 · 영업시간 · 위치 정리 (2026)](https://www.uncleday.com/blog/danang-clinic-9/): 업체 10곳 · 정보 확인 2026-11-25
+- [다낭 한국어 상담 되는 피부과 · 성형 추천 — 가격 · 영업시간 · 위치 정리 (2026)](https://www.uncleday.com/blog/danang-clinic-9/): 업체 10곳 · 정보 확인 2026-11-26
 - [다낭 마사지 여행 후 피로를 풀고 편안한 휴식 — 가격 · 영업시간 · 위치 정리 (2026)](https://www.uncleday.com/blog/danang-guide-10/): 업체 9곳 · 정보 확인 2026-11-26
-- [관광 후 피로 풀기 좋은 다낭 뷰티샵 추천 (피부 · 네일 · 헤어) — 가격 · 영업시간 · 위치 정리 (2026)](https://www.uncleday.com/blog/danang-guide-13/): 업체 10곳 · 정보 확인 2026-11-25
+- [관광 후 피로 풀기 좋은 다낭 뷰티샵 추천 (피부 · 네일 · 헤어) — 가격 · 영업시간 · 위치 정리 (2026)](https://www.uncleday.com/blog/danang-guide-13/): 업체 10곳 · 정보 확인 2026-11-26
 - [다낭 긴급상황 발생 시 대처법과 연락처 총정리](https://www.uncleday.com/blog/danang-guide-14/): 업체 6곳 · 정보 확인 2026-11-26
 - [다낭 실시간 날씨 확인법과 날씨별 여행 팁](https://www.uncleday.com/blog/danang-guide-15/): 업체 6곳 · 정보 확인 2026-11-26
 - [관광 후 피로 풀기 좋은 다낭 마사지 추천 — 가격 · 영업시간 · 위치 정리 (2026)](https://www.uncleday.com/blog/danang-guide-16/): 업체 9곳 · 정보 확인 2026-11-26
@@ -132,10 +133,10 @@ Shop and city pages translated from Uncle Day's own data (shop names, descriptio
 - [다낭 여행 준비물 체크리스트, 빠짐없이 챙기는 법](https://www.uncleday.com/blog/danang-guide-18/): 업체 6곳 · 정보 확인 2026-11-26
 - [한국어 되는 다낭 마사지 추천 — 가격 · 영업시간 · 위치 정리 (2026)](https://www.uncleday.com/blog/danang-korean-19/): 업체 8곳 · 정보 확인 2026-11-26
 - [다낭 네일 · 속눈썹 추천 — 가격 · 영업시간 · 위치 정리 (2026)](https://www.uncleday.com/blog/danang-nail-21/): 업체 3곳 · 정보 확인 2026-11-26
-- [환전하고 들르기 좋은 다낭 한시장 근처 뷰티샵 추천 (피부 · 네일 · 헤어) — 가까운 순 · 실제 가격 정리 (2026)](https://www.uncleday.com/blog/danang-han-market-22/): 업체 7곳 · 정보 확인 2026-11-25
+- [환전하고 들르기 좋은 다낭 한시장 근처 뷰티샵 추천 (피부 · 네일 · 헤어) — 가까운 순 · 실제 가격 정리 (2026)](https://www.uncleday.com/blog/danang-han-market-22/): 업체 7곳 · 정보 확인 2026-11-26
 - [다낭여행 마사지 편의 FAQ — 가격 · 영업시간 · 위치 정리 (2026)](https://www.uncleday.com/blog/danang-guide-23/): 업체 9곳 · 정보 확인 2026-11-26
-- [다낭 스킨케어 · 피부관리 추천 — 실제 메뉴 가격 비교 (2026)](https://www.uncleday.com/blog/danang-facial-32/): 업체 3곳 · 정보 확인 2026-11-25
-- [관광 후 피로 풀기 좋은 다낭 스킨케어 · 피부관리 추천 — 실제 메뉴 가격 비교 (2026)](https://www.uncleday.com/blog/danang-facial-46/): 업체 3곳 · 정보 확인 2026-11-25
+- [다낭 스킨케어 · 피부관리 추천 — 실제 메뉴 가격 비교 (2026)](https://www.uncleday.com/blog/danang-facial-32/): 업체 4곳 · 정보 확인 2026-11-26
+- [관광 후 피로 풀기 좋은 다낭 스킨케어 · 피부관리 추천 — 실제 메뉴 가격 비교 (2026)](https://www.uncleday.com/blog/danang-facial-46/): 업체 4곳 · 정보 확인 2026-11-26
 - [남자 피지관리 중요성, 다낭 여행 전에 알아둘 점](https://www.uncleday.com/blog/danang-guide-47/): 업체 9곳 · 정보 확인 2026-11-26
 - [다낭 발 마사지 추천 — 가격 · 영업시간 · 위치 정리 (2026)](https://www.uncleday.com/blog/danang-foot-48/): 업체 6곳 · 정보 확인 2026-11-26
-- [다낭 한시장 근처 뷰티샵 추천 (피부 · 네일 · 헤어) — 가까운 순 · 실제 가격 정리 (2026)](https://www.uncleday.com/blog/danang-han-market-49/): 업체 7곳 · 정보 확인 2026-11-25
+- [다낭 한시장 근처 뷰티샵 추천 (피부 · 네일 · 헤어) — 가까운 순 · 실제 가격 정리 (2026)](https://www.uncleday.com/blog/danang-han-market-49/): 업체 7곳 · 정보 확인 2026-11-26
