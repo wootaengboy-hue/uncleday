@@ -567,6 +567,19 @@ function mqDraw() {
 }
 // 메모 속 긴 주소는 '사이트 이름 · 열기' 링크로 짧게 (휴대폰에서 화면이 옆으로 밀리지 않게)
 const mqNoteHtml = t => esc(t).replace(/https?:\/\/[^\s<]+/g, u => { let h = u; try { h = new URL(u.replace(/&amp;/g, "&")).hostname.replace(/^www\./, "").replace(/^scontent[^.]*\./, ""); } catch (e) {} return `<a href="${u}" target="_blank" rel="noopener noreferrer">${h} 열기 ↗</a>`; });
+// ✂️ 자를 위치 고르기: 가로로 긴 사진은 ◀ 왼쪽 ~ 오른쪽 ▶, 세로로 긴 사진은 ▲ 위 ~ 아래 ▼ · 원본 위에 주황 네모(16:9)로 보여 줘요
+function mqCropUI(card, a) {
+  const wide = a.r > 16 / 9, rg = card.querySelector("[data-mqpos]"); if (!rg) return;
+  card.querySelectorAll('[data-mqstamp^="crop:"][data-v]').forEach(b => b.textContent = wide ? b.dataset.h : b.dataset.v);
+  card.querySelector("[data-mqsl0]").textContent = wide ? "◀ 왼쪽" : "▲ 위"; card.querySelector("[data-mqsl1]").textContent = wide ? "오른쪽 ▶" : "아래 ▼";
+  const sl = card.querySelector(".mq-slide"); if (Math.abs(a.r - 16 / 9) < 0.03) { sl.hidden = true; return; }
+  const im = card.querySelector(".mq-3 > div:first-child img"), box = im && im.parentElement; if (!im) return;
+  box.style.position = "relative"; let fr = box.querySelector(".mq-cropbox"); if (!fr) { fr = document.createElement("i"); fr.className = "mq-cropbox"; box.appendChild(fr); }
+  const draw = () => { const p = rg.value / 100, W = im.offsetWidth, H = im.offsetHeight; if (!W) return;
+    let w = W, h = H, x = 0, y = 0; if (wide) { w = H * 16 / 9; x = (W - w) * p; } else { h = W * 9 / 16; y = (H - h) * p; }
+    Object.assign(fr.style, { left: im.offsetLeft + x + "px", top: im.offsetTop + y + "px", width: w + "px", height: h + "px" }); };
+  rg.oninput = draw; if (im.complete) draw(); else im.addEventListener("load", draw, { once: true });
+}
 function mqCard(m) {
   const s = vfShop(m.shop_id) || { id: m.shop_id, name: { ko: m.shop_id }, cat: "" }, x = vfSrc(m.shop_id), [ic, sn, sd] = MQ_SRC[m.source] || ["", m.source, ""];
   const can = mqCan(m), why = mqWhy(m), main = s.img && s.img === m.work_url;
@@ -582,7 +595,10 @@ function mqCard(m) {
       <div class="mq-iss">${Object.entries(MQ_ISS).map(([k, t]) => `<label class="${(m.issues || []).includes(k) ? "on" : ""}"><input type="checkbox" data-mqis="${k}" ${(m.issues || []).includes(k) ? "checked" : ""}>${t}</label>`).join("")}</div>
       ${m.note ? `<p class="mq-note">${/^원래 주소:/.test(m.note) ? "🔗" : "🤖"} ${mqNoteHtml(m.note)}</p>` : ""}
       <div class="mq-an" data-mqan><small>🔍 사진 살펴보는 중…</small></div>
-      ${m.orig_url ? `<div class="mq-frame"><b>작업본 틀</b>${[["fit", "🖼️ 전체 보이기 (안 잘림)"], ["crop:0", "▲ 위쪽 남기기"], ["crop:.5", "● 가운데"], ["crop:1", "▼ 아래쪽 남기기"]].map(([k, t]) => `<button class="btn sm" data-mqstamp="${k}">${t}</button>`).join("")}<small>원본에서 16:9 작업본을 다시 만들어요</small></div>` : ""}
+      ${m.orig_url ? `<div class="mq-frame"><b>작업본 틀</b><button class="btn sm" data-mqstamp="fit">🖼️ 전체 보이기 (안 잘림)</button>
+        ${[["crop:0", "▲ 위쪽", "◀ 왼쪽"], ["crop:.5", "● 가운데", "● 가운데"], ["crop:1", "▼ 아래쪽", "▶ 오른쪽"]].map(([k, v, h]) => `<button class="btn sm" data-mqstamp="${k}" data-v="${v} 남기기" data-h="${h} 남기기">${v} 남기기</button>`).join("")}
+        <div class="mq-slide"><span data-mqsl0>▲ 위</span><input type="range" min="0" max="100" value="50" data-mqpos aria-label="자를 위치"><span data-mqsl1>아래 ▼</span><button class="btn sm main" data-mqstamp="crop:pos">✂️ 이 위치로 자르기</button></div>
+        <small>원본 위 <b style="color:#f97316">주황 네모</b>가 손님 화면에 보일 부분이에요 · 막대를 밀어 위치를 고른 뒤 [이 위치로 자르기]</small></div>` : ""}
       <div class="mq-btns">${m.work_url ? `<button class="btn sm" data-mqai ${MQ.busy[m.id] ? "disabled" : ""}>${MQ.busy[m.id] ? "검사 중…" : "🤖 AI 검사"}</button>` : ""}
         <button class="btn sm ${m.verdict === "pass" ? "main" : ""}" data-mqv="pass">✓ 통과</button><button class="btn sm ${m.verdict === "issue" ? "bad" : ""}" data-mqv="issue">⚠ 문제</button><button class="btn sm" data-mqv="hold">⏸ 보류</button>
         <span style="flex:1"></span>${main ? "" : can ? `<button class="btn sm main" data-mqmain>★ 대표 사진으로</button>` : `<span class="mq-nomain" title="${esc(why)}">★ 대표 사진으로 <em>— ${esc(why.replace(/ \(.*\)$/, ""))}</em></span>${m.source === "owner" && m.verdict === "pass" && !x.photo_ok ? mqPerm(m.shop_id, 1) : ""}`}${main ? `<button class="btn sm" data-mqunmain>대표에서 내리기</button>` : ""}<label class="btn sm" title="이 카드의 사진을 다른 사진으로 바꿔요 · 판정은 처음부터 다시">📷 다른 사진으로 바꾸기<input type="file" accept="image/*" data-mqrep hidden></label><button class="btn sm" data-mqdel title="기록 지우기">🗑</button></div>
@@ -668,7 +684,7 @@ async function mqStamp(blob, shopName, stamp = true, mode = "auto", ay = null) {
     } else {
       // 16:9 로 자르기 (세로 사진은 기본 위쪽 40% 지점 기준 — 간판 · 실내가 보통 위에 있어요)
       let sw = img.width, sh = img.height, sx = 0, sy = 0;
-      if (sw / sh > R) { sw = Math.round(sh * R); sx = Math.round((img.width - sw) / 2); } else { sh = Math.round(sw / R); sy = Math.round((img.height - sh) * (ay != null ? ay : img.height > img.width ? 0.4 : 0.5)); }
+      if (sw / sh > R) { sw = Math.round(sh * R); sx = Math.round((img.width - sw) * (ay != null ? ay : 0.5)); } else { sh = Math.round(sw / R); sy = Math.round((img.height - sh) * (ay != null ? ay : img.height > img.width ? 0.4 : 0.5)); }
       w = Math.min(1600, sw); h = Math.round(w / R); cv = document.createElement("canvas"); cv.width = w; cv.height = h;
       x = cv.getContext("2d"); x.imageSmoothingQuality = "high"; x.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
     }
@@ -803,10 +819,11 @@ function mqBind(el) {
     const an = card.querySelector("[data-mqan]"); if (an && m.orig_url) Promise.all([mqLoadImg(m.orig_url), m.work_url ? mqLoadImg(m.work_url).catch(() => null) : null]).then(([img, wk]) => { const a = mqAnalyze(img), pct = Math.round(a.loss * 100);
       const need = a.logo && a.loss > 0.1, done = need && wk && mqIsFit(wk, a, img), warn = need && !done;
       an.innerHTML = `<small class="${warn ? "bad" : "ok"}">🔍 원본 ${a.w}×${a.h} · ${mqRatioTxt(a)}${a.loss > 0.05 ? ` · 16:9로 자르면 <b>${pct}%</b> 잘려요` : " · 16:9에 딱 맞아요"}${a.logo ? " · <b>로고 · 그래픽 같아요</b>" : ""}${a.w < 800 ? " · 작아요 (흐리게 보일 수 있어요)" : ""}${warn ? " → <b>[🖼️ 전체 보이기]</b>로 작업본을 만들어 주세요" : done ? " → ✅ 작업본은 전체가 보이게 만들어져 있어요" : !a.logo && a.loss > 0.3 ? " → 사진은 칸에 꽉 채워요 · 간판 · 사람이 잘렸으면 [▲ 위쪽] · [▼ 아래쪽]으로 다시 만들어요" : ""}</small>`;
+      mqCropUI(card, a);
       if (a.logo && !(m.issues || []).includes("logo")) { const cb = card.querySelector('[data-mqis="logo"]'); if (cb) cb.closest("label").classList.add("sug"); }
     }).catch(() => { an.innerHTML = `<small>원본을 열지 못해 살펴보지 못했어요</small>`; });
     card.querySelectorAll("[data-mqstamp]").forEach(rs => rs.onclick = async () => {
-      const [mode, ay] = rs.dataset.mqstamp.split(":");
+      let [mode, ay] = rs.dataset.mqstamp.split(":"); if (ay === "pos") ay = String((+card.querySelector("[data-mqpos]").value) / 100);
       card.querySelectorAll("[data-mqstamp]").forEach(b => b.disabled = true); rs.textContent = "만드는 중…";
       try { await mqRemake(m, mode, ay != null ? +ay : null); toast(mode === "fit" ? "작업본을 다시 만들었어요 · 자르지 않고 전체가 보여요" : "작업본을 다시 만들었어요 · 고른 쪽을 남기고 16:9로 잘랐어요"); mqDraw();
       } catch (e) { dbErr(e, "작업본 다시 만들기"); mqDraw(); }
