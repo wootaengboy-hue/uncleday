@@ -87,6 +87,54 @@ async function getPage(u: string, ms = 15000) {
   finally { clearTimeout(tm); }
 }
 
+// 🔎 사이트 안 페이지 찾기 — 같은 사이트만, 사이트맵 → 없으면 흔한 가격표 주소를 직접 확인
+const SKIP = /\/(tag|category|author|feed|wp-json|wp-content|kien-thuc|tin-tuc|blog|news|bai-viet|cam-nhan|review|tuyen-dung|career|cart|checkout|my-account|login)\b|\?|\.(jpg|jpeg|png|webp|gif|pdf|zip|xml)$/i;
+function pageScore(u: string) {
+  let p = ""; try { p = decodeURIComponent(new URL(u).pathname).toLowerCase(); } catch (_) { return 0; }
+  if (p === "/" || SKIP.test(p)) return 0;
+  let sc = 0;
+  if (/bang-?gia|banggia|price|pricing|gia-dich-vu|menu|bao-gia|chi-phi/.test(p)) sc += 6;
+  if (/lien-he|contact|gioi-thieu|about|chi-nhanh|location|dia-chi/.test(p)) sc += 3;
+  if (/dich-vu|service|massage|spa|goi|package|combo|lieu-trinh|treatment|nail|goi-dau|cham-soc/.test(p)) sc += 2;
+  sc -= Math.max(0, p.split("/").filter(Boolean).length - 2);   // 너무 깊은 글 페이지는 덜
+  return sc;
+}
+async function sitemapUrls(origin: string) {
+  const locs = (x: string) => [...x.matchAll(/<loc>\s*(?:<!\[CDATA\[)?([^<\]]+)/gi)].map(m => m[1].trim());
+  const get = async (u: string) => { try { const r = await getPage(u, 6000); if (!r.ok) return ""; const t = (await r.text()).slice(0, 1_000_000); return /<(urlset|sitemapindex)/i.test(t) ? t : ""; } catch (_) { return ""; } };
+  let maps: string[] = [];
+  try { const r = await getPage(origin + "/robots.txt", 5000); if (r.ok) maps = [...(await r.text()).matchAll(/^\s*sitemap:\s*(\S+)/gim)].map(m => m[1]); } catch (_) {}
+  maps = [...new Set([...maps, origin + "/sitemap.xml", origin + "/sitemap_index.xml", origin + "/wp-sitemap.xml"])].slice(0, 4);
+  const out: string[] = [];
+  for (const m of maps) {
+    const x = await get(m); if (!x) continue;
+    if (/<sitemapindex/i.test(x)) {   // 묶음 사이트맵이면 '페이지' 사이트맵부터 3개까지
+      const ks = (u: string) => (/page/i.test(u) ? 3 : 0) + (/dich.?vu|service|menu|price|bang.?gia/i.test(u) ? 2 : 0) - (/post|product|tag|categ|author|danh.?muc|kien.?thuc|tuyen.?dung|khach.?hang|news|blog/i.test(u) ? 3 : 0);
+      const kids = locs(x).sort((a, b) => ks(b) - ks(a)).slice(0, 3);
+      for (const k of kids) { const y = await get(k); if (y) out.push(...locs(y)); }
+    } else out.push(...locs(x));
+    if (out.length) break;
+  }
+  return out.slice(0, 3000);
+}
+async function findPages(base: string, homeLinks: string[]) {
+  let origin = "", host = ""; try { const b = new URL(base); origin = b.origin; host = b.host.replace(/^www\./, ""); } catch (_) { return homeLinks.slice(0, 4); }
+  const same = (u: string) => { try { return new URL(u).host.replace(/^www\./, "") === host; } catch (_) { return false; } };
+  let cand = [...homeLinks, ...(await sitemapUrls(origin))].filter(same).map(u => u.replace(/#.*$/, ""));
+  if (!cand.some(u => pageScore(u) >= 6)) {   // 사이트맵에도 가격표가 없으면 흔한 주소를 직접 확인
+    const guess = ["/bang-gia/", "/bang-gia-dich-vu/", "/price/", "/menu/", "/pricing/"].map(x => origin + x);
+    const hit = await Promise.all(guess.map(async u => { try { const x = await getPage(u, 6000); return x.ok && /html/i.test(x.headers.get("content-type") || "") && new URL(x.url || u).pathname !== "/" ? (x.url || u) : null; } catch (_) { return null; } }));
+    cand = [...hit.filter(Boolean) as string[], ...cand];
+  }
+  const norm = (u: string) => u.replace(/\/$/, "");
+  const uniq = [...new Map(cand.filter(u => norm(u) !== norm(base)).map(u => [norm(u), u])).values()];
+  const ranked = uniq.map((u, i) => ({ u, sc: pageScore(u), i })).filter(x => x.sc > 0).sort((a, b) => b.sc - a.sc || a.i - b.i);
+  // 가격표 최대 2 · 연락처 1 · 나머지 서비스 — 모두 4개 (AI 토큰을 너무 쓰지 않게)
+  const price = ranked.filter(x => x.sc >= 6).slice(0, 2), contact = ranked.filter(x => x.sc >= 3 && x.sc < 6).slice(0, 1);
+  const pick = [...price, ...contact]; for (const x of ranked) { if (pick.length >= 4) break; if (!pick.includes(x)) pick.push(x); }
+  return pick.slice(0, 4).map(x => x.u);
+}
+
 // 💳 AI 사용량 기록 (universe52 ai_usage · 포털 '💳 AI 사용량'에서 대략 잔액 계산) — 실패해도 본 기능엔 영향 없어요
 //  SUPABASE_SERVICE_ROLE_KEY 는 Supabase 가 자동으로 넣어 줘요 (따로 만들거나 채팅에 적지 않아요)
 async function logUse(fn: string, model: string, u: any, ref = "") {
@@ -131,16 +179,9 @@ Deno.serve(async (req) => {
   } else {
     const base = r.url || url;
     const first = pageText((await r.text()).slice(0, 2_000_000), base);
-    // 첫 화면에 가격표 링크가 없으면 흔한 가격표 주소를 몇 개 더 찾아봐요 (예: /bang-gia-dich-vu/ — 첫 화면 메뉴에 없는 사이트가 많아요)
-    let picks = first.links.slice(0, 4);
-    if (!picks.some(u => /bang-?gia|banggia|price|pricing|menu/i.test(decodeURIComponent(u)))) {
-      const o = new URL(base).origin;
-      const guess = ["/bang-gia/", "/bang-gia-dich-vu/", "/bang-gia-dich-vu", "/price/", "/menu/", "/pricing/"].map(x => o + x);
-      const hit = (await Promise.all(guess.map(async u => { try { const x = await getPage(u, 6000); return x.ok && /html/i.test(x.headers.get("content-type") || "") ? (x.url || u) : null; } catch (_) { return null; } })))
-        .filter(Boolean) as string[];
-      const found = [...new Set(hit)].filter(u => u.replace(/\/$/, "") !== base.replace(/\/$/, "") && new URL(u).pathname !== "/").slice(0, 2);
-      picks = [...found, ...picks.filter(u => !found.includes(u))].slice(0, 4);
-    }
+    // 크롤링처럼 사이트 안을 더 찾아봐요: 첫 화면 링크 + 사이트맵(sitemap.xml)에 있는 모든 페이지 주소 중에서
+    // 가격표 · 연락처 · 서비스 페이지를 골라 읽어요 (첫 화면 메뉴에 가격표 링크가 없는 사이트가 많아서)
+    const picks = await findPages(base, first.links);
     const more = await Promise.all(picks.map(async u => {
       try { const x = await getPage(u, 12000); if (!x.ok || !/html/i.test(x.headers.get("content-type") || "")) return null;
         return { u, ...pageText((await x.text()).slice(0, 1_500_000), x.url || u) }; } catch (_) { return null; } }));
