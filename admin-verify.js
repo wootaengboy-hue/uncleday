@@ -63,8 +63,10 @@ function vfDraw() {
   const cnt = { all: rows.length, todo: rows.filter(r => r.x.review === "todo").length, done: rows.filter(r => r.x.review === "done").length,
     none: rows.filter(r => !r.x.web && !r.x.fb).length, photo: rows.filter(r => r.x.photo_ok).length };
   const F = { todo: r => r.x.review === "todo", done: r => r.x.review === "done", none: r => !r.x.web && !r.x.fb, all: () => true };
-  const q = String(VF.q || "").toLowerCase();
-  const list = rows.filter(F[VF.f] || F.all).filter(r => !q || [vfName(r.s), r.s.name.en, r.s.id].join(" ").toLowerCase().includes(q));
+  // 검색: 베트남어 성조 · 띄어쓰기 · 하이픈 무시 (예: 'tam an' → Tâm An · tam-an-medical)
+  const fold = t => String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/[\s\-_.·]+/g, "");
+  const q = fold(VF.q);
+  const list = rows.filter(F[VF.f] || F.all).filter(r => !q || fold([vfName(r.s), r.s.name.en, r.s.name.vi, r.s.id, vfSrc(r.s.id).web].join(" ")).includes(q));
   el.innerHTML = `<div class="vf">
     <div class="vf-tiles"><div><small>전체 업체</small><b>${cnt.all}</b></div><div><small>검수 대기</small><b class="w">${cnt.todo}</b></div><div><small>검수 완료</small><b class="g">${cnt.done}</b></div><div><small>링크 없음 · 현장 확인</small><b>${cnt.none}</b></div><div><small>사진 사용 허락</small><b>${cnt.photo}</b></div></div>
     <div class="vf-auto">
