@@ -135,6 +135,22 @@ async function findPages(base: string, homeLinks: string[]) {
   return pick.slice(0, 4).map(x => x.u);
 }
 
+// ✂️ 잘린 JSON 살리기 — 뒤에서부터 완전한 항목이 끝나는 곳(}, ])을 찾아 열린 괄호를 닫아 봐요
+function jsonRepair(t: string): any {
+  const a = t.indexOf("{"); if (a < 0) return null; t = t.slice(a);
+  let tries = 0;
+  for (let end = t.length; end > 0 && tries < 400; end = Math.max(t.lastIndexOf("}", end - 2), t.lastIndexOf("]", end - 2)) + 1, tries++) {
+    const cut = t.slice(0, end); const st: string[] = []; let inS = false, esc = false;
+    for (const ch of cut) { if (inS) { if (esc) esc = false; else if (ch === "\\") esc = true; else if (ch === '"') inS = false; continue; }
+      if (ch === '"') inS = true; else if (ch === "{" || ch === "[") st.push(ch); else if (ch === "}" || ch === "]") st.pop(); }
+    if (inS) continue;
+    const fix = cut.replace(/,\s*$/, "") + st.reverse().map(c => (c === "{" ? "}" : "]")).join("");
+    try { const d = JSON.parse(fix); if (d && typeof d === "object") return d; } catch (_) {}
+    if (end <= 1) break;
+  }
+  return null;
+}
+
 // 💳 AI 사용량 기록 (universe52 ai_usage · 포털 '💳 AI 사용량'에서 대략 잔액 계산) — 실패해도 본 기능엔 영향 없어요
 //  SUPABASE_SERVICE_ROLE_KEY 는 Supabase 가 자동으로 넣어 줘요 (따로 만들거나 채팅에 적지 않아요)
 async function logUse(fn: string, model: string, u: any, ref = "") {
@@ -198,7 +214,7 @@ Deno.serve(async (req) => {
   const ask = (c: unknown[]) => fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: { "x-api-key": KEY, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-    body: JSON.stringify({ model: MODEL, max_tokens: 8000, system: SYSTEM, messages: [{ role: "user", content: c }] }),
+    body: JSON.stringify({ model: MODEL, max_tokens: 16000, system: SYSTEM, messages: [{ role: "user", content: c }] }),
   });
   let ai = await ask(content);
   // 사진 하나라도 못 읽으면 (사이트가 막음 · 너무 큼) 글만으로 한 번 더
@@ -212,7 +228,8 @@ Deno.serve(async (req) => {
   const text = (j.content || []).filter((c: any) => c.type === "text").map((c: any) => c.text).join("").trim();
   const m = text.match(/\{[\s\S]*\}/);
   try {
-    const d = JSON.parse(m ? m[0] : text);
+    // 답이 길어서 중간에 잘렸으면 (stop_reason = max_tokens) 끝까지 온 메뉴까지만 살려서 읽어요
+    let d: any; try { d = JSON.parse(m ? m[0] : text); } catch (e) { d = jsonRepair(text); if (!d) throw e; d.note = [d.note, `답이 길어서 일부만 읽었어요 (메뉴 ${(d.menu || []).length}개까지)`].filter(Boolean).join(" · "); }
     const s = (v: unknown, n: number) => (v == null || v === "" ? null : String(v).slice(0, n));
     return out({
       name: s(d.name, 100), name_ko: s(d.name_ko, 60), hours: s(d.hours, 120), address: s(d.address, 240), phone: s(d.phone, 60),
