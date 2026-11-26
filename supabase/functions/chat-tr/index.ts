@@ -31,6 +31,19 @@ Rules:
 Input format: each item starts with a line "@@<number> -> <target code>", followed by the text.
 Output format (plain text, no JSON, no code block): for EVERY item write a line "@@<same number> <detected source code>" and on the following line(s) only the translation. Nothing else.`;
 
+// 💳 AI 사용량 기록 (universe52 ai_usage · 포털 '💳 AI 사용량'에서 대략 잔액 계산) — 실패해도 본 기능엔 영향 없어요
+//  SUPABASE_SERVICE_ROLE_KEY 는 Supabase 가 자동으로 넣어 줘요 (따로 만들거나 채팅에 적지 않아요)
+async function logUse(fn: string, model: string, u: any, ref = "") {
+  try {
+    const k = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "", base = Deno.env.get("SUPABASE_URL") || "";
+    if (!k || !base || !u) return;
+    const h: Record<string, string> = { apikey: k, "Content-Type": "application/json", Prefer: "return=minimal" };
+    if (k.startsWith("eyJ")) h.Authorization = "Bearer " + k;
+    await fetch(base + "/rest/v1/ai_usage", { method: "POST", headers: h, body: JSON.stringify({ fn, model: String(model || ""),
+      input_tokens: +u.input_tokens || 0, output_tokens: +u.output_tokens || 0, cache_read: +u.cache_read_input_tokens || 0, cache_write: +u.cache_creation_input_tokens || 0, ref: String(ref || "").slice(0, 80) }) });
+  } catch (_) { /* 기록 실패는 무시 */ }
+}
+
 Deno.serve(async (req) => {
   const h = { ...cors(req.headers.get("origin")), "Content-Type": "application/json" };
   const out = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: h });
@@ -59,6 +72,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({ model: MODEL, max_tokens: 3000, system: SYSTEM, messages: [{ role: "user", content: ub }] }),
     });
     const j2 = await r2.json().catch(() => ({}));
+    if (r2.ok) await logUse("chat-tr", MODEL, j2.usage, "방문 전 질문");
     if (!r2.ok) return out({ ok: false });
     const txt = (j2.content || []).filter((c: any) => c.type === "text").map((c: any) => c.text).join("").replace(/```[a-z]*\n?/gi, "").trim();
     const parts = txt.split(/^\s*@@\s*(\d+)[ \t]*([A-Za-z]{2}(?:-[A-Za-z]{2})?)?[^\S\n]*(?:\([^)\n]*\))?[ \t]*$/m);
@@ -80,6 +94,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({ model: MODEL, max_tokens: 3000, system: SYSTEM, messages: [{ role: "user", content: ub }] }),
     });
     const j3 = await r3.json().catch(() => ({}));
+    if (r3.ok) await logUse("chat-tr", MODEL, j3.usage, "시술 기록");
     if (!r3.ok) return out({ ok: false });
     const txt = (j3.content || []).filter((c: any) => c.type === "text").map((c: any) => c.text).join("").replace(/```[a-z]*\n?/gi, "").trim();
     const parts = txt.split(/^\s*@@\s*(\d+)[ \t]*([A-Za-z]{2}(?:-[A-Za-z]{2})?)?[^\S\n]*(?:\([^)\n]*\))?[ \t]*$/m);
@@ -104,6 +119,7 @@ Deno.serve(async (req) => {
     body: JSON.stringify({ model: MODEL, max_tokens: 4000, system: SYSTEM, messages: [{ role: "user", content: user }] }),
   });
   const j = await r.json().catch(() => ({}));
+  if (r.ok) await logUse("chat-tr", MODEL, j.usage, `채팅 ${items.length}개`);
   if (!r.ok) return out({ error: "AI 호출 실패: " + ((j.error && j.error.message) || r.status) }, 502);
   const text = (j.content || []).filter((c: any) => c.type === "text").map((c: any) => c.text).join("").replace(/```[a-z]*\n?/gi, "").trim();
   const got: Record<number, { src: string | null; text: string }> = {};

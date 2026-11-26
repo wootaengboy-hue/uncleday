@@ -87,6 +87,19 @@ async function getPage(u: string, ms = 15000) {
   finally { clearTimeout(tm); }
 }
 
+// 💳 AI 사용량 기록 (universe52 ai_usage · 포털 '💳 AI 사용량'에서 대략 잔액 계산) — 실패해도 본 기능엔 영향 없어요
+//  SUPABASE_SERVICE_ROLE_KEY 는 Supabase 가 자동으로 넣어 줘요 (따로 만들거나 채팅에 적지 않아요)
+async function logUse(fn: string, model: string, u: any, ref = "") {
+  try {
+    const k = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "", base = Deno.env.get("SUPABASE_URL") || "";
+    if (!k || !base || !u) return;
+    const h: Record<string, string> = { apikey: k, "Content-Type": "application/json", Prefer: "return=minimal" };
+    if (k.startsWith("eyJ")) h.Authorization = "Bearer " + k;
+    await fetch(base + "/rest/v1/ai_usage", { method: "POST", headers: h, body: JSON.stringify({ fn, model: String(model || ""),
+      input_tokens: +u.input_tokens || 0, output_tokens: +u.output_tokens || 0, cache_read: +u.cache_read_input_tokens || 0, cache_write: +u.cache_creation_input_tokens || 0, ref: String(ref || "").slice(0, 80) }) });
+  } catch (_) { /* 기록 실패는 무시 */ }
+}
+
 Deno.serve(async (req) => {
   const h = { ...cors(req.headers.get("origin")), "Content-Type": "application/json" };
   const out = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: h });
@@ -140,6 +153,7 @@ Deno.serve(async (req) => {
   // 사진 하나라도 못 읽으면 (사이트가 막음 · 너무 큼) 글만으로 한 번 더
   if (!ai.ok && imgsUsed.length && content.some((x: any) => x.type === "text")) { imgsUsed = []; ai = await ask(content.filter((x: any) => x.type === "text")); }
   const j = await ai.json().catch(() => ({}));
+  if (ai.ok) await logUse("shop-extract", MODEL, j.usage, `${String(b.shop || "").slice(0, 30)} ${url}`);
   if (!ai.ok) {
     if (imgsUsed.length) return out({ error: "AI 호출 실패 (사진을 읽지 못함): " + ((j.error && j.error.message) || ai.status) + " · 가격표 사진 주소를 따로 넣어 보세요" }, 502);
     return out({ error: "AI 호출 실패: " + ((j.error && j.error.message) || ai.status) }, 502);

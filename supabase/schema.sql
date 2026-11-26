@@ -6875,3 +6875,38 @@ update public.shop_sources set crawled = coalesce(crawled, '{}'::jsonb) || $j${"
 update public.shop_sources set crawled = coalesce(crawled, '{}'::jsonb) || $j${"hours": "09:00 - 22:00", "address": "44 Lê Mạnh Trinh, Phước Mỹ, Sơn Trà, Đà Nẵng", "phone": "+84 971 977 770", "features": ["무료 픽업 (다낭 시내 · 바나힐 · 호이안 등) · 공항 픽업", "개인 마사지룸 · 허브티", "무료 와이파이"], "deals": ["골든 타임 11:00~13:00 2인 이상 40% 할인", "2인 20% · 4인 30% · 7인 이상 40% 할인", "네일 서비스 20% 할인", "구글 지도에 사진 리뷰 남기면 선물"], "about": {"facts": ["유기농 · 천연 재료와 허브 사용", "임산부 · 아이 마사지 있음", "손 · 발 네일 함께 운영", "개인 마사지룸 · 허브티 · 무료 와이파이", "다낭 시내 · 관광지 무료 픽업, 공항 픽업", "미케 해변 근처 (선짜)"], "desc_ko": "미케 해변 근처 선짜에 있는 스파 & 네일 가게예요. 유기농 오일과 허브로 마사지하고, 임산부 · 아이 마사지와 손발 네일도 한곳에서 받을 수 있어요. 다낭 시내와 주요 관광지 무료 픽업이 있어요.", "desc_en": "A spa and nail salon in Son Tra, near My Khe Beach. Massages use organic oils and herbs, and you can get pregnancy or kids' massages and hand/foot nails in one place. Free pick-up from central Da Nang and major sights.", "desc_vi": "Tiệm spa & nail ở Sơn Trà, gần biển Mỹ Khê. Massage bằng tinh dầu hữu cơ và thảo mộc, có massage bầu, massage trẻ em và làm móng tay chân ở cùng một nơi. Đưa đón miễn phí trong trung tâm Đà Nẵng và các điểm tham quan chính.", "reco_ko": "임신 중이거나 아이와 함께인 가족, 마사지와 네일을 한 번에 받고 싶은 분", "reco_en": "Expecting mothers, families with kids, or anyone wanting massage and nails in one visit", "reco_vi": "Mẹ bầu, gia đình có trẻ nhỏ, hoặc ai muốn massage và làm móng cùng lúc"}, "note": "11/26 Claude가 홈페이지에서 다시 정리 · 메뉴 · 가격은 그대로 둠 (직원이 이미 반영) · ⚠️ 가격에 팁 · 부가세 10% 별도라고 적혀 있음 · ⚠️ 영업시간이 두 군데 다름 (09:30~23:00 / 09:00~22:00 · 마지막 예약 21:00) · ⚠️ 할인은 '가게 홈페이지 예약에만'이라고 적혀 있음 → 엉클데이 예약에도 되는지 가게 확인 필요", "src": ["https://moringaspadanang.com/", "https://moringaspadanang.com/services.html"]}$j$::jsonb, crawled_at = now(), review = 'todo', updated_at = now() where shop_id = 'moringa-spa';
 
 select shop_id, jsonb_array_length(coalesce(crawled -> 'menu', '[]'::jsonb)) as "메뉴(그대로)", crawled -> 'about' ->> 'desc_ko' as "새 소개" from public.shop_sources where shop_id in ('dahan-spa', 'moringa-spa');
+-- ===============================================================
+-- universe52: 💳 AI 사용량 · 대략 잔액
+--  · ai_usage: Edge Function(가져오기 · 이미지 AI 검사 · 블로그 AI · 다국어 번역 · 채팅 번역)이 AI 를 부를 때마다
+--      쓴 토큰을 한 줄씩 남겨요 (금액은 포털에서 모델 단가로 계산)
+--  · ai_balance: 콘솔에서 본 잔액을 직원이 적어 둬요 → 대략 잔액 = 마지막으로 적은 잔액 − 그 뒤 사용액
+--  · 직원만 읽어요. 기록은 Edge Function 이 서버 키로만 써요 (손님 · 브라우저는 못 써요)
+-- Supabase → SQL Editor 에 붙여 넣고 Run (여러 번 실행해도 괜찮아요)
+-- ===============================================================
+
+create table if not exists public.ai_usage (
+  id            bigserial primary key,
+  at            timestamptz not null default now(),
+  fn            text not null,                -- shop-extract · media-check · blog-ai · i18n-tr · chat-tr
+  model         text,
+  input_tokens  integer not null default 0,
+  output_tokens integer not null default 0,
+  cache_read    integer not null default 0,
+  cache_write   integer not null default 0,
+  ref           text                          -- 어느 업체 · 검색어 등 (짧게)
+);
+create index if not exists ai_usage_at on public.ai_usage (at desc);
+alter table public.ai_usage enable row level security;
+drop policy if exists ai_usage_staff on public.ai_usage;
+create policy ai_usage_staff on public.ai_usage for select to authenticated using (public.is_staff());
+
+create table if not exists public.ai_balance (
+  id    bigserial primary key,
+  at    timestamptz not null default now(),
+  usd   numeric(10, 2) not null check (usd >= 0),   -- 콘솔에서 본 잔액 ($)
+  note  text,
+  by_email text
+);
+alter table public.ai_balance enable row level security;
+drop policy if exists ai_balance_staff on public.ai_balance;
+create policy ai_balance_staff on public.ai_balance for all to authenticated using (public.is_staff()) with check (public.is_staff());

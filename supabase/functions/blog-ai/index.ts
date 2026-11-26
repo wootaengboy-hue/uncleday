@@ -28,6 +28,19 @@ const SYSTEM = `당신은 베트남 여행 중인 한국인을 위한 뷰티 · 
 반드시 아래 JSON 하나만 출력해요 (설명 · 코드블록 없이):
 {"title": "검색어가 들어간 자연스러운 제목 (40자 안)", "intro": "첫 문단 1~2문장", "body": "## 소제목\\n본문…", "faq": [{"q": "질문", "a": "답"}]}`;
 
+// 💳 AI 사용량 기록 (universe52 ai_usage · 포털 '💳 AI 사용량'에서 대략 잔액 계산) — 실패해도 본 기능엔 영향 없어요
+//  SUPABASE_SERVICE_ROLE_KEY 는 Supabase 가 자동으로 넣어 줘요 (따로 만들거나 채팅에 적지 않아요)
+async function logUse(fn: string, model: string, u: any, ref = "") {
+  try {
+    const k = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "", base = Deno.env.get("SUPABASE_URL") || "";
+    if (!k || !base || !u) return;
+    const h: Record<string, string> = { apikey: k, "Content-Type": "application/json", Prefer: "return=minimal" };
+    if (k.startsWith("eyJ")) h.Authorization = "Bearer " + k;
+    await fetch(base + "/rest/v1/ai_usage", { method: "POST", headers: h, body: JSON.stringify({ fn, model: String(model || ""),
+      input_tokens: +u.input_tokens || 0, output_tokens: +u.output_tokens || 0, cache_read: +u.cache_read_input_tokens || 0, cache_write: +u.cache_creation_input_tokens || 0, ref: String(ref || "").slice(0, 80) }) });
+  } catch (_) { /* 기록 실패는 무시 */ }
+}
+
 Deno.serve(async (req) => {
   const h = { ...cors(req.headers.get("origin")), "Content-Type": "application/json" };
   const out = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: h });
@@ -49,6 +62,7 @@ Deno.serve(async (req) => {
     body: JSON.stringify({ model: MODEL, max_tokens: 4000, system: SYSTEM, messages: [{ role: "user", content: ctx }] }),
   });
   const j = await r.json().catch(() => ({}));
+  if (r.ok) await logUse("blog-ai", MODEL, j.usage, kw);
   if (!r.ok) return out({ error: "AI 호출 실패: " + ((j.error && j.error.message) || r.status) }, 502);
   const text = (j.content || []).filter((c: any) => c.type === "text").map((c: any) => c.text).join("").trim();
   const m = text.match(/\{[\s\S]*\}/);
