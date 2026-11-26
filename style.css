@@ -896,3 +896,17 @@ footer .foot-priv, footer .foot-priv:visited { color: #fff; }
 .staff-links .sl-b:hover{border-color:#2563eb;color:#2563eb}.staff-links .sl-b.fb{color:#1d4ed8}
 .staff-links .sl-st,.staff-links .sl-none{font-size:12px;color:#64748b}
 .staff-links .sl-adm{margin-left:auto;font-size:12px;color:#2563eb;text-decoration:none}
+
+/* ⏱ 시간만 다른 메뉴 묶음 (아로마 마사지 · 60 / 90 / 120분) */
+.menu-row.menu-grp { flex-direction: column; align-items: stretch; gap: 10px; }
+.menu-grp .mg-h { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 10px; }
+.menu-grp .mg-h small { color: #8a8f98; font-size: 12px; }
+.mg-opts { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+.mg-opt { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 9px 6px; border: 1.5px solid #e5e1d8; border-radius: 10px; background: #fbfaf7; font: inherit; color: inherit; text-align: center; line-height: 1.3; }
+button.mg-opt { cursor: pointer; }
+button.mg-opt:hover, .mg-opt.on { border-color: #B23A1E; background: #fff5f1; }
+.mg-opt .mg-t { font-size: 12.5px; color: #555; font-weight: 600; }
+.mg-opt b { font-size: 14px; white-space: nowrap; }
+.mg-opt s { color: #98a0aa; font-size: 11px; }
+.mg-opt .mg-ap { color: #8a8f98; font-size: 10.5px; }
+.mg-opt .pm-tag { display: inline-block; background: #B23A1E; color: #fff; border-radius: 6px; padding: 0 5px; font-size: 10.5px; font-weight: 800; }

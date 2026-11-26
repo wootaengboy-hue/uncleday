@@ -255,7 +255,8 @@ function openEditor(id, preset, opts = {}) {
 
       <div class="box"><h3>메뉴·가격<small>가격은 베트남 동(₫), 숫자만. 0이면 "상담 후 안내"</small></h3>
         <div id="menuList" style="display:grid;gap:10px"></div>
-        <button class="btn sm" id="menuAdd" type="button">＋ 메뉴 추가</button>
+        <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm" id="menuAdd" type="button">＋ 메뉴 추가</button><button class="btn sm" id="menuGrid" type="button" title="종류 × 시간으로 가격이 정해진 가격표를 한 번에 메뉴로 만들어요">⏱ 시간별 가격표로 만들기</button></div>
+        <small class="hint">이름이 같은 메뉴는 손님 화면에서 하나로 묶이고 시간(60분 · 90분 …)을 골라요</small>
       </div>
 
       <div class="box"><h3>가격표 사진<small>업체에서 받은 코스별 가격표를 올려요. 여러 장 한 번에 올릴 수 있어요</small></h3>
@@ -412,6 +413,9 @@ function openEditor(id, preset, opts = {}) {
   }
   drawMenu();
   $("menuAdd").onclick = () => { s.menu.push({ name: { ko: "", en: "", vi: "" }, min: 60, price: 0 }); drawMenu(); };
+  $("menuGrid").onclick = () => vfGrid(s.menu, {}, (out, n) => { const pm = (s.promos || []).some(p => (p.menus || []).length);
+    s.menu = out.map(m => ({ ...m, name: { ko: m.name.ko || "", en: m.name.en || "", vi: m.name.vi || "" } })); drawMenu();
+    toast(`메뉴 ${n}줄을 만들었어요 · 영어 · 베트남어 이름을 확인하고 [저장]을 눌러 주세요${pm ? " · 일부 메뉴 할인 이벤트의 적용 메뉴도 다시 확인해 주세요" : ""}`, 6000); });
 
   // 이용후기
   s.userReviews = s.userReviews || [];

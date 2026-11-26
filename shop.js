@@ -127,6 +127,8 @@ if (!shop) {
   const revs = (shop.userReviews || []).slice().sort((a, b) => (b.date || "").localeCompare(a.date || ""));
   const avg = revs.length ? (revs.reduce((t, r) => t + r.stars, 0) / revs.length).toFixed(1) : 0;
   const pending = shop.verified === false || !shop.open || !shop.menu.length;   // 정보 미확인 → 예약 폼 대신 상담 버튼
+  // 이름이 같은 메뉴(시간만 다른 것)는 하나로 묶어 시간을 골라요 (저장은 시간별 한 줄씩)
+  const mGroups = []; shop.menu.forEach((m, i) => { const n = tx(m.name); let g = mGroups.find(x => x.n === n); if (!g) mGroups.push(g = { n, items: [] }); g.items.push(i); });
   const hoursText = shop.open ? `${shop.open} ~ ${shop.close}` : ui("tbd");
   const closedText = shop.open ? closed : ui("tbd");
 
@@ -176,7 +178,10 @@ if (!shop) {
 
     ${shop.menu.length ? `<h2>${ui("menu")}</h2>
     ${pms.length ? `<div class="pm-box"><b class="pm-h">${ui("pm_title")}</b><ul>${pms.map(p => `<li>${esc(pmLine(p, shop))}</li>`).join("")}</ul><small>${ui("pm_note")}</small></div>` : ""}
-    <div id="menuList">${shop.menu.map((m, i) => { const pf = promoFor(shop, i); return `
+    <div id="menuList">${mGroups.map(g => { if (g.items.length > 1) return `
+      <div class="menu-row menu-grp"><div class="mg-h"><b>${esc(g.n)}</b><small>${ui("mgPick")}</small></div>
+      <div class="mg-opts">${g.items.map(i => { const m = shop.menu[i], pf = promoFor(shop, i), cut = pf && pf.cut; return `<${pending ? "span" : "button type=\"button\""} class="mg-opt${pending ? "" : " pick"}" data-i="${i}"><span class="mg-t">${m.min ? `${m.min} ${ui("min")}` : "-"}</span>${cut ? `<s>₫${m.price.toLocaleString("en-US")}</s>` : ""}${(t => { const k = t.indexOf(" ("); return k < 0 ? `<b>${t}</b>` : `<b>${t.slice(0, k)}</b><small class="mg-ap">${t.slice(k + 1)}</small>`; })(money(cut ? pf.price : m.price))}${cut ? `<span class="pm-tag">${esc(pmTag(pf.p))}</span>` : ""}</${pending ? "span" : "button"}>`; }).join("")}</div></div>`;
+      const i = g.items[0], m = shop.menu[i], pf = promoFor(shop, i); return `
       <div class="menu-row${pf && pf.cut ? " pm-row" : ""}"><div><b>${tx(m.name)}</b>${m.min ? `<br><small>${m.min} ${ui("min")}</small>` : ""}</div>
       <div class="price${pf && pf.cut ? " pm" : ""}">${pf && pf.cut ? `<s>₫${m.price.toLocaleString("en-US")}</s><span class="pm-tag">${esc(pmTag(pf.p))}</span><br>${money(pf.price)}` : money(m.price)}</div>
       ${pending ? "" : `<button class="chip pick" data-i="${i}">${ui("bookBtn")}</button>`}</div>`; }).join("")}
@@ -197,7 +202,7 @@ if (!shop) {
       <div class="f-stars"><span>${ui("rvStars")}</span><div id="rvStarBtns">${[1, 2, 3, 4, 5].map(n => `<button type="button" data-s="${n}" aria-label="${n}">★</button>`).join("")}</div></div>
       <label>${ui("rvName")}<input name="name" required maxlength="20"></label>
       <label>${ui("rvVisit")}<input type="month" name="date" required></label>
-      ${shop.menu.length ? `<label>${ui("rvMenu")}<select name="menu"><option value="">-</option>${shop.menu.map(m => `<option>${esc(tx(m.name))}</option>`).join("")}</select></label>` : ""}
+      ${shop.menu.length ? `<label>${ui("rvMenu")}<select name="menu"><option value="">-</option>${mGroups.map(g => `<option>${esc(g.n)}</option>`).join("")}</select></label>` : ""}
       <label>${ui("rvText")}<textarea name="text" rows="4" required minlength="10" maxlength="1000" placeholder="${ui("rvTextPh")}"></textarea></label>
       <label>${ui("rvContact")}<input name="contact" maxlength="60"></label>
       <button class="btn big-btn" type="submit">${ui("rvSend")}</button>
@@ -214,8 +219,8 @@ if (!shop) {
     <h2 id="bookTitle" ${pending ? "hidden" : ""}>${ui("book")}</h2>
     <p class="find-hint" ${pending ? "hidden" : ""}>${ui("vAlready")} <a href="booking.html">🔎 ${ui("vFind")}</a></p>
     <form id="form" class="form" ${pending ? "hidden" : ""}>
-      <label>${ui("fMenu")}<select name="menu" id="fMenu">${shop.menu.map((m, i) =>
-        `<option value="${i}">${tx(m.name)} – ${(pf => pf && pf.cut ? money(pf.price) + " 🎁" : money(m.price))(promoFor(shop, i))}</option>`).join("")}</select></label>
+      <label>${ui("fMenu")}<select name="menu" id="fMenu">${mGroups.map(g => { const op = (i, lb) => { const m = shop.menu[i]; return `<option value="${i}">${lb} – ${(pf => pf && pf.cut ? money(pf.price) + " 🎁" : money(m.price))(promoFor(shop, i))}</option>`; };
+        return g.items.length > 1 ? `<optgroup label="${esc(g.n)}">${g.items.map(i => op(i, `${esc(g.n)} · ${shop.menu[i].min || "-"} ${ui("min")}`)).join("")}</optgroup>` : op(g.items[0], tx(shop.menu[g.items[0]].name)); }).join("")}</select></label>
       <p class="pm-est" id="pmEst" hidden></p>
       <div class="bk-pick">
         <button type="button" class="bk-sum" id="bkSum"><span class="bk-ic">📅</span><span id="bkSumT">${ui("pickDT")}</span><span class="bk-car">▾</span></button>
@@ -407,7 +412,8 @@ ${f.text}
   const setPpl = n => { n = Math.max(1, Math.min(10, n)); $("fPeople").value = n; $("pplN").textContent = n; $("pplM").disabled = n <= 1; $("pplP").disabled = n >= 10;
     if (AV && fDate.value) { if (fTime.value && !slotsFor().includes(fTime.value)) { fTime.value = ""; drawSum(); } if (!$("bkPanel").hidden) drawSlots(); } };
   $("pplM").onclick = () => { setPpl(+$("fPeople").value - 1); drawSum(); }; $("pplP").onclick = () => { setPpl(+$("fPeople").value + 1); drawSum(); }; setPpl(1);
-  fMenu.onchange = () => { if (fTime.value && !slotsFor().includes(fTime.value)) fTime.value = ""; drawSlots(); drawSum(); };
+  fMenu.onchange = () => { if (fTime.value && !slotsFor().includes(fTime.value)) fTime.value = ""; drawSlots(); drawSum();
+    document.querySelectorAll(".mg-opt").forEach(b => b.classList.toggle("on", b.dataset.i === fMenu.value)); };
   drawSum();
 
   document.querySelectorAll(".pick").forEach(btn => btn.onclick = () => {
