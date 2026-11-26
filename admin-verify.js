@@ -112,13 +112,14 @@ function vfDetail(s, x) {
     </div>
     <h5>💰 메뉴 · 가격 <small>모아 온 메뉴 ${menu.length}개 · 엉클데이 메뉴 ${D.menu.length}개${usd ? " · 달러 가격은 동으로 바꿔서 넣어 주세요" : ""}</small></h5>
     <div class="vf-menu3">
-      <div class="vf-mcol"><small><label class="vf-all"><input type="checkbox" id="vfAll" ${menu.length && menu.every((m, i) => vfPick(m, i, tg)) ? "checked" : ""}> 모아 온 정보</label> <span class="hint">· 이름 · 분 · 가격을 고칠 수 있어요</span></small>
+      <div class="vf-mcol"><small><label class="vf-all"><input type="checkbox" id="vfAll" ${menu.length && menu.every((m, i) => vfPick(m, i, tg)) ? "checked" : ""}> 모아 온 정보</label> <span class="hint">· 이름 · 분 · 가격을 고칠 수 있어요</span>
+        ${menu.length ? `<span class="vf-cdel"><button type="button" class="btn sm" id="vfCDel" title="체크한 모아 온 메뉴를 지워요">🗑 고른 것 지우기</button><button type="button" class="btn sm" id="vfCClr" title="모아 온 메뉴를 모두 지워요">모두 비우기</button></span>` : ""}</small>
         ${menu.map((m, i) => { const v = vfP(m), t = tg[i];
         return `<div class="vf-ci ${vfPick(m, i, tg) ? "on" : ""}"><input type="checkbox" data-vfck="${i}" ${vfPick(m, i, tg) ? "checked" : ""} aria-label="고르기">
           <div class="vf-cb"><input class="nm" data-vfcn="${i}" value="${esc(m.name_ko || m.name || "")}" aria-label="메뉴 이름">${m.name_ko && m.name && m.name_ko !== m.name ? `<small class="org">원문: ${esc(m.name)}</small>` : ""}${m.price && !/^[\d.,\s]+(vnd|đ|동|k)?$/i.test(m.price) ? `<small class="org">가격 원문: ${esc(m.price)}</small>` : ""}${m.desc && m.desc !== m.desc_ko ? `<small class="org">설명 원문: ${esc(m.desc)}</small>` : ""}
             <div class="vf-sd"><input data-vfcs="${i}" value="${esc(m.section_ko || m.section || "")}" placeholder="분류 (예: 스파)"><input data-vfcd="${i}" value="${esc(m.desc_ko || m.desc || "")}" placeholder="설명 (손님 화면에 작게)"></div>
             <div class="vf-ed"><input type="number" min="0" data-vfcm="${i}" value="${m.minutes || ""}" placeholder="분">분 <input type="number" min="0" step="1000" data-vfcp="${i}" value="${v || ""}" placeholder="가격 없음" class="${v ? "" : "none"}">동${vfVnd(m.tip) ? ` <span class="tip">+팁 ${vfMoney(vfVnd(m.tip))}</span>` : ""}
-              <select data-vfto="${i}" aria-label="어디에 넣을까요"><option value="new" ${t == null ? "selected" : ""}>＋ 새 메뉴로</option>${D.menu.map((x, j) => `<option value="${j}" ${t === j ? "selected" : ""}>→ ${esc(vfTx(x.name).slice(0, 22))}${x.min ? " " + x.min + "분" : ""}</option>`).join("")}</select></div></div></div>`; }).join("") || `<p class="hint">모아 온 메뉴가 없어요${x.fb && !x.web ? " · 페이스북만 있는 곳은 가격표를 캡처해서 붙여 넣어 주세요" : ""}</p>`}</div>
+              <select data-vfto="${i}" aria-label="어디에 넣을까요"><option value="new" ${t == null ? "selected" : ""}>＋ 새 메뉴로</option>${D.menu.map((x, j) => `<option value="${j}" ${t === j ? "selected" : ""}>→ ${esc(vfTx(x.name).slice(0, 22))}${x.min ? " " + x.min + "분" : ""}</option>`).join("")}</select> <button type="button" class="lnk vf-cx" data-vfcx="${i}" title="이 모아 온 메뉴 지우기 (쓸모없는 것)">🗑</button></div></div></div>`; }).join("") || `<p class="hint">모아 온 메뉴가 없어요${x.fb && !x.web ? " · 페이스북만 있는 곳은 가격표를 캡처해서 붙여 넣어 주세요" : ""}</p>`}</div>
       <div class="vf-mid"><button class="btn main" id="vfSend" title="고른 메뉴를 엉클데이 쪽으로 보내요"><span class="ar">▶</span><span>고른 ${menu.filter((m, i) => vfPick(m, i, tg)).length}개<br> 보내기</span></button>
         <button class="btn sm" id="vfGrid" title="종류 × 시간으로 가격이 정해진 가격표를 한 번에 메뉴로 만들어요">⏱ 시간별<br> 가격표로</button>
         <button class="btn sm" id="vfReplace" title="엉클데이 메뉴를 고른 메뉴로 통째로 바꿔요">♻️ 통째로<br> 바꾸기</button></div>
@@ -289,6 +290,12 @@ function vfBind(el) {
     if (!v) delete t[k]; else t[k] = k === "sec" ? secI18n(v) : { ...(typeof t[k] === "object" ? t[k] : {}), ko: v }; saveD(); });
   row.querySelectorAll("[data-vftip]").forEach(inp => inp.onchange = () => { const t = D.menu[+inp.dataset.vftip], v = Math.max(0, Math.round(+inp.value || 0)); if (v) t.tip = v; else delete t.tip; saveD(); });
   row.querySelectorAll("[data-vfdeal]").forEach(cb => cb.onchange = () => { const t = (c.deals || [])[+cb.dataset.vfdeal], ds = new Set(D.deals || []); cb.checked ? ds.add(t) : ds.delete(t); D.deals = [...ds]; saveD(); });
+  // 🗑 모아 온 메뉴 지우기 (엉클데이 쪽 · 손님 화면은 그대로)
+  const cDel = ks => { const set = new Set(ks); c.menu = menu.filter((m, i) => !set.has(i)); vfSave(id, { crawled: { ...c } }, `모아 온 메뉴 ${ks.length}개를 지웠어요 · 엉클데이 쪽 · 손님 화면은 그대로예요`); };
+  row.querySelectorAll("[data-vfcx]").forEach(b => b.onclick = () => cDel([+b.dataset.vfcx]));
+  const cd = row.querySelector("#vfCDel"); if (cd) cd.onclick = () => { const ks = [...row.querySelectorAll("[data-vfck]")].filter(x => x.checked).map(x => +x.dataset.vfck); if (!ks.length) return toast("지울 메뉴를 체크해 주세요");
+    confirmBox(`모아 온 메뉴 ${ks.length}개를 지울까요?`, () => cDel(ks), "모아 온 정보(초안)에서만 지워요 · 엉클데이 쪽 · 손님 화면은 그대로예요 · 다시 가져오기로 되살릴 수 있어요", "지우기"); };
+  const cc = row.querySelector("#vfCClr"); if (cc) cc.onclick = () => confirmBox(`모아 온 메뉴 ${menu.length}개를 모두 지울까요?`, () => cDel(menu.map((m, i) => i)), "엉클데이 쪽 · 손님 화면은 그대로예요", "모두 지우기");
   row.querySelectorAll("[data-vfck]").forEach(cb => cb.onchange = () => setM(+cb.dataset.vfck, "ck", cb.checked));
   row.querySelectorAll("[data-vfto]").forEach(se => se.onchange = () => setM(+se.dataset.vfto, "to", se.value));
   const all = row.querySelector("#vfAll"); if (all) all.onchange = () => saveC({ menu: menu.map(m => ({ ...m, ck: all.checked })) });
