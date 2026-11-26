@@ -435,10 +435,6 @@ ${f.text}
     document.querySelectorAll(".mg-opt").forEach(b => b.classList.toggle("on", b.dataset.i === fMenu.value)); };
   drawSum();
 
-  // 메뉴 분류 탭 (전체 · 스파 · 네일 …)
-  document.querySelectorAll(".m-tabs [data-mt]").forEach(b => b.onclick = () => { const t = b.dataset.mt;
-    document.querySelectorAll(".m-tabs [data-mt]").forEach(x => x.classList.toggle("on", x === b));
-    document.querySelectorAll("#menuList [data-top]").forEach(el => el.hidden = !!t && el.dataset.top !== t); });
   document.querySelectorAll(".pick").forEach(btn => btn.onclick = () => {
     fMenu.value = btn.dataset.i; fMenu.onchange();
     $("bookTitle").scrollIntoView({ behavior: "smooth" });
@@ -535,3 +531,11 @@ function alertBox(t) {
   const d = document.createElement("div"); d.className = "toast-site"; d.textContent = t;
   document.body.appendChild(d); setTimeout(() => d.remove(), 2500);
 }
+
+// 메뉴 분류 탭 (전체 · 스파 · 네일 …) — 화면을 다시 그려도, 다른 곳에서 오류가 나도 늘 작동하게 문서 전체에서 받아요
+document.addEventListener("click", e => {
+  const b = e.target.closest && e.target.closest(".m-tabs [data-mt]"); if (!b) return;
+  const t = b.dataset.mt, list = document.getElementById("menuList"); if (!list) return;
+  document.querySelectorAll(".m-tabs [data-mt]").forEach(x => x.classList.toggle("on", x === b));
+  list.querySelectorAll("[data-top]").forEach(el => { const hide = !!t && el.dataset.top !== t; el.hidden = hide; el.style.display = hide ? "none" : ""; });
+});
