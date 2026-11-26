@@ -511,6 +511,8 @@ function openEditor(id, preset, opts = {}) {
       if (k >= 0) { const p = s.promos[k]; shopPmDraw(s); const d = $("pmEdit").querySelector("details"); if (d) d.open = true;
         const inp = $("pmEdit").querySelector(`[data-pv="${k}"]`); if (inp) { inp.scrollIntoView({ block: "center" }); inp.focus(); }
         return toast(`🎁 ‘${(p.t && (p.t.ko || p.t.vi || p.t.en)) || k + 1 + "번째"}’ 이벤트의 할인 ${p.kind === "amt" ? "금액" : "%"}가 비어 있어요 · 숫자를 넣거나 ✕ 삭제한 뒤 저장해 주세요`, 6000); }
+      const tw = s.promos.find(p => (p.tf && !p.tt) || (!p.tf && p.tt) || (p.tf && p.tt && p.tt <= p.tf));
+      if (tw) { shopPmDraw(s); const d = $("pmEdit").querySelector("details"); if (d) d.open = true; return toast(`🎁 ‘${(tw.t && (tw.t.ko || tw.t.vi || tw.t.en)) || "이벤트"}’ 시간대는 시작 · 끝을 모두 넣고, 끝이 시작보다 늦어야 해요 (예: 11:00 ~ 13:00)`, 6000); }
       const bad = s.promos.filter(p => p.kind === "text" ? !(p.t && (p.t.vi || p.t.ko || p.t.en)) : !(p.v > 0));
       if (bad.length) toast(`할인 크기나 이름이 빈 이벤트 ${bad.length}개는 빼고 저장했어요`, 3500);
       s.promos = s.promos.filter(p => !bad.includes(p)).map(({ _pick, ...p }) => ({ ...p, menus: (p.menus || []).filter(k => k < s.menu.length) }));
@@ -832,6 +834,9 @@ function shopPmDraw(s) {
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
         <select data-pk="${i}"><option value="pct" ${p.kind !== "amt" && p.kind !== "text" ? "selected" : ""}>% 할인</option><option value="amt" ${p.kind === "amt" ? "selected" : ""}>금액 할인 (₫)</option><option value="text" ${p.kind === "text" ? "selected" : ""}>문구만 (예: 서비스 증정)</option></select>
         ${p.kind === "text" ? "" : `<input data-pv="${i}" inputmode="numeric" style="width:110px" placeholder="${p.kind === "amt" ? "금액 입력" : "% 입력"}" value="${p.v || ""}" class="${p.v > 0 ? "" : "pv-empty"}">${p.kind === "amt" ? "₫" : "%"}`}
+        <span class="hint">조건</span><select data-ppl="${i}" title="최소 인원"><option value="">인원 상관없음</option>${[2, 3, 4, 5, 6, 7, 8, 10].map(n => `<option value="${n}" ${+p.ppl === n ? "selected" : ""}>${n}인 이상</option>`).join("")}</select>
+        <input type="time" data-ptf="${i}" value="${esc(p.tf || "")}" title="예약 시작 시간대 (부터)" style="width:110px"><span>~</span><input type="time" data-ptt="${i}" value="${esc(p.tt || "")}" title="예약 시작 시간대 (까지 · 이 시간 전)" style="width:110px"><span class="hint">(시간대 · 비우면 하루 종일)</span>
+        <span style="flex-basis:100%;height:0"></span>
         <span class="hint">기간</span><input type="date" data-pf="${i}" value="${esc(p.from || "")}"><span>~</span><input type="date" data-pe="${i}" value="${esc(p.to || "")}"><span class="hint">(비우면 제한 없음)</span></div>
       <label class="sv-r"><input type="checkbox" data-pall="${i}" ${all ? "checked" : ""}> 전 메뉴</label>
       ${all ? "" : shopMenuGroups(menu).map(g => `<label class="sv-r" style="padding-left:18px"><input type="checkbox" data-pm="${i}" data-k="${g.ks.join(",")}" ${g.ks.every(k => (p.menus || []).includes(k)) ? "checked" : ""}> ${esc(g.n || "메뉴 " + (g.ks[0] + 1))}${g.ks.length > 1 ? ` · ${g.ks.map(k => (menu[k].min || "?") + "분").join(" · ")}` : menu[g.ks[0]].price ? " · ₫" + menu[g.ks[0]].price.toLocaleString("en-US") : ""}</label>`).join("")}
@@ -844,6 +849,8 @@ function shopPmDraw(s) {
   el.querySelectorAll("[data-pt]").forEach(x => x.oninput = () => { const p = list[+x.dataset.pt]; p.t = { ...(p.t || {}), [x.dataset.l]: x.value.trim() }; if (!p.t[x.dataset.l]) delete p.t[x.dataset.l]; });
   el.querySelectorAll("[data-pk]").forEach(x => x.onchange = () => { const p = list[+x.dataset.pk]; p.kind = x.value; if (p.kind === "text") delete p.v; else if (p.kind === "pct" && p.v > 90) p.v = 0; redraw(); });
   el.querySelectorAll("[data-pv]").forEach(x => x.oninput = () => { const p = list[+x.dataset.pv]; p.v = p.kind === "pct" ? Math.min(90, num(x.value)) : num(x.value); x.classList.toggle("pv-empty", !(p.v > 0)); });
+  el.querySelectorAll("[data-ppl]").forEach(x => x.onchange = () => { const p = list[+x.dataset.ppl]; if (+x.value > 1) p.ppl = +x.value; else delete p.ppl; });
+  el.querySelectorAll("[data-ptf],[data-ptt]").forEach(x => x.onchange = () => { const p = list[+(x.dataset.ptf ?? x.dataset.ptt)], k = x.dataset.ptf !== undefined ? "tf" : "tt"; if (x.value) p[k] = x.value; else delete p[k]; });
   el.querySelectorAll("[data-pf]").forEach(x => x.onchange = () => { const p = list[+x.dataset.pf]; if (x.value) p.from = x.value; else delete p.from; });
   el.querySelectorAll("[data-pe]").forEach(x => x.onchange = () => { const p = list[+x.dataset.pe]; if (x.value) p.to = x.value; else delete p.to; });
   el.querySelectorAll("[data-pall]").forEach(x => x.onchange = () => { const p = list[+x.dataset.pall]; if (x.checked) { p.menus = []; delete p._pick; } else p._pick = true; redraw(); });

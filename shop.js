@@ -385,10 +385,14 @@ ${f.text}
   function drawSum() {
     $("bkSumT").textContent = fDate.value && fTime.value ? `${fmtDate(fDate.value)} ${fmtTime(fTime.value)}` : fDate.value ? `${fmtDate(fDate.value)} · ${ui("pickTime")}` : ui("pickDT");
     $("bkSum").classList.toggle("set", !!(fDate.value && fTime.value));
-    const pe = $("pmEst"), pf = pe && promoFor(shop, +fMenu.value, fDate.value || undefined), n = +$("fPeople").value || 1;   // 🎁 고른 날짜 · 메뉴의 할인
+    const n = +$("fPeople").value || 1, pe = $("pmEst"), pf = pe && promoFor(shop, +fMenu.value, fDate.value || undefined, { ppl: n, tm: fTime.value || "" });   // 🎁 고른 날짜 · 메뉴 · 인원 · 시간의 할인
     const ex = extrasFor(shop, +fMenu.value), base = pf ? pf.price : (shop.menu[+fMenu.value] || {}).price || 0;
-    if (pe) { pe.hidden = !pf && !ex.length; const L = [];
+    // 💡 아직 조건이 안 맞는 더 큰 조건 할인 (예: 2인 이상 20% · 11:00~13:00 40%)
+    const mi = +fMenu.value, m0 = shop.menu[mi] || {}, nowCut = pf ? pf.cut || 0 : 0;
+    const tips = promosOn(shop, fDate.value || undefined).filter(p => pmCond(p) && pmFits(p, mi) && !pmOk(p, { ppl: n, tm: fTime.value || "" }) && pmCut(p, m0.price) > nowCut).sort((a, b) => (+a.ppl || 1) - (+b.ppl || 1) || pmCut(b, m0.price) - pmCut(a, m0.price)).slice(0, 2);   // 가까운 조건(적은 인원) 먼저
+    if (pe) { pe.hidden = !pf && !ex.length && !tips.length; const L = [];
       if (pf) L.push("🎁 " + pmLine(pf.p, shop) + (pf.cut && !ex.length ? " → " + ui("pm_est") + ": " + money(pf.price * n) : ""));
+      tips.forEach(p => L.push("💡 " + pmLine(p, shop)));
       if (ex.length && base) L.push(`💵 ${ui("ex_total")}: ₫${base.toLocaleString("en-US")}${ex.map(x => ` + ${x.n} ₫${x.v.toLocaleString("en-US")}`).join("")}${n > 1 ? ` × ${n}` : ""} = ${money((base + ex.reduce((a, x) => a + x.v, 0)) * n)}`);
       pe.textContent = L.join("\n"); pe.style.whiteSpace = "pre-line"; }
   }

@@ -75,9 +75,12 @@ const pmLive = (p, d) => p && p.on !== false && (!p.from || d >= p.from) && (!p.
 const promosOn = (shop, d) => ((shop && shop.promos) || []).filter(p => pmLive(p, d || pmDay()));
 const pmCut = (p, price) => !price || !p ? 0 : p.kind === "pct" ? Math.round(price * Math.min(p.v, 90) / 100 / 1000) * 1000 : p.kind === "amt" ? Math.min(p.v, price) : 0;
 const pmFits = (p, i) => !(p.menus && p.menus.length) || p.menus.includes(i);
-function promoFor(shop, i, d) {   // 그 메뉴에 맞는 가장 큰 할인 (서버 promo_pick 과 같은 규칙)
+// 조건 할인 (universe50): ppl = 최소 인원 · tf ~ tt = 예약 시작 시간대. 인원 · 시간을 모르면(메뉴 목록) 조건 할인은 빼고 계산해요
+const pmCond = p => !!(p && (+p.ppl > 1 || p.tf));
+const pmOk = (p, cx) => !pmCond(p) || (!!cx && (!(+p.ppl > 1) || (+cx.ppl || 1) >= +p.ppl) && (!p.tf || (!!cx.tm && cx.tm >= p.tf && cx.tm < (p.tt || "24:00"))));
+function promoFor(shop, i, d, cx) {   // 그 메뉴에 맞는 가장 큰 할인 (서버 promo_pick 과 같은 규칙) · cx = { ppl, tm } 예약 폼의 인원 · 시간
   const m = shop.menu[i]; let best = null, bc = 0, txt = null;
-  promosOn(shop, d).filter(p => pmFits(p, i)).forEach(p => { if (p.kind === "text") { txt = txt || p; return; } const c = pmCut(p, m && m.price); if (c > bc) { bc = c; best = p; } });
+  promosOn(shop, d).filter(p => pmFits(p, i) && pmOk(p, cx)).forEach(p => { if (p.kind === "text") { txt = txt || p; return; } const c = pmCut(p, m && m.price); if (c > bc) { bc = c; best = p; } });
   return best ? { p: best, cut: bc, price: m.price - bc } : txt ? { p: txt, cut: 0, price: m && m.price } : null;
 }
 // ➕ 추가 요금 (shop.extras) — 관리사 팁처럼 할인 없이 가게에서 함께 내는 돈 (엉클데이 정산 대상 아님)
@@ -97,11 +100,12 @@ function pmLine(p, shop) {   // "개업 3주년 · 전 메뉴 20% 할인 · 12/3
   const nm = p.menus && p.menus.length && shop ? [...new Set(p.menus.map(i => shop.menu[i] ? tx(shop.menu[i].name) : "").filter(Boolean))] : [];   // 시간만 다른 메뉴는 이름 하나로
   const scope = p.menus && p.menus.length ? (nm.length && nm.length <= 2 ? nm.join(", ") : ui("pm_some")) : ui("pm_all");
   const when = p.to ? ui("pm_until", { d: pmMD(p.to) }) : p.from && p.from > pmDay() ? ui("pm_from", { d: pmMD(p.from) }) : "";
-  return [pmName(p), p.kind === "text" ? "" : scope + " " + pmOff(p), when].filter(Boolean).join(" · ");
+  const cond = [+p.ppl > 1 ? ui("pm_ppl", { n: p.ppl }) : "", p.tf ? ui("pm_time", { a: p.tf, b: p.tt || "24:00" }) : ""].filter(Boolean).join(" + ");
+  return [pmName(p), cond && !pmName(p).includes(cond) ? cond : "", p.kind === "text" ? "" : scope + " " + pmOff(p), when].filter(Boolean).join(" · ");
 }
 const pmBadge = shop => { const ps = promosOn(shop); if (!ps.length) return "";
   // 목록 배지: 가장 많은 메뉴에 걸린 % 할인 (키즈 50%처럼 일부 메뉴만 큰 할인이면 대표 할인을 보여요)
-  const wide = p => p.menus && p.menus.length ? p.menus.length : 1e6, pp = ps.filter(p => p.kind === "pct").sort((a, b) => wide(b) - wide(a) || b.v - a.v);
+  const wide = p => (pmCond(p) ? 0 : 1e7) + (p.menus && p.menus.length ? p.menus.length : 1e6), pp = ps.filter(p => p.kind === "pct").sort((a, b) => wide(b) - wide(a) || b.v - a.v);   // 조건 없는 할인 먼저
   const pct = pp.length ? pp[0].v : 0, amt = ps.find(p => p.kind === "amt");
   return `<span class="pm-b">🎁 ${pct ? "-" + pct + "%" : amt ? pmTag(amt) : esc(pmName(ps[0]) || ui("pm_title").replace("🎁 ", ""))}</span>`; };
 const ocBadge = shop => shop && shop.outcall ? `<span class="oc-b">${ui("oc_badge")}</span>` : "";
