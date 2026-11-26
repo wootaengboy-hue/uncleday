@@ -582,7 +582,7 @@ function mqCard(m) {
       <div class="mq-iss">${Object.entries(MQ_ISS).map(([k, t]) => `<label class="${(m.issues || []).includes(k) ? "on" : ""}"><input type="checkbox" data-mqis="${k}" ${(m.issues || []).includes(k) ? "checked" : ""}>${t}</label>`).join("")}</div>
       ${m.note ? `<p class="mq-note">${/^원래 주소:/.test(m.note) ? "🔗" : "🤖"} ${mqNoteHtml(m.note)}</p>` : ""}
       <div class="mq-an" data-mqan><small>🔍 사진 살펴보는 중…</small></div>
-      ${m.orig_url && m.orig_url.includes("/object/public/images/") ? `<div class="mq-frame"><b>작업본 틀</b>${[["fit", "🖼️ 전체 보이기 (안 잘림)"], ["crop:0", "▲ 위쪽 남기기"], ["crop:.5", "● 가운데"], ["crop:1", "▼ 아래쪽 남기기"]].map(([k, t]) => `<button class="btn sm" data-mqstamp="${k}">${t}</button>`).join("")}<small>원본에서 16:9 작업본을 다시 만들어요</small></div>` : ""}
+      ${m.orig_url ? `<div class="mq-frame"><b>작업본 틀</b>${[["fit", "🖼️ 전체 보이기 (안 잘림)"], ["crop:0", "▲ 위쪽 남기기"], ["crop:.5", "● 가운데"], ["crop:1", "▼ 아래쪽 남기기"]].map(([k, t]) => `<button class="btn sm" data-mqstamp="${k}">${t}</button>`).join("")}<small>원본에서 16:9 작업본을 다시 만들어요</small></div>` : ""}
       <div class="mq-btns">${m.work_url ? `<button class="btn sm" data-mqai ${MQ.busy[m.id] ? "disabled" : ""}>${MQ.busy[m.id] ? "검사 중…" : "🤖 AI 검사"}</button>` : ""}
         <button class="btn sm ${m.verdict === "pass" ? "main" : ""}" data-mqv="pass">✓ 통과</button><button class="btn sm ${m.verdict === "issue" ? "bad" : ""}" data-mqv="issue">⚠ 문제</button><button class="btn sm" data-mqv="hold">⏸ 보류</button>
         <span style="flex:1"></span>${main ? "" : can ? `<button class="btn sm main" data-mqmain>★ 대표 사진으로</button>` : `<span class="mq-nomain" title="${esc(why)}">★ 대표 사진으로 <em>— ${esc(why.replace(/ \(.*\)$/, ""))}</em></span>${m.source === "owner" && m.verdict === "pass" && !x.photo_ok ? mqPerm(m.shop_id, 1) : ""}`}${main ? `<button class="btn sm" data-mqunmain>대표에서 내리기</button>` : ""}<button class="btn sm" data-mqdel title="기록 지우기">🗑</button></div>
@@ -824,7 +824,7 @@ function mqBind(el) {
 }
 // 🔄 원본에서 작업본 다시 만들기 (대표 사진이면 업체 사진도 새 작업본으로 바꿔요)
 async function mqRemake(m, mode, ay) {
-  const s2 = vfShop(m.shop_id), blob = await (await fetch(m.orig_url)).blob();
+  const s2 = vfShop(m.shop_id), blob = await mqFetch(new URL(m.orig_url, location.href).href);   // 다른 사이트 원본도 서버를 거쳐 가져와요
   const w = await mqStamp(await mqShrink(blob, 2400), s2 ? vfName(s2) : m.shop_id, mqStampOn(), mode, ay);
   const wu = await mqPut(w, `media/${m.shop_id}/${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}-w.jpg`), old = m.work_url, wasMain = s2 && s2.img === old;
   const r = await sb.from("shop_media").update({ work_url: wu }).eq("id", m.id).select().single(); if (r.error) throw r.error; Object.assign(m, r.data);
@@ -833,7 +833,7 @@ async function mqRemake(m, mode, ay) {
 }
 // 🔍 예전에 올린 사진 중 잘린 작업본 찾기 → 한꺼번에 '전체 보이기'로
 async function mqScanCut() {
-  const L = (MQ.list || []).filter(m => m.orig_url && m.work_url && m.orig_url.includes("/object/public/images/"));
+  const L = (MQ.list || []).filter(m => m.orig_url && m.work_url);
   MQ.cut = { busy: `살펴보는 중… 0/${L.length}`, list: [] }; mqDraw(); let i = 0;
   for (const m of L) { i++;
     try { const [img, wk] = await Promise.all([mqLoadImg(m.orig_url), mqLoadImg(m.work_url)]); const a = mqAnalyze(img);
