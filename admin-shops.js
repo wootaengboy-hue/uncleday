@@ -549,6 +549,19 @@ function openEditor(id, preset, opts = {}) {
       if (k >= 0) { const p = s.promos[k]; shopPmDraw(s); const d = $("pmEdit").querySelector("details"); if (d) d.open = true;
         const inp = $("pmEdit").querySelector(`[data-pv="${k}"]`); if (inp) { inp.scrollIntoView({ block: "center" }); inp.focus(); }
         return toast(`🎁 ‘${(p.t && (p.t.ko || p.t.vi || p.t.en)) || k + 1 + "번째"}’ 이벤트의 할인 ${p.kind === "amt" ? "금액" : "%"}가 비어 있어요 · 숫자를 넣거나 ✕ 삭제한 뒤 저장해 주세요`, 6000); }
+      // 재방문 · 첫 방문 · 리뷰처럼 예약 때 확인할 수 없는 조건인데 '% · 금액 할인'으로 걸면 모든 예약에 할인이 붙어요 → 문구 이벤트로 바꿀지 물어요
+      const CHK = /재방문|다시\s*방문|첫\s*방문|처음\s*방문|신규|리뷰|후기|review|revisit|return|first[\s-]*(time|visit)|2nd|second\s*visit|quay lại|lần đầu|đánh giá/i;
+      const risky = s.promos.filter(p => p.kind !== "text" && p.on !== false && !(+p.ppl > 1) && !p.tf && CHK.test(Object.values(p.t || {}).join(" ")));
+      if (risky.length) {
+        const nm = p => (p.t && (p.t.ko || p.t.vi || p.t.en)) || "이벤트";
+        confirmBox(`${risky.map(p => `‘${nm(p)}’`).join(" · ")} 는 예약할 때 확인할 수 없는 조건이에요. 문구 이벤트로 바꿔서 저장할까요?`, () => {
+          risky.forEach(p => { const tag = p.kind === "pct" ? `${p.v}%` : `₫${Number(p.v || 0).toLocaleString("en-US")}`;
+            p.t = Object.fromEntries(Object.entries(p.t || {}).map(([l, v]) => [l, String(v).includes(tag) || /\d+\s*%/.test(v) ? v : `${v} ${tag}`]));
+            p.kind = "text"; delete p.v; });
+          s.menuImgs = s.menuImgs || []; shopPmDraw(s); $("pOk").click();   // 위에서 지운 빈 칸을 되돌리고 다시 저장
+        }, "지금처럼 '% 할인 · 조건 없음'이면 혼자 · 처음 오는 손님까지 모든 예약에 할인이 붙어요. 문구 이벤트는 할인 안내에만 보이고 예약 금액은 그대로예요 (가게에서 확인 후 할인). 그대로 두려면 [취소] 후 이름에서 재방문 · 리뷰를 빼 주세요.", "문구로 바꾸고 저장", false);
+        return;
+      }
       const tw = s.promos.find(p => (p.tf && !p.tt) || (!p.tf && p.tt) || (p.tf && p.tt && p.tt <= p.tf));
       if (tw) { shopPmDraw(s); const d = $("pmEdit").querySelector("details"); if (d) d.open = true; return toast(`🎁 ‘${(tw.t && (tw.t.ko || tw.t.vi || tw.t.en)) || "이벤트"}’ 시간대는 시작 · 끝을 모두 넣고, 끝이 시작보다 늦어야 해요 (예: 11:00 ~ 13:00)`, 6000); }
       const bad = s.promos.filter(p => p.kind === "text" ? !(p.t && (p.t.vi || p.t.ko || p.t.en)) : !(p.v > 0));
