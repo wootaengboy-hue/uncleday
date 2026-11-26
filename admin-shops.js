@@ -550,14 +550,11 @@ function openEditor(id, preset, opts = {}) {
         const inp = $("pmEdit").querySelector(`[data-pv="${k}"]`); if (inp) { inp.scrollIntoView({ block: "center" }); inp.focus(); }
         return toast(`🎁 ‘${(p.t && (p.t.ko || p.t.vi || p.t.en)) || k + 1 + "번째"}’ 이벤트의 할인 ${p.kind === "amt" ? "금액" : "%"}가 비어 있어요 · 숫자를 넣거나 ✕ 삭제한 뒤 저장해 주세요`, 6000); }
       // 재방문 · 첫 방문 · 리뷰처럼 예약 때 확인할 수 없는 조건인데 '% · 금액 할인'으로 걸면 모든 예약에 할인이 붙어요 → 문구 이벤트로 바꿀지 물어요
-      const CHK = /재방문|다시\s*방문|첫\s*방문|처음\s*방문|신규|리뷰|후기|review|revisit|return|first[\s-]*(time|visit)|2nd|second\s*visit|quay lại|lần đầu|đánh giá/i;
-      const risky = s.promos.filter(p => p.kind !== "text" && p.on !== false && !(+p.ppl > 1) && !p.tf && CHK.test(Object.values(p.t || {}).join(" ")));
+      const risky = s.promos.filter(pmRisky);
       if (risky.length) {
         const nm = p => (p.t && (p.t.ko || p.t.vi || p.t.en)) || "이벤트";
         confirmBox(`${risky.map(p => `‘${nm(p)}’`).join(" · ")} 는 예약할 때 확인할 수 없는 조건이에요. 문구 이벤트로 바꿔서 저장할까요?`, () => {
-          risky.forEach(p => { const tag = p.kind === "pct" ? `${p.v}%` : `₫${Number(p.v || 0).toLocaleString("en-US")}`;
-            p.t = Object.fromEntries(Object.entries(p.t || {}).map(([l, v]) => [l, String(v).includes(tag) || /\d+\s*%/.test(v) ? v : `${v} ${tag}`]));
-            p.kind = "text"; delete p.v; });
+          risky.forEach(pmToText);
           s.menuImgs = s.menuImgs || []; shopPmDraw(s); $("pOk").click();   // 위에서 지운 빈 칸을 되돌리고 다시 저장
         }, "지금처럼 '% 할인 · 조건 없음'이면 혼자 · 처음 오는 손님까지 모든 예약에 할인이 붙어요. 문구 이벤트는 할인 안내에만 보이고 예약 금액은 그대로예요 (가게에서 확인 후 할인). 그대로 두려면 [취소] 후 이름에서 재방문 · 리뷰를 빼 주세요.", "문구로 바꾸고 저장", false);
         return;
@@ -876,11 +873,13 @@ function shopPmDraw(s) {
   const list = s.promos = (s.promos || []).slice(0, 10), menu = s.menu || [], today = vnToday();
   const live = p => p.on !== false && (!p.from || today >= p.from) && (!p.to || today <= p.to);
   const need = list.some(p => !(p.t && p.t.ko && p.t.en) && (p.t && (p.t.vi || p.t.ko || p.t.en)));
-  el.innerHTML = `<details ${list.length && need ? "open" : ""}><summary><b>🎁 할인 이벤트</b> <span class="hint">${list.length ? `${list.length}개 · 진행 중 ${list.filter(live).length}개` : "없음"}${need ? " · <b class='err-text'>번역 필요</b>" : ""}</span></summary>
+  const rk = list.filter(pmRisky).length;
+  el.innerHTML = `<details ${list.length && (need || rk) ? "open" : ""}><summary><b>🎁 할인 이벤트</b> <span class="hint">${list.length ? `${list.length}개 · 진행 중 ${list.filter(live).length}개` : "없음"}${rk ? ` · <b class='err-text'>⚠ 확인 필요 ${rk}개</b>` : ""}${need ? " · <b class='err-text'>번역 필요</b>" : ""}</span></summary>
     <p class="hint">시술별 할인 · 개업 기념 할인처럼 가게마다 다른 이벤트를 넣어요. <b>저장하면 바로</b> 손님 화면 (목록 배지 · 가게 메뉴 할인가)에 보이고, 예약하면 그 날짜 · 메뉴에 맞는 가장 큰 할인이 예약에 기록돼요. 사장님이 사장님 페이지에서 직접 바꿀 수도 있어요.</p>
     ${list.map((p, i) => { const all = !(p.menus && p.menus.length) && !p._pick; return `<div class="sv-c pm-a" style="display:block;border:1px solid var(--line);border-radius:10px;padding:8px;margin:6px 0">
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><label class="sv-r" style="margin:0"><input type="checkbox" data-pon="${i}" ${p.on === false ? "" : "checked"}> 켜기</label>
         <span class="hint">${live(p) ? "🟢 지금 보여요" : p.on === false ? "꺼짐" : p.to && p.to < today ? "기간 끝남" : "시작 전"}</span><span style="flex:1"></span><button class="btn sm" type="button" data-px="${i}">✕ 삭제</button></div>
+      ${pmRisky(p) ? `<div class="pm-warn">⚠️ <b>재방문 · 첫 방문 · 리뷰</b>는 예약할 때 확인할 수 없어서, 지금처럼 '% 할인 · 조건 없음'이면 <b>모든 예약에 ${p.kind === "pct" ? p.v + "%" : "할인"}가 붙어요.</b> <button class="btn sm main" type="button" data-ptext="${i}">문구 이벤트로 바꾸기</button></div>` : ""}
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:6px 0">${["vi", "ko", "en"].map(l => `<input data-pt="${i}" data-l="${l}" placeholder="이름 ${l.toUpperCase()}${l === "vi" ? " (예: Khai trương 3 năm)" : l === "ko" ? " (예: 개업 3주년)" : ""}" value="${esc((p.t || {})[l] || "")}" maxlength="80">`).join("")}</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
         <select data-pk="${i}"><option value="pct" ${p.kind !== "amt" && p.kind !== "text" ? "selected" : ""}>% 할인</option><option value="amt" ${p.kind === "amt" ? "selected" : ""}>금액 할인 (₫)</option><option value="text" ${p.kind === "text" ? "selected" : ""}>문구만 (예: 서비스 증정)</option></select>
@@ -909,6 +908,7 @@ function shopPmDraw(s) {
   el.querySelectorAll("[data-pm]").forEach(x => x.onchange = () => { const p = list[+x.dataset.pm], ks = x.dataset.k.split(",").map(Number), ms = new Set(p.menus || []); ks.forEach(k => x.checked ? ms.add(k) : ms.delete(k)); p.menus = [...ms].sort((a, b) => a - b); redraw(); });
   el.querySelectorAll("[data-psec]").forEach(b => b.onclick = () => { const p = list[+b.dataset.psec], ks = b.dataset.ks.split(",").map(Number), ms = new Set(p.menus || []), on = ks.every(k => ms.has(k));
     ks.forEach(k => on ? ms.delete(k) : ms.add(k)); p.menus = [...ms].sort((a, b) => a - b); redraw(); });
+  el.querySelectorAll("[data-ptext]").forEach(b => b.onclick = () => { pmToText(list[+b.dataset.ptext]); redraw(); toast("문구 이벤트로 바꿨어요 · 위쪽 [저장]을 눌러야 반영돼요", 4000); });
   el.querySelectorAll("[data-px]").forEach(x => x.onclick = () => { list.splice(+x.dataset.px, 1); redraw(); });
   const add = el.querySelector("[data-padd]"); if (add) add.onclick = () => { list.push({ id: "p" + Date.now().toString(36), on: true, kind: "pct", v: 0, menus: [], t: {} }); redraw(); };
 }
@@ -986,3 +986,12 @@ function shopSecPick(menu) {
 }
 const shopSecChips = (menu, sel, attr, i) => { const ps = shopSecPick(menu); if (!ps.length) return "";
   return `<div class="pm-secs"><span class="hint">📂 분류로 고르기</span>${ps.map(p => { const on = p.ks.every(k => sel.includes(k)); return `<button type="button" class="${on ? "on" : ""} ${p.key.includes(">") ? "sub" : ""}" ${attr}="${i}" data-ks="${p.ks.join(",")}">${on ? "✓ " : ""}${esc(p.key)} <i>${p.ks.length}</i></button>`; }).join("")}</div>`; };
+
+// 재방문 · 첫 방문 · 리뷰처럼 예약할 때 확인할 수 없는 조건인데 '% · 금액 할인 · 조건 없음'인 이벤트
+const PM_CHK = /재방문|다시\s*방문|첫\s*방문|처음\s*방문|신규|리뷰|후기|review|revisit|return|first[\s-]*(time|visit)|2nd|second\s*visit|quay lại|lần đầu|đánh giá/i;
+const pmRisky = p => p.kind !== "text" && p.on !== false && !(+p.ppl > 1) && !p.tf && PM_CHK.test(Object.values(p.t || {}).join(" "));
+function pmToText(p) {   // 문구 이벤트로: 이름 뒤에 할인율을 붙이고 예약 금액엔 안 들어가게
+  const tag = p.kind === "pct" ? `${p.v}%` : `₫${Number(p.v || 0).toLocaleString("en-US")}`;
+  p.t = Object.fromEntries(Object.entries(p.t || {}).map(([l, v]) => [l, String(v).includes(tag) || /\d+\s*%/.test(v) ? v : `${v} ${tag}`]));
+  p.kind = "text"; delete p.v;
+}
