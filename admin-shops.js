@@ -257,7 +257,7 @@ function openEditor(id, preset, opts = {}) {
       <div class="box"><h3>메뉴·가격<small>가격은 베트남 동(₫), 숫자만. 0이면 "상담 후 안내"</small></h3>
         <div class="m-bulk" id="mBulk"></div>
         <div id="menuList" style="display:grid;gap:10px"></div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm" id="menuAdd" type="button">＋ 메뉴 추가</button><button class="btn sm" id="menuGrid" type="button" title="종류 × 시간으로 가격이 정해진 가격표를 한 번에 메뉴로 만들어요">⏱ 시간별 가격표로 만들기</button></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm" id="menuAdd" type="button">＋ 메뉴 추가</button><button class="btn sm" id="menuGrid" type="button" title="종류 × 시간으로 가격이 정해진 가격표를 한 번에 메뉴로 만들어요">⏱ 시간별 가격표로 만들기</button><button class="btn sm" id="menuTime" type="button" title="'… 90분' · '… 120분' 처럼 이름에만 시간이 있는 메뉴를 시간 버튼으로 묶어요">🔗 이름 속 시간으로 묶기</button></div>
         <small class="hint">이름이 같은 메뉴는 손님 화면에서 하나로 묶이고 시간(60분 · 90분 …)을 골라요</small>
       </div>
 
@@ -443,6 +443,10 @@ function openEditor(id, preset, opts = {}) {
   }
   drawMenu();
   $("menuAdd").onclick = () => { s.menu.push({ name: { ko: "", en: "", vi: "" }, min: 60, price: 0 }); drawMenu(); };
+  $("menuTime").onclick = () => { const r = vfTimeMerge(s.menu);
+    if (!r.groups.length) return toast("묶을 메뉴가 없어요 · 이름에 '90분' · '120분'처럼 시간이 들어간 같은 메뉴가 2개 이상이어야 해요", 5000);
+    confirmBox(`메뉴 ${r.groups.length}종류를 시간 버튼으로 묶을까요?`, () => { s.menu = r.menu; drawMenu(); toast(`${r.groups.length}종류를 묶었어요 · 이름에서 시간 글자를 빼고 시간 칸에 넣었어요 · [저장]을 눌러야 반영돼요`, 5000); },
+      r.groups.map(g => `${g.name} → ${g.mins.join(" · ")}분`).join(" / "), "묶기", false); };
   $("menuGrid").onclick = () => vfGrid(s.menu, {}, (out, n) => { const pm = (s.promos || []).concat(s.extras || []).some(p => (p.menus || []).length);
     s.menu = out.map(m => ({ ...m, name: { ko: m.name.ko || "", en: m.name.en || "", vi: m.name.vi || "" } })); drawMenu();
     toast(`메뉴 ${n}줄을 만들었어요 · 영어 · 베트남어 이름을 확인하고 [저장]을 눌러 주세요${pm ? " · 일부 메뉴 할인 이벤트 · 추가 요금의 적용 메뉴도 다시 확인해 주세요" : ""}`, 6000); });

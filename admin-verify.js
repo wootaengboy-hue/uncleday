@@ -122,6 +122,7 @@ function vfDetail(s, x) {
               <select data-vfto="${i}" aria-label="어디에 넣을까요"><option value="new" ${t == null ? "selected" : ""}>＋ 새 메뉴로</option>${D.menu.map((x, j) => `<option value="${j}" ${t === j ? "selected" : ""}>→ ${esc(vfTx(x.name).slice(0, 22))}${x.min ? " " + x.min + "분" : ""}</option>`).join("")}</select> <button type="button" class="lnk vf-cx" data-vfcx="${i}" title="이 모아 온 메뉴 지우기 (쓸모없는 것)">🗑</button></div></div></div>`; }).join("") || `<p class="hint">모아 온 메뉴가 없어요${x.fb && !x.web ? " · 페이스북만 있는 곳은 가격표를 캡처해서 붙여 넣어 주세요" : ""}</p>`}</div>
       <div class="vf-mid"><button class="btn main" id="vfSend" title="고른 메뉴를 엉클데이 쪽으로 보내요"><span class="ar">▶</span><span>고른 ${menu.filter((m, i) => vfPick(m, i, tg)).length}개<br> 보내기</span></button>
         <button class="btn sm" id="vfGrid" title="종류 × 시간으로 가격이 정해진 가격표를 한 번에 메뉴로 만들어요">⏱ 시간별<br> 가격표로</button>
+        <button class="btn sm" id="vfTime" title="'… 90분' · '… 120분' 처럼 이름에만 시간이 있는 엉클데이 메뉴를 시간 버튼으로 묶어요">🔗 이름 속<br> 시간 묶기</button>
         <button class="btn sm" id="vfReplace" title="엉클데이 메뉴를 고른 메뉴로 통째로 바꿔요">♻️ 통째로<br> 바꾸기</button></div>
       <div class="vf-mcol"><small>엉클데이 <span class="hint">· ☑ 표시한 것만 검수 완료 때 손님 화면에 반영돼요</span></small>
         ${D.menu.map((m, j) => { const k = ch.find(q => q.key === m._k);
@@ -333,6 +334,9 @@ function vfBind(el) {
     vfGrid(D.menu, { rows }, (out, n) => { D.menu = out.map(m => m._k ? m : { ...m, _o: null, _k: nk() });
       c.menu = menu.map((m, i) => vfPick(m, i, tg) ? { ...m, ck: false } : m);   // 가격표로 쓴 모아 온 메뉴는 체크 해제 (▶ 로 또 보내지 않게)
       saveD(`메뉴 ${n}줄을 만들었어요 · 확인하고 검수 완료를 누르면 손님 화면에 나가요`); }); };
+  const tm = row.querySelector("#vfTime"); if (tm) tm.onclick = () => { const r = vfTimeMerge(D.menu);
+    if (!r.groups.length) return toast("묶을 메뉴가 없어요 · 오른쪽(엉클데이)에 이름에 '90분' · '120분'이 들어간 같은 메뉴가 2개 이상이어야 해요", 5000);
+    confirmBox(`엉클데이 메뉴 ${r.groups.length}종류를 시간 버튼으로 묶을까요?`, () => { D.menu = r.menu; saveD(`${r.groups.length}종류를 묶었어요 · 검수 완료 때 반영돼요`); }, r.groups.map(g => `${g.name} → ${g.mins.join(" · ")}분`).join(" / "), "묶기", false); };
   row.querySelectorAll("[data-vfon]").forEach(cb => cb.onchange = () => { D.ck = { ...(D.ck || {}), [cb.dataset.vfon]: cb.checked }; vfSave(id, { crawled: { ...c, draft: D } }); });
   row.querySelectorAll("[data-vfback]").forEach(b => b.onclick = () => { const j = +b.dataset.vfback, o = (s.menu || [])[j]; if (!o) return;
     const at = D.menu.findIndex(m => m._o != null && m._o > j); D.menu.splice(at < 0 ? D.menu.length : at, 0, { ...JSON.parse(JSON.stringify(o)), _o: j, _k: "o" + j }); saveD("되살렸어요"); });
@@ -748,4 +752,20 @@ function secI18n(ko) {
   const t = String(ko || "").trim(); if (!t) return null;
   const parts = t.split(/\s*>\s*/), tr = k => parts.map(x => (SEC_DICT[x] || [])[k] || x).join(" > ");
   return { ko: t, en: tr(0), vi: tr(1) };
+}
+
+// 🔗 이름 속 시간으로 묶기: "스크럽 팩 (… 90분)" · "스크럽 팩 (… 120분)" 처럼 이름에만 시간이 있는 메뉴를
+//    이름은 같게 (시간 글자 빼고) · 시간 칸은 90 · 120 으로 → 손님 화면에서 시간 버튼으로 묶여요
+const vfTimeRx = /\s*(\d{2,3})\s*(분|min(?:s|utes)?|phút|p|')(?![a-z])/i;
+const vfNoTime = t => String(t || "").replace(new RegExp(vfTimeRx.source, "gi"), "").replace(/\(\s*\)|\[\s*\]/g, "").replace(/\s*([+&·,])\s*(?=\)|$)/g, "").replace(/\(\s+/g, "(").replace(/\s+\)/g, ")").replace(/\s{2,}/g, " ").trim();
+function vfTimeMerge(menu) {
+  const nm = m => (m.name && typeof m.name === "object" ? m.name.ko || m.name.en || m.name.vi : m.name) || "";
+  const cand = menu.map((m, i) => { const x = nm(m).match(vfTimeRx); return x ? { i, min: +x[1], base: vfNoTime(nm(m)) + "|" + ((m.sec && m.sec.ko) || "") } : null; }).filter(Boolean);
+  const by = {}; cand.forEach(c => (by[c.base] = by[c.base] || []).push(c));
+  const out = menu.map(m => ({ ...m })), groups = [];
+  Object.values(by).forEach(g => { if (g.length < 2 || new Set(g.map(c => c.min)).size < 2) return;
+    g.forEach(c => { const m = out[c.i]; if (+m.min && +m.min !== c.min) return;
+      m.min = c.min; m.name = typeof m.name === "object" ? Object.fromEntries(Object.entries(m.name).map(([k, v]) => [k, vfNoTime(v)])) : vfNoTime(m.name); });
+    groups.push({ name: vfNoTime(nm(menu[g[0].i])), mins: g.map(c => c.min).sort((a, b) => a - b) }); });
+  return { menu: out, groups };
 }
