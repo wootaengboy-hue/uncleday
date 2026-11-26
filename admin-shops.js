@@ -404,11 +404,20 @@ function openEditor(id, preset, opts = {}) {
         <input placeholder="메뉴명 (베트남어)" data-m="${i}.vi" value="${esc(m.name.vi || "")}">
         <button class="btn sm danger" data-mdel="${i}" type="button">삭제</button></div>
       <div class="nums"><label class="f"><span>소요 시간 (분)</span><input type="number" min="0" step="5" data-m="${i}.min" value="${m.min || 0}"></label>
-        <label class="f"><span>가격 (₫)</span><input type="number" min="0" step="1000" data-m="${i}.price" value="${m.price || 0}"></label></div>
+        <label class="f"><span>가격 (₫)</span><input type="number" min="0" step="1000" data-m="${i}.price" value="${m.price || 0}"></label>
+        <label class="f"><span>관리사 팁 (₫ · 없으면 0)</span><input type="number" min="0" step="1000" data-m="${i}.tip" value="${m.tip || 0}"></label></div>
+      <details class="m-more" ${(m.sec && (m.sec.ko || m.sec.en)) || (m.desc && (m.desc.ko || m.desc.en)) ? "open" : ""}><summary>분류 · 설명 <span class="hint">${esc((m.sec && m.sec.ko) || "")}${m.desc && m.desc.ko ? " · " + esc(m.desc.ko.slice(0, 30)) : ""}</span></summary>
+        <div class="three"><input placeholder="분류 (한국어 · 예: 스파 / 네일 · 여성)" data-ms="${i}.ko" value="${esc((m.sec && m.sec.ko) || "")}"><input placeholder="분류 (영어 · Spa / Nails)" data-ms="${i}.en" value="${esc((m.sec && m.sec.en) || "")}"><input placeholder="분류 (베트남어)" data-ms="${i}.vi" value="${esc((m.sec && m.sec.vi) || "")}"></div>
+        <div class="three"><textarea rows="2" placeholder="설명 (한국어 · 손님 화면 메뉴 이름 밑에 작게)" data-md="${i}.ko">${esc((m.desc && m.desc.ko) || "")}</textarea><textarea rows="2" placeholder="설명 (영어)" data-md="${i}.en">${esc((m.desc && m.desc.en) || "")}</textarea><textarea rows="2" placeholder="설명 (베트남어)" data-md="${i}.vi">${esc((m.desc && m.desc.vi) || "")}</textarea></div>
+        <small class="hint">같은 분류끼리 손님 화면에서 제목 아래로 모여요. 이름 · 분류가 같고 시간만 다르면 시간 버튼으로 묶여요.</small></details>
     </div>`).join("") || `<span class="hint">메뉴가 없어요. 메뉴가 없으면 손님 화면에 예약 폼 대신 상담 버튼이 나와요.</span>`;
     $("menuList").querySelectorAll("[data-m]").forEach(el => el.oninput = () => {
       const [i, k] = el.dataset.m.split(".");
       if (k === "ko" || k === "en" || k === "vi") s.menu[i].name[k] = el.value; else s.menu[i][k] = +el.value || 0;
+    });
+    $("menuList").querySelectorAll("[data-ms],[data-md]").forEach(el => el.oninput = () => {
+      const k = el.dataset.ms ? "sec" : "desc", [i, l] = (el.dataset.ms || el.dataset.md).split("."), m = s.menu[+i];
+      m[k] = { ...(m[k] || {}), [l]: el.value }; if (!Object.values(m[k]).some(v => String(v).trim())) delete m[k];
     });
     $("menuList").querySelectorAll("[data-mdel]").forEach(el => el.onclick = () => { s.menu.splice(+el.dataset.mdel, 1); drawMenu(); });
   }

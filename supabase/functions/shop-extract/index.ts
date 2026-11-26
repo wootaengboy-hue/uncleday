@@ -25,13 +25,17 @@ const SYSTEM = `당신은 베트남 마사지 · 스파 · 뷰티 · 클리닉 �
 - 가격은 원문 그대로 (예: "552.000đ", "từ 630.000đ", "$25", "1,257,000++ VND").
 - 같은 코스가 시간별로 가격이 다르면 시간마다 한 줄씩.
 - name 은 원문 그대로, name_ko 는 한국 여행객이 알아보기 쉬운 짧은 한국어 이름.
-- 메뉴는 대표적인 것 위주로 30개까지.
+- 가격표가 분류로 나뉘어 있으면 (예: SPA / NAILS · 남성 / 여성 · 바디 / 페이셜) section 에 원문 분류, section_ko 에 한국어 분류. 없으면 null.
+- 메뉴 설명이 적혀 있으면 desc 에 원문 설명을 짧게 (120자 안쪽), desc_ko 에 한국어 설명 한 줄. 한국어 설명이 원문에 있으면 그대로 써요. 없으면 null.
+- "851.000 / 70.000" 처럼 가격 옆에 관리사 팁 · 추가 요금이 따로 적혀 있으면 price 는 앞 가격만, tip 에 뒤 금액 (원문 그대로).
+- 인원 · 시간대 · 재방문 · 첫 방문 · 리뷰 같은 조건 할인이 적혀 있으면 deals 에 한국어 한 줄씩 (예: "2인 방문 20% 할인", "11:00-13:00 2인 이상 40% 할인"). 5개까지.
+- 메뉴는 대표적인 것 위주로 40개까지.
 - features 는 사실만 한국어 짧은 문장 (예: "무료 픽업", "한국어 응대") 3개까지. 광고 문구는 빼요.
 - 반영구 화장 · 문신(phun xăm) 시술이 있으면 note 에 꼭 적어요.
 반드시 아래 JSON 하나만 출력해요:
 {"name": "업체 이름 (원문 · 간판에 쓰는 이름)" 또는 null, "name_ko": "한국어로 읽는 이름" 또는 null, "hours": "09:00 - 22:00" 또는 null, "address": 문자열 또는 null, "phone": 문자열 또는 null,
- "menu": [{"name": "...", "name_ko": "...", "minutes": 숫자 또는 null, "price": "..." 또는 null}],
- "features": ["..."], "note": "확인이 필요한 점 한두 줄 (없으면 빈 문자열)"}`;
+ "menu": [{"name": "...", "name_ko": "...", "minutes": 숫자 또는 null, "price": "..." 또는 null, "tip": "..." 또는 null, "section": "..." 또는 null, "section_ko": "..." 또는 null, "desc": "..." 또는 null, "desc_ko": "..." 또는 null}],
+ "features": ["..."], "deals": ["..."], "note": "확인이 필요한 점 한두 줄 (없으면 빈 문자열)"}`;
 
 const BLOCK = /^https?:\/\/(localhost|127\.|10\.|192\.168\.|169\.254\.|0\.|\[)/i;
 // 베트남어 글자가 &#7845; 같은 숫자 표기로 들어 있는 사이트가 많아요 → 진짜 글자로 바꿔요 (안 바꾸면 "Võ Nguyên" 이 "V Nguy n" 처럼 깨져요)
@@ -124,7 +128,7 @@ Deno.serve(async (req) => {
   const ask = (c: unknown[]) => fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: { "x-api-key": KEY, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-    body: JSON.stringify({ model: MODEL, max_tokens: 4000, system: SYSTEM, messages: [{ role: "user", content: c }] }),
+    body: JSON.stringify({ model: MODEL, max_tokens: 8000, system: SYSTEM, messages: [{ role: "user", content: c }] }),
   });
   let ai = await ask(content);
   // 사진 하나라도 못 읽으면 (사이트가 막음 · 너무 큼) 글만으로 한 번 더
@@ -141,7 +145,9 @@ Deno.serve(async (req) => {
     const s = (v: unknown, n: number) => (v == null || v === "" ? null : String(v).slice(0, n));
     return out({
       name: s(d.name, 100), name_ko: s(d.name_ko, 60), hours: s(d.hours, 120), address: s(d.address, 240), phone: s(d.phone, 60),
-      menu: (Array.isArray(d.menu) ? d.menu : []).slice(0, 30).map((x: any) => ({ name: String(x.name || "").slice(0, 120), name_ko: s(x.name_ko, 80), minutes: +x.minutes || null, price: s(x.price, 60) })).filter((x: any) => x.name),
+      menu: (Array.isArray(d.menu) ? d.menu : []).slice(0, 40).map((x: any) => ({ name: String(x.name || "").slice(0, 120), name_ko: s(x.name_ko, 80), minutes: +x.minutes || null, price: s(x.price, 60),
+        tip: s(x.tip, 40), section: s(x.section, 40), section_ko: s(x.section_ko, 30), desc: s(x.desc, 200), desc_ko: s(x.desc_ko, 160) })).filter((x: any) => x.name),
+      deals: (Array.isArray(d.deals) ? d.deals : []).slice(0, 5).map((x: unknown) => String(x).slice(0, 80)),
       features: (Array.isArray(d.features) ? d.features : []).slice(0, 3).map((x: unknown) => String(x).slice(0, 80)),
       note: s(d.note, 300) || "", src: [...new Set([url, ...pagesRead, ...imgsUsed])].slice(0, 10), model: MODEL,
     });

@@ -87,7 +87,7 @@ function extrasFor(shop, i) {
   return ((shop.extras) || []).filter(e => !(e.menus && e.menus.length) || e.menus.includes(i)).map(e => {
     const v = e.mins && e.mins[m.min] != null && e.mins[m.min] !== "" ? +e.mins[m.min] : +e.amt || 0;
     return { n: tx(e.t) || ui("ex_fee"), v };
-  }).filter(x => x.v > 0);
+  }).concat(+m.tip > 0 ? [{ n: ui("ex_tip"), v: +m.tip }] : []).filter(x => x.v > 0);   // 메뉴마다 다른 팁 (m.tip)
 }
 const pmName = p => { const t = p.t || {}; return t[lang] || (lang === "vi" ? "" : t.en || (lang === "ko" ? t.ko : "")) || (p.kind === "text" ? t.en || t.ko || t.vi || "" : ""); };
 const pmOff = p => p.kind === "pct" ? ui("pm_pct", { v: p.v }) : p.kind === "amt" ? ui("pm_amt", { v: "₫" + Number(p.v).toLocaleString("en-US") }) : "";
