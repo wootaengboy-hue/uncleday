@@ -66,6 +66,13 @@ function vfDraw() {
   const list = rows.filter(F[VF.f] || F.all).filter(r => !q || [vfName(r.s), r.s.name.en, r.s.id].join(" ").toLowerCase().includes(q));
   el.innerHTML = `<div class="vf">
     <div class="vf-tiles"><div><small>전체 업체</small><b>${cnt.all}</b></div><div><small>검수 대기</small><b class="w">${cnt.todo}</b></div><div><small>검수 완료</small><b class="g">${cnt.done}</b></div><div><small>링크 없음 · 현장 확인</small><b>${cnt.none}</b></div><div><small>사진 사용 허락</small><b>${cnt.photo}</b></div></div>
+    <div class="vf-auto">
+      <div class="vf-auto-c"><b>📥 한꺼번에 가져오기</b><small>홈페이지 링크가 있는 업체를 차례로 가져와서 '다른 점'을 만들어 둬요 (한 곳에 30초쯤)</small>
+        <div class="vf-get-r"><select id="vfBulkF">${[["todo", "검수 안 끝난 업체"], ["new", "아직 안 가져온 업체만"], ["all", "링크 있는 업체 전부"]].map(([k, t]) => `<option value="${k}" ${VF.bulkF === k ? "selected" : ""}>${t}</option>`).join("")}</select><button class="btn main sm" id="vfBulk" ${VF.bulk ? "disabled" : ""}>${VF.bulk ? `가져오는 중… ${VF.bulk.n}/${VF.bulk.t}` : "시작"}</button>${VF.bulk ? `<button class="btn sm" id="vfBulkX">멈추기</button>` : ""}</div></div>
+      <div class="vf-auto-c"><b>＋ 링크로 새 업체 등록</b><small>홈페이지 주소 → 이름 · 주소 · 영업시간 · 메뉴 · 가격을 채운 '숨김' 업체가 만들어져요 → 검수 · 사진 후 공개</small>
+        <div class="vf-get-r"><input id="vfNewUrl" placeholder="https://… (업체 홈페이지)"><select id="vfNewCity">${(typeof CITIES !== "undefined" ? CITIES : []).map(c => `<option value="${c.id}">${esc(c.name.ko)}</option>`).join("")}</select>
+          <select id="vfNewCat">${(typeof CATEGORY_DETAIL !== "undefined" ? CATEGORY_DETAIL : []).map(c => `<option value="${c.id}">${esc(c.name.ko)}</option>`).join("")}</select><button class="btn main sm" id="vfNew" ${VF.busy ? "disabled" : ""}>${VF.busy === "new" ? "만드는 중…" : "만들기"}</button></div></div>
+    </div>
     <div class="vf-bar">${[["todo", "검수 대기"], ["done", "완료"], ["none", "링크 없음"], ["all", "전체"]].map(([k, t]) => `<button class="chip ${VF.f === k ? "on" : ""}" data-vff="${k}">${t} ${k === "all" ? cnt.all : cnt[k]}</button>`).join("")}
       <input id="vfQ" placeholder="🔍 업체 이름" value="${esc(VF.q)}"></div>
     <div class="vf-list">${list.map(({ s, x }) => {
@@ -80,6 +87,21 @@ function vfDraw() {
   if (VF.open) { const o = el.querySelector(`.vf-row.open`); if (o && VF._scroll !== VF.open) { VF._scroll = VF.open; setTimeout(() => o.scrollIntoView({ block: "start", behavior: "smooth" }), 80); } }
 }
 
+// 다른 점: 엉클데이 메뉴마다 짝을 찾아 가격이 다르거나 비어 있으면 보여 주고 [한 번에 반영]
+function vfDiffs(s, menu) {
+  return (s.menu || []).map((sm, j) => { const r = vfMatch(sm, menu); return r && r.v !== (+sm.price || 0) ? { j, sm, ...r } : null; }).filter(Boolean);
+}
+function vfDiffBox(s, menu) {
+  if (!menu.length) return "";
+  const d = vfDiffs(s, menu), priced = menu.filter(m => vfVnd(m.price)).length;
+  const used = new Set((s.menu || []).map(sm => (vfMatch(sm, menu) || {}).i).filter(i => i != null));
+  const extra = menu.map((m, i) => ({ m, i })).filter(o => vfVnd(o.m.price) && !used.has(o.i));
+  return `<div class="vf-diff"><div class="vf-diff-h"><b>🔄 엉클데이와 다른 점</b><small>모아 온 메뉴 ${menu.length}개 중 가격 있는 것 ${priced}개 · 이름 · 시간이 비슷한 메뉴끼리 짝지었어요</small></div>
+    ${d.length ? `<div class="vf-dtw"><table class="vf-dt"><tr><th></th><th>엉클데이 메뉴</th><th>지금</th><th>모아 온 가격</th><th>짝지은 메뉴 (원문)</th></tr>${d.map(x => `<tr><td><input type="checkbox" data-vfdf="${x.j}" checked></td><td>${esc(vfTx(x.sm.name))}${x.sm.min ? ` · ${x.sm.min}분` : ""}</td><td class="${x.sm.price ? "" : "none"}">${x.sm.price ? vfMoney(x.sm.price) : "가격 없음"}</td><td><b>${vfMoney(x.v)}</b></td><td><small>${esc(x.m.name)}${x.m.minutes ? ` · ${x.m.minutes}분` : ""} · ${esc(x.m.price)}</small></td></tr>`).join("")}</table></div>
+      <div class="vf-diff-a"><button class="btn main sm" id="vfDiffGo">✓ 고른 ${d.length}개 가격 반영</button></div>` : `<p class="hint">${priced ? "짝지은 메뉴의 가격이 모두 같아요 ✓" : "모아 온 정보에 가격이 없어서 비교할 게 없어요 · 가격표를 캡처해서 붙여 넣어 보세요"}</p>`}
+    ${extra.length ? `<div class="vf-extra"><small>엉클데이에 없는 메뉴 ${extra.length}개</small> ${extra.slice(0, 10).map(o => `<label><input type="checkbox" data-vfex="${o.i}"> ${esc(o.m.name_ko || o.m.name)}${o.m.minutes ? ` ${o.m.minutes}분` : ""} · ${vfMoney(vfVnd(o.m.price))}</label>`).join("")}<button class="btn sm" id="vfExGo">고른 메뉴 추가</button></div>` : ""}
+    <div class="vf-diff-a"><button class="btn sm" id="vfReplace" title="엉클데이 메뉴를 모아 온 메뉴로 통째로 바꿔요">♻️ 메뉴를 모아 온 것으로 통째로 바꾸기</button><small class="hint">새로 등록하는 업체 · 엉클데이 메뉴가 너무 다를 때</small></div></div>`;
+}
 function vfDetail(s, x) {
   const c = x.crawled || {}, hrs = vfHours(c.hours), menu = c.menu || [];
   const cur = `${s.open || "?"} ~ ${s.close || "?"}`;
@@ -98,6 +120,7 @@ function vfDetail(s, x) {
       <div class="vf-tr"><span>📍 주소</span><span>${esc(c.address || "—")}</span><span>${esc(addr)}</span><span>${c.address && c.address.trim() !== addr.trim() ? `<button class="btn sm" data-vfad>주소 넣기</button>` : c.address ? "<i class='ok'>같아요</i>" : ""}</span></div>
       ${(c.features || []).length ? `<div class="vf-tr"><span>✨ 특징</span><span>${(c.features || []).map(esc).join(" · ")}</span><span>${(s.tags || []).map(t => "#" + esc(t.ko || t.en || "")).join(" ")}</span><span class="hint">태그는 업체 편집에서</span></div>` : ""}
     </div>
+    ${vfDiffBox(s, menu)}
     <h5>💰 메뉴 · 가격 <small>모아 온 메뉴 ${menu.length}개 · 엉클데이 메뉴 ${(s.menu || []).length}개${usd ? " · 달러 가격은 동으로 바꿔서 직접 넣어 주세요" : ""}</small></h5>
     <div class="vf-menu">
       <div class="vf-mcol"><small>모아 온 정보</small>${menu.map((m, i) => { const v = vfVnd(m.price);
@@ -115,14 +138,28 @@ function vfDetail(s, x) {
     </div></div>`;
 }
 // 시간 · 이름이 비슷한 메뉴를 미리 골라 둬요
-function vfGuess(x, m) {
-  if (x.price) return false;
-  const a = String(vfTx(x.name)).toLowerCase(), b = String(m.name || "").toLowerCase();
-  const same = ["aroma", "hot stone", "thai", "foot", "swedish", "four hand", "body", "facial", "scrub", "sauna"].some(k => b.includes(k) && (a.includes(k) || (x.name.en || "").toLowerCase().includes(k)));
-  return same && (!m.minutes || !x.min || +m.minutes === +x.min);
+// 메뉴 짝 찾기: 같은 뜻 낱말(아로마 = aroma …)이 겹치고 시간이 맞으면 같은 메뉴로 봐요
+const VF_KW = [["aroma", "아로마", "tinh dầu", "oil"], ["hot stone", "핫스톤", "đá nóng", "bazan", "stone"], ["thai", "타이", "건식", "dry", "khô"], ["bamboo", "대나무", "tre"],
+  ["pregnan", "임산부", "산전", "bầu"], ["kid", "키즈", "아동", "trẻ em", "child"], ["foot", "발", "chân", "reflex"], ["four hand", "포핸드", "4 tay", "bốn tay"],
+  ["swedish", "스웨디시", "thụy điển"], ["scrub", "스크럽", "tẩy"], ["facial", "페이셜", "얼굴", "mặt", "skin care"], ["sauna", "사우나", "xông"], ["head", "헤드", "두피", "샴푸", "shampoo", "gội"],
+  ["nail", "네일", "móng"], ["gel", "젤"], ["pedi", "페디"], ["signature", "시그니처"], ["vietnam", "베트남", "traditional", "전통"], ["deep", "딥티슈"], ["sport", "스포츠"], ["package", "패키지", "combo", "gói"],
+  ["nose", "rhino", "코"], ["facelift", "face lift", "안면거상", "smas"], ["eyelid", "blephar", "쌍꺼풀", "눈", "mí"], ["brow", "눈썹", "이마", "forehead"], ["breast", "가슴", "ngực"],
+  ["lipo", "지방흡입", "hút mỡ"], ["fat graft", "지방이식", "fat transfer"], ["chin", "턱"], ["botox", "보톡스"], ["filler", "필러"], ["consult", "상담"], ["laser", "레이저"], ["acne", "여드름"]];
+const vfKeys = t => { const x = String(t || "").toLowerCase(); return VF_KW.map((g, i) => g.some(k => x.includes(k)) ? i : -1).filter(i => i >= 0); };
+function vfMatch(sm, menu) {   // 엉클데이 메뉴 하나 → 모아 온 메뉴 중 가장 잘 맞는 것 (가격 있는 것만)
+  const a = vfKeys([vfTx(sm.name), sm.name && sm.name.en, sm.name && sm.name.vi].join(" ")); if (!a.length) return null;
+  let best = null, bs = 0;
+  menu.forEach((m, i) => { if (!vfVnd(m.price)) return; const b = vfKeys([m.name, m.name_ko].join(" ")); const hit = a.filter(k => b.includes(k)).length; if (!hit) return;
+    let sc = hit * 10 - a.filter(k => !b.includes(k)).length * 20 - b.filter(k => !a.includes(k)).length * 3; /* 아동 아로마 ≠ 아로마 */ if (sm.min && m.minutes) sc += +sm.min === +m.minutes ? 6 : -4; if (sc > bs) { bs = sc; best = i; } });
+  return best == null ? null : { i: best, m: menu[best], v: vfVnd(menu[best].price) };
 }
+function vfGuess(x, m) { return !x.price && !!vfMatch(x, [m]); }
 
 function vfBind(el) {
+  const bk = el.querySelector("#vfBulk"); if (bk) bk.onclick = () => { VF.bulkF = el.querySelector("#vfBulkF").value; vfBulk(VF.bulkF); };
+  const bx = el.querySelector("#vfBulkX"); if (bx) bx.onclick = () => { if (VF.bulk) VF.bulk.stop = 1; };
+  const nw = el.querySelector("#vfNew"); if (nw) nw.onclick = () => vfNewShop(el.querySelector("#vfNewUrl").value.trim(), el.querySelector("#vfNewCity").value, el.querySelector("#vfNewCat").value);
+
   el.querySelectorAll("[data-vff]").forEach(b => b.onclick = () => { VF.f = b.dataset.vff; vfDraw(); });
   const q = el.querySelector("#vfQ"); if (q) q.oninput = () => { VF.q = q.value; const p = q.selectionStart; vfDraw(); const n = document.getElementById("vfQ"); n.focus(); n.setSelectionRange(p, p); };
   el.querySelectorAll("[data-vfo]").forEach(h => h.onclick = e => { if (e.target.closest("a")) return; VF.open = VF.open === h.dataset.vfo ? null : h.dataset.vfo; vfDraw(); });
@@ -155,6 +192,22 @@ function vfBind(el) {
     pz.ondragover = e => { e.preventDefault(); pz.classList.add("over"); }; pz.ondragleave = () => pz.classList.remove("over");
     pz.ondrop = e => { e.preventDefault(); pz.classList.remove("over"); go([...e.dataTransfer.files][0]); };
   }
+  // 다른 점 한 번에 반영
+  const dg = row.querySelector("#vfDiffGo"); if (dg) dg.onclick = () => {
+    const d = vfDiffs(s, c.menu || []).filter(x => (row.querySelector(`[data-vfdf="${x.j}"]`) || {}).checked);
+    if (!d.length) return toast("반영할 메뉴를 골라 주세요");
+    d.forEach(x => { s.menu[x.j].price = x.v; if (!s.menu[x.j].min && x.m.minutes) s.menu[x.j].min = +x.m.minutes; });
+    vfShopSave(s, `${d.length}개 메뉴 가격을 반영했어요 · 손님 화면에 바로 나가요`); };
+  const eg = row.querySelector("#vfExGo"); if (eg) eg.onclick = () => {
+    const add = [...row.querySelectorAll("[data-vfex]")].filter(i => i.checked).map(i => (c.menu || [])[+i.dataset.vfex]).filter(Boolean);
+    if (!add.length) return toast("추가할 메뉴를 골라 주세요");
+    s.menu = (s.menu || []).concat(add.map(m => ({ name: { ko: m.name_ko || m.name, en: m.name, vi: m.name }, min: +m.minutes || 0, price: vfVnd(m.price) })));
+    vfShopSave(s, `메뉴 ${add.length}개를 추가했어요`); };
+  const rp = row.querySelector("#vfReplace"); if (rp) rp.onclick = () => {
+    const nm = (c.menu || []).filter(m => m.name); if (!nm.length) return toast("모아 온 메뉴가 없어요");
+    confirmBox(`${vfName(s)} 메뉴 ${(s.menu || []).length}개를 모아 온 메뉴 ${nm.length}개로 바꿀까요?`, () => {
+      s.menu = nm.map(m => ({ name: { ko: m.name_ko || m.name, en: m.name, vi: m.name }, min: +m.minutes || 0, price: vfVnd(m.price) }));
+      vfShopSave(s, "메뉴를 통째로 바꿨어요 · 한국어 이름은 업체 편집에서 다듬어 주세요"); }, "지금 메뉴는 없어져요"); };
   // 엉클데이 지금: 가격 · 시간 · 영업시간 직접 고치기
   row.querySelectorAll("[data-vfpr],[data-vfmin]").forEach(inp => inp.onchange = () => {
     const j = +(inp.dataset.vfpr ?? inp.dataset.vfmin), t = s.menu[j], v = Math.max(0, Math.round(+inp.value || 0));
@@ -167,6 +220,51 @@ function vfBind(el) {
   const ig = row.querySelector("[data-vfimg]"); if (ig) ig.onclick = () => { MQ.shop = id; MQ.f = "all"; portalGo("imgqa"); mqDraw(); };
 }
 
+async function vfCall(url, shopName) {
+  const { data: { session } } = await sb.auth.getSession();
+  const r = await fetch(`${SUPA.url}/functions/v1/shop-extract`, { method: "POST", headers: { "Content-Type": "application/json", apikey: SUPA.key, Authorization: "Bearer " + (session && session.access_token) },
+    body: JSON.stringify({ url, shop: shopName || "" }) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || (r.status === 404 ? "Edge Function 'shop-extract' 을 먼저 배포해 주세요" : "error " + r.status));
+  return j;
+}
+const vfCrawled = (j, url) => ({ hours: j.hours, address: j.address, phone: j.phone, menu: j.menu || [], features: j.features || [], note: j.note || "", src: j.src || [url] });
+// 📥 한꺼번에: 링크 있는 업체를 차례로 가져와요 (멈추기 가능)
+async function vfBulk(f) {
+  const S = (typeof shops !== "undefined" ? shops : []).filter(s => { const x = vfSrc(s.id); return x.web && (f === "all" || (f === "todo" && x.review !== "done") || (f === "new" && !x.crawled)); });
+  if (!S.length) return toast("가져올 업체가 없어요 (홈페이지 링크가 있는 업체만 돼요)");
+  VF.bulk = { n: 0, t: S.length, ok: 0, bad: [] }; vfDraw();
+  for (const s of S) {
+    if (VF.bulk.stop) break;
+    try { const x = vfSrc(s.id), j = await vfCall(x.web, vfName(s));
+      await vfSave(s.id, { crawled: vfCrawled(j, x.web), crawled_at: new Date().toISOString(), review: x.review === "done" ? "done" : "todo" }); VF.bulk.ok++; }
+    catch (e) { VF.bulk.bad.push(vfName(s)); if (/배포/.test(e.message)) { toast(e.message, 6000); break; } }
+    VF.bulk.n++; vfDraw();
+  }
+  const b = VF.bulk; delete VF.bulk; vfDraw();
+  toast(`${b.ok}곳 가져왔어요${b.bad.length ? ` · 실패 ${b.bad.length}곳 (${b.bad.slice(0, 4).join(", ")}${b.bad.length > 4 ? " …" : ""})` : ""} · 업체를 펼쳐 '다른 점'을 확인해 주세요`, 7000);
+}
+// ＋ 링크로 새 업체: 가져온 내용으로 '숨김' 업체를 만들어요 (손님에게 안 보임 → 검수 · 사진 · 공개는 사람이)
+async function vfNewShop(url, city, cat) {
+  if (!/^https?:\/\/\S+$/.test(url)) return toast("새 업체 홈페이지 주소(https://…)를 넣어 주세요");
+  const dup = (VF.src || []).find(x => x.web && x.web.replace(/\/$/, "") === url.replace(/\/$/, ""));
+  if (dup) { VF.open = dup.shop_id; VF.f = "all"; vfDraw(); return toast("이미 등록된 업체 링크예요 · 그 업체를 열었어요", 4500); }
+  VF.busy = "new"; vfDraw();
+  try {
+    const j = await vfCall(url, "");
+    const en = j.name || new URL(url).hostname.replace(/^www\./, "").split(".")[0];
+    const base = String(en).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "shop";
+    let id = base, k = 2; while (shops.some(x => x.id === id)) id = `${base}-${k++}`;
+    const ad = j.address || "", hr = vfHours(j.hours) || {};
+    const s = { id, cat, city, verified: false, name: { ko: j.name_ko || en, en, vi: en }, tags: [], desc: { ko: "", en: "", vi: "" }, address: { ko: ad, en: ad, vi: ad },
+      open: hr.open || "", close: hr.close || "", menu: (j.menu || []).map(m => ({ name: { ko: m.name_ko || m.name, en: m.name, vi: m.name }, min: +m.minutes || 0, price: vfVnd(m.price) })) };
+    META[id] = { published: false, sort: 999 };
+    await dbSaveShop(s); shops.push(s);
+    await vfSave(id, { web: url, crawled: vfCrawled(j, url), crawled_at: new Date().toISOString(), review: "todo" });
+    delete VF.busy; VF.f = "todo"; VF.open = id; VF._scroll = null; vfDraw();
+    toast(`‘${vfName(s)}’ 업체를 숨김으로 만들었어요 · 메뉴 ${s.menu.length}개 · 확인 후 업체 편집에서 공개해 주세요`, 7000);
+  } catch (e) { delete VF.busy; vfDraw(); toast("새 업체 만들기 실패: " + e.message, 6000); }
+}
 // 📥 가져오기: Edge Function 'shop-extract' (홈페이지 · 메뉴 페이지 · 가격표 사진 → 영업시간 · 주소 · 메뉴 가격)
 async function vfExtract(s, url, isImg) {
   VF.busy = 1; vfDraw();
@@ -227,7 +325,6 @@ function mqDraw() {
         ${(MQ.pasted || []).length ? `<div class="mq-uprow"><button class="btn main" id="mqPasteGo">붙여 넣은 ${MQ.pasted.length}장 검수에 올리기</button><button class="btn" id="mqPasteX">모두 비우기</button></div>` : ""}`
       : `<div class="mq-uprow"><input id="mqUrl" placeholder="이미지 주소 붙여넣기 (https://… .jpg · .png · .webp) · 여러 개면 줄바꿈이나 띄어쓰기로"><button class="btn main" id="mqUrlGo">가져와서 검수에 올리기</button></div>
         <small class="hint">사진 위에서 오른쪽 클릭 → '이미지 주소 복사'로 얻은 주소를 넣어요. 엉클데이 저장소로 복사해 와서 원본 · 작업본을 만들어요 (원래 주소도 함께 기록).</small>`}
-      <label class="mq-stamp"><input type="checkbox" id="mqStampOn" ${mqStampOn() ? "checked" : ""}> 🏷️ 작업본에 <b>업체명 + 엉클데이 로고</b> 넣기 <small>(작업본은 손님 화면 비율 16:9 로 맞춰요 · 원본은 그대로)</small></label>
       <small class="mq-rule">ℹ️ <b>홈페이지 후보</b>는 검수만 하고 공개되지 않아요. 업체가 허락하면 카드에서 출처를 <b>업체 제공</b>으로 바꾸면 공개할 수 있어요.</small>
     </div>
     <div class="vf-bar"><select id="mqShop"><option value="">모든 업체</option>${shopOpts}</select>${MQ.shop && vfShop(MQ.shop) ? `<span class="mq-uplk">${vfSrc(MQ.shop).web ? `<a class="vf-lk" href="${esc(vfSrc(MQ.shop).web)}" target="_blank" rel="noopener">🌐 홈페이지</a>` : ""}${vfSrc(MQ.shop).fb ? `<a class="vf-lk fb" href="${esc(vfSrc(MQ.shop).fb)}" target="_blank" rel="noopener">📘 페이스북</a>` : ""}</span>` : ""}
@@ -249,7 +346,7 @@ function mqCard(m) {
     <div class="mq-act">
       <div class="mq-iss">${Object.entries(MQ_ISS).map(([k, t]) => `<label class="${(m.issues || []).includes(k) ? "on" : ""}"><input type="checkbox" data-mqis="${k}" ${(m.issues || []).includes(k) ? "checked" : ""}>${t}</label>`).join("")}</div>
       ${m.note ? `<p class="mq-note">🤖 ${esc(m.note)}</p>` : ""}
-      <div class="mq-btns">${m.orig_url && m.orig_url.includes("/object/public/images/") ? `<button class="btn sm" data-mqstamp title="원본에서 작업본을 다시 만들어요 (16:9 · 업체명 + 로고)">🏷️ 작업본 다시 만들기</button>` : ""}${m.work_url ? `<button class="btn sm" data-mqai ${MQ.busy[m.id] ? "disabled" : ""}>${MQ.busy[m.id] ? "검사 중…" : "🤖 AI 검사"}</button>` : ""}
+      <div class="mq-btns">${m.orig_url && m.orig_url.includes("/object/public/images/") ? `<button class="btn sm" data-mqstamp title="원본에서 작업본을 다시 만들어요 (16:9 · 글자 · 로고 없이)">🔄 작업본 다시 만들기</button>` : ""}${m.work_url ? `<button class="btn sm" data-mqai ${MQ.busy[m.id] ? "disabled" : ""}>${MQ.busy[m.id] ? "검사 중…" : "🤖 AI 검사"}</button>` : ""}
         <button class="btn sm ${m.verdict === "pass" ? "main" : ""}" data-mqv="pass">✓ 통과</button><button class="btn sm ${m.verdict === "issue" ? "bad" : ""}" data-mqv="issue">⚠ 문제</button><button class="btn sm" data-mqv="hold">⏸ 보류</button>
         <span style="flex:1"></span>${can && !main ? `<button class="btn sm main" data-mqmain>★ 대표 사진으로</button>` : ""}${main ? `<button class="btn sm" data-mqunmain>대표에서 내리기</button>` : ""}<button class="btn sm" data-mqdel title="기록 지우기">🗑</button></div>
     </div></div>`;
@@ -317,7 +414,7 @@ async function mqStamp(blob, shopName, stamp = true) {
     return await new Promise((ok, no) => cv.toBlob(b => b ? ok(b) : no(new Error("작업본을 만들지 못했어요")), "image/jpeg", 0.86));
   } finally { URL.revokeObjectURL(u); }
 }
-const mqStampOn = () => { try { return localStorage.getItem("mqStamp") !== "0"; } catch (e) { return true; } };
+const mqStampOn = () => false;   // 업체명 · 로고 넣기는 껐어요 (11/26 · AI 가 우리 로고를 워터마크로 봐서 통과가 막혔어요) — 16:9 맞춤만 해요
 
 async function mqUpOne(file, p, from) {
   const tag = `media/${p.shop}/${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
@@ -404,7 +501,9 @@ function mqBind(el) {
     card.querySelectorAll("[data-mqv]").forEach(b => b.onclick = () => {
       const v = b.dataset.mqv;
       if (v === "issue" && !(m.issues || []).length) return toast("어떤 문제인지 아래에서 하나 이상 골라 주세요");
-      if (v === "pass" && (m.issues || []).some(k => ["fake", "watermark", "body", "off"].includes(k))) return toast("‘날조 · 워터마크 · 노출 · 관계없음’ 표시가 있으면 통과할 수 없어요", 4200);
+      const hard = (m.issues || []).filter(k => ["fake", "watermark", "body", "off"].includes(k));
+      if (v === "pass" && hard.length) return confirmBox(`‘${hard.map(k => MQ_ISS[k]).join(" · ")}’ 표시가 있어요. 표시를 지우고 통과할까요?`, () => {
+        MQ.keep.add(m.id); mqUpd(m, { verdict: "pass", issues: (m.issues || []).filter(k => !hard.includes(k)) }, "표시를 지우고 ✓ 통과로 판정했어요"); }, "AI 표시는 참고예요. 직접 보고 문제없으면 통과해도 돼요");
       MQ.keep.add(m.id); mqUpd(m, { verdict: v }, `${MQ_V[v][0]} 으로 판정했어요 · 다른 탭을 누르면 '${{ pass: "통과", issue: "문제", hold: "보류" }[v]}' 탭에서 볼 수 있어요`);
       if (v !== "pass") { const s = vfShop(m.shop_id); if (s && s.img === m.work_url) mqMain(m, false); }
     });
@@ -419,7 +518,7 @@ function mqBind(el) {
         const s2 = vfShop(m.shop_id), blob = await (await fetch(m.orig_url)).blob();
         const w = await mqStamp(await mqShrink(blob, 2400), s2 ? vfName(s2) : m.shop_id, mqStampOn());
         const wu = await mqPut(w, `media/${m.shop_id}/${Date.now().toString(36)}-w.jpg`), old = m.work_url, wasMain = s2 && s2.img === old;
-        await mqUpd(m, { work_url: wu }, "작업본을 다시 만들었어요 (16:9 · 업체명 + 로고)");
+        await mqUpd(m, { work_url: wu }, "작업본을 다시 만들었어요 (16:9 · 글자 · 로고 없이)");
         if (wasMain) { s2.img = wu; try { await dbSaveShop(s2); } catch (e) { dbErr(e, "대표 사진 바꾸기"); } }
         if (old && old.includes("/object/public/images/media/")) sb.storage.from("images").remove([old.split("/object/public/images/")[1]]);
       } catch (e) { dbErr(e, "작업본 다시 만들기"); mqDraw(); }

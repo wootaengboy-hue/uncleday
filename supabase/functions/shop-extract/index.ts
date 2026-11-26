@@ -29,7 +29,7 @@ const SYSTEM = `당신은 베트남 마사지 · 스파 · 뷰티 · 클리닉 �
 - features 는 사실만 한국어 짧은 문장 (예: "무료 픽업", "한국어 응대") 3개까지. 광고 문구는 빼요.
 - 반영구 화장 · 문신(phun xăm) 시술이 있으면 note 에 꼭 적어요.
 반드시 아래 JSON 하나만 출력해요:
-{"hours": "09:00 - 22:00" 또는 null, "address": 문자열 또는 null, "phone": 문자열 또는 null,
+{"name": "업체 이름 (원문 · 간판에 쓰는 이름)" 또는 null, "name_ko": "한국어로 읽는 이름" 또는 null, "hours": "09:00 - 22:00" 또는 null, "address": 문자열 또는 null, "phone": 문자열 또는 null,
  "menu": [{"name": "...", "name_ko": "...", "minutes": 숫자 또는 null, "price": "..." 또는 null}],
  "features": ["..."], "note": "확인이 필요한 점 한두 줄 (없으면 빈 문자열)"}`;
 
@@ -104,7 +104,7 @@ Deno.serve(async (req) => {
     const d = JSON.parse(m ? m[0] : text);
     const s = (v: unknown, n: number) => (v == null || v === "" ? null : String(v).slice(0, n));
     return out({
-      hours: s(d.hours, 120), address: s(d.address, 240), phone: s(d.phone, 60),
+      name: s(d.name, 100), name_ko: s(d.name_ko, 60), hours: s(d.hours, 120), address: s(d.address, 240), phone: s(d.phone, 60),
       menu: (Array.isArray(d.menu) ? d.menu : []).slice(0, 30).map((x: any) => ({ name: String(x.name || "").slice(0, 120), name_ko: s(x.name_ko, 80), minutes: +x.minutes || null, price: s(x.price, 60) })).filter((x: any) => x.name),
       features: (Array.isArray(d.features) ? d.features : []).slice(0, 3).map((x: unknown) => String(x).slice(0, 80)),
       note: s(d.note, 300) || "", src: [url, ...imgsUsed], model: MODEL,
