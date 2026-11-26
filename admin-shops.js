@@ -406,8 +406,8 @@ function openEditor(id, preset, opts = {}) {
       <button class="btn sm" type="button" id="mSecGo">적용</button><button class="btn sm" type="button" id="mSecX">분류 지우기</button>
       <small class="hint">'대분류 > 소분류'로 쓰면 손님 화면에 큰 제목(네일) 아래 작은 제목(여성)으로 나뉘고, 대분류가 2개 이상이면 위에 [전체 · 스파 · 네일] 탭이 생겨요. 영어 · 베트남어는 자주 쓰는 낱말이면 자동으로 채워요.</small>
       ${tops.length > 1 ? `<span class="m-ord"><b>손님 화면 순서</b> ${tops.map((t, k) => `<span>${k ? `<button type="button" class="lnk" data-mord="${k}" title="앞으로">◀</button>` : ""}${esc(t)}</span>`).join(" ")}</span>` : ""}
-      ${secs.length ? `<span class="m-secs">${secs.map(x => `<span>${esc(x)} <i>${s.menu.filter(m => m.sec && m.sec.ko === x).length}</i></span>`).join("")}<span class="none">분류 없음 <i>${s.menu.filter(m => !(m.sec && m.sec.ko)).length}</i></span></span>` : ""}` : "";
-    $("menuList").innerHTML = s.menu.map((m, i) => `<div class="menu-item"><label class="m-ck"><input type="checkbox" data-mck="${i}"> <span class="m-sectag">${m.sec && m.sec.ko ? "📂 " + esc(m.sec.ko) : "분류 없음"}</span></label>
+      ${secs.length ? `<span class="m-secs">${secs.map(x => `<button type="button" data-msel="${esc(x)}" title="이 분류 메뉴를 모두 체크">${esc(x)} <i>${s.menu.filter(m => m.sec && m.sec.ko === x).length}</i></button>`).join("")}<button type="button" class="none" data-msel="" title="분류 없는 메뉴를 모두 체크">분류 없음 <i>${s.menu.filter(m => !(m.sec && m.sec.ko)).length}</i></button><small class="hint" style="flex-basis:auto">← 누르면 그 메뉴들이 체크돼요</small></span>` : ""}` : "";
+    $("menuList").innerHTML = s.menu.map((m, i) => `<div class="menu-item"><div class="m-head"><label class="m-ck"><input type="checkbox" data-mck="${i}"><span class="m-sectag ${m.sec && m.sec.ko ? "" : "none"}">${m.sec && m.sec.ko ? "📂 " + esc(m.sec.ko) : "📂 분류 없음"}</span></label><span class="hint">메뉴 ${i + 1}</span></div>
       <div class="three"><input placeholder="메뉴명 (한국어)" data-m="${i}.ko" value="${esc(m.name.ko)}">
         <input placeholder="메뉴명 (영어)" data-m="${i}.en" value="${esc(m.name.en)}">
         <input placeholder="메뉴명 (베트남어)" data-m="${i}.vi" value="${esc(m.name.vi || "")}">
@@ -416,7 +416,7 @@ function openEditor(id, preset, opts = {}) {
         <label class="f"><span>가격 (₫)</span><input type="number" min="0" step="1000" data-m="${i}.price" value="${m.price || 0}"></label>
         <label class="f"><span>관리사 팁 (₫ · 없으면 0)</span><input type="number" min="0" step="1000" data-m="${i}.tip" value="${m.tip || 0}"></label></div>
       <details class="m-more" ${(m.sec && (m.sec.ko || m.sec.en)) || (m.desc && (m.desc.ko || m.desc.en)) ? "open" : ""}><summary>분류 · 설명 <span class="hint">${esc((m.sec && m.sec.ko) || "")}${m.desc && m.desc.ko ? " · " + esc(m.desc.ko.slice(0, 30)) : ""}</span></summary>
-        <div class="three"><input placeholder="분류 (한국어 · 예: 스파 / 네일 · 여성)" data-ms="${i}.ko" value="${esc((m.sec && m.sec.ko) || "")}"><input placeholder="분류 (영어 · Spa / Nails)" data-ms="${i}.en" value="${esc((m.sec && m.sec.en) || "")}"><input placeholder="분류 (베트남어)" data-ms="${i}.vi" value="${esc((m.sec && m.sec.vi) || "")}"></div>
+        <div class="three"><input placeholder="분류 (한국어 · 예: 스파 · 네일 > 여성)" data-ms="${i}.ko" value="${esc((m.sec && m.sec.ko) || "")}"><input placeholder="분류 (영어 · Spa / Nails)" data-ms="${i}.en" value="${esc((m.sec && m.sec.en) || "")}"><input placeholder="분류 (베트남어)" data-ms="${i}.vi" value="${esc((m.sec && m.sec.vi) || "")}"></div>
         <div class="three"><textarea rows="2" placeholder="설명 (한국어 · 손님 화면 메뉴 이름 밑에 작게)" data-md="${i}.ko">${esc((m.desc && m.desc.ko) || "")}</textarea><textarea rows="2" placeholder="설명 (영어)" data-md="${i}.en">${esc((m.desc && m.desc.en) || "")}</textarea><textarea rows="2" placeholder="설명 (베트남어)" data-md="${i}.vi">${esc((m.desc && m.desc.vi) || "")}</textarea></div>
         <small class="hint">같은 분류끼리 손님 화면에서 제목 아래로 모여요. 이름 · 분류가 같고 시간만 다르면 시간 버튼으로 묶여요.</small></details>
     </div>`).join("") || `<span class="hint">메뉴가 없어요. 메뉴가 없으면 손님 화면에 예약 폼 대신 상담 버튼이 나와요.</span>`;
@@ -429,9 +429,14 @@ function openEditor(id, preset, opts = {}) {
       m[k] = { ...(m[k] || {}), [l]: el.value }; if (!Object.values(m[k]).some(v => String(v).trim())) delete m[k];
     });
     const picked = () => [...$("menuList").querySelectorAll("[data-mck]")].filter(x => x.checked).map(x => +x.dataset.mck);
-    if ($("mAll")) $("mAll").onchange = () => $("menuList").querySelectorAll("[data-mck]").forEach(x => x.checked = $("mAll").checked);
+    if ($("mAll")) $("mAll").onchange = () => $("menuList").querySelectorAll("[data-mck]").forEach(x => { x.checked = $("mAll").checked; x.closest(".menu-item").classList.toggle("ck", x.checked); });
     if ($("mSecGo")) $("mSecGo").onclick = () => { const v = $("mSecIn").value.trim(), ks = picked(); if (!ks.length) return toast("분류를 정할 메뉴를 체크해 주세요"); if (!v) return toast("분류 이름을 넣어 주세요");
       const sec = typeof secI18n === "function" ? secI18n(v) : { ko: v }; ks.forEach(k => { s.menu[k].sec = { ...sec }; }); drawMenu(); toast(`메뉴 ${ks.length}개를 ‘${v}’ 로 정했어요 · [저장]을 눌러야 반영돼요`); };
+    $("mBulk").querySelectorAll("[data-msel]").forEach(b => b.onclick = () => { const v = b.dataset.msel, cks = [...$("menuList").querySelectorAll("[data-mck]")].filter(x => { const m = s.menu[+x.dataset.mck]; return v ? m.sec && m.sec.ko === v : !(m.sec && m.sec.ko); });
+      const all = cks.every(x => x.checked); cks.forEach(x => { x.checked = !all; x.closest(".menu-item").classList.toggle("ck", !all); });
+      $("menuList").querySelectorAll("[data-mck]").forEach(x => x.closest(".menu-item").classList.toggle("ck", x.checked));
+      toast(all ? "체크를 풀었어요" : `${cks.length}개를 체크했어요 · 위에서 분류를 넣고 [적용]`); });
+    $("menuList").querySelectorAll("[data-mck]").forEach(x => x.onchange = () => x.closest(".menu-item").classList.toggle("ck", x.checked));
     $("mBulk").querySelectorAll("[data-mord]").forEach(b => b.onclick = () => { const k = +b.dataset.mord, t = tops.slice(); [t[k - 1], t[k]] = [t[k], t[k - 1]]; s.secOrder = t; drawMenu(); });
     if ($("mSecX")) $("mSecX").onclick = () => { const ks = picked(); if (!ks.length) return toast("메뉴를 체크해 주세요"); ks.forEach(k => delete s.menu[k].sec); drawMenu(); };
     $("menuList").querySelectorAll("[data-mdel]").forEach(el => el.onclick = () => { s.menu.splice(+el.dataset.mdel, 1); drawMenu(); });
