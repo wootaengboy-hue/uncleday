@@ -230,8 +230,12 @@ if (!shop) {
     <h2 id="bookTitle" ${pending ? "hidden" : ""}>${ui("book")}</h2>
     <p class="find-hint" ${pending ? "hidden" : ""}>${ui("vAlready")} <a href="booking.html">🔎 ${ui("vFind")}</a></p>
     <form id="form" class="form" ${pending ? "hidden" : ""}>
-      <label>${ui("fMenu")}<select name="menu" id="fMenu">${mGroups.map(g => { const op = (i, lb) => { const m = shop.menu[i]; return `<option value="${i}">${lb} – ${(pf => pf && pf.cut ? money(pf.price) + " 🎁" : money(m.price))(promoFor(shop, i))}</option>`; };
-        return g.items.length > 1 ? `<optgroup label="${esc(g.n)}">${g.items.map(i => op(i, `${esc(g.n)} · ${shop.menu[i].min || "-"} ${ui("min")}`)).join("")}</optgroup>` : op(g.items[0], tx(shop.menu[g.items[0]].name)); }).join("")}</select></label>
+      <label>${ui("fMenu")}<select name="menu" id="fMenu">${(() => { const op = (i, lb) => { const m = shop.menu[i]; return `<option value="${i}">${lb} – ${(pf => pf && pf.cut ? money(pf.price) + " 🎁" : money(m.price))(promoFor(shop, i))}</option>`; };
+        const ops = g => g.items.map(i => op(i, g.items.length > 1 || shop.menu[i].min ? `${esc(g.n)} · ${shop.menu[i].min || "-"} ${ui("min")}` : esc(g.n))).join("");
+        // 분류가 있으면 분류(스파 · 네일 · 여성 …)로 묶고, 없으면 시간만 다른 메뉴끼리 묶어요
+        if (mHasSec) { const secs = []; mGroups.forEach(g => { const k = g.top + (g.sub ? " · " + g.sub : ""); let x = secs.find(y => y.k === k); if (!x) secs.push(x = { k, gs: [] }); x.gs.push(g); });
+          return secs.map(x => `<optgroup label="${esc(x.k)}">${x.gs.map(ops).join("")}</optgroup>`).join(""); }
+        return mGroups.map(g => g.items.length > 1 ? `<optgroup label="${esc(g.n)}">${ops(g)}</optgroup>` : op(g.items[0], tx(shop.menu[g.items[0]].name))).join(""); })()}</select></label>
       <p class="pm-est" id="pmEst" hidden></p>
       <div class="bk-pick">
         <button type="button" class="bk-sum" id="bkSum"><span class="bk-ic">📅</span><span id="bkSumT">${ui("pickDT")}</span><span class="bk-car">▾</span></button>
