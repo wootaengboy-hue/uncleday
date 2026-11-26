@@ -565,6 +565,8 @@ function mqDraw() {
   mqBind(el);
   const as = el.querySelector("#mqAllShops"); if (as) as.onclick = () => { MQ.shop = ""; MQ.f = "todo"; mqDraw(); };
 }
+// 메모 속 긴 주소는 '사이트 이름 · 열기' 링크로 짧게 (휴대폰에서 화면이 옆으로 밀리지 않게)
+const mqNoteHtml = t => esc(t).replace(/https?:\/\/[^\s<]+/g, u => { let h = u; try { h = new URL(u.replace(/&amp;/g, "&")).hostname.replace(/^www\./, "").replace(/^scontent[^.]*\./, ""); } catch (e) {} return `<a href="${u}" target="_blank" rel="noopener noreferrer">${h} 열기 ↗</a>`; });
 function mqCard(m) {
   const s = vfShop(m.shop_id) || { id: m.shop_id, name: { ko: m.shop_id }, cat: "" }, x = vfSrc(m.shop_id), [ic, sn, sd] = MQ_SRC[m.source] || ["", m.source, ""];
   const can = mqCan(m), why = mqWhy(m), main = s.img && s.img === m.work_url;
@@ -578,7 +580,7 @@ function mqCard(m) {
     </div>
     <div class="mq-act">
       <div class="mq-iss">${Object.entries(MQ_ISS).map(([k, t]) => `<label class="${(m.issues || []).includes(k) ? "on" : ""}"><input type="checkbox" data-mqis="${k}" ${(m.issues || []).includes(k) ? "checked" : ""}>${t}</label>`).join("")}</div>
-      ${m.note ? `<p class="mq-note">🤖 ${esc(m.note)}</p>` : ""}
+      ${m.note ? `<p class="mq-note">${/^원래 주소:/.test(m.note) ? "🔗" : "🤖"} ${mqNoteHtml(m.note)}</p>` : ""}
       <div class="mq-an" data-mqan><small>🔍 사진 살펴보는 중…</small></div>
       ${m.orig_url && m.orig_url.includes("/object/public/images/") ? `<div class="mq-frame"><b>작업본 틀</b>${[["fit", "🖼️ 전체 보이기 (안 잘림)"], ["crop:0", "▲ 위쪽 남기기"], ["crop:.5", "● 가운데"], ["crop:1", "▼ 아래쪽 남기기"]].map(([k, t]) => `<button class="btn sm" data-mqstamp="${k}">${t}</button>`).join("")}<small>원본에서 16:9 작업본을 다시 만들어요</small></div>` : ""}
       <div class="mq-btns">${m.work_url ? `<button class="btn sm" data-mqai ${MQ.busy[m.id] ? "disabled" : ""}>${MQ.busy[m.id] ? "검사 중…" : "🤖 AI 검사"}</button>` : ""}
