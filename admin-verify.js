@@ -330,7 +330,7 @@ async function mqUpFiles(files, p, from) {
   let n = 0;
   for (const f of files.slice(0, 20)) { try { await mqUpOne(f, p, from); n++; } catch (e) { dbErr(e, `${f.name} 올리기`); } }
   if (files.length > 20) toast("한 번에 20장까지 올려요 · 나머지는 다시 올려 주세요", 4000);
-  if (n) { toast(`${n}장 올렸어요 · 판정해 주세요`); MQ.shop = p.shop; MQ.f = "todo"; mqDraw(); }
+  if (n) { toast(`${n}장 올렸어요 · 판정해 주세요`); MQ.shop = p.shop; MQ.f = "all"; mqDraw(); }
 }
 // 링크 → 사진 파일: 먼저 브라우저에서 바로, 막히면(다른 사이트 보안) 서버(media-check)가 대신 가져와요
 async function mqFetch(u) {
@@ -342,7 +342,7 @@ async function mqFetch(u) {
 }
 function mqBind(el) {
   el.querySelectorAll("[data-mqf]").forEach(b => b.onclick = () => { MQ.f = b.dataset.mqf; MQ.keep.clear(); mqDraw(); });
-  const sh = el.querySelector("#mqShop"); if (sh) sh.onchange = () => { MQ.shop = sh.value; mqDraw(); };
+  const sh = el.querySelector("#mqShop"); if (sh) sh.onchange = () => { MQ.shop = sh.value; if (MQ.shop) MQ.f = "all"; mqDraw(); };   // 업체를 고르면 그 업체 사진은 판정과 상관없이 전부 보여요
   if (MQ.shop) { const u = el.querySelector("#mqUpShop"); if (u) u.value = MQ.shop; }
   // 사진 크기 표시
   el.querySelectorAll("img[data-wh]").forEach(im => { const f = () => { const w = im.closest("div").parentElement.querySelector(".mq-wh"); if (w && im.naturalWidth) w.textContent = `${im.naturalWidth}×${im.naturalHeight}${im.naturalWidth < 800 ? " · 작아요" : ""}`; }; if (im.complete) f(); else im.onload = f; });
@@ -390,7 +390,7 @@ function mqBind(el) {
       try { const blob = await mqFetch(u); await mqUpOne(blob, p, u); n++; }
       catch (e) { toast(`가져오지 못했어요: ${u.slice(0, 60)} (${e.message})`, 5000); }
     }
-    if (n) { toast(`${n}장 가져왔어요 · 판정해 주세요`); MQ.shop = p.shop; MQ.f = "todo"; }
+    if (n) { toast(`${n}장 가져왔어요 · 판정해 주세요`); MQ.shop = p.shop; MQ.f = "all"; }
     mqDraw();
   };
   el.querySelectorAll("[data-mqos]").forEach(sel => sel.onchange = async () => {
