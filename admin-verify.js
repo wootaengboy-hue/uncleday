@@ -288,7 +288,7 @@ async function vfExtract(s, url, isImg) {
     const c = isImg ? { ...prev, menu: (prev.menu || []).concat((j.menu || []).filter(m => !(prev.menu || []).some(o => o.name === m.name && o.minutes === m.minutes && o.price === m.price))), src: (prev.src || []).concat(j.src || []), note: [prev.note, j.note].filter(Boolean).join(" · ") }
       : vfMerge(prev, vfCrawled(j, url));
     delete VF.busy;
-    await vfSave(s.id, { crawled: c, crawled_at: new Date().toISOString(), review: "todo" }, `가져왔어요 · 메뉴 ${(j.menu || []).length}개${j.hours ? " · 영업시간" : ""}${j.address ? " · 주소" : ""} — 비교해서 넣어 주세요`);
+    await vfSave(s.id, { crawled: c, crawled_at: new Date().toISOString(), review: "todo" }, (!isImg && !(j.menu || []).length && (c.menu || []).length) ? `이번엔 메뉴를 못 찾아서 예전에 모은 메뉴 ${c.menu.length}개를 그대로 뒀어요 — 메뉴 페이지 링크나 📋 가격표 캡처로 다시 해 보세요` : `가져왔어요 · 메뉴 ${(j.menu || []).length}개${j.hours ? " · 영업시간" : ""}${j.address ? " · 주소" : ""} — 비교해서 넣어 주세요`);
   } catch (e) { delete VF.busy; vfDraw(); toast("가져오기 실패: " + e.message, 6000); }
 }
 
