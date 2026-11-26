@@ -399,6 +399,17 @@ function openEditor(id, preset, opts = {}) {
 
   // 메뉴
   function drawMenu() {
+    // 손님 화면 묶음: 이름 · 분류가 같으면 시간 버튼 하나로 (shop.js 와 같은 규칙)
+    const gkey = m => ((m.name && m.name.ko) || "") + "|" + ((m.sec && m.sec.ko) || ""), gmap = {};
+    s.menu.forEach((m, i) => (gmap[gkey(m)] = gmap[gkey(m)] || []).push(i));
+    const gtag = i => { const g = gmap[gkey(s.menu[i])]; if (!g || g.length < 2) return ""; const mins = g.map(k => s.menu[k].min ? s.menu[k].min + "분" : "시간 없음");
+      return `<span class="m-grptag" title="손님 화면에서 메뉴 ${g.map(k => k + 1).join(" · ")} 이 하나로 묶여 시간 버튼으로 보여요">🔗 묶음 ${g.indexOf(i) + 1}/${g.length} · ${mins.join(" · ")}</span>`; };
+    const prev = () => { const order = [], seen = new Set(); s.menu.forEach(m => { const k = gkey(m); if (!seen.has(k)) { seen.add(k); order.push(k); } });
+      const top = x => String(x || "").split(/\s*>\s*/)[0].trim(), ord = s.secOrder || [];
+      order.sort((a, b) => { const x = ord.indexOf(top(a.split("|")[1])), y = ord.indexOf(top(b.split("|")[1])); return (x < 0 ? 999 : x) - (y < 0 ? 999 : y); });
+      let last = null; return order.map(k => { const g = gmap[k], m = s.menu[g[0]], sc = (m.sec && m.sec.ko) || "";
+        const h = secs.length && sc !== last ? `<div class="mp-sec">${esc(sc || "기타 (분류 없음)")}</div>` : ""; last = sc;
+        return h + `<div class="mp-row"><b>${esc((m.name && m.name.ko) || "(이름 없음)")}</b>${g.map(i => `<span>${s.menu[i].min ? s.menu[i].min + "분 " : ""}₫${(+s.menu[i].price || 0).toLocaleString("en-US")}</span>`).join("")}</div>`; }).join(""); };
     const secs = [...new Set(s.menu.map(m => m.sec && m.sec.ko).filter(Boolean))], top = x => String(x).split(/\s*>\s*/)[0].trim();
     const tops0 = [...new Set(secs.map(top))], ord = (s.secOrder || []).filter(t => tops0.includes(t)), tops = ord.concat(tops0.filter(t => !ord.includes(t)));
     $("mBulk").innerHTML = s.menu.length ? `<label class="m-ck"><input type="checkbox" id="mAll"> 전체</label><b>📂 고른 메뉴 분류</b>
@@ -407,7 +418,9 @@ function openEditor(id, preset, opts = {}) {
       <small class="hint">'대분류 > 소분류'로 쓰면 손님 화면에 큰 제목(네일) 아래 작은 제목(여성)으로 나뉘고, 대분류가 2개 이상이면 위에 [전체 · 스파 · 네일] 탭이 생겨요. 영어 · 베트남어는 자주 쓰는 낱말이면 자동으로 채워요.</small>
       ${tops.length > 1 ? `<span class="m-ord"><b>손님 화면 순서</b> ${tops.map((t, k) => `<span>${k ? `<button type="button" class="lnk" data-mord="${k}" title="앞으로">◀</button>` : ""}${esc(t)}</span>`).join(" ")}</span>` : ""}
       ${secs.length ? `<span class="m-secs">${secs.map(x => `<button type="button" data-msel="${esc(x)}" title="이 분류 메뉴를 모두 체크">${esc(x)} <i>${s.menu.filter(m => m.sec && m.sec.ko === x).length}</i></button>`).join("")}<button type="button" class="none" data-msel="" title="분류 없는 메뉴를 모두 체크">분류 없음 <i>${s.menu.filter(m => !(m.sec && m.sec.ko)).length}</i></button><small class="hint" style="flex-basis:auto">← 누르면 그 메뉴들이 체크돼요</small></span>` : ""}` : "";
-    $("menuList").innerHTML = s.menu.map((m, i) => `<div class="menu-item"><div class="m-head"><label class="m-ck"><input type="checkbox" data-mck="${i}"><span class="m-sectag ${m.sec && m.sec.ko ? "" : "none"}">${m.sec && m.sec.ko ? "📂 " + esc(m.sec.ko) : "📂 분류 없음"}</span></label><span class="hint">메뉴 ${i + 1}</span></div>
+    if (s.menu.length) $("mBulk").insertAdjacentHTML("beforeend", `<details class="m-prev" ${s._mprev ? "open" : ""}><summary>👁 손님 화면에서 이렇게 보여요 <span class="hint">메뉴 ${s.menu.length}줄 → ${Object.keys(gmap).length}칸 · 같은 이름 · 같은 분류는 한 칸에 시간 버튼</span></summary><div class="m-prevb">${prev()}</div></details>`);
+    const mpv = $("mBulk").querySelector(".m-prev"); if (mpv) mpv.ontoggle = () => { s._mprev = mpv.open; };
+    $("menuList").innerHTML = s.menu.map((m, i) => `<div class="menu-item"><div class="m-head"><label class="m-ck"><input type="checkbox" data-mck="${i}"><span class="m-sectag ${m.sec && m.sec.ko ? "" : "none"}">${m.sec && m.sec.ko ? "📂 " + esc(m.sec.ko) : "📂 분류 없음"}</span></label><span class="m-hr">${gtag(i)}<span class="hint">메뉴 ${i + 1}</span></span></div>
       <div class="three"><input placeholder="메뉴명 (한국어)" data-m="${i}.ko" value="${esc(m.name.ko)}">
         <input placeholder="메뉴명 (영어)" data-m="${i}.en" value="${esc(m.name.en)}">
         <input placeholder="메뉴명 (베트남어)" data-m="${i}.vi" value="${esc(m.name.vi || "")}">
@@ -524,6 +537,7 @@ function openEditor(id, preset, opts = {}) {
     s.id = newId;
     s.tags = s.tags.filter(t => t.ko.trim() || t.en.trim() || (t.vi || "").trim());
     s.menu = s.menu.filter(m => m.name.ko.trim() || m.name.en.trim());
+    delete s._mprev;
     if (!s.menuImgs.length) delete s.menuImgs;
     if (s.extras) {   // ➕ 추가 요금 정리: 이름 · 금액 없는 건 빼요
       s.extras = s.extras.filter(e => (e.t && (e.t.ko || e.t.en || e.t.vi)) && (+e.amt > 0 || Object.values(e.mins || {}).some(v => +v > 0)))
