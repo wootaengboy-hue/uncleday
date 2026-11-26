@@ -94,12 +94,15 @@ const pmOff = p => p.kind === "pct" ? ui("pm_pct", { v: p.v }) : p.kind === "amt
 const pmTag = p => p.kind === "pct" ? "-" + p.v + "%" : p.kind === "amt" ? "-₫" + Number(p.v).toLocaleString("en-US") : "🎁";
 const pmMD = d => d ? (+d.slice(5, 7)) + "/" + (+d.slice(8, 10)) : "";
 function pmLine(p, shop) {   // "개업 3주년 · 전 메뉴 20% 할인 · 12/31까지"
-  const scope = p.menus && p.menus.length ? (p.menus.length <= 2 && shop ? p.menus.map(i => shop.menu[i] ? tx(shop.menu[i].name) : "").filter(Boolean).join(", ") : ui("pm_some")) : ui("pm_all");
+  const nm = p.menus && p.menus.length && shop ? [...new Set(p.menus.map(i => shop.menu[i] ? tx(shop.menu[i].name) : "").filter(Boolean))] : [];   // 시간만 다른 메뉴는 이름 하나로
+  const scope = p.menus && p.menus.length ? (nm.length && nm.length <= 2 ? nm.join(", ") : ui("pm_some")) : ui("pm_all");
   const when = p.to ? ui("pm_until", { d: pmMD(p.to) }) : p.from && p.from > pmDay() ? ui("pm_from", { d: pmMD(p.from) }) : "";
   return [pmName(p), p.kind === "text" ? "" : scope + " " + pmOff(p), when].filter(Boolean).join(" · ");
 }
 const pmBadge = shop => { const ps = promosOn(shop); if (!ps.length) return "";
-  const pct = Math.max(0, ...ps.filter(p => p.kind === "pct").map(p => p.v)), amt = ps.find(p => p.kind === "amt");
+  // 목록 배지: 가장 많은 메뉴에 걸린 % 할인 (키즈 50%처럼 일부 메뉴만 큰 할인이면 대표 할인을 보여요)
+  const wide = p => p.menus && p.menus.length ? p.menus.length : 1e6, pp = ps.filter(p => p.kind === "pct").sort((a, b) => wide(b) - wide(a) || b.v - a.v);
+  const pct = pp.length ? pp[0].v : 0, amt = ps.find(p => p.kind === "amt");
   return `<span class="pm-b">🎁 ${pct ? "-" + pct + "%" : amt ? pmTag(amt) : esc(pmName(ps[0]) || ui("pm_title").replace("🎁 ", ""))}</span>`; };
 const ocBadge = shop => shop && shop.outcall ? `<span class="oc-b">${ui("oc_badge")}</span>` : "";
 // ⚡ 업체별 예약 확정 속도 (universe35 shop_speed · 실제 기록 3건 이상인 업체만)
