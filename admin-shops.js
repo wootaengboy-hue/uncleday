@@ -255,6 +255,7 @@ function openEditor(id, preset, opts = {}) {
       </div>
 
       <div class="box"><h3>메뉴·가격<small>가격은 베트남 동(₫), 숫자만. 0이면 "상담 후 안내"</small></h3>
+        <div class="m-bulk" id="mBulk"></div>
         <div id="menuList" style="display:grid;gap:10px"></div>
         <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm" id="menuAdd" type="button">＋ 메뉴 추가</button><button class="btn sm" id="menuGrid" type="button" title="종류 × 시간으로 가격이 정해진 가격표를 한 번에 메뉴로 만들어요">⏱ 시간별 가격표로 만들기</button></div>
         <small class="hint">이름이 같은 메뉴는 손님 화면에서 하나로 묶이고 시간(60분 · 90분 …)을 골라요</small>
@@ -398,7 +399,15 @@ function openEditor(id, preset, opts = {}) {
 
   // 메뉴
   function drawMenu() {
-    $("menuList").innerHTML = s.menu.map((m, i) => `<div class="menu-item">
+    const secs = [...new Set(s.menu.map(m => m.sec && m.sec.ko).filter(Boolean))], top = x => String(x).split(/\s*>\s*/)[0].trim();
+    const tops0 = [...new Set(secs.map(top))], ord = (s.secOrder || []).filter(t => tops0.includes(t)), tops = ord.concat(tops0.filter(t => !ord.includes(t)));
+    $("mBulk").innerHTML = s.menu.length ? `<label class="m-ck"><input type="checkbox" id="mAll"> 전체</label><b>📂 고른 메뉴 분류</b>
+      <input id="mSecIn" list="mSecList" placeholder="예: 스파 · 네일 > 여성 · 네일 > 남성"><datalist id="mSecList">${secs.map(x => `<option value="${esc(x)}">`).join("")}</datalist>
+      <button class="btn sm" type="button" id="mSecGo">적용</button><button class="btn sm" type="button" id="mSecX">분류 지우기</button>
+      <small class="hint">'대분류 > 소분류'로 쓰면 손님 화면에 큰 제목(네일) 아래 작은 제목(여성)으로 나뉘고, 대분류가 2개 이상이면 위에 [전체 · 스파 · 네일] 탭이 생겨요. 영어 · 베트남어는 자주 쓰는 낱말이면 자동으로 채워요.</small>
+      ${tops.length > 1 ? `<span class="m-ord"><b>손님 화면 순서</b> ${tops.map((t, k) => `<span>${k ? `<button type="button" class="lnk" data-mord="${k}" title="앞으로">◀</button>` : ""}${esc(t)}</span>`).join(" ")}</span>` : ""}
+      ${secs.length ? `<span class="m-secs">${secs.map(x => `<span>${esc(x)} <i>${s.menu.filter(m => m.sec && m.sec.ko === x).length}</i></span>`).join("")}<span class="none">분류 없음 <i>${s.menu.filter(m => !(m.sec && m.sec.ko)).length}</i></span></span>` : ""}` : "";
+    $("menuList").innerHTML = s.menu.map((m, i) => `<div class="menu-item"><label class="m-ck"><input type="checkbox" data-mck="${i}"> <span class="m-sectag">${m.sec && m.sec.ko ? "📂 " + esc(m.sec.ko) : "분류 없음"}</span></label>
       <div class="three"><input placeholder="메뉴명 (한국어)" data-m="${i}.ko" value="${esc(m.name.ko)}">
         <input placeholder="메뉴명 (영어)" data-m="${i}.en" value="${esc(m.name.en)}">
         <input placeholder="메뉴명 (베트남어)" data-m="${i}.vi" value="${esc(m.name.vi || "")}">
@@ -419,6 +428,12 @@ function openEditor(id, preset, opts = {}) {
       const k = el.dataset.ms ? "sec" : "desc", [i, l] = (el.dataset.ms || el.dataset.md).split("."), m = s.menu[+i];
       m[k] = { ...(m[k] || {}), [l]: el.value }; if (!Object.values(m[k]).some(v => String(v).trim())) delete m[k];
     });
+    const picked = () => [...$("menuList").querySelectorAll("[data-mck]")].filter(x => x.checked).map(x => +x.dataset.mck);
+    if ($("mAll")) $("mAll").onchange = () => $("menuList").querySelectorAll("[data-mck]").forEach(x => x.checked = $("mAll").checked);
+    if ($("mSecGo")) $("mSecGo").onclick = () => { const v = $("mSecIn").value.trim(), ks = picked(); if (!ks.length) return toast("분류를 정할 메뉴를 체크해 주세요"); if (!v) return toast("분류 이름을 넣어 주세요");
+      const sec = typeof secI18n === "function" ? secI18n(v) : { ko: v }; ks.forEach(k => { s.menu[k].sec = { ...sec }; }); drawMenu(); toast(`메뉴 ${ks.length}개를 ‘${v}’ 로 정했어요 · [저장]을 눌러야 반영돼요`); };
+    $("mBulk").querySelectorAll("[data-mord]").forEach(b => b.onclick = () => { const k = +b.dataset.mord, t = tops.slice(); [t[k - 1], t[k]] = [t[k], t[k - 1]]; s.secOrder = t; drawMenu(); });
+    if ($("mSecX")) $("mSecX").onclick = () => { const ks = picked(); if (!ks.length) return toast("메뉴를 체크해 주세요"); ks.forEach(k => delete s.menu[k].sec); drawMenu(); };
     $("menuList").querySelectorAll("[data-mdel]").forEach(el => el.onclick = () => { s.menu.splice(+el.dataset.mdel, 1); drawMenu(); });
   }
   drawMenu();

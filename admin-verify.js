@@ -286,7 +286,7 @@ function vfBind(el) {
   row.querySelectorAll("[data-vfcs]").forEach(inp => inp.onchange = () => setM(+inp.dataset.vfcs, "section_ko", inp.value.trim() || null));
   row.querySelectorAll("[data-vfcd]").forEach(inp => inp.onchange = () => setM(+inp.dataset.vfcd, "desc_ko", inp.value.trim() || null));
   row.querySelectorAll("[data-vfus],[data-vfud]").forEach(inp => inp.onchange = () => { const k = inp.dataset.vfus !== undefined ? "sec" : "desc", t = D.menu[+(inp.dataset.vfus ?? inp.dataset.vfud)], v = inp.value.trim();
-    if (!v) delete t[k]; else t[k] = { ...(typeof t[k] === "object" ? t[k] : {}), ko: v }; saveD(); });
+    if (!v) delete t[k]; else t[k] = k === "sec" ? secI18n(v) : { ...(typeof t[k] === "object" ? t[k] : {}), ko: v }; saveD(); });
   row.querySelectorAll("[data-vftip]").forEach(inp => inp.onchange = () => { const t = D.menu[+inp.dataset.vftip], v = Math.max(0, Math.round(+inp.value || 0)); if (v) t.tip = v; else delete t.tip; saveD(); });
   row.querySelectorAll("[data-vfdeal]").forEach(cb => cb.onchange = () => { const t = (c.deals || [])[+cb.dataset.vfdeal], ds = new Set(D.deals || []); cb.checked ? ds.add(t) : ds.delete(t); D.deals = [...ds]; saveD(); });
   row.querySelectorAll("[data-vfck]").forEach(cb => cb.onchange = () => setM(+cb.dataset.vfck, "ck", cb.checked));
@@ -721,4 +721,14 @@ async function mqAi(m) {
     await mqUpd(m, { issues: is, note: [((m.note || "").match(/^(원래 주소: \S+|캡처)/) || [])[1], j.what, j.note].filter(Boolean).join(" · ") }, j.issues && j.issues.length ? `🤖 문제 ${j.issues.length}개를 찾았어요 · 확인해 주세요` : "🤖 눈에 띄는 문제가 없어요 · 판정은 직접 해 주세요");
   } catch (e) { toast("AI 검사 실패: " + e.message, 5000); }
   delete MQ.busy[m.id]; mqDraw();
+}
+
+// 📂 메뉴 분류 이름 → 영어 · 베트남어 (자주 쓰는 낱말만 · "네일 > 여성" 처럼 대분류 > 소분류)
+const SEC_DICT = { "스파": ["Spa", "Spa"], "마사지": ["Massage", "Massage"], "네일": ["Nails", "Nail"], "남성": ["Men", "Nam"], "여성": ["Women", "Nữ"], "남자": ["Men", "Nam"], "여자": ["Women", "Nữ"],
+  "페이셜": ["Facial", "Chăm sóc da mặt"], "얼굴": ["Facial", "Da mặt"], "헤어": ["Hair", "Tóc"], "샴푸": ["Hair wash", "Gội đầu"], "왁싱": ["Waxing", "Wax"], "속눈썹": ["Eyelashes", "Mi"], "바디": ["Body", "Body"],
+  "패키지": ["Packages", "Gói"], "키즈": ["Kids", "Trẻ em"], "아동": ["Kids", "Trẻ em"], "발": ["Foot", "Chân"], "손": ["Hand", "Tay"], "기타": ["Other", "Khác"], "시술": ["Treatments", "Liệu trình"], "피부": ["Skin", "Da"] };
+function secI18n(ko) {
+  const t = String(ko || "").trim(); if (!t) return null;
+  const parts = t.split(/\s*>\s*/), tr = k => parts.map(x => (SEC_DICT[x] || [])[k] || x).join(" > ");
+  return { ko: t, en: tr(0), vi: tr(1) };
 }

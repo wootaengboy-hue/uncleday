@@ -129,9 +129,16 @@ if (!shop) {
   const pending = shop.verified === false || !shop.open || !shop.menu.length;   // 정보 미확인 → 예약 폼 대신 상담 버튼
   // 이름이 같은 메뉴(시간만 다른 것)는 하나로 묶어 시간을 골라요 (저장은 시간별 한 줄씩)
   //  분류(m.sec · 예: 스파 / 네일)가 있으면 분류별 제목 아래로 모아요 · 설명(m.desc)은 이름 밑에 작게
+  const mSplit = v => { const t = String(v || "").trim(); if (!t) return ["", ""]; const p = t.split(/\s+[>›»\/·|]\s+|\s*>\s*/); return [p[0].trim(), p.slice(1).join(" · ").trim()]; };   // "네일 > 여성" → 대분류 · 소분류
   const mGroups = []; shop.menu.forEach((m, i) => { const n = tx(m.name), sc = tx(m.sec) || ""; let g = mGroups.find(x => x.n === n && x.sc === sc); if (!g) mGroups.push(g = { n, sc, d: "", items: [] }); if (!g.d) g.d = tx(m.desc) || ""; g.items.push(i); });
-  if (mGroups.some(g => g.sc)) { const order = [...new Set(mGroups.map(g => g.sc))]; mGroups.sort((a, b) => order.indexOf(a.sc) - order.indexOf(b.sc)); }
-  const mSec = (g, k) => g.sc && (k === 0 || mGroups[k - 1].sc !== g.sc) ? `<h3 class="m-sec">${esc(g.sc)}</h3>` : "";
+  const mHasSec = mGroups.some(g => g.sc);
+  mGroups.forEach(g => { [g.top, g.sub] = mSplit(g.sc); if (mHasSec && !g.top) g.top = ui("m_other"); });
+  if (mHasSec) { const ord = shop.secOrder || [], ko = g => mSplit((shop.menu[g.items[0]].sec || {}).ko || "")[0];   // 관리자가 정한 분류 순서 (없으면 처음 나온 순서)
+    const tops = [...new Set(mGroups.slice().sort((a, b) => { const x = ord.indexOf(ko(a)), y = ord.indexOf(ko(b)); return (x < 0 ? 999 : x) - (y < 0 ? 999 : y); }).map(g => g.top))], subs = [...new Set(mGroups.map(g => g.top + "|" + g.sub))];
+    mGroups.forEach((g, k) => g.k = k); mGroups.sort((a, b) => tops.indexOf(a.top) - tops.indexOf(b.top) || subs.indexOf(a.top + "|" + a.sub) - subs.indexOf(b.top + "|" + b.sub) || a.k - b.k); }
+  const mTops = mHasSec ? [...new Set(mGroups.map(g => g.top))] : [];
+  const mSec = (g, k) => !mHasSec ? "" : (k === 0 || mGroups[k - 1].top !== g.top ? `<h3 class="m-sec" data-top="${esc(g.top)}">${esc(g.top)}</h3>` : "") + (g.sub && (k === 0 || mGroups[k - 1].top !== g.top || mGroups[k - 1].sub !== g.sub) ? `<h4 class="m-sub" data-top="${esc(g.top)}">${esc(g.sub)}</h4>` : "");
+  const mTabs = () => mTops.length > 1 ? `<div class="m-tabs" role="tablist"><button type="button" class="on" data-mt="">${ui("m_all")}</button>${mTops.map(t => `<button type="button" data-mt="${esc(t)}">${esc(t)}</button>`).join("")}</div>` : "";
   const mDesc = g => g.d ? `<small class="m-desc">${esc(g.d)}</small>` : "";
   const hoursText = shop.open ? `${shop.open} ~ ${shop.close}` : ui("tbd");
   const closedText = shop.open ? closed : ui("tbd");
@@ -182,11 +189,11 @@ if (!shop) {
 
     ${shop.menu.length ? `<h2>${ui("menu")}</h2>
     ${pms.length ? `<div class="pm-box"><b class="pm-h">${ui("pm_title")}</b><ul>${pms.map(p => `<li>${esc(pmLine(p, shop))}</li>`).join("")}</ul><small>${ui("pm_note")}</small></div>` : ""}
-    <div id="menuList">${mGroups.map((g, k) => { if (g.items.length > 1) return `${mSec(g, k)}
-      <div class="menu-row menu-grp"><div class="mg-h"><b>${esc(g.n)}</b><small>${ui("mgPick")}</small></div>${mDesc(g)}
+    ${mTabs()}<div id="menuList">${mGroups.map((g, k) => { if (g.items.length > 1) return `${mSec(g, k)}
+      <div class="menu-row menu-grp" data-top="${esc(g.top || "")}"><div class="mg-h"><b>${esc(g.n)}</b><small>${ui("mgPick")}</small></div>${mDesc(g)}
       <div class="mg-opts">${g.items.map(i => { const m = shop.menu[i], pf = promoFor(shop, i), cut = pf && pf.cut; return `<${pending ? "span" : "button type=\"button\""} class="mg-opt${pending ? "" : " pick"}" data-i="${i}"><span class="mg-t">${m.min ? `${m.min} ${ui("min")}` : "-"}</span>${cut ? `<s>₫${m.price.toLocaleString("en-US")}</s>` : ""}${(t => { const k = t.indexOf(" ("); return k < 0 ? `<b>${t}</b>` : `<b>${t.slice(0, k)}</b><small class="mg-ap">${t.slice(k + 1)}</small>`; })(money(cut ? pf.price : m.price))}${cut ? `<span class="pm-tag">${esc(pmTag(pf.p))}</span>` : ""}${extrasFor(shop, i).map(x => `<small class="mg-x">+ ${esc(x.n)} ₫${x.v.toLocaleString("en-US")}</small>`).join("")}</${pending ? "span" : "button"}>`; }).join("")}</div></div>`;
       const i = g.items[0], m = shop.menu[i], pf = promoFor(shop, i); return `${mSec(g, k)}
-      <div class="menu-row${pf && pf.cut ? " pm-row" : ""}"><div><b>${tx(m.name)}</b>${m.min ? `<br><small>${m.min} ${ui("min")}</small>` : ""}${mDesc(g)}</div>
+      <div class="menu-row${pf && pf.cut ? " pm-row" : ""}" data-top="${esc(g.top || "")}"><div><b>${tx(m.name)}</b>${m.min ? `<br><small>${m.min} ${ui("min")}</small>` : ""}${mDesc(g)}</div>
       <div class="price${pf && pf.cut ? " pm" : ""}">${pf && pf.cut ? `<s>₫${m.price.toLocaleString("en-US")}</s><span class="pm-tag">${esc(pmTag(pf.p))}</span><br>${money(pf.price)}` : money(m.price)}${extrasFor(shop, i).map(x => `<br><small class="mg-x">+ ${esc(x.n)} ₫${x.v.toLocaleString("en-US")}</small>`).join("")}</div>
       ${pending ? "" : `<button class="chip pick" data-i="${i}">${ui("bookBtn")}</button>`}</div>`; }).join("")}
     </div>` : ""}
@@ -428,6 +435,10 @@ ${f.text}
     document.querySelectorAll(".mg-opt").forEach(b => b.classList.toggle("on", b.dataset.i === fMenu.value)); };
   drawSum();
 
+  // 메뉴 분류 탭 (전체 · 스파 · 네일 …)
+  document.querySelectorAll(".m-tabs [data-mt]").forEach(b => b.onclick = () => { const t = b.dataset.mt;
+    document.querySelectorAll(".m-tabs [data-mt]").forEach(x => x.classList.toggle("on", x === b));
+    document.querySelectorAll("#menuList [data-top]").forEach(el => el.hidden = !!t && el.dataset.top !== t); });
   document.querySelectorAll(".pick").forEach(btn => btn.onclick = () => {
     fMenu.value = btn.dataset.i; fMenu.onchange();
     $("bookTitle").scrollIntoView({ behavior: "smooth" });
