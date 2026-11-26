@@ -585,7 +585,7 @@ function mqCard(m) {
       ${m.orig_url ? `<div class="mq-frame"><b>작업본 틀</b>${[["fit", "🖼️ 전체 보이기 (안 잘림)"], ["crop:0", "▲ 위쪽 남기기"], ["crop:.5", "● 가운데"], ["crop:1", "▼ 아래쪽 남기기"]].map(([k, t]) => `<button class="btn sm" data-mqstamp="${k}">${t}</button>`).join("")}<small>원본에서 16:9 작업본을 다시 만들어요</small></div>` : ""}
       <div class="mq-btns">${m.work_url ? `<button class="btn sm" data-mqai ${MQ.busy[m.id] ? "disabled" : ""}>${MQ.busy[m.id] ? "검사 중…" : "🤖 AI 검사"}</button>` : ""}
         <button class="btn sm ${m.verdict === "pass" ? "main" : ""}" data-mqv="pass">✓ 통과</button><button class="btn sm ${m.verdict === "issue" ? "bad" : ""}" data-mqv="issue">⚠ 문제</button><button class="btn sm" data-mqv="hold">⏸ 보류</button>
-        <span style="flex:1"></span>${main ? "" : can ? `<button class="btn sm main" data-mqmain>★ 대표 사진으로</button>` : `<span class="mq-nomain" title="${esc(why)}">★ 대표 사진으로 <em>— ${esc(why.replace(/ \(.*\)$/, ""))}</em></span>${m.source === "owner" && m.verdict === "pass" && !x.photo_ok ? mqPerm(m.shop_id, 1) : ""}`}${main ? `<button class="btn sm" data-mqunmain>대표에서 내리기</button>` : ""}<button class="btn sm" data-mqdel title="기록 지우기">🗑</button></div>
+        <span style="flex:1"></span>${main ? "" : can ? `<button class="btn sm main" data-mqmain>★ 대표 사진으로</button>` : `<span class="mq-nomain" title="${esc(why)}">★ 대표 사진으로 <em>— ${esc(why.replace(/ \(.*\)$/, ""))}</em></span>${m.source === "owner" && m.verdict === "pass" && !x.photo_ok ? mqPerm(m.shop_id, 1) : ""}`}${main ? `<button class="btn sm" data-mqunmain>대표에서 내리기</button>` : ""}<label class="btn sm" title="이 카드의 사진을 다른 사진으로 바꿔요 · 판정은 처음부터 다시">📷 다른 사진으로 바꾸기<input type="file" accept="image/*" data-mqrep hidden></label><button class="btn sm" data-mqdel title="기록 지우기">🗑</button></div>
     </div></div>`;
 }
 
@@ -811,6 +811,22 @@ function mqBind(el) {
       try { await mqRemake(m, mode, ay != null ? +ay : null); toast(mode === "fit" ? "작업본을 다시 만들었어요 · 자르지 않고 전체가 보여요" : "작업본을 다시 만들었어요 · 고른 쪽을 남기고 16:9로 잘랐어요"); mqDraw();
       } catch (e) { dbErr(e, "작업본 다시 만들기"); mqDraw(); }
     });
+    // 📷 다른 사진으로 바꾸기 — 같은 업체 · 같은 출처 그대로, 원본 · 작업본만 새 사진으로 (판정 · 문제 표시는 처음부터)
+    const rp = card.querySelector("[data-mqrep]"); if (rp) rp.onchange = async () => {
+      const f = rp.files && rp.files[0]; if (!f) return; const lb = rp.closest("label"); lb.classList.add("busy"); lb.firstChild.textContent = "바꾸는 중… ";
+      try {
+        const s2 = vfShop(m.shop_id), wasMain = s2 && s2.img === m.work_url, tag = `media/${m.shop_id}/${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
+        let [o2, w2] = await Promise.all([mqShrink(f, 2400), mqShrink(f, 1600)]);
+        try { w2 = await mqStamp(w2, s2 ? vfName(s2) : m.shop_id, mqStampOn()); } catch (e) {}
+        const [ou, wu] = await Promise.all([mqPut(o2, tag + "-o.jpg"), mqPut(w2, tag + "-w.jpg")]);
+        const old = [m.orig_url, m.work_url].filter(u => u && u.includes("/object/public/images/media/")).map(u => u.split("/object/public/images/")[1]);
+        if (wasMain) { delete s2.img; delete s2.imgPos; try { await dbSaveShop(s2); } catch (e) { dbErr(e, "대표 사진 내리기"); } }
+        const r = await sb.from("shop_media").update({ orig_url: ou, work_url: wu, verdict: "none", issues: [], note: null, checked_at: new Date().toISOString(), checked_by: ME.email }).eq("id", m.id).select().single();
+        if (r.error) throw r.error; Object.assign(m, r.data); MQ.keep.add(m.id);
+        if (old.length) sb.storage.from("images").remove(old);
+        toast(wasMain ? "사진을 바꿨어요 · 대표 사진에서는 내렸어요 · 판정(통과) 후 다시 [★ 대표 사진으로]를 눌러 주세요" : "사진을 바꿨어요 · 판정해 주세요", 6000); mqDraw();
+      } catch (e) { dbErr(e, "사진 바꾸기"); mqDraw(); }
+    };
     const ai = card.querySelector("[data-mqai]"); if (ai) ai.onclick = () => mqAi(m);
     const mm = card.querySelector("[data-mqmain]"); if (mm) mm.onclick = () => mqMain(m, true);
     const um = card.querySelector("[data-mqunmain]"); if (um) um.onclick = () => mqMain(m, false);
