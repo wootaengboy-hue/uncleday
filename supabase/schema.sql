@@ -6598,3 +6598,150 @@ on conflict (kind, target) do update set
 
 -- 확인
 select count(*) as 업체, sum(cardinality(words)) as 검색어, sum(cardinality(shown)) as 해시태그 from public.search_synonyms where kind = 'shop';
+
+-- ===============================================================
+-- universe48: 🔍 업체 정보 검수 · 🖼️ 이미지 검수 (캐시바이 방식)
+--  · shop_sources: 업체마다 홈페이지 · 페이스북 링크, 홈페이지에서 모아 온 정보(초안), 검수 상태, 사진 사용 허락
+--      → 직원만 봐요. 손님 업체 화면에서 직원이 로그인하면 [홈페이지] [페이스북] 버튼이 떠요 (비교하며 검수)
+--  · shop_media: 업체 사진 후보 → 원본 | 작업본 | 실제 노출 비교 → 판정 (통과 · 문제 · 보류)
+--      출처: field(현장에서 우리가 찍음) · owner(업체가 준 · 허락) · site(홈페이지 후보 — 허락 전엔 공개 안 됨)
+--      공개는 '통과' + (현장 사진 또는 사진 사용 허락받은 업체) 일 때만
+-- Supabase → SQL Editor 에 붙여 넣고 Run (여러 번 실행해도 괜찮아요)
+-- ===============================================================
+
+create table if not exists public.shop_sources (
+  shop_id      text primary key,
+  web          text,                                   -- 공식 홈페이지
+  fb           text,                                   -- 페이스북
+  other        jsonb not null default '{}'::jsonb,     -- 잘로 · 인스타 · 카카오 등
+  crawled      jsonb,                                  -- 모아 온 정보 { hours, address, phone, menu:[{name,minutes,price}], features, src:[url] }
+  crawled_at   timestamptz,
+  review       text not null default 'none' check (review in ('none', 'todo', 'done', 'skip')),   -- 정보 검수
+  reviewed_at  timestamptz,
+  reviewed_by  text,
+  photo_ok     boolean not null default false,         -- 업체가 사진 사용을 허락했나
+  photo_note   text,                                   -- 허락 받은 방법 · 날짜 (계약서 · 잘로 등)
+  updated_at   timestamptz not null default now()
+);
+alter table public.shop_sources enable row level security;
+drop policy if exists src_staff on public.shop_sources;
+create policy src_staff on public.shop_sources for all to authenticated using (public.is_staff()) with check (public.is_staff());
+
+-- 손님 업체 화면: 직원이면 링크를 돌려줘요 (직원이 아니면 null)
+create or replace function public.staff_shop_links(sid text) returns jsonb
+language sql stable security definer set search_path = public as $$
+  select case when is_staff() then (select jsonb_build_object('web', web, 'fb', fb, 'review', review, 'photo_ok', photo_ok) from shop_sources where shop_id = sid) end
+$$;
+grant execute on function public.staff_shop_links(text) to anon, authenticated;
+
+create table if not exists public.shop_media (
+  id          bigserial primary key,
+  shop_id     text not null,
+  source      text not null default 'field' check (source in ('field', 'owner', 'site')),
+  orig_url    text,             -- 원본 (현장 사진은 우리 저장소 · 홈페이지 후보는 그 사이트 주소)
+  work_url    text,             -- 작업본 (1024px · 밝기 · 자르기)
+  verdict     text not null default 'none' check (verdict in ('none', 'pass', 'issue', 'hold')),
+  issues      text[] not null default '{}',   -- 날조 · 왜곡 · 글자 · 워터마크 · 사람 얼굴 · 흐림 · 다른 가게
+  note        text,
+  is_main     boolean not null default false, -- 대표 사진
+  created_at  timestamptz not null default now(),
+  created_by  text,
+  checked_at  timestamptz,
+  checked_by  text
+);
+create index if not exists shop_media_shop on public.shop_media (shop_id);
+alter table public.shop_media enable row level security;
+drop policy if exists media_staff on public.shop_media;
+create policy media_staff on public.shop_media for all to authenticated using (public.is_staff()) with check (public.is_staff());
+
+-- 지금 알고 있는 링크 (11/25 정리한 연락처 시트) — 이미 있으면 그대로
+insert into public.shop_sources (shop_id, web, fb, review) values
+  ('dahan-spa', 'https://www.dahanspa.com/', 'https://www.facebook.com/luxurydahanspadanang/', 'todo'),
+  ('azit-spa', null, null, 'none'),
+  ('villa-de-spa', null, 'https://www.facebook.com/danangvilladespa/', 'todo'),
+  ('view-spa', null, 'https://www.facebook.com/viewspa126/', 'todo'),
+  ('rendezvous-spa', null, 'https://www.facebook.com/rendezvousspa.vn/', 'todo'),
+  ('moringa-spa', 'https://moringaspadanang.com/', 'https://www.facebook.com/moringaspanails/', 'todo'),
+  ('herbal-spa', 'https://herbalspa.vn/', 'https://www.facebook.com/herbalspadanang/', 'todo'),
+  ('sarangbang-spa', null, null, 'none'),
+  ('papaya-spa', null, null, 'none'),
+  ('clover-spa', 'https://cloverspa.vn/', 'https://www.facebook.com/cloverspavn/', 'todo'),
+  ('sform-clinic', null, null, 'none'),
+  ('doctor-international', null, 'https://www.facebook.com/doctoraestheticdanang/', 'todo'),
+  ('seoul-plastic-danang', null, 'https://www.facebook.com/seoulcenterdanang.vn/', 'todo'),
+  ('dr-harvard', 'https://drharvard.vn/', 'https://www.facebook.com/drharvardplasticsurgery/', 'todo'),
+  ('linh-chau', 'https://thammyvienlinhchau.com/', 'https://www.facebook.com/thammyvienlinhchau/', 'todo'),
+  ('xuan-truong', 'https://thammyxuantruong.com/', 'https://www.facebook.com/bvthammyxuantruong/', 'todo'),
+  ('golden-lotus-spa', 'https://saigonwellness.vn/', 'https://www.facebook.com/GoldenLotusSpaQ1/', 'todo'),
+  ('ngo-massage-spa', 'https://www.ngospa.vn/', 'https://www.facebook.com/ngospa1/', 'todo'),
+  ('swan-spa', 'https://swanspavn.com/', null, 'todo'),
+  ('jw-korea-hospital', 'https://jwhospital.vn/', 'https://www.facebook.com/benhvienjw.vn', 'todo'),
+  ('dr-quang-tuan', 'https://thammyquangtuan.com/', 'https://www.facebook.com/bacsiquangtuanchuyenkhoaphauthuatthammy', 'todo'),
+  ('dr-thanh-hoa', null, null, 'none'),
+  ('villa-aesthetica', 'http://www.villaaesthetica.com/', null, 'todo'),
+  ('paragon-spa', null, 'https://www.facebook.com/p/Paragon-SPA-100087531035989/', 'todo'),
+  ('la-belle-spa', 'https://hanoilabelleviespa.vn/', 'https://www.facebook.com/labellespamassage/', 'todo'),
+  ('la-maison-grand-spa', 'https://lamaisonspa.com.vn/grand.html', 'https://www.facebook.com/lamaisonspavn/', 'todo'),
+  ('vinmec-view', 'https://www.vinmec.com/eng/', null, 'todo'),
+  ('dong-a-beauty', 'https://benhvienthammydonga.vn/', 'https://www.facebook.com/ThamMyDongA/', 'todo'),
+  ('white-spa-nail', null, 'https://www.facebook.com/p/White-Spa-Nail-100064704200464/', 'todo'),
+  ('j-spa', null, null, 'none'),
+  ('well-spa', null, 'https://www.facebook.com/p/Well-Spa-100063464254328/', 'todo'),
+  ('grand-spa-nhatrang', null, null, 'none'),
+  ('w-spa-nail', null, 'https://www.facebook.com/wspanails/', 'todo'),
+  ('lumi-lux-nail', null, 'https://www.facebook.com/p/Lumi-Lux-Nail-Spa-61574584509822/', 'todo'),
+  ('aramsa-nails', null, 'https://www.facebook.com/61565089499434/', 'todo'),
+  ('vinpearl-spa-nhatrang', 'https://vinpearl.com/en/hotels/vinpearl-resort-spa-nha-trang-bay', 'https://www.facebook.com/vinpearlresortandspanhatrangbay.official/', 'todo'),
+  ('cho-ray-aesthetic', null, null, 'none'),
+  ('dr-dung-clinic', null, null, 'none'),
+  ('anna-huynh', null, null, 'none'),
+  ('vvs-nhatrang', null, null, 'none'),
+  ('seras-spa', 'https://seraspa.com.vn/', 'https://www.facebook.com/seraspaclinic/', 'todo')
+on conflict (shop_id) do nothing;
+
+-- ===============================================================
+-- universe49: 📥 업체 정보 1차 수집 결과 (11/26) → 🔍 업체 정보 검수 '모아 온 정보'
+--  · 공식 홈페이지 (없으면 공개 예약 · 비교 사이트 · 후기)에서 모은 영업시간 · 주소 · 메뉴 가격 — 초안이에요
+--  · 관리자 → 포털 → 🔍 업체 정보 검수에서 원문과 비교하고 [넣기]를 눌러야 손님 화면에 나가요
+--  · 페이스북은 자동으로 긁지 않았어요 (페이스북만 있는 곳은 현장 · 사람이 확인)
+-- 먼저 universe48 이 실행돼 있어야 해요. Supabase → SQL Editor 에 붙여 넣고 Run (여러 번 실행해도 괜찮아요)
+-- ===============================================================
+
+with v(shop_id, c) as (values
+  ('dahan-spa', '{"hours": null, "address": "498/6 Võ Nguyên Giáp, Khuê Mỹ, Ngũ Hành Sơn, Đà Nẵng", "phone": "+84 941 185 762", "note": "홈페이지 가격표가 그림이라 가격은 못 읽었어요 · 영업시간 표시 없음", "menu": [{"name": "60-minute Spa Care Program", "minutes": 60}, {"name": "90-minute Spa Care Program", "minutes": 90}, {"name": "120-minute Spa Care Program", "minutes": 120}, {"name": "Dry Body & Skin Vitality Care"}, {"name": "Aroma Oil Therapy & Skin Nourishment"}, {"name": "Hot Stone Therapy & Thermal Skin Renewal Care"}, {"name": "Bamboo Therapy & Cellulite Skin Improvement"}], "features": ["2017년 호이안에서 시작", "한국어 · 영어 · 베트남어 예약 응대"], "src": ["https://www.dahanspa.com/program", "https://www.dahanspa.com/contact"]}'::jsonb),
+  ('moringa-spa', '{"hours": "09:00 - 22:00", "address": "44 Lê Mạnh Trinh, Phước Mỹ, Sơn Trà, Đà Nẵng", "phone": "097 197 7770", "note": "홈페이지에 영업시간이 두 가지(09:30~23:00 / 09:00~22:00, 마지막 예약 21:00)로 적혀 있어요 · 가격은 팁 · 부가세 10% 별도", "menu": [{"name": "Aroma Relaxation Massage", "minutes": 60, "price": "552.000đ"}, {"name": "Traditional Dry Massage", "minutes": 60, "price": "552.000đ"}, {"name": "Pregnancy Massage", "minutes": 90, "price": "851.000đ"}, {"name": "Body Scrub & Massage (Coffee & Pearl)", "minutes": 90, "price": "1.886.000đ"}, {"name": "Kids Massage", "minutes": 60, "price": "497.000đ"}, {"name": "Foot Massage", "minutes": 60, "price": "552.000đ"}, {"name": "Nail Care", "price": "100.000đ"}, {"name": "Hand/Foot Nail Design", "price": "600.000đ"}], "features": ["다낭 시내 · 관광지 무료 이동", "방음 개별 룸", "유기농 제품"], "src": ["https://moringaspadanang.com/", "https://moringaspadanang.com/services.html"]}'::jsonb),
+  ('herbal-spa', '{"hours": "09:00 - 22:30", "address": "201 Dương Đình Nghệ, Đà Nẵng", "phone": "0901 825 789", "note": "''từ''(부터) 가격은 최저가예요", "menu": [{"name": "Mộc Bàn Bốn Tay Khô (건식 포핸드)", "minutes": 60, "price": "1.850.000đ"}, {"name": "Mộc Bàn Bốn Tay Khô (건식 포핸드)", "minutes": 90, "price": "2.350.000đ"}, {"name": "Mộc Bàn Bốn Tay Khô (건식 포핸드)", "minutes": 120, "price": "2.800.000đ"}, {"name": "Giao Hưởng Bốn Tay (포핸드)", "price": "từ 1.350.000đ"}, {"name": "Nghệ Thuật Sáu Tay (식스핸드)", "price": "từ 2.100.000đ"}, {"name": "Tuyệt Tác Tám Tay (에잇핸드)", "price": "từ 3.150.000đ"}, {"name": "An Dưỡng Kiểu Herbal (허벌 기본)", "price": "từ 630.000đ"}], "features": ["미케비치 500m", "포핸드 · 에잇핸드 전용 코스"], "src": ["https://herbalspa.vn/vi/chi-nhanh/herbal-spa-221.html", "https://herbalspa.vn/vi/dich-vu-yeu-thich-nhat/massage-bon-tay-da-nang-158.html"]}'::jsonb),
+  ('clover-spa', '{"hours": "09:00 - 23:00", "address": "266 Trần Phú, Phước Ninh, Hải Châu, Đà Nẵng", "phone": "0909 433 086", "note": "가격표가 그림이라 가격은 못 읽었어요", "menu": [], "features": ["선인장 · 허벌 · 타이 · 핫스톤 · 시아추 · 스웨디시", "달팽이 껍데기 마사지(Ốc Massage)"], "src": ["https://cloverspa.vn/chi-nhanh.html", "https://cloverspa.vn/bang-gia-clover-spa.html"]}'::jsonb),
+  ('dr-harvard', '{"hours": null, "address": "299 Dương Đình Nghệ, An Hải Bắc, Sơn Trà, Đà Nẵng", "phone": "0931 858 579", "note": "영업시간 표시 없음", "menu": [{"name": "Nose implant (L silicone)", "price": "15.000.000 VND"}, {"name": "Nose implant (Surgiform)", "price": "25.000.000 VND"}, {"name": "Nasal tip plasty", "price": "25.000.000 – 30.000.000 VND"}, {"name": "Double eyelid blepharoplasty", "price": "25.000.000 VND"}, {"name": "Lower eyelid (skin & fat)", "price": "30.000.000 VND"}, {"name": "Endoscopic brow lift", "price": "40.000.000 VND"}, {"name": "Total forehead lift", "price": "50.000.000 – 70.000.000 VND"}, {"name": "Buccal fat removal", "price": "25.000.000 – 30.000.000 VND"}, {"name": "Chin augmentation (implant)", "price": "28.000.000 VND"}, {"name": "Chin augmentation (fat graft)", "price": "20.000.000 VND"}], "features": ["여드름 · 마이크로니들 · PRP · 레이저 피부 시술도 있음"], "src": ["https://drharvard.vn/bang-gia/", "https://drharvard.vn/vi/lien-he/"]}'::jsonb),
+  ('linh-chau', '{"hours": "08:00 - 18:00 (월~토)", "address": "06 Ngô Gia Tự, Thạch Thang, Hải Châu, Đà Nẵng", "phone": "076 357 7889", "note": "가격표 없음", "menu": [], "features": ["Huỳnh Thái Sơn 박사 직접 상담 (경력 25년+)", "코 · 눈 · 가슴 · 이마거상"], "src": ["https://thammyvienlinhchau.com/", "https://thammyvienlinhchau.com/dich-vu/"]}'::jsonb),
+  ('xuan-truong', '{"hours": null, "address": null, "phone": "0906 551 818", "note": "⚠ 홈페이지에는 호치민 본점 주소만 있고 다낭 지점 주소 · 영업시간이 없어요 · 가격은 2022년 글이라 확인 필요", "menu": [{"name": "Cắt mí mắt (쌍꺼풀)", "price": "10.000.000 – 15.000.000 VND"}], "features": ["보건부 허가 01649/BYT-GPHĐ"], "src": ["https://thammyxuantruong.com/lien-he/", "https://thammyxuantruong.com/bang-gia-cat-mi-mat-moi-nhat/"]}'::jsonb),
+  ('golden-lotus-spa', '{"hours": "09:00 - 23:00", "address": "15 Thái Văn Lung, Quận 1, TP.HCM", "phone": "028 3822 1515", "note": "메뉴 · 가격이 예약 창 안에 있어 못 읽었어요", "menu": [], "features": ["사이공 23년 운영", "팁 포함 · 짐 보관"], "src": ["https://saigonwellness.vn/"]}'::jsonb),
+  ('ngo-massage-spa', '{"hours": "11:00 - 22:00", "address": "44 Cửu Long, Tân Sơn Hòa, TP.HCM", "phone": "0899 119 911", "note": null, "menu": [{"name": "Liệu pháp đả thông kinh mạch (경락)", "minutes": 60, "price": "500.000đ"}, {"name": "Liệu pháp đả thông kinh mạch (경락)", "minutes": 90, "price": "600.000đ"}, {"name": "Bazan hot stone (현무암 핫스톤)", "minutes": 90, "price": "550.000đ"}, {"name": "Himalaya salt stone massage", "minutes": 90, "price": "650.000đ"}, {"name": "Ngõ''s Signature", "minutes": 60, "price": "550.000đ"}, {"name": "Ngõ''s Signature", "minutes": 90, "price": "650.000đ"}, {"name": "Natural facial care", "minutes": 60, "price": "350.000đ"}, {"name": "Linh Chi rejuvenation facial", "minutes": 75, "price": "900.000đ"}, {"name": "Hair & scalp care (헤드스파)", "minutes": 60, "price": "150.000đ"}], "features": ["떤선녓 공항 근처", "개별 룸", "허브 목욕"], "src": ["https://www.ngospa.vn/", "https://ngospa.vn/ngos-signature"]}'::jsonb),
+  ('swan-spa', '{"hours": null, "address": "181A Điện Biên Phủ, Tân Định, TP.HCM", "phone": "+84 869 745 586", "note": "영업시간 표시 없음", "menu": [{"name": "Signature Basic", "minutes": 90, "price": "680,000VND"}, {"name": "Signature Basic", "minutes": 120, "price": "860,000VND"}, {"name": "Signature Basic + Shampoo", "minutes": 105, "price": "800,000VND"}, {"name": "Signature Basic + Shampoo", "minutes": 135, "price": "980,000VND"}, {"name": "Aroma Body Massage", "minutes": 60, "price": "550,000VND"}, {"name": "Aroma Body Massage", "minutes": 90, "price": "680,000VND"}, {"name": "Foot Massage", "minutes": 60, "price": "550,000VND"}, {"name": "Four Hands Massage", "minutes": 90, "price": "980,000VND"}, {"name": "Hair Wash & Hair Care", "minutes": 45, "price": "450,000VND"}, {"name": "Facial Care", "minutes": 30, "price": "350,000VND"}], "features": ["짐 보관 · 샤워 무료", "공항 드롭 무료"], "src": ["https://swanspavn.com/"]}'::jsonb),
+  ('jw-korea-hospital', '{"hours": "08:00 - 18:00 (월~토 · 일요일 08:00~12:00)", "address": "50 Tôn Thất Tùng, Bến Thành, Quận 1, TP.HCM", "phone": "+84 968 681 111", "note": "홈페이지에 가격 없음", "menu": [], "features": ["보건부 허가 종합병원 (성형 · 치과 · 피부)", "외국인 24시간 상담", "외국인 공항 픽업"], "src": ["https://jwhospital.vn/policy/contact-jw-korea-hospital/", "https://jwhospital.vn/jw-anesthetic-hospital/about-us/"]}'::jsonb),
+  ('dr-quang-tuan', '{"hours": null, "address": "City International Hospital, TP.HCM", "phone": "+84 914 045 843", "note": "가격 없음 · 진료 병원이 City International Hospital 로 적혀 있어요", "menu": [{"name": "Facelift (안면거상)"}, {"name": "Facial fat grafting (얼굴 지방이식)"}, {"name": "Rhinoplasty (코성형)"}, {"name": "Breast surgery (가슴성형)"}, {"name": "Breast lift"}, {"name": "Liposuction (지방흡입)"}, {"name": "Abdominoplasty (복부성형)"}], "features": ["경력 10년+", "국제병원(City International Hospital)에서 진료"], "src": ["https://thammyquangtuan.com/", "https://thammyquangtuan.com/contact-us"]}'::jsonb),
+  ('villa-aesthetica', '{"hours": null, "address": null, "phone": null, "note": "⚠ 홈페이지가 정지(suspended) 상태예요 · 영업 중인지 현장 확인 필요", "menu": [], "features": [], "src": ["http://www.villaaesthetica.com/"]}'::jsonb),
+  ('la-belle-spa', '{"hours": "09:00 - 22:00", "address": "48 Lương Văn Can, Hoàn Kiếm, Hà Nội", "phone": "+84 24 6686 9163", "note": "마사지 단품은 시간별 가격이 여러 개라 패키지 · 페이셜 위주로 모았어요", "menu": [{"name": "La Belle Signature Package", "minutes": 255, "price": "3.490.000 VND"}, {"name": "Romantic Honeymoon Package (커플)", "minutes": 210, "price": "5.390.000 VND"}, {"name": "Spirit of Vietnam", "minutes": 210, "price": "3.290.000 VND"}, {"name": "Relaxation Package for her", "minutes": 240, "price": "3.190.000 VND"}, {"name": "Relaxation Package for him", "minutes": 210, "price": "3.090.000 VND"}, {"name": "La Belle Classic Facial", "minutes": 60, "price": "1.090.000 VND"}, {"name": "Luxury Facial", "minutes": 60, "price": "1.290.000 VND"}, {"name": "Fantastic Treatment Combo", "minutes": 150, "price": "3.090.000 VND"}], "features": ["돌 · 대나무 시그니처 마사지", "포핸드 마사지", "베트남 전통 마사지 (지압 · 딥티슈 · 스트레칭)"], "src": ["https://hanoilabelleviespa.vn/our-menu/spa-packages/", "https://hanoilabelleviespa.vn/our-menu/facial-treatment/"]}'::jsonb),
+  ('la-maison-grand-spa', '{"hours": "09:00 - 22:00", "address": "18-24 Nhà Chung, Hoàn Kiếm, Hà Nội", "phone": "+84 243 275 0000", "note": "가격은 봉사료 · 세금 별도(++) · 마지막 예약 21:00 · 주소가 18-24 Nhà Chung 으로 바뀌어 있어요", "menu": [{"name": "Vietnamese Traditional Massage", "minutes": 60, "price": "850,000 VND"}, {"name": "Vietnamese Traditional Massage", "minutes": 90, "price": "1,257,000 VND"}, {"name": "Vietnamese Traditional Massage", "minutes": 120, "price": "1,679,000 VND"}, {"name": "Swedish Massage", "minutes": 60, "price": "783,000 VND"}, {"name": "Swedish Massage", "minutes": 90, "price": "1,133,000 VND"}, {"name": "Hot Stone Massage", "minutes": 75, "price": "1,087,000 VND"}, {"name": "Hot Stone Massage", "minutes": 90, "price": "1,308,000 VND"}, {"name": "Thai Traditional Massage", "minutes": 60, "price": "1,123,000 VND"}, {"name": "Thai Traditional Massage", "minutes": 90, "price": "1,329,000 VND"}, {"name": "Sport Massage", "minutes": 75, "price": "1,087,000 VND"}], "features": ["여러 마사지를 섞은 Maison 마사지"], "src": ["https://lamaisonspa.com.vn/grand/treatment-menu.html"]}'::jsonb),
+  ('vinmec-view', '{"hours": null, "address": "458 Minh Khai, Vĩnh Tuy, Hà Nội (Vinmec Times City)", "phone": "024 3974 3556", "note": "가격은 2026-04-03 기준 병원 요금표 (바뀔 수 있음)", "menu": [{"name": "성형외과 상담 (예약)", "price": "690,000 VND"}, {"name": "성형외과 상담 (예약 없이)", "price": "1,100,000 VND"}, {"name": "미용 재진", "price": "330,000 VND"}], "features": ["베트남 첫 JCI 인증 종합병원", "영어 · 프랑스어 · 일본어 · 한국어 통역", "성형은 Times City 병원에서만"], "src": ["https://www.vinmec.com/eng/hospital/vinmec-times-city-international-hospital", "https://www.vinmec.com/static/uploads/bang_gia_dich_vu_benh_vien_vmtc_t1_2026_35f34d50cb.pdf"]}'::jsonb),
+  ('dong-a-beauty', '{"hours": null, "address": null, "phone": null, "note": "⚠ 홈페이지에 접속이 안 돼요 (주소가 없어짐) · 영업 중인지 확인 필요", "menu": [], "features": [], "src": ["https://benhvienthammydonga.vn/"]}'::jsonb),
+  ('vinpearl-spa-nhatrang', '{"hours": null, "address": "Hòn Tre, Nha Trang, Khánh Hòa", "phone": "+84 258 359 8999", "note": "리조트 페이지에 스파 메뉴 · 가격 · 시간 없음", "menu": [], "features": ["전용 해변", "큰 야외 수영장"], "src": ["https://vinpearl.com/en/hotels/vinpearl-resort-spa-nha-trang-bay"]}'::jsonb),
+  ('seras-spa', '{"hours": "08:00 - 20:00", "address": "250 Dã Tượng, Vĩnh Nguyên, Nha Trang, Khánh Hòa", "phone": "079 776 8999", "note": "가격표가 그림이라 못 읽었어요 · ⚠ 홈페이지에 반영구(phun xăm) 시술도 있어요 — 엉클데이에는 넣지 마세요 (네이버 검수 기준)", "menu": [], "features": ["페이셜 · 바디 · 발 마사지 · 여드름 · 하이테크 피부 시술"], "src": ["https://seraspa.com.vn/lien-he", "https://seraspa.com.vn/bang-gia-dich-vu"]}'::jsonb),
+  ('rendezvous-spa', '{"hours": null, "address": null, "phone": null, "note": "⚠ Wanderlog 에는 ''영구 폐업''으로 나와요 (Traveloka 는 09:00~23:00) · 영업 중인지 꼭 확인", "menu": [], "features": [], "src": ["https://wanderlog.com/place/details/4402336/rendez-vous-by-charm-spa--massage", "https://www.traveloka.com/en-en/activities/vietnam/product/rendz-vous-oleh-charm-spa-massage-da-nang-rawatan-urutan-2001647072639"]}'::jsonb),
+  ('doctor-international', '{"hours": "08:00 - 18:00", "address": null, "phone": null, "note": "가격은 WhatClinic(의료 비교 사이트)에 공개된 것 · 업체 확인 필요", "menu": [{"name": "Rhinoplasty (코성형)", "price": "24,991,032–64,976,682 VND"}, {"name": "Full-face facelift (안면거상)", "price": "from 82,500,000 VND"}, {"name": "Partial SMAS facelift", "price": "49,500,000–60,000,000 VND"}, {"name": "Mid-facelift (하안검 절개)", "price": "27,500,000–35,000,000 VND"}, {"name": "Brow lift (눈썹 거상)", "price": "10,996,054–12,495,516 VND"}, {"name": "Eyelid revision (눈 재수술)", "price": "16,500,000–22,000,000 VND"}, {"name": "Fat grafting to eye area", "price": "16,500,000–22,000,000 VND"}], "features": [], "src": ["https://www.whatclinic.com/cosmetic-plastic-surgery/vietnam/da-nang/doctor-international-aesthetic-clinic"]}'::jsonb),
+  ('seoul-plastic-danang', '{"hours": "08:00 - 19:30", "address": null, "phone": null, "note": "시술 목록만 있고 가격은 ''문의'' · 시작 시간이 08:00/08:45로 달라서 확인 필요", "menu": [{"name": "Dermal fillers (필러)"}, {"name": "Chin filler (턱 필러)"}, {"name": "IPL skin rejuvenation"}, {"name": "IPL hair removal"}], "features": [], "src": ["https://clinicbooking.com/plastic-surgery/vietnam/da-nang/seoul-plastic-surgery-center-da-nang-rhinoplasty-aesthetic-surgery-clinic"]}'::jsonb),
+  ('paragon-spa', '{"hours": "09:30 - 22:00", "address": null, "phone": null, "note": "가격은 2025년 네이버 블로그 후기에 나온 것 · 업체 확인 필요", "menu": [{"name": "마사지 대부분 (90분 · 2025 후기 기준)", "minutes": 90, "price": "650,000 VND"}], "features": [], "src": ["https://m.blog.naver.com/pjuii/223944711480"]}'::jsonb),
+  ('villa-de-spa', '{"hours": null, "address": null, "phone": null, "note": "페이스북 말고는 공개된 가격 · 시간이 없어요 (찾은 건 엉클데이 페이지 자신뿐) · 현장 확인", "menu": [], "features": [], "src": []}'::jsonb),
+  ('view-spa', '{"hours": null, "address": null, "phone": null, "note": "페이스북 말고는 공개된 가격 · 시간이 없어요 · 현장 확인", "menu": [], "features": [], "src": []}'::jsonb),
+  ('white-spa-nail', '{"hours": null, "address": null, "phone": null, "note": "페이스북 말고는 공개된 가격 · 시간이 없어요 · 현장 확인", "menu": [], "features": [], "src": []}'::jsonb),
+  ('well-spa', '{"hours": null, "address": null, "phone": null, "note": "페이스북 말고는 공개된 가격 · 시간이 없어요 · 현장 확인", "menu": [], "features": [], "src": []}'::jsonb),
+  ('w-spa-nail', '{"hours": "09:00 - 22:00", "address": null, "phone": null, "note": "가격 공개 없음", "menu": [], "features": [], "src": ["https://vinpearl.com/en/nha-trang-nail-salons"]}'::jsonb),
+  ('lumi-lux-nail', '{"hours": "08:30 - 22:00", "address": null, "phone": null, "note": "가격 공개 없음", "menu": [], "features": [], "src": ["https://vinpearl.com/en/nha-trang-nail-salons"]}'::jsonb),
+  ('aramsa-nails', '{"hours": "08:30 - 22:00", "address": null, "phone": null, "note": "가격 공개 없음 · Klook 에 상품 있음", "menu": [], "features": [], "src": ["https://www.klook.com/en-US/activity/124119-aramsa-spa-massage-experience-nha-trang/"]}'::jsonb)
+)
+insert into public.shop_sources as s (shop_id, crawled, crawled_at, review)
+select shop_id, c, now(), 'todo' from v
+on conflict (shop_id) do update set crawled = excluded.crawled, crawled_at = excluded.crawled_at,
+  review = case when s.review = 'done' then 'done' else 'todo' end, updated_at = now();
+
+select count(*) filter (where crawled is not null) as 모아온_업체, count(*) filter (where review = 'todo') as 검수_대기 from public.shop_sources;

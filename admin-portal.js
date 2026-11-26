@@ -55,11 +55,11 @@ const PORTAL_SIMS = [
 // 🧩 사내 앱 — 포털을 목적별로 나눠서, 하나씩 열어 봐요 (한 화면에 다 펼치면 스크롤이 너무 길어서)
 const PORTAL_APPS = [
   ["🧭 운영", [["payback", "💸", "결제 확인 · 페이백", "손님이 알려 준 금액 vs 업체 금액 · 포인트 확정"], ["spaces", "🧭", "공간 바로가기", "손님 사이트 · 사장님 · 직원 화면 주소 · 안내 문구"], ["field", "📒", "현장 영업 매뉴얼", "베트남 영업 담당자용 · 베/한 · 잘로로 보내기 · 인쇄"], ["shops", "🏪", "매장별 관리", "현황판 · 대신 수정 · 직원 PIN · 사장님 계정"], ["audit", "🛠️", "대신 수정 기록", "사장님 화면 '오늘'에도 보여요"], ["sim", "🎬", "운영 시뮬레이션", "입점 영업 · 직원 교육용 데모"]]],
-  ["🏪 가게 정보", [["fill", "📋", "가게 정보 채우기", "업체별 검색 점수 · 빈 칸 · 후기 요청"], ["price", "💰", "가격 채우기", "메뉴 가격을 휴대폰으로 바로"], ["links", "🔗", "가게에 링크 달기", "구글 지도 · 페북 · 잘로 · QR"], ["crawl", "📥", "링크로 가게 가져오기", "홈페이지 · 가격표 링크로 페이지 만들기"]]],
+  ["🏪 가게 정보", [["verify", "🔍", "업체 정보 검수", "홈페이지 · 페이스북과 비교 · 영업시간 · 가격 넣기"], ["imgqa", "🖼️", "이미지 검수", "원본 | 작업본 | 실제 노출 · 판정 · AI 검사"], ["fill", "📋", "가게 정보 채우기", "업체별 검색 점수 · 빈 칸 · 후기 요청"], ["price", "💰", "가격 채우기", "메뉴 가격을 휴대폰으로 바로"], ["links", "🔗", "가게에 링크 달기", "구글 지도 · 페북 · 잘로 · QR"], ["crawl", "📥", "링크로 가게 가져오기", "홈페이지 · 가격표 링크로 페이지 만들기"]]],
   ["🔎 검색 · 마케팅", [["i18n", "🌐", "다국어 번역", "일본어 · 중국어 · 러시아어 등 10개 언어 AI 번역"], ["blog", "📝", "블로그", "검색어로 글 만들기 · 네이버 요약본"], ["comp", "🔍", "경쟁사 분석", "빠진 검색어 · 소개된 가게"], ["con", "📈", "엉클데이 서치 콘솔", "구글 색인 상태 · URL 검사"], ["seo", "📨", "검색 유입 · 리드", "어디서 왔는지 · 미입점 문의"]]],
   ["📚 자료", [["guide", "📘", "운영 가이드", "팀원용 설명서 · 자주 묻는 질문"], ["brand", "🎨", "브랜드 자료실 (CI)", "로고 · 색 · 글꼴 · 원본"]]],
 ];
-const FIELD_APPS = ["field", "fill", "price", "links"];
+const FIELD_APPS = ["field", "fill", "price", "links", "verify", "imgqa"];
 // 현장 영업 직원에게는 영업 · 가게 정보 앱만 보여요
 const portalAppsFor = () => typeof IS_FIELD === "function" && IS_FIELD() ? PORTAL_APPS.map(([g, A]) => [g, A.filter(a => FIELD_APPS.includes(a[0]))]).filter(([, A]) => A.length) : PORTAL_APPS;
 const portalApp = k => portalAppsFor().flatMap(g => g[1]).find(a => a[0] === k);
@@ -69,6 +69,8 @@ function portalBadge(k) {
     if (k === "payback" && typeof pbCount === "function") return pbCount();
     if (k === "i18n" && typeof i18nPending === "function") return i18nPending();
     if (k === "fill" && typeof filRvTargets === "function") return filRvTargets().length;
+    if (k === "verify" && typeof VF !== "undefined" && VF.src) return VF.src.filter(x => x.review === "todo").length;
+    if (k === "imgqa" && typeof MQ !== "undefined" && MQ.list) return MQ.list.filter(x => x.verdict === "none").length;
     if (k === "shops") return (PORTAL.shops || []).reduce((a, s) => a + (+s.pending_req || 0), 0);
   } catch (e) {}
   return 0;
@@ -129,6 +131,8 @@ function drawPortal(skip) {
     <section class="pt-sec" data-pv="field" id="ptFieldSec"><h3>📒 현장 영업 매뉴얼 <span class="hint">베트남 현지 영업 담당자용 · 베트남어 / 한국어</span></h3><div id="ptField"></div></section>
     <section class="pt-sec" data-pv="fill" id="ptFillSec"><h3>📋 가게 정보 채우기 <span class="hint">업체별 검색 점수 100점 만점 — 사진 · 가격 · 후기 · 소개 · 위치 빈 칸 찾기 · 사장님께 요청 · 후기 요청</span></h3><div id="ptFill"></div></section>
     <section class="pt-sec" data-pv="price" id="ptPriceSec"><h3>💰 가격 채우기 <span class="hint">업체 메뉴 가격 — 채울수록 검색 · AI 에 강해져요 · 영업 현장에서 휴대폰으로</span></h3><div id="ptPrice"></div></section>
+    <section class="pt-sec" data-pv="verify" id="ptVerifySec"><h3>🔍 업체 정보 검수 <span class="hint">홈페이지 · 페이스북 원문과 엉클데이에 들어간 내용을 나란히 — 모아 온 정보는 초안이라 [넣기]를 눌러야 손님 화면에 나가요</span></h3><div id="ptVerify"></div></section>
+    <section class="pt-sec" data-pv="imgqa" id="ptImgqaSec"><h3>🖼️ 이미지 검수 <span class="hint">원본 · 작업본 · 실제 노출 비교 → 통과 · 문제 · 보류 — 현장 사진이나 사진 사용을 허락한 업체만 공개돼요</span></h3><div id="ptImgqa"></div></section>
     <section class="pt-sec" data-pv="crawl" id="ptCrawlSec"><h3>🔗 링크로 가게 가져오기 <span class="hint">가게 홈페이지 · 가격표 링크를 넣으면 정보를 뽑아 와서 검색 페이지로 만들어요</span></h3><div id="ptCrawl"></div></section>
     <section class="pt-sec" data-pv="comp" id="ptCompSec"><h3>🔍 경쟁사 분석 <span class="hint">경쟁 사이트가 노리는 검색어 중 엉클데이에 없는 것 · 경쟁사가 소개한 가게 중 엉클데이에 없는 곳</span></h3><div id="ptComp"></div></section>
     <section class="pt-sec" data-pv="blog" id="ptBlogSec"><h3>📝 블로그 <span class="hint">검색어 하나로 우리 데이터 글 만들기 — 가까운 순 · 실제 가격 · 영업시간 · FAQ, 매시간 최신으로</span></h3><div id="ptBlog"></div></section>
@@ -166,6 +170,8 @@ function drawPortal(skip) {
   if (typeof fieldDraw === "function") fieldDraw();
   if (typeof linksDraw === "function") linksDraw();
   if (typeof crawlDraw === "function") crawlDraw();
+  if (typeof vfDraw === "function") vfDraw();
+  if (typeof mqDraw === "function") mqDraw();
   if (typeof blogDraw === "function") blogDraw();
   if (typeof conDraw === "function") conDraw();
   if (PORTAL.guide && $("ptGuideBox")) drawGuide($("ptGuideBox"));

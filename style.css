@@ -888,3 +888,11 @@ footer .foot-priv, footer .foot-priv:visited { color: #fff; }
 .hash-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .hash-tags .hash{display:inline-block;padding:5px 11px;border-radius:999px;background:var(--soft,#f3f4f1);border:1px solid var(--line,#e5e2d6);color:var(--sub,#4b5563);font-size:13px;text-decoration:none;line-height:1.3}
 .hash-tags .hash:hover{border-color:var(--green,#14532d);color:var(--green,#14532d)}
+
+/* 🔧 직원 전용 홈페이지 · 페이스북 버튼 */
+.staff-links{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:12px;padding:8px 10px;border:1px dashed #94a3b8;border-radius:12px;background:#f8fafc}
+.staff-links .sl-k{font-size:11.5px;font-weight:700;color:#475569;margin-right:2px}
+.staff-links .sl-b{display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border-radius:9px;border:1px solid #cbd5e1;background:#fff;color:#0f172a;font-size:13px;font-weight:600;text-decoration:none}
+.staff-links .sl-b:hover{border-color:#2563eb;color:#2563eb}.staff-links .sl-b.fb{color:#1d4ed8}
+.staff-links .sl-st,.staff-links .sl-none{font-size:12px;color:#64748b}
+.staff-links .sl-adm{margin-left:auto;font-size:12px;color:#2563eb;text-decoration:none}

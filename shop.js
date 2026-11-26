@@ -3,6 +3,23 @@
 const shopLink = id => `/s/${encodeURIComponent(id)}/`;
 
 // 업체 화면에서 '상담하기'를 누르면: 이 업체 문의 문구를 보여 주고 복사한 뒤, 카톡을 열어요 (카톡 창에 붙여넣기)
+// 🔧 직원 전용: 업체 홈페이지 · 페이스북 버튼 (캐시바이 관리자 '홈페이지' 버튼처럼) — 들어간 내용을 원문과 비교하며 검수 (universe48)
+//    손님에게는 안 보여요: 로그인한 사람이 엉클데이 직원일 때만 서버가 링크를 돌려줘요
+const STAFF_LK = {};
+async function staffLinks(shop) {
+  const fill = async () => {
+    const box = $("staffLinks"); if (!box || typeof LIVE === "undefined" || !LIVE.on || !window.UD_TOKEN) return;
+    let r = STAFF_LK[shop.id];
+    if (r === undefined) { try { r = await LIVE.rpc("staff_shop_links", { sid: shop.id }); } catch (e) { r = null; } STAFF_LK[shop.id] = r; }
+    if (!r || $("staffLinks") !== box) return;
+    const RV = { todo: "정보 검수 대기", done: "정보 검수 완료", skip: "검수 안 함", none: "모아 온 정보 없음" };
+    box.innerHTML = `<span class="sl-k">🔧 직원만 보여요</span>${r.web ? `<a class="sl-b" href="${esc(r.web)}" target="_blank" rel="noopener">🌐 홈페이지</a>` : ""}${r.fb ? `<a class="sl-b fb" href="${esc(r.fb)}" target="_blank" rel="noopener">📘 페이스북</a>` : ""}
+      ${!r.web && !r.fb ? `<span class="sl-none">등록된 링크 없음</span>` : ""}<span class="sl-st">${RV[r.review] || ""} · 사진 ${r.photo_ok ? "허락 ✓" : "허락 전"}</span><a class="sl-adm" href="admin.html#verify:${encodeURIComponent(shop.id)}">관리자에서 검수 →</a>`;
+    box.hidden = false;
+  };
+  STAFF_LK._cur = fill; fill();
+  if (typeof ACCT !== "undefined" && ACCT.onUser && !STAFF_LK._sub) { STAFF_LK._sub = 1; ACCT.onUser(() => { Object.keys(STAFF_LK).forEach(k => { if (k[0] !== "_") delete STAFF_LK[k]; }); STAFF_LK._cur && STAFF_LK._cur(); }); }
+}
 // 🔎 해시태그: 관리자 검색어 탭에서 '👁 보이기'를 켠 동의어 (universe46) — 한국어 화면에서만
 function hashOf(shop) {
   if (typeof lang !== "undefined" && lang !== "ko") return "";
@@ -143,6 +160,7 @@ if (!shop) {
       <h1>${tx(shop.name)}${shop.best ? ` <span class="best-badge"><i>✦</i>${ui("certBadge")}<i>✦</i></span>` : ""}</h1>
       <div class="tags">${shop.tags.map(t => `<span class="tag">#${tx(t)}</span>`).join("")}</div>
       ${hashOf(shop)}
+      <div class="staff-links" id="staffLinks" hidden></div>
     </div>
 
     <h2>${ui("overview")}</h2>
@@ -309,6 +327,7 @@ ${f.text}
   // 공유하기: 카톡·네이버에서 미리보기가 예쁘게 나오는 공유 전용 주소
   // ⚡ 실제 기록으로 본 예약 확정 속도 (3건 이상일 때만)
   if (!pending) shopSpeed().then(sp => { const el = document.getElementById("spdBadge"), t = speedText(sp && sp[shop.id]); if (el && t) el.outerHTML = `<span class="spd-b">${t}</span>`; });
+  staffLinks(shop);
   $("shareBtn").onclick = async () => {
     const url = `${location.origin}/s/${encodeURIComponent(shop.id)}/`;
     if (navigator.share && /Mobi|Android|iPhone/i.test(navigator.userAgent)) { try { await navigator.share({ title: tx(shop.name) + " | " + tx(SITE.name), url }); return; } catch (e) { if (e.name === "AbortError") return; } }
