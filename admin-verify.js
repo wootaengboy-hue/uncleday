@@ -527,6 +527,9 @@ function mqDraw() {
   const shopOpts = S.map(s => `<option value="${esc(s.id)}" ${MQ.shop === s.id ? "selected" : ""}>${esc(vfName(s))} · ${esc(cityName(s.city))}</option>`).join("");
   el.innerHTML = `<div class="mq">
     <div class="vf-tiles"><div><small>전체 사진</small><b>${cnt.all}</b></div><div><small>판정 대기</small><b class="w">${cnt.todo}</b></div><div><small>통과</small><b class="g">${cnt.pass}</b></div><div><small>문제 표시</small><b class="r">⚠ ${cnt.issue}</b></div><div><small>사진 공개 중인 업체</small><b>${live} / ${S.length}</b></div></div>
+    ${(() => { const ex = (typeof shops !== "undefined" ? shops : []).filter(x => typeof isExtImg === "function" && (isExtImg(x.img) || (x.menuImgs || []).some(m => isExtImg(m.src))));
+      return ex.length ? `<div class="mq-ext"><b>🔗 바깥 사이트 사진 주소를 쓰는 업체 ${ex.length}곳</b> <small>대표 · 가격표 사진이 다른 사이트 주소 그대로예요 (그 사이트가 지우거나 막으면 깨져요). 엉클데이 저장소로 옮겨 우리 주소로 바꿔요.</small>
+        <button class="btn sm main" id="mqExtGo" ${MQ.extBusy ? "disabled" : ""}>${MQ.extBusy ? esc(MQ.extBusy) : `🔄 ${ex.length}곳 모두 엉클데이로 옮기기`}</button></div>` : ""; })()}
     ${orphan.length ? `<div class="mq-orph"><b>🔎 출처 확인 필요 ${orphan.length}곳</b> <small>지금 손님 화면에 나오는데 어디서 온 사진인지 기록이 없어요. 우리가 찍었거나 허락받은 사진이면 출처를 고르고, 아니면 내려 주세요.</small>
       <div class="mq-orl">${orphan.map(s => `<div class="mq-oi"><img src="${esc(s.img)}" alt="" loading="lazy"><b>${esc(vfName(s))}</b><div><select data-mqos="${esc(s.id)}"><option value="">출처 고르기…</option><option value="field">📷 현장 사진 (우리가 찍음)</option><option value="owner">🤝 업체 제공 · 허락</option></select><button class="btn sm" data-mqdown="${esc(s.id)}">내리기</button></div></div>`).join("")}</div></div>` : ""}
     <div class="mq-up">
@@ -652,6 +655,13 @@ async function mqFetch(u) {
   const b = await r.blob(); if (!/^image\//.test(b.type)) throw new Error("사진 파일이 아니에요"); return b;
 }
 function mqBind(el) {
+  const eg = el.querySelector("#mqExtGo"); if (eg) eg.onclick = async () => {
+    const ex = shops.filter(x => isExtImg(x.img) || (x.menuImgs || []).some(m => isExtImg(m.src))); let ok = 0, bad = [];
+    for (const [k, x] of ex.entries()) { MQ.extBusy = `옮기는 중… ${k + 1}/${ex.length}`; mqDraw();
+      try { if (isExtImg(x.img)) x.img = await toOurImg(x.img, "shops/" + x.id);
+        for (const m of x.menuImgs || []) if (isExtImg(m.src)) m.src = await toOurImg(m.src, `shops/${x.id}-menu`, 2000, 0.85);
+        await dbSaveShop(x); ok++; } catch (e) { bad.push(vfName(x)); } }
+    delete MQ.extBusy; mqDraw(); toast(`${ok}곳을 엉클데이 주소로 바꿨어요${bad.length ? ` · 못 가져온 곳 ${bad.length}곳: ${bad.slice(0, 4).join(", ")} (업체 편집에서 파일로 올려 주세요)` : ""}`, 8000); };
   mqPermBind(el);
   el.querySelectorAll("[data-mqf]").forEach(b => b.onclick = () => { MQ.f = b.dataset.mqf; MQ.keep.clear(); mqDraw(); });
   const sh = el.querySelector("#mqShop"); if (sh) sh.onchange = () => { MQ.shop = sh.value; if (MQ.shop) MQ.f = "all"; mqDraw(); };   // 업체를 고르면 그 업체 사진은 판정과 상관없이 전부 보여요

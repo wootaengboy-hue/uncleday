@@ -67,6 +67,14 @@ async function uploadImg(file, name, max = 1400, q = 0.82) {
   if (r.error) throw r.error;
   return sb.storage.from("images").getPublicUrl(path).data.publicUrl;
 }
+// 🔗 바깥 사이트 사진 주소인가요? (엉클데이 저장소 · 우리 도메인 · images/… 상대 주소는 우리 것)
+const isExtImg = u => /^https?:\/\//i.test(String(u || "")) && !String(u).startsWith(SUPA.url) && !/^https?:\/\/([a-z0-9-]+\.)*uncleday\.com\//i.test(String(u));
+// 바깥 사진 → 받아서 엉클데이 저장소에 올리고 새 주소를 돌려줘요 (원래 주소는 쓰지 않아요)
+async function toOurImg(u, name, max, q) {
+  if (!isExtImg(u)) return u;
+  if (typeof mqFetch !== "function") throw new Error("이미지 기능이 아직 안 불러와졌어요");
+  return uploadImg(await mqFetch(u), name, max, q);
+}
 const dbErr = (e, what = "저장") => { console.error(e); toast(`${what}에 실패했어요. ${e && e.message ? "(" + e.message + ")" : "인터넷 연결을 확인해 주세요."}`, 5000); };
 
 /* ===== 목록 ===== */
@@ -375,6 +383,10 @@ function openEditor(id, preset, opts = {}) {
   // 🔗 이미지 링크로 넣기: 사진을 엉클데이 저장소로 복사해 와요 (다른 사이트가 막으면 media-check 가 대신 가져와요)
   //    출처 기록은 🖼️ 이미지 검수의 '출처 확인 필요'에 모여요 → 거기서 현장 · 업체 제공으로 표시
   const fromUrl = async u => { if (typeof mqFetch !== "function") throw new Error("이미지 검수 기능이 아직 안 불러와졌어요"); return mqFetch(u); };
+  $("imgPath").onchange = async () => { const u = $("imgPath").value.trim(); if (!isExtImg(u)) return;
+    toast("바깥 사이트 사진이라 엉클데이 저장소로 옮기는 중…");
+    try { const url = await toOurImg(u, "shops/" + (slug($("idIn").value) || "shop")); s.img = url; delete s.imgPos; $("imgPath").value = url; drawImg(); toast("엉클데이 주소로 바꿨어요 · '저장'을 눌러 주세요", 4000); }
+    catch (e) { toast("이 링크에서 사진을 못 가져왔어요 (" + e.message + ") · 사진을 저장해서 파일로 올려 주세요", 6000); } };
   $("imgUrlGo").onclick = async () => {
     const u = $("imgUrl").value.trim(); if (!/^https?:\/\/\S+$/.test(u)) return toast("이미지 링크(https://…)를 넣어 주세요");
     toast("링크에서 사진을 가져오는 중…");
@@ -529,6 +541,16 @@ function openEditor(id, preset, opts = {}) {
   $("pCancel").onclick = close;
   $("ov").onclick = e => { if (e.target.id === "ov") close(); };
   $("pOk").onclick = async () => {
+    // 저장 전에 바깥 사이트 사진(대표 · 가격표)을 엉클데이 저장소로 옮겨요 — 손님 화면에는 우리 주소만 나가요
+    const extM = (s.menuImgs || []).filter(m => isExtImg(m.src));
+    if (isExtImg(s.img) || extM.length) {
+      const btn = $("pOk"); btn.disabled = true; toast(`바깥 링크 사진 ${(isExtImg(s.img) ? 1 : 0) + extM.length}장을 엉클데이 저장소로 옮기는 중…`);
+      const base = slug($("idIn").value) || "shop"; let bad = 0;
+      if (isExtImg(s.img)) { try { s.img = await toOurImg(s.img, "shops/" + base); $("imgPath").value = s.img; drawImg(); } catch (e) { bad++; } }
+      for (const m of extM) { try { m.src = await toOurImg(m.src, `shops/${base}-menu`, 2000, 0.85); } catch (e) { bad++; } }
+      btn.disabled = false; drawBoards();
+      if (bad) return toast(`사진 ${bad}장은 링크에서 못 가져왔어요 · 저장하지 않았어요. 그 사진을 파일로 올리거나 지운 뒤 다시 저장해 주세요`, 7000);
+    }
     const newId = slug($("idIn").value);
     $("idIn").value = newId;
     if (!s.name.ko.trim() && !s.name.en.trim()) { $("idErr").textContent = "업체명을 적어 주세요."; return; }
