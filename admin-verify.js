@@ -14,7 +14,8 @@
  *   - 지금 노출 중인데 출처 기록이 없는 사진은 '출처 확인 필요'로 따로 모아요
  */
 const VF = { src: null, err: "", f: "todo", q: "", open: null };
-const MQ = { list: null, err: "", shop: "", f: "todo", busy: {}, keep: new Set() };   // keep: 방금 판정한 사진은 목록에서 바로 사라지지 않게
+const MQ = { list: null, err: "", shop: "", f: "todo", busy: {}, keep: new Set(), mode: "file", src: "", pasted: [] };   // keep: 방금 판정한 사진은 목록에서 바로 사라지지 않게
+try { MQ.mode = sessionStorage.getItem("mqMode") || "file"; } catch (e) {}
 try { const p = location.hash.slice(1).split("/"); if (p[0] === "home" && (p[1] === "verify" || p[1] === "imgqa") && p[2]) { if (p[1] === "verify") VF.open = decodeURIComponent(p[2]); else MQ.shop = decodeURIComponent(p[2]); } } catch (e) {}
 
 const vfTx = n => n && typeof n === "object" ? (n.ko || n.en || n.vi || "") : String(n || "");
@@ -135,11 +136,11 @@ function vfBind(el) {
 }
 
 /* ===================== 🖼️ 이미지 검수 ===================== */
-const MQ_SRC = { field: ["📷", "현장 사진", "우리가 찍음 · 공개 가능"], owner: ["🤝", "업체 제공", "사진 허락한 업체만 공개"], site: ["🌐", "홈페이지 후보", "허락 전 보여 주기용 · 공개 안 됨"] };
+const MQ_SRC = { field: ["📷", "현장 사진", "우리가 찍음 · 공개 가능"], owner: ["🤝", "업체 제공", "사진 허락한 업체만 공개"], site: ["🌐", "홈페이지 · 캡처 후보", "허락 전 보여 주기용 · 공개 안 됨"] };
 const MQ_ISS = { fake: "날조 · 과한 보정", distort: "왜곡 · 늘어남", text: "큰 글자 · 가격표", watermark: "워터마크 · 다른 로고", face: "사람 얼굴", body: "노출 · 선정적", blur: "흐림 · 어두움", stock: "스톡 사진 같음", off: "가게와 관계없음" };
 const MQ_V = { none: ["판정 없음", ""], pass: ["✓ 통과", "g"], issue: ["⚠ 문제", "r"], hold: ["⏸ 보류", "w"] };
 const mqCan = m => m.verdict === "pass" && m.source !== "site" && (m.source === "field" || vfSrc(m.shop_id).photo_ok);
-const mqWhy = m => m.source === "site" ? "홈페이지 후보는 공개 안 돼요 (허락받으면 업체에게 원본을 받아 '업체 제공'으로)" : m.verdict !== "pass" ? "판정이 '통과'여야 공개돼요" : !vfSrc(m.shop_id).photo_ok && m.source === "owner" ? "업체 사진 사용 허락이 필요해요 (업체 정보 검수에서 체크)" : "";
+const mqWhy = m => m.source === "site" ? "홈페이지 · 캡처 후보는 공개 안 돼요 (업체가 허락하면 출처를 '업체 제공'으로 바꿔요)" : m.verdict !== "pass" ? "판정이 '통과'여야 공개돼요" : !vfSrc(m.shop_id).photo_ok && m.source === "owner" ? "업체 사진 사용 허락이 필요해요 (업체 정보 검수에서 체크)" : "";
 
 async function mqLoad() {
   const r = await sb.from("shop_media").select("*").order("created_at", { ascending: false }).limit(1000);
@@ -166,10 +167,18 @@ function mqDraw() {
     <div class="vf-tiles"><div><small>전체 사진</small><b>${cnt.all}</b></div><div><small>판정 대기</small><b class="w">${cnt.todo}</b></div><div><small>통과</small><b class="g">${cnt.pass}</b></div><div><small>문제 표시</small><b class="r">⚠ ${cnt.issue}</b></div><div><small>사진 공개 중인 업체</small><b>${live} / ${S.length}</b></div></div>
     ${orphan.length ? `<div class="mq-orph"><b>🔎 출처 확인 필요 ${orphan.length}곳</b> <small>지금 손님 화면에 나오는데 어디서 온 사진인지 기록이 없어요. 우리가 찍었거나 허락받은 사진이면 출처를 고르고, 아니면 내려 주세요.</small>
       <div class="mq-orl">${orphan.map(s => `<div class="mq-oi"><img src="${esc(s.img)}" alt="" loading="lazy"><b>${esc(vfName(s))}</b><div><select data-mqos="${esc(s.id)}"><option value="">출처 고르기…</option><option value="field">📷 현장 사진 (우리가 찍음)</option><option value="owner">🤝 업체 제공 · 허락</option></select><button class="btn sm" data-mqdown="${esc(s.id)}">내리기</button></div></div>`).join("")}</div></div>` : ""}
-    <div class="mq-up"><b>＋ 사진 올리기</b><select id="mqUpShop"><option value="">업체 고르기…</option>${shopOpts}</select>
-      <select id="mqUpSrc"><option value="field">📷 현장 사진 (우리가 찍음)</option><option value="owner">🤝 업체가 준 사진</option></select>
-      <label class="btn" for="mqFile">사진 고르기 (여러 장)</label><input type="file" id="mqFile" accept="image/*" multiple hidden>
-      <span class="hint">또는</span><input id="mqUrl" placeholder="🌐 홈페이지 사진 주소 (후보로만 저장 · 공개 안 됨)"><button class="btn" id="mqUrlGo">후보 추가</button></div>
+    <div class="mq-up">
+      <div class="mq-modes">${[["file", "📁 파일 올리기"], ["paste", "📋 캡처 붙여넣기"], ["link", "🔗 이미지 링크"]].map(([k, t]) => `<button type="button" class="${MQ.mode === k ? "on" : ""}" data-mqmode="${k}">${t}</button>`).join("")}</div>
+      <div class="mq-uprow"><select id="mqUpShop"><option value="">업체 고르기…</option>${shopOpts}</select>
+        <select id="mqUpSrc">${Object.entries(MQ_SRC).map(([k, [ic, nm]]) => `<option value="${k}" ${(MQ.src || (MQ.mode === "file" ? "field" : "site")) === k ? "selected" : ""}>${ic} ${nm}${k === "field" ? " (우리가 찍음)" : k === "owner" ? " (허락받음)" : " (공개 안 됨)"}</option>`).join("")}</select></div>
+      ${MQ.mode === "file" ? `<label class="mq-drop" for="mqFile" id="mqDrop"><b>여기를 눌러 사진 고르기</b><small>또는 사진 파일을 여기로 끌어다 놓기 · 여러 장 · 한 번에 20장까지</small></label><input type="file" id="mqFile" accept="image/*" multiple hidden>`
+      : MQ.mode === "paste" ? `<div class="mq-drop paste" id="mqPaste" tabindex="0"><b>여기를 누르고 Ctrl+V (맥은 ⌘+V)</b><small>홈페이지 · 페이스북 화면을 캡처(윈도우 Win+Shift+S · 맥 ⌘+Shift+4)한 뒤 붙여 넣어요 · 여러 번 붙여도 돼요</small>
+          ${(MQ.pasted || []).length ? `<div class="mq-pv">${MQ.pasted.map((b, i) => `<span><img src="${b.url}" alt=""><button type="button" data-mqpx="${i}" aria-label="빼기">×</button></span>`).join("")}</div>` : ""}</div>
+        ${(MQ.pasted || []).length ? `<div class="mq-uprow"><button class="btn main" id="mqPasteGo">붙여 넣은 ${MQ.pasted.length}장 검수에 올리기</button><button class="btn" id="mqPasteX">모두 비우기</button></div>` : ""}`
+      : `<div class="mq-uprow"><input id="mqUrl" placeholder="이미지 주소 붙여넣기 (https://… .jpg · .png · .webp) · 여러 개면 줄바꿈이나 띄어쓰기로"><button class="btn main" id="mqUrlGo">가져와서 검수에 올리기</button></div>
+        <small class="hint">사진 위에서 오른쪽 클릭 → '이미지 주소 복사'로 얻은 주소를 넣어요. 엉클데이 저장소로 복사해 와서 원본 · 작업본을 만들어요 (원래 주소도 함께 기록).</small>`}
+      <small class="mq-rule">ℹ️ <b>홈페이지 후보</b>는 검수만 하고 공개되지 않아요. 업체가 허락하면 카드에서 출처를 <b>업체 제공</b>으로 바꾸면 공개할 수 있어요.</small>
+    </div>
     <div class="vf-bar"><select id="mqShop"><option value="">모든 업체</option>${shopOpts}</select>
       ${[["todo", "판정 대기"], ["pass", "통과"], ["issue", "문제"], ["hold", "보류"], ["all", "전체"]].map(([k, t]) => `<button class="chip ${MQ.f === k ? "on" : ""}" data-mqf="${k}">${t} ${cnt[k]}</button>`).join("")}</div>
     <div class="mq-list">${list.map(mqCard).join("") || `<p class="hint" style="padding:16px">${MQ.shop ? "이 업체 사진이 아직 없어요 · 위에서 올려 주세요" : "사진이 없어요 · 위에서 올려 주세요"}</p>`}</div></div>`;
@@ -180,10 +189,10 @@ function mqCard(m) {
   const can = mqCan(m), why = mqWhy(m), main = s.img && s.img === m.work_url;
   return `<div class="mq-card" data-mqid="${m.id}">
     <div class="mq-h"><b>${esc(vfName(s))}</b><a href="${vfPage(s)}" target="_blank" rel="noopener" title="엉클데이 페이지">🔗</a>${x.web ? `<a class="vf-lk" href="${esc(x.web)}" target="_blank" rel="noopener">🌐 홈페이지</a>` : ""}${x.fb ? `<a class="vf-lk fb" href="${esc(x.fb)}" target="_blank" rel="noopener">📘 페이스북</a>` : ""}
-      <span class="mq-src" title="${esc(sd)}">${ic} ${sn}</span><span class="vf-st ${MQ_V[m.verdict][1]}">${MQ_V[m.verdict][0]}</span>${main ? `<span class="vf-st g">★ 대표 사진 노출 중</span>` : ""}</div>
+      <select class="mq-src" data-mqsrc title="${esc(sd)}">${Object.entries(MQ_SRC).map(([k, [i2, n2]]) => `<option value="${k}" ${m.source === k ? "selected" : ""}>${i2} ${n2}</option>`).join("")}</select><span class="vf-st ${MQ_V[m.verdict][1]}">${MQ_V[m.verdict][0]}</span>${main ? `<span class="vf-st g">★ 대표 사진 노출 중</span>` : ""}</div>
     <div class="mq-3">
       <div><small>원본</small><div class="mq-img chk">${m.orig_url ? `<img src="${esc(m.orig_url)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-wh>` : "<i>없음</i>"}</div><small class="mq-wh" data-whof="o"></small></div>
-      <div><small>작업본</small><div class="mq-img chk">${m.work_url ? `<img src="${esc(m.work_url)}" alt="" loading="lazy" data-wh>` : `<i>${m.source === "site" ? "홈페이지 후보는 작업본을 만들지 않아요" : "없음"}</i>`}</div><small class="mq-wh" data-whof="w"></small></div>
+      <div><small>작업본</small><div class="mq-img chk">${m.work_url ? `<img src="${esc(m.work_url)}" alt="" loading="lazy" data-wh>` : `<i>작업본 없음 (예전에 주소만 저장한 후보)</i>`}</div><small class="mq-wh" data-whof="w"></small></div>
       <div><small>실제 노출 (손님 업체 화면)</small><div class="mq-live ${can ? "" : "off"}">${can && m.work_url ? `<img src="${esc(m.work_url)}" alt="" loading="lazy">` : `<div class="mq-ph">${typeof catGroup === "function" && catGroup(s.cat) ? catGroup(s.cat).icon : "🖼️"}<span>예시 이미지가 나가요</span></div>`}</div><small class="mq-why">${can ? (main ? "대표 사진으로 노출 중" : "공개 가능 · [대표 사진으로]를 누르면 노출돼요") : esc(why)}</small></div>
     </div>
     <div class="mq-act">
@@ -222,34 +231,76 @@ async function mqMain(m, on) {
   try { await dbSaveShop(s); toast(on ? "대표 사진으로 노출해요 (손님 화면 바로 · 검색엔진 페이지는 1시간 안)" : "대표 사진에서 내렸어요 · 예시 이미지가 나가요"); mqDraw(); } catch (e) { dbErr(e, "업체 저장"); }
 }
 
+// 사진 한 장 → 원본(긴 쪽 2400) · 작업본(1600) 저장 → 검수 목록에
+async function mqUpOne(file, p, from) {
+  const tag = `media/${p.shop}/${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
+  const [o, w] = await Promise.all([mqShrink(file, 2400), mqShrink(file, 1600)]);
+  const [ou, wu] = await Promise.all([mqPut(o, tag + "-o.jpg"), mqPut(w, tag + "-w.jpg")]);
+  return mqAdd({ shop_id: p.shop, source: p.src, orig_url: ou, work_url: wu, note: from ? (/^https?:/.test(from) ? "원래 주소: " + from : from) : null });
+}
+async function mqUpFiles(files, p, from) {
+  let n = 0;
+  for (const f of files.slice(0, 20)) { try { await mqUpOne(f, p, from); n++; } catch (e) { dbErr(e, `${f.name} 올리기`); } }
+  if (files.length > 20) toast("한 번에 20장까지 올려요 · 나머지는 다시 올려 주세요", 4000);
+  if (n) { toast(`${n}장 올렸어요 · 판정해 주세요`); MQ.shop = p.shop; MQ.f = "todo"; mqDraw(); }
+}
+// 링크 → 사진 파일: 먼저 브라우저에서 바로, 막히면(다른 사이트 보안) 서버(media-check)가 대신 가져와요
+async function mqFetch(u) {
+  try { const r = await fetch(u, { mode: "cors" }); if (r.ok) { const b = await r.blob(); if (/^image\//.test(b.type)) return b; } } catch (e) {}
+  const { data: { session } } = await sb.auth.getSession();
+  const r = await fetch(`${SUPA.url}/functions/v1/media-check`, { method: "POST", headers: { "Content-Type": "application/json", apikey: SUPA.key, Authorization: "Bearer " + (session && session.access_token) }, body: JSON.stringify({ fetch: u }) });
+  if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(j.error || (r.status === 404 ? "Edge Function 'media-check' 배포가 필요해요" : "error " + r.status)); }
+  const b = await r.blob(); if (!/^image\//.test(b.type)) throw new Error("사진 파일이 아니에요"); return b;
+}
 function mqBind(el) {
   el.querySelectorAll("[data-mqf]").forEach(b => b.onclick = () => { MQ.f = b.dataset.mqf; MQ.keep.clear(); mqDraw(); });
   const sh = el.querySelector("#mqShop"); if (sh) sh.onchange = () => { MQ.shop = sh.value; mqDraw(); };
   if (MQ.shop) { const u = el.querySelector("#mqUpShop"); if (u) u.value = MQ.shop; }
   // 사진 크기 표시
   el.querySelectorAll("img[data-wh]").forEach(im => { const f = () => { const w = im.closest("div").parentElement.querySelector(".mq-wh"); if (w && im.naturalWidth) w.textContent = `${im.naturalWidth}×${im.naturalHeight}${im.naturalWidth < 800 ? " · 작아요" : ""}`; }; if (im.complete) f(); else im.onload = f; });
-  const fi = el.querySelector("#mqFile");
-  if (fi) fi.onchange = async () => {
-    const shop = el.querySelector("#mqUpShop").value, src = el.querySelector("#mqUpSrc").value, files = [...fi.files]; fi.value = "";
-    if (!shop) return toast("어느 업체 사진인지 먼저 골라 주세요");
+  el.querySelectorAll("[data-mqmode]").forEach(b => b.onclick = () => { MQ.mode = b.dataset.mqmode; MQ.src = ""; try { sessionStorage.setItem("mqMode", MQ.mode); } catch (e) {} mqDraw(); });
+  const us = el.querySelector("#mqUpSrc"); if (us) us.onchange = () => { MQ.src = us.value; };
+  const us2 = el.querySelector("#mqUpShop"); if (us2) us2.onchange = () => { MQ.upShop = us2.value; };
+  if (MQ.upShop && us2) us2.value = MQ.upShop;
+  const pick = () => { const shop = el.querySelector("#mqUpShop").value, src = el.querySelector("#mqUpSrc").value;
+    if (!shop) { toast("어느 업체 사진인지 먼저 골라 주세요"); el.querySelector("#mqUpShop").focus(); return null; }
     if (src === "owner" && !vfSrc(shop).photo_ok) toast("이 업체는 아직 사진 허락 표시가 없어요 · 올릴 수는 있지만 허락 전엔 공개 안 돼요", 4500);
-    let n = 0;
-    for (const f of files.slice(0, 20)) {
-      try {
-        const tag = `media/${shop}/${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
-        const [o, w] = await Promise.all([mqShrink(f, 2400), mqShrink(f, 1600)]);
-        const [ou, wu] = await Promise.all([mqPut(o, tag + "-o.jpg"), mqPut(w, tag + "-w.jpg")]);
-        await mqAdd({ shop_id: shop, source: src, orig_url: ou, work_url: wu }); n++;
-      } catch (e) { dbErr(e, `${f.name} 올리기`); }
-    }
-    if (n) { toast(`${n}장 올렸어요 · 판정해 주세요`); MQ.shop = shop; MQ.f = "todo"; mqDraw(); }
-  };
+    return { shop, src }; };
+  // ① 파일 (고르기 · 끌어다 놓기)
+  const fi = el.querySelector("#mqFile");
+  if (fi) fi.onchange = async () => { const files = [...fi.files]; fi.value = ""; const p = pick(); if (p) mqUpFiles(files, p); };
+  const dz = el.querySelector("#mqDrop");
+  if (dz && MQ.mode === "file") {
+    dz.ondragover = e => { e.preventDefault(); dz.classList.add("over"); }; dz.ondragleave = () => dz.classList.remove("over");
+    dz.ondrop = e => { e.preventDefault(); dz.classList.remove("over"); const files = [...e.dataTransfer.files].filter(f => /^image\//.test(f.type)); if (!files.length) return toast("사진 파일만 올릴 수 있어요"); const p = pick(); if (p) mqUpFiles(files, p); };
+  }
+  // ② 캡처 붙여넣기
+  const pz = el.querySelector("#mqPaste");
+  if (pz) {
+    pz.onpaste = e => { const items = [...(e.clipboardData || {}).items || []].filter(i => /^image\//.test(i.type)); e.preventDefault();
+      if (!items.length) return toast("붙여 넣은 것 중에 사진이 없어요 · 화면을 캡처한 뒤 붙여 넣어 주세요");
+      items.forEach(i => { const f = i.getAsFile(); if (f) MQ.pasted.push({ file: f, url: URL.createObjectURL(f) }); });
+      mqDraw(); const n = document.getElementById("mqPaste"); if (n) n.focus(); };
+    pz.onclick = () => pz.focus();
+    if (MQ.mode === "paste" && !MQ.pasted.length) setTimeout(() => { try { pz.focus({ preventScroll: true }); } catch (e) {} }, 50);
+  }
+  el.querySelectorAll("[data-mqpx]").forEach(b => b.onclick = e => { e.stopPropagation(); const i = +b.dataset.mqpx; URL.revokeObjectURL(MQ.pasted[i].url); MQ.pasted.splice(i, 1); mqDraw(); });
+  const pg = el.querySelector("#mqPasteGo"); if (pg) pg.onclick = async () => { const p = pick(); if (!p) return; const files = MQ.pasted.map((x, i) => new File([x.file], `capture-${i + 1}.png`, { type: x.file.type })); MQ.pasted.forEach(x => URL.revokeObjectURL(x.url)); MQ.pasted = []; await mqUpFiles(files, p, "캡처"); };
+  const px = el.querySelector("#mqPasteX"); if (px) px.onclick = () => { MQ.pasted.forEach(x => URL.revokeObjectURL(x.url)); MQ.pasted = []; mqDraw(); };
+  // ③ 이미지 링크
   const ug = el.querySelector("#mqUrlGo");
   if (ug) ug.onclick = async () => {
-    const shop = el.querySelector("#mqUpShop").value, u = el.querySelector("#mqUrl").value.trim();
-    if (!shop) return toast("어느 업체 사진인지 먼저 골라 주세요");
-    if (!/^https?:\/\/\S+$/.test(u)) return toast("사진 주소(https://…)를 넣어 주세요");
-    try { await mqAdd({ shop_id: shop, source: "site", orig_url: u }); toast("홈페이지 후보로 저장했어요 · 허락 전에는 공개 안 돼요"); MQ.shop = shop; mqDraw(); } catch (e) { dbErr(e, "후보 저장"); }
+    const urls = el.querySelector("#mqUrl").value.split(/\s+/).map(x => x.trim()).filter(Boolean);
+    if (!urls.length || urls.some(u => !/^https?:\/\/\S+$/.test(u))) return toast("이미지 주소(https://…)를 넣어 주세요");
+    const p = pick(); if (!p) return;
+    ug.disabled = true; ug.textContent = "가져오는 중…";
+    let n = 0;
+    for (const u of urls.slice(0, 20)) {
+      try { const blob = await mqFetch(u); await mqUpOne(blob, p, u); n++; }
+      catch (e) { toast(`가져오지 못했어요: ${u.slice(0, 60)} (${e.message})`, 5000); }
+    }
+    if (n) { toast(`${n}장 가져왔어요 · 판정해 주세요`); MQ.shop = p.shop; MQ.f = "todo"; }
+    mqDraw();
   };
   el.querySelectorAll("[data-mqos]").forEach(sel => sel.onchange = async () => {
     const id = sel.dataset.mqos, s = vfShop(id); if (!sel.value || !s) return;
@@ -267,6 +318,10 @@ function mqBind(el) {
       if (v !== "pass") { const s = vfShop(m.shop_id); if (s && s.img === m.work_url) mqMain(m, false); }
     });
     card.querySelectorAll("[data-mqis]").forEach(c => c.onchange = () => { const k = c.dataset.mqis; const is = new Set(m.issues || []); c.checked ? is.add(k) : is.delete(k); mqUpd(m, { issues: [...is] }); });
+    const sc = card.querySelector("[data-mqsrc]"); if (sc) sc.onchange = () => {
+      if (sc.value === "owner" && !vfSrc(m.shop_id).photo_ok) toast("업체 제공으로 바꿨어요 · 업체 정보 검수에서 '사진 사용 허락'을 체크해야 공개돼요", 4500);
+      mqUpd(m, { source: sc.value }, `출처를 ${MQ_SRC[sc.value][1]} 로 바꿨어요`);
+      if (sc.value === "site") { const s2 = vfShop(m.shop_id); if (s2 && s2.img === m.work_url) mqMain(m, false); } };
     const ai = card.querySelector("[data-mqai]"); if (ai) ai.onclick = () => mqAi(m);
     const mm = card.querySelector("[data-mqmain]"); if (mm) mm.onclick = () => mqMain(m, true);
     const um = card.querySelector("[data-mqunmain]"); if (um) um.onclick = () => mqMain(m, false);
@@ -287,7 +342,7 @@ async function mqAi(m) {
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(j.error || (r.status === 404 ? "Edge Function 'media-check' 을 먼저 배포해 주세요" : "error " + r.status));
     const is = [...new Set((m.issues || []).concat(j.issues || []))];
-    await mqUpd(m, { issues: is, note: [j.what, j.note].filter(Boolean).join(" · ") }, j.issues && j.issues.length ? `🤖 문제 ${j.issues.length}개를 찾았어요 · 확인해 주세요` : "🤖 눈에 띄는 문제가 없어요 · 판정은 직접 해 주세요");
+    await mqUpd(m, { issues: is, note: [((m.note || "").match(/^(원래 주소: \S+|캡처)/) || [])[1], j.what, j.note].filter(Boolean).join(" · ") }, j.issues && j.issues.length ? `🤖 문제 ${j.issues.length}개를 찾았어요 · 확인해 주세요` : "🤖 눈에 띄는 문제가 없어요 · 판정은 직접 해 주세요");
   } catch (e) { toast("AI 검사 실패: " + e.message, 5000); }
   delete MQ.busy[m.id]; mqDraw();
 }

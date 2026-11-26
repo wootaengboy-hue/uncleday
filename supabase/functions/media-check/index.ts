@@ -1,6 +1,7 @@
 // 🖼️ 이미지 AI 검수 (Claude) — 엉클데이 직원만
 //  포털 🖼️ 이미지 검수에서 [🤖 AI 검사]를 누르면, 작업본 사진을 보고 문제를 찾아 돌려줘요.
 //  판정(통과 · 문제 · 보류)은 사람이 해요. AI 결과는 참고만 (자동 공개 없음).
+//  🔗 이미지 링크 모드: { fetch: "https://…jpg" } → 다른 사이트 사진을 대신 받아 돌려줘요 (직원만 · 10MB · 사진 파일만)
 //  필요한 비밀값: ANTHROPIC_API_KEY (블로그 AI 와 같은 값 · Supabase → Edge Functions → Secrets)
 //  배포: Supabase → Edge Functions → Deploy a new function → 이름 media-check → 이 코드 붙여넣기 (Verify JWT 켜 둠)
 import { createClient } from "jsr:@supabase/supabase-js@2";
@@ -39,9 +40,24 @@ Deno.serve(async (req) => {
   const caller = createClient(SB_URL, ANON, { global: { headers: { Authorization: req.headers.get("Authorization") || "" } } });
   const { data: staff, error: e1 } = await caller.rpc("is_staff");
   if (e1 || staff !== true) return out({ error: "엉클데이 직원만 쓸 수 있어요" }, 403);
-  if (!KEY) return out({ error: "ANTHROPIC_API_KEY 비밀값이 아직 없어요 (Supabase → Edge Functions → Secrets)" }, 400);
 
   const b = await req.json().catch(() => ({}));
+  // 🔗 이미지 링크 모드: 다른 사이트 사진은 브라우저가 바로 못 가져와서(보안) 서버가 대신 받아 돌려줘요 (저장은 관리자 화면이 해요)
+  if (b.fetch) {
+    const fu = String(b.fetch);
+    if (!/^https?:\/\/[^\s]+$/.test(fu) || /^https?:\/\/(localhost|127\.|10\.|192\.168\.|169\.254\.|\[)/i.test(fu)) return out({ error: "사진 주소가 올바르지 않아요" }, 400);
+    try {
+      const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 15000);
+      const r = await fetch(fu, { signal: ctl.signal, redirect: "follow", headers: { "User-Agent": "Mozilla/5.0 (UncleDay image review)" } }); clearTimeout(tm);
+      if (!r.ok) return out({ error: `사이트가 사진을 주지 않았어요 (${r.status})` }, 502);
+      const ct = r.headers.get("content-type") || "";
+      if (!/^image\/(jpeg|png|webp|gif|avif)/i.test(ct)) return out({ error: "사진 파일 주소가 아니에요 (사진 위 오른쪽 클릭 → '이미지 주소 복사')" }, 400);
+      const buf = new Uint8Array(await r.arrayBuffer());
+      if (buf.length > 10 * 1024 * 1024) return out({ error: "10MB 보다 큰 사진은 가져올 수 없어요" }, 400);
+      return new Response(buf, { status: 200, headers: { ...cors(req.headers.get("origin")), "Content-Type": ct } });
+    } catch (_) { return out({ error: "사진을 가져오지 못했어요 (시간 초과 · 주소 확인)" }, 502); }
+  }
+  if (!KEY) return out({ error: "ANTHROPIC_API_KEY 비밀값이 아직 없어요 (Supabase → Edge Functions → Secrets)" }, 400);
   const url = String(b.url || "");
   // 우리 저장소에 올린 사진만 검사해요 (아무 주소나 보내지 못하게)
   if (!url.startsWith(SB_URL + "/storage/v1/object/public/images/")) return out({ error: "엉클데이 저장소 사진만 검사할 수 있어요" }, 400);
