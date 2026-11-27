@@ -9,17 +9,28 @@
   const LANGS = ["vi", "ko", "en"];
   let lang = (() => { try { const q = new URLSearchParams(location.search).get("lang"); if (LANGS.includes(q)) return q; } catch (e) {} return "vi"; })();
   const li = () => LANGS.indexOf(lang);
-  // 🌍 손님 나라: 영국(영어 · 왓츠앱) 기본 · 한국(한국어 · 카카오톡) — 엉클데이 손님은 전 세계에서 와요
-  const GUESTS = ["uk", "kr"];
-  let gk = (() => { try { const q = new URLSearchParams(location.search).get("guest"); if (GUESTS.includes(q)) return q; } catch (e) {} return "uk"; })();
-  const GF = () => gk === "kr" ? "🇰🇷" : "🇬🇧";
-  // 안내 글은 한국 손님 기준으로 써 두고, 영국 손님이면 말만 바꿔요
+  // 🌍 엉클데이 손님은 전 세계에서 와요 (영국 · 미국 · 한국 · 일본 · 호주 …) — 업체 영업용이라 '외국어 몰라도 된다'가 핵심
+  //    안내 글은 예전 한국 손님 기준으로 써 둔 걸 전 세계 손님 말로 바꿔서 보여 줘요 (긴 말부터 바꿔요)
+  const gk = "world";
+  const GF = () => "🌍";
   const GX = {
-    vi: [["Khách Hàn", "Khách nước ngoài"], ["khách Hàn", "khách nước ngoài"], ["tiếng Hàn", "tiếng Anh"], ["KakaoTalk", "WhatsApp"], ["Kakao", "WhatsApp"], ["🇰🇷", "🇬🇧"]],
-    ko: [["한국인 손님", "해외 손님"], ["한국어", "영어"], ["카카오톡", "왓츠앱"], ["카카오", "왓츠앱"], ["🇰🇷", "🇬🇧"]],
-    en: [["A Korean guest", "A guest from abroad"], ["Korean", "English"], ["KakaoTalk", "WhatsApp"], ["Kakao", "WhatsApp"], ["🇰🇷", "🇬🇧"]],
+    vi: [["Khách Hàn đặt lịch trên điện thoại", "Khách nước ngoài đặt lịch trên điện thoại"], ["Khách nhận xác nhận bằng tiếng Hàn", "Khách nhận xác nhận bằng ngôn ngữ của mình"],
+      ["Màn hình khách nhìn thấy (tiếng Hàn)", "Màn hình khách nhìn thấy (ngôn ngữ của khách — Anh, Hàn, Nhật, Trung…)"], ["Màn hình của khách (tiếng Hàn)", "Màn hình của khách (ngôn ngữ của khách)"],
+      ["Trang cửa hàng bằng tiếng Hàn làm miễn phí", "Trang cửa hàng bằng 5 ngôn ngữ (Anh · Hàn · Nhật · Trung · Việt) làm miễn phí"], ["Trang cửa hàng bằng tiếng Hàn do Uncle Day làm miễn phí", "Trang cửa hàng bằng 5 ngôn ngữ do Uncle Day làm miễn phí"],
+      ["Đặt lịch bằng tiếng Hàn", "Đặt lịch bằng ngôn ngữ của mình"], ["Đánh giá từ khách Hàn", "Đánh giá từ khách nước ngoài"], ["khách nhận tin KakaoTalk tiếng Hàn", "khách nhận tin bằng ngôn ngữ của mình (WhatsApp, KakaoTalk…)"],
+      ["phiên dịch bằng tiếng Hàn", "phiên dịch cho khách nước ngoài"], ["(tự dịch sang tiếng Hàn)", "(tự dịch sang ngôn ngữ của khách)"], ["tự dịch sang tiếng Hàn", "tự dịch sang ngôn ngữ của khách"],
+      ["Khách Hàn", "Khách nước ngoài"], ["khách Hàn", "khách nước ngoài"], ["bằng tiếng Hàn", "bằng ngôn ngữ của khách"], ["tiếng Hàn", "ngôn ngữ của khách"], ["KakaoTalk", "WhatsApp, KakaoTalk"], ["Kakao", "WhatsApp"], ["🇰🇷", "🌍"]],
+    ko: [["한국인 손님이 예약", "전 세계 손님이 예약"], ["한국인 손님 후기", "해외 손님 후기"], ["한국인 손님", "해외 손님"], ["손님: 한국어 확정 안내 받기", "손님: 자기 나라 말로 확정 안내 받기"],
+      ["한국어 확정 안내", "손님 나라 말로 확정 안내"], ["한국어로 예약", "자기 나라 말로 예약"], ["한국어 매장 페이지 무료 제작", "5개 언어(영 · 한 · 일 · 중 · 베) 매장 페이지 무료 제작"], ["한국어 매장 페이지", "5개 언어 매장 페이지"],
+      ["한국어로 자동 번역", "손님 나라 말로 자동 번역"], ["한국어로 번역", "손님 나라 말로 번역"], ["한국어 통역", "외국어 통역"], ["손님이 보는 화면이에요(한국어)", "손님이 보는 화면이에요(손님 나라 말 — 영어 · 한국어 · 일본어 · 중국어)"],
+      ["손님 화면 (한국어)", "손님 화면 (손님 나라 말)"], ["카카오톡 안내", "메신저 안내"], ["(채팅 · 카카오톡)", "(채팅 · 왓츠앱 · 카카오톡)"], ["카카오톡", "왓츠앱 · 카카오톡"], ["한국어", "외국어"], ["🇰🇷", "🌍"]],
+    en: [["A Korean guest books", "A guest from anywhere in the world books"], ["What the guest sees (in Korean)", "What the guest sees (in their language — English, Korean, Japanese, Chinese…)"],
+      ["Guest's screen (Korean)", "Guest's screen (their language)"], ["Guest gets a Korean confirmation", "Guest gets a confirmation in their language"], ["a Korean confirmation", "a confirmation in their language"],
+      ["Books in Korean", "Books in their own language"], ["Free Korean shop page", "Free shop page in 5 languages"], ["the Korean shop page", "the shop page in 5 languages"], ["(translated to Korean)", "(translated to the guest's language)"],
+      ["translates in Korean", "translates for foreign guests"], ["in Korean (chat, KakaoTalk)", "in their language (chat, WhatsApp, KakaoTalk)"], ["Korean reviews", "Reviews from abroad"], ["a Korean KakaoTalk", "a message in their language"],
+      ["Korean", "foreign"], ["KakaoTalk", "WhatsApp / KakaoTalk"], ["Kakao", "WhatsApp"], ["🇰🇷", "🌍"]],
   };
-  const gx = str => { if (gk === "kr" || str == null) return str; let x = String(str); for (const [a, b] of GX[lang]) x = x.split(a).join(b); return x; };
+  const gx = str => { if (str == null) return str; let x = String(str); for (const [a, b] of GX[lang]) x = x.split(a).join(b); return x; };
   const won = n => Math.round(n || 0).toLocaleString("vi-VN") + "₫";
   const RATE = 15; // 예시 수수료율 (%)
 
@@ -180,7 +191,7 @@
       guests: [], sessions: [],
       bookings: [
         { id: "b1", code: "UD-7K3P", name: gk === "kr" ? "Kim Minji" : "Emily Clarke", menu_name: "", menu_ko: "", min: 90, people: 2, price: 0, time: "", status: "none", req: true },
-        { id: "b2", code: "UD-2M8Q", name: gk === "kr" ? "Park Jisoo" : "James Wilson", menu_name: "Massage body Thái 60′", menu_ko: "타이 전신 마사지 60분", menu_en: "Thai body massage 60 min", min: 60, people: 1, price: 350000, time: hm(Math.min(22 * 60, Math.ceil((m + 90) / 10) * 10)), status: "confirmed" },
+        { id: "b2", code: "UD-2M8Q", name: gk === "kr" ? "Park Jisoo" : "Yuki Tanaka 🇯🇵", menu_name: "Massage body Thái 60′", menu_ko: "타이 전신 마사지 60분", menu_en: "Thai body massage 60 min", min: 60, people: 1, price: 350000, time: hm(Math.min(22 * 60, Math.ceil((m + 90) / 10) * 10)), status: "confirmed" },
       ],
       past: [ // 이번 달 이미 방문 완료된 엉클데이 손님 (예시)
         // 엉클데이 손님은 여러 나라에서 와요 (예시)
@@ -349,13 +360,13 @@
       myHist: "📒 내 시술 기록", writeRv: "후기 쓰기", how: "오늘 Spa Mẫu 어떠셨어요?", perTp: "담당 테라피스트마다 별점을 남겨 주세요", line: "한 줄 후기 (선택)", lineV: "압이 딱 좋았어요. 다음에도 또 올게요!", rvSend: "후기 보내기",
       thx: "💝 후기 고마워요! 가게가 남긴 시술 기록이 여기에 쌓여요.", show: "🇻🇳 사장님께 보여 주기", only: "가게에는 자기 가게 기록만 보여요. 다른 가게 기록은 내가 이 화면을 보여 줄 때만 볼 수 있어요.",
       past: "발 마사지 60분", pastN: "발 피로가 심했어요. 다음엔 전신 아로마 추천", cap: ["Màn hình của khách (tiếng Hàn)", "손님 화면 (한국어)", "Guest's screen (Korean)"] },
-    uk: { logo: "Uncle Day", search: "🔍 Da Nang · massage", rv: "reviews", beach: "5 min to My Khe Beach", tags: ["Book in English", "Pay at the shop"], sub: "English support", pick: "Choose a treatment", mn: " min", next: "Next", book: "Book",
-      dt: "Date & time", today: "Today", ppl: "Guests", pn: n => `${n} ${n > 1 ? "people" : "person"}`, who: "Your name", whoV: "Emily Clarke", ct: "💬 WhatsApp · +44 ••••••", lock: "🔒 Only Uncle Day keeps your contact. The shop only gets your name, party size and time.",
-      est: "Estimated (pay at the shop)", send: "Send booking request", hist: "My booking", waitH: "Waiting for the shop to confirm", code: "Booking no.", okShop: "The shop said yes 👍<br>Uncle Day will confirm shortly.", usual: "Usually answered within 10 minutes.", notify: "We'll message you on WhatsApp.",
+    world: { logo: "Uncle Day", search: "🔍 Da Nang · massage", rv: "reviews", beach: "5 min to My Khe Beach", tags: ["Book in your language", "Pay at the shop"], sub: "English · 한국어 · 日本語 · 中文", pick: "Choose a treatment", mn: " min", next: "Next", book: "Book",
+      dt: "Date & time", today: "Today", ppl: "Guests", pn: n => `${n} ${n > 1 ? "people" : "person"}`, who: "Your name", whoV: "Emily Clarke", ct: "💬 WhatsApp · +44 •••••• (🇬🇧 UK)", lock: "🔒 Only Uncle Day keeps your contact. The shop only gets your name, party size and time.",
+      est: "Estimated (pay at the shop)", send: "Send booking request", hist: "My booking", waitH: "Waiting for the shop to confirm", code: "Booking no.", okShop: "The shop said yes 👍<br>Uncle Day will confirm shortly.", usual: "Usually answered within 10 minutes.", notify: "We'll message you on WhatsApp.<br><small>(or KakaoTalk · LINE · Zalo · email)</small>",
       app: "WhatsApp", cfH: "[Uncle Day] Your booking is confirmed ✅", map: "Open map · show your taxi driver", remind: "⏰ We'll remind you 1 hour before. Running late or can't make it? Just reply here.",
       myHist: "📒 My treatment history", writeRv: "Write a review", how: "How was Spa Mẫu today?", perTp: "Rate each therapist who looked after you", line: "One-line review (optional)", lineV: "Perfect pressure. I'll be back!", rvSend: "Send review",
       thx: "💝 Thanks for your review! Notes from each shop are kept here.", show: "🇻🇳 Show the shop owner", only: "Each shop only sees its own records. Others are shown only when you open this screen for them.",
-      past: "Foot massage 60 min", pastN: "Very tired feet. Try a full-body aroma massage next time.", cap: ["Màn hình của khách (tiếng Anh)", "손님 화면 (영어)", "Guest's screen (English)"] },
+      past: "Foot massage 60 min", pastN: "Very tired feet. Try a full-body aroma massage next time.", cap: ["Màn hình của khách (ví dụ: khách Anh · tiếng Anh)", "손님 화면 (예: 영국 손님 · 영어)", "Guest's screen (e.g. a UK guest in English)"] },
   };
   const ph_ = () => PHS[gk];
   const cName = co => gk === "kr" ? co.ko : co.en;
@@ -371,9 +382,9 @@
     else k = "ok";
     const bar = (title, back) => `<div class="ph-bar">${back != null ? `<button class="ph-back" data-cs="${back}">‹</button>` : ""}<b>${title}</b></div>`;
     if (k === "home") ph = `<div class="ph-top"><span class="ph-logo">${H.logo}</span><span class="ph-sm">${gk === "kr" ? "Uncle Day" : "uncleday.com"}</span></div>
-        <div class="ph-search">${H.search}</div>
+        ${gk === "kr" ? "" : `<div class="ph-langs"><i class="on">EN</i><i>한국어</i><i>日本語</i><i>中文</i><i>VI</i></div>`}<div class="ph-search">${H.search}</div>
         <button class="ph-card on" data-cs="1"><span class="ph-img a">💆</span><span class="ph-ct"><b>Spa Mẫu</b><small>⭐ 4.9 · ${H.rv} 128 · ${H.beach}</small><small class="ph-tags">${H.tags.map(x => `<i>${x}</i>`).join("")}</small></span></button>
-        <button class="ph-card dim" data-cs="x"><span class="ph-img b">🌿</span><span class="ph-ct"><b>Lotus Spa</b><small>⭐ 4.8 · ${H.rv} 96</small></span></button>
+        <button class="ph-card dim" data-cs="x"><span class="ph-img b">🌿</span><span class="ph-ct"><b>Lotus Spa</b><small>⭐ 4.8 · ${H.rv} 96 · 🇬🇧🇰🇷🇯🇵🇺🇸</small></span></button>
         <button class="ph-card dim" data-cs="x"><span class="ph-img c">💅</span><span class="ph-ct"><b>Sen Nail & Spa</b><small>⭐ 4.7 · ${H.rv} 61</small></span></button>`;
     else if (k === "shop") ph = bar("Spa Mẫu", 0) + `<div class="ph-hero">💆<span>Spa Mẫu</span></div><div class="ph-pad"><small class="ph-sub">⭐ 4.9 (128) · 10:00–22:00 · ${H.sub}</small>
         <h4>${H.pick}</h4>${COURSES.map(x => `<button class="ph-opt ${x.id === c.course ? "on" : ""}" data-cc="${x.id}"><span><b>${esc(cName(x))}</b><small>${x.min}${H.mn}</small></span><b>${won(x.price)}</b></button>`).join("")}
@@ -388,7 +399,7 @@
         <button class="ph-go pulse" data-send>${H.send}</button></div>`; }
     else if (k === "wait") ph = bar(H.hist) + `<div class="ph-pad ph-c"><div class="ph-big">⏳</div><h4>${H.waitH}</h4><p>${H.code} <b>${esc(b.code)}</b><br>${b.status === "shop_ok" ? H.okShop : H.usual}<br>${H.notify}</p>
         <div class="ph-sum"><b>Spa Mẫu · ${H.today} ${esc(b.time)}</b><small>${esc(bMenu(b))} · ${H.pn(b.people)}</small></div></div>`;
-    else if (k === "ok") ph = `<div class="ph-kbar ${gk === "kr" ? "" : "wa"}"><b>${gk === "kr" ? "엉클데이" : "Uncle Day"}</b><small>${H.app}</small></div><div class="ph-chat">
+    else if (k === "ok") ph = `<div class="ph-kbar ${gk === "kr" ? "" : "wa"}"><b>${gk === "kr" ? "엉클데이" : "Uncle Day"}</b><small>${H.app}${gk === "kr" ? "" : " · 🇬🇧 Emily"}</small></div><div class="ph-chat">
         <div class="ph-msg"><b>${H.cfH}</b><br>Spa Mẫu<br>📅 ${H.today} ${esc(b.time)} · ${H.pn(b.people)}<br>💆 ${esc(bMenu(b))}<br>🔖 ${H.code} ${esc(b.code)}<br>📍 12 Võ Nguyên Giáp, Đà Nẵng<br><span class="ph-link">${H.map}</span></div>
         <div class="ph-msg">${H.remind}</div></div>`;
     else { const names = tps.length ? tps : ["Linh"];
@@ -526,7 +537,7 @@
     m.innerHTML = `<div class="ud-wrap"><div class="ud-hd"><span class="ud-logo">엉클데이 관리자</span><span class="ud-tabs"><i class="on">📅 예약</i><i>💬 채팅</i><i>⭐ 후기</i><i>💰 정산</i><i>🌌 유니버스</i></span></div>
       <div class="ud-grid">
         <section class="ud-card ${step === SI("udnew") || step === SI("udconfirm") ? "hl" : ""}"><h4>📅 예약 · 오늘</h4>
-          ${rows.length ? rows.map(x => `<div class="ud-bk"><div><b>${esc(x.name)}</b>${gk === "kr" ? "" : " 🇬🇧"} · ${x.people}명 · ${esc(x.menu_ko)}<br><small>${esc(x.code)} · Spa Mẫu · 오늘 ${esc(x.time)} · ${won(x.price)}</small></div>
+          ${rows.length ? rows.map(x => `<div class="ud-bk"><div><b>${esc(x.name)}</b>${x.id === "b1" && gk !== "kr" ? " 🇬🇧" : ""} · ${x.people}명 · ${esc(x.menu_ko)}<br><small>${esc(x.code)} · Spa Mẫu · 오늘 ${esc(x.time)} · ${won(x.price)}</small></div>
             <span class="ud-st s-${x.status}">${x.id === "b1" ? stK : "예약 확정"}</span>
             ${x.id === "b1" && x.status === "shop_ok" ? `<button class="ud-btn pulse" data-udok>✅ 예약 확정</button>` : ""}
             ${x.id === "b1" && x.status === "requested" ? `<small class="ud-hint">업체에 알림이 갔어요 · 업체 답을 기다리는 중 (목표 30분)</small>` : ""}</div>`).join("") : `<p class="ud-muted">아직 새 예약이 없어요. (손님 화면에서 예약을 보내 보세요)</p>`}
@@ -622,7 +633,7 @@
     document.title = "Uncle Day · " + t("title");
     $("#dm").innerHTML = `<header class="dm-hdr"><img src="images/owner-180.png" alt=""><div class="dm-t"><b>${t("title")}</b><small>Spa Mẫu · <span class="dm-demo">${t("demoTag")}</span></small></div>
       <div class="dm-roles">${ROLES.map(r => `<button class="${r === role ? "on" : ""}" data-role="${r}">${gx(RL[r][li()])}</button>`).join("")}</div>
-      <div class="dm-langs dm-gk" title="${PL("Khách đến từ đâu", "손님 나라", "Guest from")}">${GUESTS.map(k => `<button class="${k === gk ? "on" : ""}" data-gk="${k}">${k === "uk" ? "🇬🇧" : "🇰🇷"} ${k === "uk" ? PL("Khách Anh", "영국 손님", "UK guest") : PL("Khách Hàn", "한국 손님", "Korean guest")}</button>`).join("")}</div>
+
       <div class="dm-langs">${LANGS.map(k => `<button class="${k === lang ? "on" : ""}" data-lang="${k}">${k.toUpperCase()}</button>`).join("")}</div></header>
       <div class="dm-wrap"><aside class="dm-guide" id="dmGuide"></aside>
         <section class="dm-app"><nav class="dm-tabs">${TABS.filter(([k, , w]) => role === "all" || w === role).map(([k, l, w]) => `<button data-tab="${k}" class="w-${w}">${t(l)}</button>`).join("")}<button class="dm-rs" data-reset>${t("restart")}</button></nav>
@@ -633,8 +644,7 @@
   document.addEventListener("change", e => { if (e.target.hasAttribute && e.target.hasAttribute("data-smust")) S.sform.must = e.target.checked; });
   document.addEventListener("click", e => {
     const b = e.target.closest("button, [data-go]"); if (!b) return;
-    if (b.dataset.lang) { lang = b.dataset.lang; try { history.replaceState(null, "", `?role=${role}&lang=${lang}&guest=${gk}`); } catch (x) {} shell(); return; }
-    if (b.dataset.gk) { gk = b.dataset.gk; try { history.replaceState(null, "", `?role=${role}&lang=${lang}&guest=${gk}`); } catch (x) {} reset(); step = 0; tab = null; shell(); goStep(0); return; }
+    if (b.dataset.lang) { lang = b.dataset.lang; try { history.replaceState(null, "", `?role=${role}&lang=${lang}`); } catch (x) {} shell(); return; }
     if (b.hasAttribute("data-min")) { gMin = !gMin; renderGuide(); return; }
     if (b.dataset.tab) { setTab(b.dataset.tab); return; }
     if (b.dataset.go != null) { goStep(+b.dataset.go); return; }
@@ -659,7 +669,7 @@
     if (b.hasAttribute("data-so2w")) { S.open2work = !S.open2work; renderStaff(); return; }
     if (b.hasAttribute("data-udok")) { b1().status = "confirmed"; mark("udconfirm"); toast(["Đã xác nhận · khách nhận tin KakaoTalk tiếng Hàn", "확정했어요 · 손님에게 카카오톡 안내가 가요", "Confirmed · guest gets a Korean KakaoTalk"][li()]); renderUd(); return; }
     if (b.hasAttribute("data-udbonus")) { S.bonusPaid = true; mark("bonus"); renderUd(); return; }
-    if (b.dataset.role) { role = b.dataset.role; buildFlow(); try { history.replaceState(null, "", `?role=${role}&lang=${lang}&guest=${gk}`); } catch (x) {} reset(); step = 0; tab = null; shell(); goStep(0); return; }
+    if (b.dataset.role) { role = b.dataset.role; buildFlow(); try { history.replaceState(null, "", `?role=${role}&lang=${lang}`); } catch (x) {} reset(); step = 0; tab = null; shell(); goStep(0); return; }
     if (b.dataset.sm) { S.smode = b.dataset.sm; renderSettle(); return; }
     if (b.dataset.acc) { const x = S.bookings.find(y => y.id === b.dataset.acc); x.status = "shop_ok"; toast(t("acceptToast")); renderBook(); mark("accept"); return; }
     if (b.dataset.dec) { toast(["Bản demo: hãy bấm Nhận để xem tiếp", "체험판에서는 '수락'을 눌러 다음으로 가 보세요", "Demo: press Accept to continue"][li()]); return; }

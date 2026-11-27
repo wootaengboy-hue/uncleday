@@ -277,8 +277,9 @@ button { cursor: pointer; }
 .dm-h-ask { margin: 4px 0 0; padding: 9px 11px; border-radius: 10px; background: #F3F8FF; border: 1px solid #D5E4F7; font-size: 13px; line-height: 1.5; }
 .ph-hrow { display: flex; gap: 8px; padding: 8px 0; border-top: 1px solid #eee; text-align: left; } .ph-hrow > small { flex: none; width: 54px; color: #889; font-size: 11px; }
 .ph-hrow b { display: block; font-size: 13px; } .ph-hrow small { font-size: 11px; color: #889; } .ph-hrow p { margin: 3px 0 0; font-size: 12px; line-height: 1.45; }
-/* 🌍 손님 나라 고르기 · 영국 손님은 왓츠앱 */
-.dm-gk button { white-space: nowrap; }
+/* 🌍 전 세계 손님 · 확정 안내는 왓츠앱 예시 */
 .ph-kbar.wa { background: #075E54; color: #fff; }
 .ph-kbar.wa small { color: #cfe9e5; }
-@media (max-width: 700px) { .dm-gk { order: 5; } }
+.ph-langs { display: flex; gap: 4px; padding: 0 14px 6px; flex-wrap: wrap; }
+.ph-langs i { font-style: normal; font-size: 10.5px; padding: 2px 7px; border-radius: 999px; background: #F1ECE1; color: #6b5d45; }
+.ph-langs i.on { background: var(--ink, #0E2843); color: #fff; }
