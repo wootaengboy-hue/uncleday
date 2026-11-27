@@ -139,16 +139,17 @@ async function drawInq(el) {
           <div class="inq-topics">${r.topics.map(k => `<span class="chip">${tName(k)}</span>`).join("")}</div>
           ${String(r.first || "").trim() ? `<div class="inq-first">“${esc(String(r.first).slice(0, 110))}${String(r.first).length > 110 ? "…" : ""}”</div>` : `<div class="hint"><small>(사진 · 예약 알림만 있음)</small></div>`}</div>
         <div class="inq-res"><span class="inq-r ${r.res}">${INQ_RES[r.res]}</span>${r.bk ? `<small>${esc(r.bk.code || "")}${r.bk.visit_date ? ` · ${esc(r.bk.visit_date.slice(5).replace("-", "/"))} 방문` : ""}</small>` : ""}
-          ${r.manual ? `<small class="hint">✍️ 직접 입력${r.manual.memo ? " · 메모 있음" : ""} · 눌러서 고치기</small>` : `<small class="hint">손님 ${r.nG} · 답장 ${r.nA}${r.repMin != null ? ` · ${mm(r.repMin)} 만에` : ""}</small>`}${r.cust ? `<button type="button" class="btn sm" data-inqcust="${esc(r.cust)}">👤 손님 카드</button>` : ""}</div>
+          ${r.manual ? `<small class="hint">✍️ 직접 입력${r.manual.memo ? " · 메모 있음" : ""} · 눌러서 고치기</small>` : `<small class="hint">손님 ${r.nG} · 답장 ${r.nA}${r.repMin != null ? ` · ${mm(r.repMin)} 만에` : ""}</small>`}<span class="inq-btns">${r.manual ? "" : `<button type="button" class="btn sm" data-inqset="${esc(r.th.id)}">✏️ 업체 · 나라 지정</button>`}${r.cust ? `<button type="button" class="btn sm" data-inqcust="${esc(r.cust)}">👤 손님 카드</button>` : ""}</span></div>
       </a>`; }).join("") || `<div class="todo"><div class="empty">조건에 맞는 문의가 없어요.</div></div>`}</div>
     ${list.length > 400 ? `<p class="hint">앞의 400건만 보여요. 조건으로 좁혀 주세요.</p>` : ""}
     <p class="hint" style="margin:12px 0 30px">💡 따로 적지 않아도 채팅이 들어오면 자동으로 쌓여요. <b>언제 · 누구 · 나라 · 기기 · 들어온 곳 · 보던 업체 · 물어본 것(자동 분류) · 예약했는지 · 답장 속도</b>까지.
-      나라 · 기기는 11/27 이후 채팅부터 정확해요. '나중에 예약' = 문의 뒤에 같은 연락처로 들어온 예약이에요. 줄을 누르면 그 채팅이 열려요.<br>
+      나라 · 기기는 11/27 이후 채팅부터 정확해요. '나중에 예약' = 문의 뒤에 같은 연락처로 들어온 예약이에요. 줄을 누르면 그 채팅이 열려요. 채팅을 열지 않고 <b>✏️ 업체 · 나라 지정</b>으로 바로 고칠 수도 있어요.<br>
       카톡 · 잘로 · 전화로 온 문의는 <b>＋ 카톡 · 전화 문의 입력</b>으로 넣으면 같은 목록 · 숫자에 함께 들어가요. 사이트 채팅의 업체는 채팅 화면 위 <b>🏪 문의 업체</b>에서 직접 고를 수 있어요.</p>`;
   el.querySelectorAll("[data-inq]").forEach(b => b.onclick = () => { const k = b.dataset.inq, v = b.dataset.v; INQ[k] = k === "days" ? +v : v; drawCrm(); });
   const qi = $("inqQ"); qi.oninput = () => { INQ.q = qi.value; clearTimeout(qi._t); qi._t = setTimeout(() => { drawCrm().then(() => { const x = $("inqQ"); if (x) { x.focus(); x.setSelectionRange(x.value.length, x.value.length); } }); }, 250); };
   el.querySelectorAll("[data-inqx]").forEach(b => b.onclick = () => { const k = b.dataset.inqx; if (k === "all") Object.assign(INQ, { res: "", topic: "", cty: "", shop: "", q: "", ch: "" }); else INQ[k] = ""; drawCrm(); });
   $("inqAdd").onclick = () => inqEdit(null);
+  el.querySelectorAll("[data-inqset]").forEach(b => b.onclick = e => { e.preventDefault(); e.stopPropagation(); inqSetChat(INQ.rows.find(r => !r.manual && r.th.id === b.dataset.inqset)); });
   el.querySelectorAll("[data-inqedit]").forEach(a => a.onclick = e => { if (e.target.closest("[data-inqcust]")) return; e.preventDefault(); inqEdit((INQ.rows.find(r => r.manual && r.manual.id === a.dataset.inqedit) || {}).manual); });
   $("inqCty").onchange = e => { INQ.cty = e.target.value; drawCrm(); };
   $("inqShop").onchange = e => { INQ.shop = e.target.value; drawCrm(); };
@@ -205,5 +206,29 @@ function inqEdit(q) {
     const r = isNew ? await sb.from("inquiries").insert(row) : await sb.from("inquiries").update(row).eq("id", q.id);
     if (r.error) return dbErr(r.error, "문의 저장");
     d.remove(); toast(isNew ? "문의를 기록했어요" : "고쳤어요"); INQ.rows = null; drawCrm();
+  };
+}
+
+// ✏️ 사이트 채팅 문의를 채팅창에 들어가지 않고 바로 정리 (문의 업체 · 나라 · 테스트)
+function inqSetChat(r) {
+  if (!r) return; const th = r.th, auto = inqShops(th.page)[0] || (r.bk && r.bk.shop_id) || "";
+  const g = typeof chatGeo === "function" ? chatGeo({ ...th, country: null }) : {};
+  const d = document.createElement("div"); d.className = "overlay center";
+  d.innerHTML = `<div class="modal inq-modal" style="width:min(560px,calc(100% - 32px))"><h2>✏️ 문의 정리</h2>
+    <p class="hint"><b>${esc(th.name || "손님")}</b> · ${esc(inqTime(th.created_at))}<br>“${esc(String(r.first || "").slice(0, 140))}”</p>
+    <label class="f"><span>어느 업체 문의?</span><select id="isShop"><option value="">${auto ? "자동: " + esc(inqShopNm(auto)) : "자동 (보던 화면 기준 · 지금은 모름)"}</option><option value="-" ${th.shop_id === "-" ? "selected" : ""}>업체 없는 일반 문의</option>
+      ${shops.slice().sort((a, b) => (a.name.ko || "").localeCompare(b.name.ko || "", "ko")).map(x => `<option value="${esc(x.id)}" ${th.shop_id === x.id ? "selected" : ""}>${esc(x.name.ko || x.name.en || x.id)}</option>`).join("")}</select></label>
+    <label class="f"><span>나라</span><select id="isCty"><option value="">${g.home ? "자동: " + esc(ccName(g.home)) + (g.how ? ` (${esc(g.how)})` : "") : "자동 (지금은 모름)"}</option><option value="ZZ" ${th.country === "ZZ" ? "selected" : ""}>🧪 테스트 (통계에서 빼기)</option>
+      ${CC_PICK.map(c => `<option value="${c}" ${th.country === c ? "selected" : ""}>${esc(ccName(c))}</option>`).join("")}</select></label>
+    <div class="btns"><button class="btn" data-open>💬 채팅 열기</button><span style="flex:1"></span><button class="btn" data-no>취소</button><button class="btn main" data-yes>저장</button></div></div>`;
+  document.body.appendChild(d);
+  d.querySelector("[data-no]").onclick = () => d.remove();
+  d.querySelector("[data-open]").onclick = () => { d.remove(); location.hash = "#chat/" + th.id; showTab("chat"); };
+  d.querySelector("[data-yes]").onclick = async () => {
+    const shop_id = d.querySelector("#isShop").value || null, country = d.querySelector("#isCty").value || null;
+    const x = await sb.from("chat_threads").update({ shop_id, country }).eq("id", th.id);
+    if (x.error) return dbErr(x.error, /shop_id|country/.test(x.error.message || "") ? "저장 (supabase/universe56 · 57.sql 실행 필요)" : "저장");
+    const T = (typeof THREADS !== "undefined" ? THREADS : []).find(t => t.id === th.id); if (T) Object.assign(T, { shop_id, country });
+    d.remove(); toast("정리했어요"); INQ.rows = null; drawCrm();
   };
 }
