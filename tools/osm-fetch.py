@@ -51,6 +51,15 @@ for cid, b in BBOX.items():
         lat = e.get("lat") or (e.get("center") or {}).get("lat"); lon = e.get("lon") or (e.get("center") or {}).get("lon")
         if lat is None: continue
         rows.append({"id": f"{e['type'][0]}{e['id']}", "lat": round(lat, 6), "lon": round(lon, 6), "tags": {k: tg[k] for k in KEEP if k in tg}})
-    out["cities"][cid] = sorted(rows, key=lambda r: r["id"]); print(cid, len(rows), "곳"); time.sleep(3)
+    # 한 번 가져올 때 빠진 가게도 바로 지우지 않아요 — OSM 응답이 그때그때 달라서 페이지가 사라지면 검색에 남은 주소가 '찾을 수 없어요'가 돼요
+    #  · 90일 동안 계속 안 보일 때만 빼요 (gone = 처음 안 보인 날)
+    today = datetime.date.today().isoformat(); ids = {r["id"] for r in rows}; kept = 0
+    for r in old.get("cities", {}).get(cid, []):
+        if r["id"] in ids: continue
+        g = r.get("gone") or today
+        if (datetime.date.today() - datetime.date.fromisoformat(g)).days <= 90: rows.append({**r, "gone": g}); kept += 1
+    for r in rows:
+        if r["id"] in ids: r.pop("gone", None)
+    out["cities"][cid] = sorted(rows, key=lambda r: r["id"]); print(cid, len(rows), "곳", f"(이번에 안 보였지만 남긴 곳 {kept})" if kept else ""); time.sleep(3)
 os.makedirs("data", exist_ok=True)
 json.dump(out, open(OUT, "w"), ensure_ascii=False, indent=0)

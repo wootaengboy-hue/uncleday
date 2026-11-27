@@ -839,6 +839,11 @@ def lead_js(cid, ref, nm):
             "name:v('name'),contact:v('contact'),msg:v('msg'),visit_date:(v('vday')+' '+v('vtime')).trim()||v('visit_date'),people:+v('people')||0,lang:document.documentElement.lang,src:window.UD_SRC||''};"
             "fetch(" + json.dumps(_SU["url"]) + "+'/rest/v1/rpc/seo_lead',{method:'POST',headers:{apikey:" + json.dumps(_SU["key"]) + auth + ",'Content-Type':'application/json'},body:JSON.stringify({p:p})})"
             ".then(function(r){if(!r.ok)throw 0;f.outerHTML='<p class=\"ok\">'+f.getAttribute('data-ok')+'</p>'}).catch(function(){b.disabled=false;alert(f.getAttribute('data-err'))})})})</script>")
+def gone_page(cid):
+    to = f"/c/{cid}/more/"
+    return f"""<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,follow">
+<title>이 가게 안내는 목록으로 옮겼어요 | 엉클데이</title><link rel="canonical" href="{SITE}{to}"><meta http-equiv="refresh" content="0;url={to}">
+<script>location.replace("{to}")</script></head><body style="font-family:sans-serif;text-align:center;padding:60px 16px"><p>이 가게 안내는 목록으로 옮겼어요.</p><p><a href="{to}">가게 목록 보기</a></p></body></html>"""
 def unclaimed_page(cid, u):
     city = cities.get(cid, {}); cko = tx(city.get("name")); url = f"{SITE}/p/{cid}/{u['slug']}/"
     G = hasgeo(u); crawl = u.get("src") == "crawl"; um = u.get("menu") or []
@@ -1188,7 +1193,9 @@ for cid in hubs:
             os.makedirs(f"p/{cid}/{u['slug']}/vi", exist_ok=True); open(f"p/{cid}/{u['slug']}/index.html", "w").write(unclaimed_page(cid, u)); keep_p.add(u["slug"])
             open(f"p/{cid}/{u['slug']}/vi/index.html", "w").write(unclaimed_vi_page(cid, u))
         for f in os.listdir(f"p/{cid}"):
-            if f not in keep_p: shutil.rmtree(f"p/{cid}/{f}", ignore_errors=True)
+            if f not in keep_p and os.path.isdir(f"p/{cid}/{f}"):   # 없어진 가게: 지우지 않고 '목록으로 옮겼어요' 안내 + 이동 (검색에 남은 주소용)
+                for sub in ("", "vi/"):
+                    os.makedirs(f"p/{cid}/{f}/{sub}", exist_ok=True); open(f"p/{cid}/{f}/{sub}index.html", "w").write(gone_page(cid))
     for t, xs in city_topics(cid, sc):
         tk.add(t["id"])
         os.makedirs(f"c/{cid}/{t['id']}", exist_ok=True); open(f"c/{cid}/{t['id']}/index.html", "w").write(topic_page(cid, t, xs, sc))

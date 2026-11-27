@@ -23,7 +23,11 @@
 <link rel="stylesheet" href="style.css">
 <meta name="robots" content="noindex">
 <script>/* 공유 주소(/s/업체/)가 아직 안 만들어졌으면 업체 화면으로 바로 보내요 */
-(function(){var m=location.pathname.match(/^\/s\/([A-Za-z0-9_-]+)\/?$/);if(m)location.replace("/?via=share#/shop/"+m[1]);})();</script>
+(function(){var P=location.pathname,m=P.match(/^\/s\/([A-Za-z0-9_-]+)\/?$/);if(m)return location.replace("/?via=share#/shop/"+m[1]);
+/* 예전에 있던 가게 안내 페이지(/p/도시/가게/)가 사라졌으면 그 도시 가게 목록으로 보내요 (검색에 남은 옛 주소) */
+m=P.match(/^\/p\/(danang|hcm|hanoi|nhatrang)\//);if(m)return location.replace("/c/"+m[1]+"/more/?from=old");
+m=P.match(/^\/(?:(en|vi|ja|zh)\/)?c\/(danang|hcm|hanoi|nhatrang)\//);if(m)return location.replace((m[1]?"/"+m[1]:"")+"/c/"+m[2]+"/");
+m=P.match(/^\/(en|vi|ja|zh)\/s\/([A-Za-z0-9_-]+)\/?$/);if(m)return location.replace("/?via=share&lang="+m[1]+"#/shop/"+m[2]);})();</script>
 </head>
 <body>
 <main class="wrap" style="padding:80px 16px;text-align:center"><h1>페이지를 찾을 수 없어요</h1><p><a class="btn" href="/">엉클데이 홈으로</a></p></main>
