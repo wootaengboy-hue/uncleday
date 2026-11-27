@@ -3,7 +3,9 @@
    - 언제 · 누구 · 어느 나라 · 어느 업체 · 무엇을 · 어디서 왔나 · 결과(예약했나)
    - 따로 적을 필요 없음: 채팅 기록(chat_threads · chat_messages)에서 매번 새로 계산
    ========================================================= */
-const INQ = { days: 30, q: "", cty: "", shop: "", topic: "", res: "", test: false, rows: null, key: "" };
+const INQ = { days: 30, q: "", cty: "", shop: "", topic: "", res: "", ch: "", test: false, rows: null, key: "" };
+// 사이트 밖 문의 경로 (universe57 inquiries.channel)
+const INQ_CH = { kakao: "💛 카톡", zalo: "🔵 잘로", whatsapp: "🟢 왓츠앱", line: "🟩 라인", instagram: "📸 인스타 DM", facebook: "📘 페북 메신저", phone: "📞 전화", email: "✉️ 이메일", visit: "🚶 매장·현장", other: "📝 기타" };
 const INQ_TOPICS = [
   ["price", "💰 가격", /가격|얼마|요금|비용|price|cost|how much|rate|giá|bao nhiêu|цен|сколько|стоим|料金|値段|いくら|价格|多少钱/i],
   ["time", "🕒 예약·시간", /예약|가능|내일|오늘|모레|몇 ?시|시간 ?돼|book|reserv|availab|tomorrow|today|tonight|slot|đặt|lịch|ngày mai|hôm nay|запис|брон|завтра|сегодня|予約|空き|明日|今日|预约|预订|明天|今天/i],
@@ -40,7 +42,8 @@ async function loadInq() {
   const key = INQ.days + ""; if (INQ.rows && INQ.key === key) return;
   const get = cols => { let q = sb.from("chat_threads").select(cols).order("created_at", { ascending: false }).limit(3000);
     if (INQ.days) q = q.gte("created_at", new Date(Date.now() - INQ.days * 864e5).toISOString()); return q; };
-  let t = await get("id,name,contact,lang,page,created_at,last_at,status,booking_id,country");
+  let t = await get("id,name,contact,lang,page,created_at,last_at,status,booking_id,country,shop_id");
+  if (t.error) t = await get("id,name,contact,lang,page,created_at,last_at,status,booking_id,country");
   if (t.error) t = await get("id,name,contact,lang,page,created_at,last_at,status,booking_id");
   if (t.error) { INQ.rows = []; INQ.err = t.error.message; return; }
   const ths = t.data || [], ids = ths.map(x => x.id), msgs = {};
@@ -58,21 +61,36 @@ async function loadInq() {
     const pp = String(th.page || "").split("|");
     const bk = th.booking_id && BOOKINGS.find(b => b.id === th.booking_id);
     let shopsSeen = inqShops(th.page); if (bk && !shopsSeen.includes(bk.shop_id)) shopsSeen.unshift(bk.shop_id);
+    if (th.shop_id === "-") shopsSeen = []; else if (th.shop_id) shopsSeen = [th.shop_id, ...shopsSeen.filter(x => x !== th.shop_id)];
     const key = inqDigits(th.contact) || String(th.contact || "").trim().toLowerCase();
     const later = !bk && key && (bkBy[key] || []).filter(b => b.created_at >= new Date(Date.parse(th.created_at) - 864e5).toISOString()).sort((a, b) => a.created_at < b.created_at ? -1 : 1)[0];
     const res = bk ? "book" : later ? "later" : !rep && guest.length ? "wait" : "only";
     const cust = (bk || later) && (bk || later).customer_id;
     return { th, geo, test: typeof chatIsTest === "function" && chatIsTest(th), shops: shopsSeen, topics, first: g0 ? g0.body : th.last_body || "",
       nG: guest.length, nA: real.length, repMin: rep ? Math.round((Date.parse(rep.created_at) - Date.parse(g0.created_at)) / 6e4) : null,
-      src: pp.length >= 3 ? pp[2] : "", land: pp.length >= 3 ? pp[1] : "", res, bk: bk || later || null, cust };
+      src: pp.length >= 3 ? pp[2] : "", land: pp.length >= 3 ? pp[1] : "", res, bk: bk || later || null, cust, ch: "site", pick: th.shop_id || "" };
   });
+  // ✍️ 직접 입력한 문의 (카톡 · 잘로 · 전화 …)
+  let mq = sb.from("inquiries").select("*").order("asked_at", { ascending: false }).limit(3000);
+  if (INQ.days) mq = mq.gte("asked_at", new Date(Date.now() - INQ.days * 864e5).toISOString());
+  const mr = await mq; INQ.manualOk = !mr.error;
+  (mr.data || []).forEach(q => {
+    const bk = q.booking_code && BOOKINGS.find(b => (b.code || "").toUpperCase() === q.booking_code.trim().toUpperCase());
+    const key = inqDigits(q.contact) || String(q.contact || "").trim().toLowerCase();
+    const later = !bk && key && (bkBy[key] || []).filter(b => b.created_at >= new Date(Date.parse(q.asked_at) - 864e5).toISOString())[0];
+    const th = { id: q.id, name: q.name, contact: q.contact, created_at: q.asked_at, page: "" };
+    INQ.rows.push({ th, manual: q, geo: { home: q.country || "", how: "직접 입력" }, test: typeof chatIsTest === "function" && chatIsTest({ name: q.name, contact: q.contact }),
+      shops: q.shop_id ? [q.shop_id] : [], topics: q.topics || [], first: q.body || q.memo || "", nG: null, nA: null, repMin: null, src: "", land: "",
+      res: bk ? "book" : (later && q.result !== "book" ? "later" : q.result), bk: bk || later || null, cust: (bk || later) && (bk || later).customer_id, ch: q.channel, pick: "" });
+  });
+  INQ.rows.sort((a, b) => a.th.created_at < b.th.created_at ? 1 : -1);
   INQ.key = key;
 }
 
 function inqFilter() {
   const q = INQ.q.trim().toLowerCase();
   return INQ.rows.filter(r => (INQ.test || !r.test) && (!INQ.cty || (r.geo.home || "?") === INQ.cty) && (!INQ.shop || r.shops.includes(INQ.shop))
-    && (!INQ.topic || r.topics.includes(INQ.topic)) && (!INQ.res || r.res === INQ.res)
+    && (!INQ.topic || r.topics.includes(INQ.topic)) && (!INQ.res || r.res === INQ.res) && (!INQ.ch || (INQ.ch === "site" ? r.ch === "site" : INQ.ch === "out" ? r.ch !== "site" : r.ch === INQ.ch))
     && (!q || [r.th.name, r.th.contact, r.first, ...r.shops.map(id => (shopById(id) || { name: {} }).name.ko || id)].join(" ").toLowerCase().includes(q)));
 }
 const inqShopNm = id => { const s = shopById(id); return s ? (s.name.ko || s.name.en) : id; };
@@ -99,6 +117,8 @@ async function drawInq(el) {
     </div>
     <div class="crm-bar">
       <div class="inq-fr"><span class="inq-lb">기간</span><div class="crm-segs">${[7, 30, 90, 0].map(d => chip("days", d, d ? d + "일" : "전체")).join("")}</div></div>
+      <div class="inq-fr"><span class="inq-lb">경로</span><div class="crm-segs"><button class="chip ${!INQ.ch ? "on" : ""}" data-inq="ch" data-v="">전부</button><button class="chip ${INQ.ch === "site" ? "on" : ""}" data-inq="ch" data-v="${INQ.ch === "site" ? "" : "site"}">🌐 사이트 채팅 <small>${base.filter(r => r.ch === "site").length}</small></button>${Object.entries(INQ_CH).map(([k, v]) => { const c = base.filter(r => r.ch === k).length; return c ? `<button class="chip ${INQ.ch === k ? "on" : ""}" data-inq="ch" data-v="${INQ.ch === k ? "" : k}">${v} <small>${c}</small></button>` : ""; }).join("")}
+        <button class="btn main sm inq-add" id="inqAdd">＋ 카톡 · 전화 문의 입력</button></div></div>
       <div class="inq-fr"><span class="inq-lb">결과</span><div class="crm-segs"><button class="chip ${!INQ.res ? "on" : ""}" data-inq="res" data-v="">전부</button>${Object.entries(INQ_RES).map(([k, v]) => `<button class="chip ${INQ.res === k ? "on" : ""}" data-inq="res" data-v="${INQ.res === k ? "" : k}">${v} <small>${base.filter(r => r.res === k).length}</small></button>`).join("")}</div></div>
       <div class="inq-fr"><span class="inq-lb">물어본 것</span><div class="crm-segs"><button class="chip ${!INQ.topic ? "on" : ""}" data-inq="topic" data-v="">전부</button>${INQ_TOPICS.map(([k, v]) => { const c = base.filter(r => r.topics.includes(k)).length; return c ? `<button class="chip ${INQ.topic === k ? "on" : ""}" data-inq="topic" data-v="${INQ.topic === k ? "" : k}">${v} <small>${c}</small></button>` : ""; }).join("")}</div></div>
       <div class="crm-filters"><input id="inqQ" placeholder="🔎 이름 · 연락처 · 문의 내용 · 업체 검색" value="${esc(INQ.q)}">
@@ -107,36 +127,83 @@ async function drawInq(el) {
         <label class="inq-ck"><input type="checkbox" id="inqTest" ${INQ.test ? "checked" : ""}> 🧪 테스트도 보기</label>
         <button class="btn sm" id="inqCsv">⬇️ 엑셀(CSV)</button><button class="btn sm" id="inqReload">↻ 새로고침</button></div>
     </div>
-    ${(() => { const on = [INQ.res && ["res", INQ_RES[INQ.res]], INQ.topic && ["topic", tName(INQ.topic)], INQ.cty && ["cty", INQ.cty === "?" ? "나라 모름" : ccName(INQ.cty)], INQ.shop && ["shop", inqShopNm(INQ.shop)], INQ.q && ["q", `"${INQ.q}"`]].filter(Boolean);
+    ${(() => { const on = [INQ.res && ["res", INQ_RES[INQ.res]], INQ.topic && ["topic", tName(INQ.topic)], INQ.ch && ["ch", INQ.ch === "site" ? "🌐 사이트 채팅" : INQ_CH[INQ.ch]], INQ.cty && ["cty", INQ.cty === "?" ? "나라 모름" : ccName(INQ.cty)], INQ.shop && ["shop", inqShopNm(INQ.shop)], INQ.q && ["q", `"${INQ.q}"`]].filter(Boolean);
       return `<div class="inq-on"><b>${INQ.days ? `최근 ${INQ.days}일` : "전체 기간"} · ${list.length}건</b>${on.length ? ` 보는 중: ${on.map(([k, v]) => `<button class="inq-x" data-inqx="${k}">${esc(v)} ✕</button>`).join("")}<button class="inq-x all" data-inqx="all">모두 풀기</button>` : ` <span class="hint">· 필터 없이 전부 보는 중</span>`}</div>`; })()}
     ${INQ.err ? `<p class="err-text">불러오기 실패: ${esc(INQ.err)}</p>` : ""}
     <div class="inq-list">${list.slice(0, 400).map(r => { const th = r.th, g = r.geo;
-      return `<a class="inq-row${r.test ? " is-test" : ""}" href="#chat/${esc(th.id)}" onclick="showTab('chat')">
+      return `<a class="inq-row${r.test ? " is-test" : ""}${r.manual ? " manual" : ""}" ${r.manual ? `href="javascript:void 0" data-inqedit="${esc(th.id)}"` : `href="#chat/${esc(th.id)}" onclick="showTab('chat')"`}>
         <div class="inq-when"><b>${esc(inqTime(th.created_at))}</b><small>베트남 시각${g.tz && g.tz !== "Asia/Ho_Chi_Minh" && g.tz !== "Asia/Saigon" ? `<br>손님 쪽 ${esc(inqTime(th.created_at, g.tz).split(" ").pop())}` : ""}</small></div>
         <div class="inq-who"><b>${esc(th.name || "손님")}</b>${r.test ? ` <span class="ctag">🧪 테스트</span>` : ""}<br><small class="hint">${esc(inqMask(th.contact) || "연락처 없음")}</small>
-          <div class="inq-meta">${g.home ? `${ccFlag(g.home)} ${esc(ccName(g.home))}` : "❔ 나라 모름"}${g.here ? ` · ${g.here === "VN" ? "베트남 현지" : "여행 전"}` : ""}${g.dv ? ` · ${INQ_DEV[g.dv] || ""}` : ""}${r.src ? ` · ${esc(INQ_SRC[r.src] || r.src)}` : ""}</div></div>
-        <div class="inq-what">${r.shops.length ? `<div class="inq-shops">${r.shops.slice(0, 3).map((id, i) => `<span class="${i ? "inq-s2" : "inq-s1"}">🏪 ${esc(inqShopNm(id))}</span>`).join("")}${r.shops.length > 3 ? ` <small class="hint">+${r.shops.length - 3}</small>` : ""}</div>` : `<div class="hint"><small>업체 화면 없이 문의 (${esc(typeof chatPageName === "function" && r.land ? chatPageName(r.land) : "첫 화면")})</small></div>`}
+          <div class="inq-meta"><span class="inq-ch ${r.ch === "site" ? "site" : ""}">${r.ch === "site" ? "🌐 사이트 채팅" : INQ_CH[r.ch] || r.ch}</span> ${g.home ? `${ccFlag(g.home)} ${esc(ccName(g.home))}` : "❔ 나라 모름"}${g.here ? ` · ${g.here === "VN" ? "베트남 현지" : "여행 전"}` : ""}${g.dv ? ` · ${INQ_DEV[g.dv] || ""}` : ""}${r.src ? ` · ${esc(INQ_SRC[r.src] || r.src)}` : ""}</div></div>
+        <div class="inq-what">${r.shops.length ? `<div class="inq-shops">${r.shops.slice(0, 3).map((id, i) => `<span class="${i ? "inq-s2" : "inq-s1"}">🏪 ${esc(inqShopNm(id))}${!i && (r.pick || r.manual) ? ` <small class="inq-pick">✍️ 지정</small>` : ""}</span>`).join("")}${r.shops.length > 3 ? ` <small class="hint">+${r.shops.length - 3}</small>` : ""}</div>` : r.pick === "-" ? `<div class="hint"><small>✍️ 업체 없는 일반 문의</small></div>` : r.manual ? `<div class="hint"><small>업체 안 정함</small></div>` : `<div class="hint"><small>업체 화면 없이 문의 (${esc(typeof chatPageName === "function" && r.land ? chatPageName(r.land) : "첫 화면")})</small></div>`}
           <div class="inq-topics">${r.topics.map(k => `<span class="chip">${tName(k)}</span>`).join("")}</div>
           ${String(r.first || "").trim() ? `<div class="inq-first">“${esc(String(r.first).slice(0, 110))}${String(r.first).length > 110 ? "…" : ""}”</div>` : `<div class="hint"><small>(사진 · 예약 알림만 있음)</small></div>`}</div>
         <div class="inq-res"><span class="inq-r ${r.res}">${INQ_RES[r.res]}</span>${r.bk ? `<small>${esc(r.bk.code || "")}${r.bk.visit_date ? ` · ${esc(r.bk.visit_date.slice(5).replace("-", "/"))} 방문` : ""}</small>` : ""}
-          <small class="hint">손님 ${r.nG} · 답장 ${r.nA}${r.repMin != null ? ` · ${mm(r.repMin)} 만에` : ""}</small>${r.cust ? `<button type="button" class="btn sm" data-inqcust="${esc(r.cust)}">👤 손님 카드</button>` : ""}</div>
+          ${r.manual ? `<small class="hint">✍️ 직접 입력${r.manual.memo ? " · 메모 있음" : ""} · 눌러서 고치기</small>` : `<small class="hint">손님 ${r.nG} · 답장 ${r.nA}${r.repMin != null ? ` · ${mm(r.repMin)} 만에` : ""}</small>`}${r.cust ? `<button type="button" class="btn sm" data-inqcust="${esc(r.cust)}">👤 손님 카드</button>` : ""}</div>
       </a>`; }).join("") || `<div class="todo"><div class="empty">조건에 맞는 문의가 없어요.</div></div>`}</div>
     ${list.length > 400 ? `<p class="hint">앞의 400건만 보여요. 조건으로 좁혀 주세요.</p>` : ""}
     <p class="hint" style="margin:12px 0 30px">💡 따로 적지 않아도 채팅이 들어오면 자동으로 쌓여요. <b>언제 · 누구 · 나라 · 기기 · 들어온 곳 · 보던 업체 · 물어본 것(자동 분류) · 예약했는지 · 답장 속도</b>까지.
-      나라 · 기기는 11/27 이후 채팅부터 정확해요. '나중에 예약' = 문의 뒤에 같은 연락처로 들어온 예약이에요. 줄을 누르면 그 채팅이 열려요.</p>`;
+      나라 · 기기는 11/27 이후 채팅부터 정확해요. '나중에 예약' = 문의 뒤에 같은 연락처로 들어온 예약이에요. 줄을 누르면 그 채팅이 열려요.<br>
+      카톡 · 잘로 · 전화로 온 문의는 <b>＋ 카톡 · 전화 문의 입력</b>으로 넣으면 같은 목록 · 숫자에 함께 들어가요. 사이트 채팅의 업체는 채팅 화면 위 <b>🏪 문의 업체</b>에서 직접 고를 수 있어요.</p>`;
   el.querySelectorAll("[data-inq]").forEach(b => b.onclick = () => { const k = b.dataset.inq, v = b.dataset.v; INQ[k] = k === "days" ? +v : v; drawCrm(); });
   const qi = $("inqQ"); qi.oninput = () => { INQ.q = qi.value; clearTimeout(qi._t); qi._t = setTimeout(() => { drawCrm().then(() => { const x = $("inqQ"); if (x) { x.focus(); x.setSelectionRange(x.value.length, x.value.length); } }); }, 250); };
-  el.querySelectorAll("[data-inqx]").forEach(b => b.onclick = () => { const k = b.dataset.inqx; if (k === "all") Object.assign(INQ, { res: "", topic: "", cty: "", shop: "", q: "" }); else INQ[k] = ""; drawCrm(); });
+  el.querySelectorAll("[data-inqx]").forEach(b => b.onclick = () => { const k = b.dataset.inqx; if (k === "all") Object.assign(INQ, { res: "", topic: "", cty: "", shop: "", q: "", ch: "" }); else INQ[k] = ""; drawCrm(); });
+  $("inqAdd").onclick = () => inqEdit(null);
+  el.querySelectorAll("[data-inqedit]").forEach(a => a.onclick = e => { if (e.target.closest("[data-inqcust]")) return; e.preventDefault(); inqEdit((INQ.rows.find(r => r.manual && r.manual.id === a.dataset.inqedit) || {}).manual); });
   $("inqCty").onchange = e => { INQ.cty = e.target.value; drawCrm(); };
   $("inqShop").onchange = e => { INQ.shop = e.target.value; drawCrm(); };
   $("inqTest").onchange = e => { INQ.test = e.target.checked; drawCrm(); };
   $("inqReload").onclick = () => { INQ.rows = null; drawCrm(); };
   el.querySelectorAll("[data-inqcust]").forEach(b => b.onclick = e => { e.preventDefault(); e.stopPropagation(); openCustomer(b.dataset.inqcust); });
   $("inqCsv").onclick = () => {
-    const H = ["문의 시각(베트남)", "이름", "연락처(가림)", "나라", "나라 근거", "위치", "기기", "브라우저 언어", "들어온 곳", "문의 업체", "함께 본 업체", "주제", "첫 문의", "손님 메시지 수", "답장 수", "첫 답장(분)", "결과", "예약 번호"];
-    const L = list.map(r => [inqTime(r.th.created_at), r.th.name || "", inqMask(r.th.contact), r.geo.home ? ccName(r.geo.home) : "", r.geo.how || "", r.geo.here === "VN" ? "베트남 현지" : r.geo.here ? "여행 전" : "", (INQ_DEV[r.geo.dv] || "").replace(/^\S+ /, ""), r.geo.bl || "",
-      (INQ_SRC[r.src] || r.src || "").replace(/^\S+ /, ""), r.shops[0] ? inqShopNm(r.shops[0]) : "", r.shops.slice(1).map(inqShopNm).join(" / "), r.topics.map(k => tName(k).replace(/^\S+ /, "")).join(" / "), r.first || "", r.nG, r.nA, r.repMin ?? "", INQ_RES[r.res].replace(/^\S+ /, ""), r.bk ? r.bk.code || "" : ""]);
+    const H = ["문의 시각(베트남)", "경로", "이름", "연락처(가림)", "나라", "나라 근거", "위치", "기기", "브라우저 언어", "들어온 곳", "문의 업체", "함께 본 업체", "주제", "첫 문의", "손님 메시지 수", "답장 수", "첫 답장(분)", "결과", "예약 번호"];
+    const L = list.map(r => [inqTime(r.th.created_at), r.ch === "site" ? "사이트 채팅" : (INQ_CH[r.ch] || r.ch).replace(/^\S+ /, ""), r.th.name || "", inqMask(r.th.contact), r.geo.home ? ccName(r.geo.home) : "", r.geo.how || "", r.geo.here === "VN" ? "베트남 현지" : r.geo.here ? "여행 전" : "", (INQ_DEV[r.geo.dv] || "").replace(/^\S+ /, ""), r.geo.bl || "",
+      (INQ_SRC[r.src] || r.src || "").replace(/^\S+ /, ""), r.shops[0] ? inqShopNm(r.shops[0]) : "", r.shops.slice(1).map(inqShopNm).join(" / "), r.topics.map(k => tName(k).replace(/^\S+ /, "")).join(" / "), r.first || "", r.nG ?? "", r.nA ?? "", r.repMin ?? "", INQ_RES[r.res].replace(/^\S+ /, ""), r.bk ? r.bk.code || "" : ""]);
     const csv = "﻿" + [H, ...L].map(row => row.map(v => `"${String(v).replace(/"/g, '""').replace(/\n/g, " ")}"`).join(",")).join("\r\n");
     const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" })); a.download = `엉클데이_문의기록_${vnToday()}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+  };
+}
+
+// ✍️ 카톡 · 전화 등 사이트 밖 문의 입력 / 고치기
+function inqEdit(q) {
+  if (INQ.manualOk === false) return toast("먼저 supabase/universe57.sql 을 실행해 주세요", 5000);
+  q = q || {}; const isNew = !q.id;
+  const pad = n => String(n).padStart(2, "0"), dt = new Date(q.asked_at || Date.now());
+  const local = `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+  const shopOpts = shops.slice().sort((a, b) => (a.name.ko || "").localeCompare(b.name.ko || "", "ko")).map(s => `<option value="${esc(s.id)}" ${q.shop_id === s.id ? "selected" : ""}>${esc(s.name.ko || s.name.en || s.id)}</option>`).join("");
+  const d = document.createElement("div"); d.className = "overlay center";
+  d.innerHTML = `<div class="modal inq-modal" style="width:min(680px,calc(100% - 32px))"><h2>${isNew ? "＋ 사이트 밖 문의 입력" : "✍️ 문의 고치기"}</h2>
+    <p class="hint">카톡 · 잘로 · 전화 등으로 온 문의를 적어 두면 '문의 기록' 목록과 숫자에 함께 들어가요. 관리자 · 직원만 봐요.</p>
+    <div class="inq-chs">${Object.entries(INQ_CH).map(([k, v]) => `<label><input type="radio" name="iqCh" value="${k}" ${(q.channel || "kakao") === k ? "checked" : ""}><span>${v}</span></label>`).join("")}</div>
+    <div class="two"><label class="f"><span>문의 받은 시각 <small class="hint">(이 컴퓨터 시각)</small></span><input type="datetime-local" id="iqAt" value="${local}"></label>
+      <label class="f"><span>손님 이름 · 닉네임</span><input id="iqName" value="${esc(q.name || "")}" placeholder="예: 김민지 / Emily"></label></div>
+    <div class="two"><label class="f"><span>연락처 · 카톡 ID</span><input id="iqContact" value="${esc(q.contact || "")}" placeholder="예: +44 7700 900123 / kakao: minji99"></label>
+      <label class="f"><span>나라</span><select id="iqCty"><option value="">모름</option>${CC_PICK.map(c => `<option value="${c}" ${q.country === c ? "selected" : ""}>${esc(ccName(c))}</option>`).join("")}</select></label></div>
+    <label class="f"><span>어느 업체 문의?</span><select id="iqShop"><option value="">업체 안 정함 · 일반 문의</option>${shopOpts}</select></label>
+    <label class="f"><span>문의 내용 <small class="hint">— 카톡 대화를 그대로 붙여 넣어도 돼요. 물어본 것은 자동으로 체크돼요</small></span><textarea id="iqBody" rows="4" placeholder="예: 내일 오후 3시 2명 90분 마사지 가능한가요? 가격은요?">${esc(q.body || "")}</textarea></label>
+    <div class="f"><span>물어본 것</span><div class="inq-tps">${INQ_TOPICS.map(([k, v]) => `<label><input type="checkbox" value="${k}" ${(q.topics || []).includes(k) ? "checked" : ""}><span>${v}</span></label>`).join("")}</div></div>
+    <div class="two"><label class="f"><span>결과</span><select id="iqRes">${Object.entries(INQ_RES).map(([k, v]) => `<option value="${k}" ${(q.result || "only") === k ? "selected" : ""}>${v}</option>`).join("")}</select></label>
+      <label class="f"><span>예약 번호 <small class="hint">(예약했으면)</small></span><input id="iqCode" value="${esc(q.booking_code || "")}" placeholder="UD-1127-1234"></label></div>
+    <label class="f"><span>메모 (팀만 봐요)</span><input id="iqMemo" value="${esc(q.memo || "")}" placeholder="예: 가격 비싸다고 고민 중 · 다음 주에 다시 연락"></label>
+    <div class="btns">${isNew ? "" : `<button class="btn danger" data-del style="margin-right:auto">삭제</button>`}<button class="btn" data-no>취소</button><button class="btn main" data-yes>${isNew ? "저장" : "고친 것 저장"}</button></div></div>`;
+  document.body.appendChild(d);
+  const touched = new Set(), body = d.querySelector("#iqBody");
+  d.querySelectorAll(".inq-tps input").forEach(x => x.onchange = () => touched.add(x.value));
+  const auto = () => { const t = body.value; d.querySelectorAll(".inq-tps input").forEach(x => { if (touched.has(x.value)) return; const re = (INQ_TOPICS.find(z => z[0] === x.value) || [])[2]; if (re) x.checked = re.test(t); }); };
+  body.oninput = auto; if (isNew) auto();
+  d.querySelector("#iqCode").oninput = e => { if (e.target.value.trim()) d.querySelector("#iqRes").value = "book"; };
+  d.querySelector("[data-no]").onclick = () => d.remove();
+  const del = d.querySelector("[data-del]"); if (del) del.onclick = async () => {
+    if (!del.dataset.sure) { del.dataset.sure = 1; del.textContent = "정말 삭제? 한 번 더"; return; }
+    const r = await sb.from("inquiries").delete().eq("id", q.id); if (r.error) return dbErr(r.error, "삭제"); d.remove(); toast("삭제했어요"); INQ.rows = null; drawCrm(); };
+  d.querySelector("[data-yes]").onclick = async () => {
+    const v = id => d.querySelector(id).value.trim();
+    const row = { channel: (d.querySelector('[name="iqCh"]:checked') || {}).value || "kakao", asked_at: v("#iqAt") ? new Date(v("#iqAt")).toISOString() : new Date().toISOString(),
+      name: v("#iqName") || null, contact: v("#iqContact") || null, country: v("#iqCty") || null, shop_id: v("#iqShop") || null, body: v("#iqBody") || null,
+      topics: [...d.querySelectorAll(".inq-tps input:checked")].map(x => x.value), result: v("#iqRes"), booking_code: v("#iqCode") || null, memo: v("#iqMemo") || null, updated_at: new Date().toISOString() };
+    if (!row.name && !row.contact && !row.body) return toast("이름 · 연락처 · 문의 내용 중 하나는 적어 주세요");
+    const r = isNew ? await sb.from("inquiries").insert(row) : await sb.from("inquiries").update(row).eq("id", q.id);
+    if (r.error) return dbErr(r.error, "문의 저장");
+    d.remove(); toast(isNew ? "문의를 기록했어요" : "고쳤어요"); INQ.rows = null; drawCrm();
   };
 }
