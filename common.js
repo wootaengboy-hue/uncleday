@@ -281,5 +281,7 @@ const UD_TRAIL = (() => {
   const push = () => { const p = here(); t.pages = (t.pages || []).filter(x => x !== p).concat(p).slice(-3); try { sessionStorage.setItem("ud-trail", JSON.stringify(t)); } catch (e) {} };
   push(); window.addEventListener("hashchange", push);
   // chat_send 의 page 칸에 넣는 글자: 지금 화면 | 처음 들어온 화면 | 들어온 곳 | 최근 본 화면들
-  return { pack: () => { push(); return [here(), t.land, t.src, (t.pages || []).join(",")].join("|").slice(0, 300); } };
+  // 🌍 마지막 칸: 기기 시간대 ~ 브라우저 언어 (나라별 문의 수 세기용 · 개인 정보 아님)
+  const geo = () => { let z = "", l = ""; try { z = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch (e) {} try { l = (navigator.languages && navigator.languages[0]) || navigator.language || ""; } catch (e) {} return (z.slice(0, 40) + "~" + l.slice(0, 12)).replace(/\|/g, ""); };
+  return { pack: () => { push(); const g = geo(); return [here(), t.land, t.src, (t.pages || []).join(",")].join("|").slice(0, 299 - g.length) + "|" + g; } };
 })();

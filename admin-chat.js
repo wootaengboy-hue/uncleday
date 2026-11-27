@@ -176,7 +176,7 @@ function drawThread() {
   const read = lastAdmin && th.guest_seen_at && th.guest_seen_at >= lastAdmin.created_at;
   const typed = box.querySelector("textarea") ? box.querySelector("textarea").value : "";
   box.innerHTML = `<div class="cm-head"><button class="btn sm cm-back" type="button">‹ 목록</button>
-      <div><b>${esc(th.name || "손님")}</b> <span class="hint">${esc(th.contact || "")}${th.lang ? ` · ${{ ko: "한국어", en: "영어", vi: "베트남어" }[th.lang] || th.lang}` : ""}</span></div>${chatSrcHtml(th.page)}
+      <div><b>${esc(th.name || "손님")}</b> <span class="hint">${esc(th.contact || "")}${th.lang ? ` · ${{ ko: "한국어", en: "영어", vi: "베트남어" }[th.lang] || th.lang}` : ""}</span></div>${chatSrcHtml(th.page, th)}
       <div class="cm-acts">${b ? `<button class="btn sm" data-bk="${b.id}">📅 ${esc(b.code)}</button>` : ""}
         <button class="btn sm" data-st>${th.status === "open" ? "✓ 대화 끝내기" : "다시 열기"}</button></div></div>
     <div class="cm-trbar">🌐 <b>자동 번역</b> <button type="button" class="tgl ${CTR.on ? "on" : ""}" data-ctr="on">${CTR.on ? "켜짐" : "꺼짐"}</button>
@@ -358,13 +358,39 @@ function chatPageName(p) {
   if (/^(home|\/|\/(en|vi|ja|zh)\/?|\/index\.html)?(#.*)?$/.test(p)) return "🏠 첫 화면 (업체 목록)";
   return "📄 " + p;
 }
-function chatSrcHtml(page) {
+// 🌍 손님 나라 추정 — ① 연락처 국가번호 ② 브라우저 언어의 나라 ③ 기기 시간대 (지금 있는 곳)
+const CC_TZ = { "Europe/London": "GB", "Europe/Dublin": "IE", "Europe/Paris": "FR", "Europe/Berlin": "DE", "Europe/Madrid": "ES", "Europe/Rome": "IT", "Europe/Amsterdam": "NL", "Europe/Brussels": "BE", "Europe/Luxembourg": "LU", "Europe/Zurich": "CH", "Europe/Vienna": "AT", "Europe/Stockholm": "SE", "Europe/Oslo": "NO", "Europe/Copenhagen": "DK", "Europe/Helsinki": "FI", "Europe/Warsaw": "PL", "Europe/Prague": "CZ", "Europe/Bratislava": "SK", "Europe/Budapest": "HU", "Europe/Lisbon": "PT", "Europe/Athens": "GR", "Europe/Moscow": "RU", "Europe/Kiev": "UA", "Europe/Kyiv": "UA", "Europe/Bucharest": "RO", "Europe/Sofia": "BG", "Europe/Zagreb": "HR", "Europe/Ljubljana": "SI", "Europe/Istanbul": "TR", "Asia/Seoul": "KR", "Asia/Tokyo": "JP", "Asia/Shanghai": "CN", "Asia/Hong_Kong": "HK", "Asia/Taipei": "TW", "Asia/Singapore": "SG", "Asia/Bangkok": "TH", "Asia/Ho_Chi_Minh": "VN", "Asia/Saigon": "VN", "Asia/Kuala_Lumpur": "MY", "Asia/Manila": "PH", "Asia/Jakarta": "ID", "Asia/Kolkata": "IN", "Asia/Calcutta": "IN", "Asia/Dubai": "AE", "Asia/Jerusalem": "IL", "Australia/Sydney": "AU", "Australia/Melbourne": "AU", "Australia/Brisbane": "AU", "Australia/Perth": "AU", "Australia/Adelaide": "AU", "Pacific/Auckland": "NZ", "America/New_York": "US", "America/Chicago": "US", "America/Denver": "US", "America/Los_Angeles": "US", "America/Phoenix": "US", "Pacific/Honolulu": "US", "America/Anchorage": "US", "America/Toronto": "CA", "America/Vancouver": "CA", "America/Edmonton": "CA", "America/Mexico_City": "MX", "America/Sao_Paulo": "BR" };
+const CC_TEL = [["420", "CZ"], ["421", "SK"], ["353", "IE"], ["358", "FI"], ["351", "PT"], ["352", "LU"], ["380", "UA"], ["852", "HK"], ["886", "TW"], ["971", "AE"], ["972", "IL"], ["44", "GB"], ["33", "FR"], ["49", "DE"], ["34", "ES"], ["39", "IT"], ["31", "NL"], ["32", "BE"], ["41", "CH"], ["43", "AT"], ["46", "SE"], ["47", "NO"], ["45", "DK"], ["48", "PL"], ["36", "HU"], ["30", "GR"], ["40", "RO"], ["90", "TR"], ["82", "KR"], ["81", "JP"], ["86", "CN"], ["65", "SG"], ["66", "TH"], ["84", "VN"], ["60", "MY"], ["63", "PH"], ["62", "ID"], ["91", "IN"], ["61", "AU"], ["64", "NZ"], ["55", "BR"], ["52", "MX"], ["7", "RU"], ["1", "US"]];
+const CC_LANG = { ko: "KR", ja: "JP", vi: "VN", zh: "CN", de: "DE", fr: "FR", it: "IT", es: "ES", nl: "NL", sv: "SE", da: "DK", nb: "NO", no: "NO", fi: "FI", pl: "PL", cs: "CZ", sk: "SK", hu: "HU", ro: "RO", ru: "RU", uk: "UA", pt: "PT", el: "GR", tr: "TR", th: "TH" };
+const CC_EU = "GB IE FR DE ES IT NL BE LU CH AT SE NO DK FI PL CZ SK HU PT GR RU UA RO BG HR SI TR".split(" "), CC_AS = "KR JP CN HK TW SG TH VN MY PH ID IN AE IL".split(" "), CC_AM = "US CA MX BR".split(" "), CC_OC = "AU NZ".split(" ");
+function ccName(c) { if (!c) return "알 수 없음"; let n = c; try { n = new Intl.DisplayNames(["ko"], { type: "region" }).of(c) || c; } catch (e) {} return n; }
+function ccFlag(c) { return c && /^[A-Z]{2}$/.test(c) ? String.fromCodePoint(...[...c].map(x => 0x1F1A5 + x.charCodeAt(0))) : "🏳️"; }
+function ccArea(c) { return !c ? "알 수 없음" : CC_EU.includes(c) ? "유럽" : CC_AS.includes(c) ? "아시아" : CC_AM.includes(c) ? "미주" : CC_OC.includes(c) ? "오세아니아" : "기타"; }
+function chatGeo(th) {
+  const parts = String(th.page || "").split("|"); const g = parts.length >= 5 ? parts[parts.length - 1] : ""; const [tz, bl] = g.split("~");
+  const here = CC_TZ[tz] || (tz && /^Europe\//.test(tz) ? "EU" : "");
+  let home = "", how = "";
+  const c = String(th.contact || "").replace(/[\s().-]/g, "");
+  if (/^(\+|00)\d{6,}/.test(c)) { const d = c.replace(/^(\+|00)/, ""); const hit = CC_TEL.find(([p]) => d.startsWith(p)); if (hit) { home = hit[1]; how = "연락처 국가번호"; } }
+  else if (/^010\d{7,8}$/.test(c)) { home = "KR"; how = "연락처 (010)"; }
+  else if (/^0[35789]\d{8}$/.test(c)) { home = "VN"; how = "연락처 (베트남 번호)"; }
+  if (!home && bl) { const m = bl.match(/^([a-z]{2,3})(?:-([A-Z]{2}))?/i); if (m) { const r = m[2] && m[2].toUpperCase(); const l = m[1].toLowerCase(); home = r && !(l === "en" && r === "US" && here && here !== "US") ? r : CC_LANG[l] || ""; if (home) how = "브라우저 언어 " + bl; } }
+  if (!home && here && here !== "EU") { home = here; how = "기기 시간대"; }
+  return { home, how, here, tz: tz || "", bl: bl || "" };
+}
+function chatGeoHtml(th) {
+  const g = chatGeo(th); if (!g.home && !g.tz) return "";
+  const where = g.here === "VN" ? "지금 베트남에 있어요 (현지 문의)" : g.here ? `지금 ${g.here === "EU" ? "유럽" : ccName(g.here)} 시간대 (여행 전 문의)` : "";
+  return `<br>🌍 손님 나라 (추정): <b>${ccFlag(g.home)} ${esc(ccName(g.home))}</b>${g.how ? ` <small>· ${esc(g.how)}</small>` : ""}${where ? `<br><small>🕒 ${esc(where)}</small>` : ""}`;
+}
+function chatSrcHtml(page, th) {
   if (!page) return "";
-  const [cur, land, src, pages] = String(page).split("|");
-  if (land === undefined) return page === "home" ? "" : `<div class="ch-src">👀 보고 있던 화면: <b>${esc(chatPageName(cur))}</b></div>`;   // 예전 기록
+  const _p = String(page).split("|"); if (_p.length >= 5) _p.pop();
+  const [cur, land, src, pages] = _p;
+  if (land === undefined) { const gh = th ? chatGeoHtml(th) : ""; return page === "home" ? (gh ? `<div class="ch-src">${gh.replace(/^<br>/, "")}</div>` : "") : `<div class="ch-src">👀 보고 있던 화면: <b>${esc(chatPageName(cur))}</b>${gh}</div>`; }   // 예전 기록
   const SRC = { google: "🔎 구글 검색", naver: "🟢 네이버", naverblog: "🟢 네이버 블로그", daum: "다음", bing: "빙", direct: "⌨️ 주소 직접 입력 · 즐겨찾기", internal: "엉클데이 안", kakao: "💬 카카오톡", facebook: "페이스북", instagram: "인스타그램", youtube: "유튜브", zalo: "잘로", tiktok: "틱톡", chatgpt: "🤖 ChatGPT", perplexity: "🤖 Perplexity", claude: "🤖 Claude", gemini: "🤖 Gemini", gbp: "📍 구글 지도 업체 프로필", qr: "📱 QR 코드", fb: "페이스북", ig: "인스타그램" };
   const url = p => /^\//.test(p) ? "https://www.uncleday.com" + p : null;
   const a = p => { const u = url(p); return u ? `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(chatPageName(p))}</a>` : esc(chatPageName(p)); };
   const trail = (pages || "").split(",").filter(x => x && x !== cur);
-  return `<div class="ch-src">👀 문의할 때 보던 화면: <b>${a(cur)}</b><br>🚪 처음 들어온 곳: <b>${esc(SRC[src] || src || "알 수 없음")}</b> → ${a(land)}${trail.length ? `<br><small>최근 본 화면: ${trail.map(a).join(" · ")}</small>` : ""}</div>`;
+  return `<div class="ch-src">👀 문의할 때 보던 화면: <b>${a(cur)}</b><br>🚪 처음 들어온 곳: <b>${esc(SRC[src] || src || "알 수 없음")}</b> → ${a(land)}${trail.length ? `<br><small>최근 본 화면: ${trail.map(a).join(" · ")}</small>` : ""}${th ? chatGeoHtml(th) : ""}</div>`;
 }

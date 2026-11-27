@@ -259,6 +259,13 @@ function drawDash() {
     }).catch(() => {});
   }
 
+  // 🌍 채팅 문의 나라별 (연락처 국가번호 → 브라우저 언어 → 기기 시간대 순으로 추정)
+  { const tab = $("tab-dash"); let box = document.getElementById("ctyBox");
+    if (!box) { box = document.createElement("div"); box.id = "ctyBox"; tab.appendChild(box); }
+    const spd = document.getElementById("spdBox"); if (spd && box.nextSibling !== spd) tab.insertBefore(box, spd);
+    drawCty(box);
+  }
+
   $("tab-dash").querySelectorAll("[data-todo]").forEach(r => r.onclick = () => { if (r.classList.contains("zero")) return; bkF = { ...BKF0, st: "all", todo: r.dataset.todo }; showTab("bk"); });
   $("tab-dash").querySelectorAll("[data-wtodo]").forEach(r => r.onclick = () => { if (r.classList.contains("zero")) return; const t = workTodos().find(x => x[0] === r.dataset.wtodo); if (t) t[4](); });
   $("tab-dash").querySelectorAll("[data-tab-go-home]").forEach(r => r.onclick = () => { PORTAL.view = "home"; try { sessionStorage.setItem("ptView", "home"); } catch (e) {} PORTAL.todoUntil = Date.now() + 5000; showTab("home"); portalTodoScroll(); });   // 마지막에 보던 앱이 아니라 포털 첫 화면의 오늘 할 일로
@@ -1468,4 +1475,26 @@ async function bkSurvey(b, shop) {
   }
   box.hidden = false;
   $("bkSvIn").innerHTML = `<dl class="sv-adm">${svRows(r.data.answers, shop || {}, "ko").map(x => `<dt>${esc(x.q)}</dt><dd class="${x.flag ? "err-text" : ""}">${x.flag ? "⚠️ " : ""}${esc(x.a)}</dd>`).join("")}</dl><p class="hint">작성: ${dt(r.data.updated_at)}</p>`;
+}
+
+let CTY_DAYS = 30;
+async function drawCty(box) {
+  if (typeof chatGeo !== "function") return;
+  let q = sb.from("chat_threads").select("created_at,page,contact,lang").order("created_at", { ascending: false }).limit(5000);
+  if (CTY_DAYS) q = q.gte("created_at", new Date(Date.now() - CTY_DAYS * 864e5).toISOString());
+  const r = await q; if (r.error) { box.innerHTML = ""; return; }
+  const rows = (r.data || []);
+  const by = {}, area = {}; let local = 0, before = 0;
+  rows.forEach(t => { const g = chatGeo(t); const k = g.home || ""; by[k] = (by[k] || 0) + 1; const a = ccArea(g.home); area[a] = (area[a] || 0) + 1; if (g.here === "VN") local++; else if (g.here) before++; });
+  const list = Object.entries(by).sort((a, b) => (a[0] === "") - (b[0] === "") || b[1] - a[1]);
+  const max = Math.max(1, ...list.map(x => x[1])), tot = rows.length;
+  const chip = d => `<button class="btn sm${CTY_DAYS === d ? " main" : ""}" data-ctyd="${d}">${d ? d + "일" : "전체"}</button>`;
+  const pct = n => tot ? Math.round(n / tot * 100) + "%" : "";
+  box.innerHTML = `<h2 class="sec">🌍 채팅 문의 나라별 <small>추정 · 연락처 국가번호 → 브라우저 언어 → 기기 시간대</small></h2>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px">${[7, 30, 90, 0].map(chip).join("")}</div>
+    ${tot ? `<p class="hint" style="margin:0 0 8px">총 <b>${tot}</b>건 · ${["유럽", "아시아", "미주", "오세아니아", "기타", "알 수 없음"].filter(a => area[a]).map(a => `${a} <b>${area[a]}</b>`).join(" · ")}${local + before ? `<br>🕒 문의할 때 위치: 베트남 현지 <b>${local}</b> · 여행 전 (자기 나라) <b>${before}</b>` : ""}</p>
+    <div class="cty-list">${list.map(([c, n]) => `<div class="cty-row"><span class="cty-nm">${c ? ccFlag(c) + " " + esc(ccName(c)) : "❔ 알 수 없음 <small>(예전 기록)</small>"}</span><span class="cty-bar"><i style="width:${Math.max(3, n / max * 100)}%${c && ccArea(c) === "유럽" ? ";background:#6366f1" : ""}"></i></span><b class="cty-n">${n}</b><small class="cty-p">${pct(n)}</small></div>`).join("")}</div>`
+      : `<div class="todo"><div class="empty">이 기간에는 채팅 문의가 없어요.</div></div>`}
+    <p class="hint" style="margin:10px 0 24px">오늘(11/27) 이후 들어온 채팅부터 기기 시간대 · 언어가 함께 기록돼요. 그 전 채팅은 연락처 국가번호가 있을 때만 나라가 나와요. 보라색 막대 = 유럽.</p>`;
+  box.querySelectorAll("[data-ctyd]").forEach(b => b.onclick = () => { CTY_DAYS = +b.dataset.ctyd; drawCty(box); });
 }
