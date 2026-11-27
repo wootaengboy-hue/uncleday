@@ -192,6 +192,7 @@ function drawThread() {
     ${lastAdmin && !read ? `<div class="cm-ping"><span>손님이 사이트를 닫았으면 답장을 못 봐요 →</span>
       ${phone ? `<button class="btn sm" data-ping="sms">📱 답장 알림 문자 (${esc(phone)})</button>` : ""}<button class="btn sm" data-ping="copy">📋 알림 메시지 복사 (카톡 등)</button></div>` : ""}`;
   const list = box.querySelector(".cm-list"); list.scrollTop = list.scrollHeight;
+  { const d = box.querySelector("details.ch-src"); if (d) d.ontoggle = () => { CH_SRC_OPEN = d.open; }; }
   box.querySelector(".cm-back").onclick = () => { CHAT_CUR = null; clearInterval(CHAT_TIMER); drawChat(); NAV_QUIET = true; navSync(); NAV_QUIET = false; };
   const bk = box.querySelector("[data-bk]"); if (bk) bk.onclick = () => openBooking(bk.dataset.bk);
   const setSt = async st => { const r = await sb.from("chat_threads").update({ status: st }).eq("id", th.id); if (r.error) { dbErr(r.error, "상태 변경"); return false; } th.status = st; return true; };
@@ -391,8 +392,19 @@ function chatGeoHtml(th) {
   const where = g.here === "VN" ? "지금 베트남에 있어요 (현지 문의)" : g.here ? `지금 ${g.here === "EU" ? "유럽" : ccName(g.here)} 시간대 (여행 전 문의)` : "";
   return `<br>🌍 손님 나라 (추정): <b>${ccFlag(g.home)} ${esc(ccName(g.home))}</b>${g.how ? ` <small>· ${esc(g.how)}</small>` : ""}${where ? `<br><small>🕒 ${esc(where)}</small>` : ""}`;
 }
-function chatSrcHtml(page, th) {
-  if (!page) return "";
+// 접어 둔 한 줄 요약 (눌러야 자세히) — 채팅 칸이 좁아지지 않게
+let CH_SRC_OPEN = false;
+function chatSrcWrap(html, page, th) {
+  if (!html) return "";
+  const p = String(page || "").split("|"), src = p.length >= 3 ? p[2] : "";
+  const SRCS = { google: "🔎 구글", naver: "🟢 네이버", direct: "⌨️ 직접 입력", internal: "엉클데이 안", kakao: "💬 카톡", facebook: "페이스북", instagram: "인스타", chatgpt: "🤖 ChatGPT", gbp: "📍 구글 지도", qr: "📱 QR", zalo: "잘로" };
+  const g = th ? (chatIsTest(th) ? { test: 1 } : chatGeo(th)) : {};
+  const bits = [g.test ? "🧪 테스트" : g.home ? `${ccFlag(g.home)} ${esc(ccName(g.home))}` : "", src ? esc(SRCS[src] || src) : "", p[0] && p[0] !== "home" ? esc(chatPageName(p[0]).replace(/ 업체 화면$| \(업체 목록\)$/, "")) : ""].filter(Boolean);
+  return html.replace(/^<div class="ch-src">/, `<details class="ch-src"${CH_SRC_OPEN ? " open" : ""}><summary>${bits.join(" · ") || "🚪 들어온 경로"} <span class="ch-more">자세히</span></summary><div class="ch-src-in">`).replace(/<\/div>$/, "</div></details>");
+}
+function chatSrcHtml(page, th) { return chatSrcWrap(chatSrcHtml0(page, th), page, th); }
+function chatSrcHtml0(page, th) {
+  if (!page) return th ? (h => h ? `<div class="ch-src">${h.replace(/^<br>/, "")}</div>` : "")(chatGeoHtml(th)) : "";
   const _p = String(page).split("|"); if (_p.length >= 5) _p.pop();
   const [cur, land, src, pages] = _p;
   if (land === undefined) { const gh = th ? chatGeoHtml(th) : ""; return page === "home" ? (gh ? `<div class="ch-src">${gh.replace(/^<br>/, "")}</div>` : "") : `<div class="ch-src">👀 보고 있던 화면: <b>${esc(chatPageName(cur))}</b>${gh}</div>`; }   // 예전 기록

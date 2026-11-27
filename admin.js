@@ -235,6 +235,7 @@ function drawDash() {
       ${dimCard(dashMonth, "dev", "어떤 기기로 봤나요")}
       ${dimCard(dashMonth, "lang", "어떤 언어를 쓰나요", "휴대폰·브라우저 기본 언어예요.")}
     </div>` : `<p class="hint">불러오는 중…</p>`}
+    <div id="ctyBox"></div>
     <h2 class="sec">업체별 <small>${monthKo(dashMonth)}</small></h2>
     ${rows.length ? `<div class="tscroll"><table class="t"><thead><tr><th>업체</th><th class="num">수수료율</th><th class="num">조회</th><th class="num">상담</th><th class="num">예약</th><th class="num">방문</th><th class="num">결제액</th><th class="num">수수료</th><th class="num">미정산</th><th></th></tr></thead><tbody>
       ${rows.map(r => `<tr class="click" data-shop="${esc(r.id)}"><td><b>${esc(r.name)}</b></td><td class="num">${r.rate ? r.rate + "%" : `<span style="color:var(--danger)">미정</span>`}</td><td class="num">${r.views}</td><td class="num">${r.consult}</td><td class="num">${r.active}</td><td class="num">${r.done}</td><td class="num">${vnd(r.paid)}</td><td class="num"><b>${vnd(r.comm)}</b></td><td class="num">${r.unsettled ? vnd(r.unsettled) : "-"}</td><td class="num">${r.id !== "-" ? `<button class="btn sm" data-rep="${esc(r.id)}">리포트</button>` : ""}</td></tr>`).join("")}
@@ -262,7 +263,6 @@ function drawDash() {
   // 🌍 채팅 문의 나라별 (연락처 국가번호 → 브라우저 언어 → 기기 시간대 순으로 추정)
   { const tab = $("tab-dash"); let box = document.getElementById("ctyBox");
     if (!box) { box = document.createElement("div"); box.id = "ctyBox"; tab.appendChild(box); }
-    const spd = document.getElementById("spdBox"); if (spd && box.nextSibling !== spd) tab.insertBefore(box, spd);
     drawCty(box);
   }
 
