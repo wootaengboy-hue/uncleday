@@ -129,7 +129,7 @@ if (!shop) {
   const pending = shop.verified === false || !shop.open || !shop.menu.length;   // 정보 미확인 → 예약 폼 대신 상담 버튼
   // 이름이 같은 메뉴(시간만 다른 것)는 하나로 묶어 시간을 골라요 (저장은 시간별 한 줄씩)
   //  분류(m.sec · 예: 스파 / 네일)가 있으면 분류별 제목 아래로 모아요 · 설명(m.desc)은 이름 밑에 작게
-  const mSplit = v => { const t = String(v || "").trim(); if (!t) return ["", ""]; const p = t.split(/\s+[>›»\/·|]\s+|\s*>\s*/); return [p[0].trim(), p.slice(1).join(" · ").trim()]; };   // "네일 > 여성" → 대분류 · 소분류
+  const mSplit = v => { const t = String(v || "").trim(); if (!t) return ["", ""]; const p = t.split(/\s*[>›»]\s*/); return [p[0].trim(), p.slice(1).join(" · ").trim()]; };   // 대분류 · 소분류는 ">"로만 나눠요 ("헤드스파 · 귀 관리"의 "·"는 "와"라서 안 나눠요) · "네일 > 여성" → 대분류 · 소분류
   const mGroups = []; shop.menu.forEach((m, i) => { const n = tx(m.name), sc = tx(m.sec) || ""; let g = mGroups.find(x => x.n === n && x.sc === sc); if (!g) mGroups.push(g = { n, sc, d: "", items: [] }); if (!g.d) g.d = tx(m.desc) || ""; g.items.push(i); });
   const mHasSec = mGroups.some(g => g.sc);
   mGroups.forEach(g => { [g.top, g.sub] = mSplit(g.sc); if (mHasSec && !g.top) g.top = ui("m_other"); });
