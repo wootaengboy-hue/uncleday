@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
   if (up.error) return out({ error: "올리지 못했어요: " + up.error.message }, 400);
   const att = { p: path, n: (file.name || "file").slice(0, 120), m: file.type, s: file.size, w: str("w", 6), h: str("h", 6), g: str("grp", 32) };
   const { data, error } = await db.rpc("chat_send_att", { p: { att, body: str("body", 2000), t: str("t", 100), bt: str("bt", 100), uid,
-    name: str("name", 60), contact: str("contact", 100), lang: str("lang", 8), page: str("page", 80), gn: str("gn", 3) } });
+    name: str("name", 60), contact: str("contact", 100), lang: str("lang", 8), page: str("page", 300), gn: str("gn", 3) } });
   if (error) { await db.storage.from("chat").remove([path]); return out({ error: error.message }, 400); }
   return out(data);
 });

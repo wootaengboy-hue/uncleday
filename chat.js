@@ -131,7 +131,7 @@ const CHAT = (() => {
     f.onsubmit = async e => {
       e.preventDefault(); const body = ta.value.trim(); if (!body || sending) return; sending = true; f.querySelector(".cb-send").disabled = true;
       try {
-        const r = await LIVE.rpc("chat_send", { body, t: get() || null, bt: bt(), name: f.name ? f.name.value.trim() || null : null, contact: f.contact ? f.contact.value.trim() || null : null, lang: L(), page: (location.hash.match(/#\/shop\/([^/?]+)/) || [])[1] || (onVoucher ? "voucher" : "home") });
+        const r = await LIVE.rpc("chat_send", { body, t: get() || null, bt: bt(), name: f.name ? f.name.value.trim() || null : null, contact: f.contact ? f.contact.value.trim() || null : null, lang: L(), page: typeof UD_TRAIL !== "undefined" ? UD_TRAIL.pack() : ((location.hash.match(/#\/shop\/([^/?]+)/) || [])[1] || (onVoucher ? "voucher" : "home")) });   // 어떤 화면을 보다가 문의했는지 · 어디서 왔는지
         if (r && r.token && !bt()) put(r.token);
         known = true; take(r, true); ta.value = ""; draw(); box.querySelector(".cb-form textarea").focus();
         if (typeof LIVE.track === "function") LIVE.track("chat");
@@ -158,7 +158,7 @@ const CHAT = (() => {
         if (s1.blob.size > 10 * 1048576) throw new Error(t("big"));
         const fd = new FormData(); fd.append("file", s1.blob, s1.name);
         const add = (k2, v) => { if (v) fd.append(k2, v); };
-        add("t", get()); add("bt", bt()); add("lang", L()); add("page", (location.hash.match(/#\/shop\/([^/?]+)/) || [])[1] || (onVoucher ? "voucher" : "home"));
+        add("t", get()); add("bt", bt()); add("lang", L()); add("page", typeof UD_TRAIL !== "undefined" ? UD_TRAIL.pack() : ((location.hash.match(/#\/shop\/([^/?]+)/) || [])[1] || (onVoucher ? "voucher" : "home")));
         add("name", f.name ? f.name.value.trim() : ""); add("contact", f.contact ? f.contact.value.trim() : ""); if (k === 0) add("body", cap);
         if (s1.w) { add("w", String(s1.w)); add("h", String(s1.h)); }
         if (grp && /^image\//.test(file.type)) { add("grp", grp); add("gn", String(imgs)); }

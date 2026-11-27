@@ -176,7 +176,7 @@ function drawThread() {
   const read = lastAdmin && th.guest_seen_at && th.guest_seen_at >= lastAdmin.created_at;
   const typed = box.querySelector("textarea") ? box.querySelector("textarea").value : "";
   box.innerHTML = `<div class="cm-head"><button class="btn sm cm-back" type="button">‹ 목록</button>
-      <div><b>${esc(th.name || "손님")}</b> <span class="hint">${esc(th.contact || "")}${th.lang ? ` · ${{ ko: "한국어", en: "영어", vi: "베트남어" }[th.lang] || th.lang}` : ""}${th.page && th.page !== "home" ? ` · 시작 화면: ${esc((shopById(th.page) || {}).name ? shopById(th.page).name.ko : th.page)}` : ""}</span></div>
+      <div><b>${esc(th.name || "손님")}</b> <span class="hint">${esc(th.contact || "")}${th.lang ? ` · ${{ ko: "한국어", en: "영어", vi: "베트남어" }[th.lang] || th.lang}` : ""}</span></div>${chatSrcHtml(th.page)}
       <div class="cm-acts">${b ? `<button class="btn sm" data-bk="${b.id}">📅 ${esc(b.code)}</button>` : ""}
         <button class="btn sm" data-st>${th.status === "open" ? "✓ 대화 끝내기" : "다시 열기"}</button></div></div>
     <div class="cm-trbar">🌐 <b>자동 번역</b> <button type="button" class="tgl ${CTR.on ? "on" : ""}" data-ctr="on">${CTR.on ? "켜짐" : "꺼짐"}</button>
@@ -342,4 +342,29 @@ async function openGreet() {
     if (w.error) { toast("저장하지 못했어요: " + w.error.message); return; }
     toast(G.on ? "자동 인사를 저장했어요 ✅" : "자동 인사를 껐어요"); d.remove();
   };
+}
+
+// 🚪 이 손님이 어디서 와서 어떤 화면을 보다가 문의했는지 (universe55 · 손님 화면이 보낸 '지금|처음|들어온 곳|최근' )
+function chatPageName(p) {
+  p = String(p || ""); if (!p) return "";
+  const shopNm = id => { const s = typeof shopById === "function" && shopById(id); return s ? `🏪 ${s.name.ko || s.name.en} 업체 화면` : `🏪 업체 화면 (${id})`; };
+  let m;
+  if ((m = p.match(/#\/shop\/([^/?|]+)/)) || (m = p.match(/^\/(?:(?:en|vi|ja|zh)\/)?s\/([^/]+)/)) || (m = p.match(/shop\.html#([^/?|&]+)/))) return shopNm(decodeURIComponent(m[1]));
+  if (/^[a-z0-9-]+$/.test(p) && p !== "home" && p !== "voucher") return shopNm(p);   // 예전 기록 (업체 id 만)
+  if ((m = p.match(/^\/(?:(?:en|vi)\/)?p\/([a-z]+)\/([^/]+)/))) return `📍 입점 전 가게 안내 (${decodeURIComponent(m[2]).replace(/-[nw]\d+$/, "").replace(/-/g, " ")})`;
+  if ((m = p.match(/^\/(?:(?:en|vi|ja|zh)\/)?c\/([a-z]+)\/?(more)?/))) return `🗺️ ${{ danang: "다낭", hcm: "호치민", hanoi: "하노이", nhatrang: "나트랑" }[m[1]] || m[1]} 가게 목록`;
+  if (/^\/blog\//.test(p)) return `📝 블로그 글 (${decodeURIComponent(p.replace(/^\/blog\//, "").replace(/\/$/, "")) || "목록"})`;
+  if (/booking\.html|^voucher$/.test(p)) return "🧾 예약 확인증";
+  if (/^(home|\/|\/(en|vi|ja|zh)\/?|\/index\.html)?(#.*)?$/.test(p)) return "🏠 첫 화면 (업체 목록)";
+  return "📄 " + p;
+}
+function chatSrcHtml(page) {
+  if (!page) return "";
+  const [cur, land, src, pages] = String(page).split("|");
+  if (land === undefined) return page === "home" ? "" : `<div class="ch-src">👀 보고 있던 화면: <b>${esc(chatPageName(cur))}</b></div>`;   // 예전 기록
+  const SRC = { google: "🔎 구글 검색", naver: "🟢 네이버", naverblog: "🟢 네이버 블로그", daum: "다음", bing: "빙", direct: "⌨️ 주소 직접 입력 · 즐겨찾기", internal: "엉클데이 안", kakao: "💬 카카오톡", facebook: "페이스북", instagram: "인스타그램", youtube: "유튜브", zalo: "잘로", tiktok: "틱톡", chatgpt: "🤖 ChatGPT", perplexity: "🤖 Perplexity", claude: "🤖 Claude", gemini: "🤖 Gemini", gbp: "📍 구글 지도 업체 프로필", qr: "📱 QR 코드", fb: "페이스북", ig: "인스타그램" };
+  const url = p => /^\//.test(p) ? "https://www.uncleday.com" + p : null;
+  const a = p => { const u = url(p); return u ? `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(chatPageName(p))}</a>` : esc(chatPageName(p)); };
+  const trail = (pages || "").split(",").filter(x => x && x !== cur);
+  return `<div class="ch-src">👀 문의할 때 보던 화면: <b>${a(cur)}</b><br>🚪 처음 들어온 곳: <b>${esc(SRC[src] || src || "알 수 없음")}</b> → ${a(land)}${trail.length ? `<br><small>최근 본 화면: ${trail.map(a).join(" · ")}</small>` : ""}</div>`;
 }

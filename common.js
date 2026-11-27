@@ -265,3 +265,21 @@ function udFitImg(im) {
 }
 document.addEventListener("load", e => { const t = e.target; if (t && t.tagName === "IMG" && t.matches(".hero, .shop img, .shop-media img, .v-img, .mq-lv img, .fp img")) udFitImg(t); }, true);
 window.addEventListener("resize", () => document.querySelectorAll(".hero, .shop-media img, .v-img").forEach(im => { if (!im.dataset.fit) udFitImg(im); }));
+
+// 🚪 손님이 어디서 왔고 어떤 화면을 보다가 문의했는지 (관리자 채팅에 보여 줘요 · 이 브라우저 탭 안에서만 기억)
+//    처음 들어온 화면 + 들어온 곳(구글 · 네이버 · 카톡 · 직접 등) + 최근 본 화면 3개
+const UD_TRAIL = (() => {
+  const here = () => (location.pathname.replace(/index\.html$/, "") + (location.hash && !/^#(access_token|error)/.test(location.hash) ? location.hash : "")).slice(0, 90);
+  const srcOf = () => { try {
+    const v = new URLSearchParams(location.search).get("via"); if (v && /^[a-z0-9_-]{2,20}$/i.test(v)) return v;
+    const r = document.referrer; if (!r) return "direct"; const h = new URL(r).hostname; if (h === location.hostname) return "internal";
+    const m = [["google", "google"], ["naver", "naver"], ["bing", "bing"], ["daum", "daum"], ["chatgpt", "chatgpt"], ["openai", "chatgpt"], ["perplexity", "perplexity"], ["claude", "claude"], ["gemini", "gemini"], ["kakao", "kakao"], ["facebook", "facebook"], ["instagram", "instagram"], ["youtube", "youtube"], ["zalo", "zalo"], ["tiktok", "tiktok"]];
+    for (const [k, n] of m) if (h.includes(k)) return n; return h.replace(/^www\./, "").slice(0, 30);
+  } catch (e) { return "other"; } };
+  let t = {}; try { t = JSON.parse(sessionStorage.getItem("ud-trail") || "{}"); } catch (e) {}
+  if (!t.land) { t.land = here(); t.src = srcOf(); t.at = Date.now(); }
+  const push = () => { const p = here(); t.pages = (t.pages || []).filter(x => x !== p).concat(p).slice(-3); try { sessionStorage.setItem("ud-trail", JSON.stringify(t)); } catch (e) {} };
+  push(); window.addEventListener("hashchange", push);
+  // chat_send 의 page 칸에 넣는 글자: 지금 화면 | 처음 들어온 화면 | 들어온 곳 | 최근 본 화면들
+  return { pack: () => { push(); return [here(), t.land, t.src, (t.pages || []).join(",")].join("|").slice(0, 300); } };
+})();
