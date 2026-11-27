@@ -44,6 +44,14 @@ const priceFrom = shop => {
   const ps = shop.menu.map((m, i) => { const pf = typeof promoFor === "function" && m.price > 0 ? promoFor(shop, i) : null; return pf && pf.cut ? pf.price : m.price; }).filter(p => p > 0);   // 🎁 할인 중이면 할인가 기준
   return ps.length ? money(Math.min(...ps)) + " ~" : ui("consultPrice");
 };
+// 업체 상세 💰 가격: 가장 싼 것 ~ 가장 비싼 것 (할인 중이면 할인가) · 예: ₫448,000 ~ ₫5,408,000 (약 ₩24,600 ~ ₩297,000)
+const priceRange = shop => {
+  const ps = shop.menu.map((m, i) => { const pf = typeof promoFor === "function" && m.price > 0 ? promoFor(shop, i) : null; return pf && pf.cut ? pf.price : m.price; }).filter(p => p > 0);
+  if (!ps.length) return ui("consultPrice");
+  const lo = Math.min(...ps), hi = Math.max(...ps); if (lo === hi) return money(lo);
+  const r = SITE.rates[lang], k = v => Math.round(v * r.rate / r.round) * r.round;
+  return `₫${lo.toLocaleString("en-US")} ~ ₫${hi.toLocaleString("en-US")}` + (r ? ` (${ui("approx")} ${r.symbol}${k(lo).toLocaleString("en-US")} ~ ${r.symbol}${k(hi).toLocaleString("en-US")})` : "");
+};
 
 // 🟢 지금 영업 중? — 베트남 시간(UTC+7) 기준 · 자정 넘어 끝나는 가게(예: 10:00 ~ 02:00)도 맞게
 function openInfo(shop) {

@@ -152,7 +152,7 @@ if (!shop) {
   ];
   const facts = [
     ["📍", ui("address"), addrOk ? tx(shop.address) : ui("tbd"), addrOk],
-    ["💰", ui("price"), hasPrice ? priceFrom(shop) : ui("consultPrice"), hasPrice],
+    ["💰", ui("price"), hasPrice ? priceRange(shop) : ui("consultPrice"), hasPrice],
     ["🕒", ui("hours"), shop.open ? `${hoursText} ${openBadge(shop)}<br><small>${ui("closedDays")}: ${closedText}</small>` : ui("tbd"), !!shop.open],
     ["🗣️", ui("staffLangs"), staff, shop.staffLangs.length > 0]
   ];
