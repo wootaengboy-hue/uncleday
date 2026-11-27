@@ -44,7 +44,7 @@ const SEGS = [
 
 let crmView = "cust";
 const crmViewBar = () => `<div class="crm-views"><button class="chip ${crmView === "cust" ? "on" : ""}" data-crmv="cust">👥 예약 손님</button><button class="chip ${crmView === "inq" ? "on" : ""}" data-crmv="inq">💬 문의 기록 <small>채팅 자동 기록</small></button></div>`;
-function crmViewBind(el) { el.querySelectorAll("[data-crmv]").forEach(b => b.onclick = () => { crmView = b.dataset.crmv; drawCrm(); }); }
+function crmViewBind(el) { el.querySelectorAll("[data-crmv]").forEach(b => b.onclick = () => { if (crmView === b.dataset.crmv) return; crmView = b.dataset.crmv; NAV_QUIET = false; navSync(); drawCrm(); }); }
 async function drawCrm() {
   const el = $("tab-crm");
   if (crmView === "inq" && typeof drawInq === "function") { await drawInq(el); el.insertAdjacentHTML("afterbegin", crmViewBar()); crmViewBind(el); return; }

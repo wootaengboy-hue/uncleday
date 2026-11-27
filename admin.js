@@ -128,13 +128,13 @@ const TODO = [
 let TAB = "home";
 // 브라우저 '뒤로 가기'가 관리자 페이지 안에서 움직이게: 탭 · 포털 앱마다 주소(#bk, #home/price …)를 남겨요
 let NAV_QUIET = true;   // 처음 열 때 · 뒤로 가기로 움직일 때는 기록을 새로 쌓지 않아요
-function navHash() { if (TAB === "chat" && typeof CHAT_CUR !== "undefined" && CHAT_CUR) return "chat/" + CHAT_CUR; return TAB === "home" && typeof PORTAL !== "undefined" && PORTAL.view && PORTAL.view !== "home" ? "home/" + PORTAL.view : TAB; }
+function navHash() { if (TAB === "chat" && typeof CHAT_CUR !== "undefined" && CHAT_CUR) return "chat/" + CHAT_CUR; if (TAB === "crm" && typeof crmView !== "undefined" && crmView === "inq") return "crm/inq"; return TAB === "home" && typeof PORTAL !== "undefined" && PORTAL.view && PORTAL.view !== "home" ? "home/" + PORTAL.view : TAB; }
 function navSync() { const h = navHash(); if (location.hash.slice(1) === h) return; if (NAV_QUIET) history.replaceState(null, "", "#" + h); else history.pushState(null, "", "#" + h); }
 window.addEventListener("popstate", () => {
   if (typeof TAB === "undefined" || $("app").hidden) return;
   const [t, v] = location.hash.slice(1).split("/"); if (!t || /=/.test(t)) return;
   NAV_QUIET = true;
-  try { if (t === "home") { PORTAL.view = v || "home"; if (TAB !== "home") showTab("home"); else portalGo(PORTAL.view, true); } else if (t === "chat" && v) { showTab("chat"); if (CHAT_CUR !== v) openThread(v).then(() => $("tab-chat").scrollIntoView({ block: "start" })); } else if (TABS_ALL.includes(t)) { if (t === "chat") CHAT_CUR = null; showTab(t); } }
+  try { if (t === "home") { PORTAL.view = v || "home"; if (TAB !== "home") showTab("home"); else portalGo(PORTAL.view, true); } else if (t === "chat" && v) { showTab("chat"); if (CHAT_CUR !== v) openThread(v).then(() => $("tab-chat").scrollIntoView({ block: "start" })); } else if (TABS_ALL.includes(t)) { if (t === "chat") CHAT_CUR = null; if (t === "crm" && typeof crmView !== "undefined") crmView = v === "inq" ? "inq" : "cust"; showTab(t); } }
   finally { NAV_QUIET = false; }
 });
 const TABS_ALL = ["home", "dash", "work", "bk", "chat", "crm", "settle", "shops", "syn", "rv", "uni", "acc"];
@@ -1369,6 +1369,7 @@ async function afterLogin(session) {
   $("logoHome").onclick = e => { e.preventDefault(); PORTAL.view = "home"; try { sessionStorage.setItem("ptView", "home"); } catch (er) {} showTab("home"); window.scrollTo(0, 0); };
   const [h, hv] = location.hash.slice(1).split("/");
   if (h === "home" && hv) PORTAL.view = hv;
+  if (h === "crm" && hv === "inq" && typeof crmView !== "undefined") crmView = "inq";
   NAV_QUIET = true; showTab(TABS_ALL.includes(h) ? h : "home"); NAV_QUIET = false;
   // 슬랙 알림의 링크(#chat/대화번호)로 들어오면 그 손님 대화를 바로 열어요
   if (h === "chat" && hv && TAB === "chat") openThread(hv).then(() => setTimeout(() => $("tab-chat").scrollIntoView({ block: "start" }), 300));
@@ -1510,7 +1511,7 @@ async function drawCty(box) {
     ub.innerHTML = `<div class="cty-unk"><div class="cty-uh"><b>${isT ? "🧪 테스트 채팅" : k ? ccFlag(k) + " " + esc(ccName(k)) : "❔ 알 수 없음"} ${these.length}건</b>
       ${isT ? `<small class="hint">이름·연락처에 test·테스트가 들어간 건 자동이라 여기서 못 바꿔요</small>` : `<button class="btn sm" data-ctyall>🧪 이 목록 전부 테스트로</button>`}</div>
       ${these.map(t => { const auto = isT && t.country !== "ZZ"; return `<div class="cty-u"><div><b>${esc(t.name || "손님")}</b> <small>${esc(String(t.created_at).slice(5, 10).replace("-", "/"))}${t.lang ? " · " + esc(t.lang) : ""}${!isT && t.country ? " · 관리자 지정" : ""}</small><br><small class="hint">${esc((t.contact || "연락처 없음").slice(0, 40))} · ${esc((t.last_body || "").slice(0, 40))}</small></div>
-      ${auto ? `<small class="hint">자동 테스트</small>` : `<select data-ctyset="${esc(t.id)}"><option value="">${isT ? "테스트 아님으로 되돌리기" : "나라 바꾸기"}</option>${isT ? `<option value="-">↩ 자동 추정으로</option>` : `<option value="ZZ">🧪 테스트 (통계에서 빼기)</option>`}${opt}</select>`} <a class="btn sm" href="#chat/${esc(t.id)}" onclick="showTab('chat')">채팅 보기</a></div>`; }).join("")}</div>`;
+      ${auto ? `<small class="hint">자동 테스트</small>` : `<select data-ctyset="${esc(t.id)}"><option value="">${isT ? "테스트 아님으로 되돌리기" : "나라 바꾸기"}</option>${isT ? `<option value="-">↩ 자동 추정으로</option>` : `<option value="ZZ">🧪 테스트 (통계에서 빼기)</option>`}${opt}</select>`} <a class="btn sm" href="#chat/${esc(t.id)}" onclick="event.preventDefault();goChat('${esc(t.id)}')">채팅 보기</a></div>`; }).join("")}</div>`;
     const save = async (ids, v) => { const x = await sb.from("chat_threads").update({ country: v }).in("id", ids); if (x.error) { dbErr(x.error, "나라 지정"); return; }
       toast(v === "ZZ" ? `${ids.length}건을 테스트로 뺐어요` : v ? `${ccName(v)}(으)로 지정했어요` : "자동 추정으로 되돌렸어요"); await drawCty(box); };
     ub.querySelectorAll("[data-ctyset]").forEach(sel => sel.onchange = () => { if (sel.value) save([sel.dataset.ctyset], sel.value === "-" ? null : sel.value); });
@@ -1521,3 +1522,6 @@ async function drawCty(box) {
   box.querySelectorAll("[data-ctyk]").forEach(r => r.onclick = () => openList(CTY_OPEN === r.dataset.ctyk ? null : r.dataset.ctyk));
   if (CTY_OPEN != null && box.querySelector(`[data-ctyk="${CTY_OPEN}"]`)) openList(CTY_OPEN); else CTY_OPEN = null;
 }
+
+// 다른 화면(문의 기록 · 대시보드)에서 채팅 하나 열기 — 브라우저 '뒤로'를 누르면 보던 화면으로 돌아와요
+function goChat(id) { if (!id) return; CHAT_CUR = id; NAV_QUIET = false; showTab("chat"); NAV_QUIET = true; openThread(id).then(() => { const t = $("tab-chat"); if (t) t.scrollIntoView({ block: "start" }); }); NAV_QUIET = false; }

@@ -178,7 +178,8 @@ function drawThread() {
   box.innerHTML = `<div class="cm-head"><button class="btn sm cm-back" type="button">‹ 목록</button>
       <div><b>${esc(th.name || "손님")}</b> <span class="hint">${esc(th.contact || "")}${th.lang ? ` · ${{ ko: "한국어", en: "영어", vi: "베트남어" }[th.lang] || th.lang}` : ""}</span></div>${chatSrcHtml(th.page, th)}
       <div class="cm-acts">${(() => { const au = (b && b.shop_id) || (typeof inqShops === "function" ? inqShops(th.page)[0] : ""), nm = id => { const x = shopById(id); return x ? (x.name.ko || x.name.en) : id; };
-        return `<select class="cm-shop${th.shop_id ? " set" : ""}" data-cshop title="이 문의가 어느 업체 문의인지 (문의 기록에 쌓여요)"><option value="">🏪 ${au ? "자동: " + esc(nm(au)) : "문의 업체 고르기"}</option><option value="-" ${th.shop_id === "-" ? "selected" : ""}>업체 없는 일반 문의</option>${shops.slice().sort((x, y) => (x.name.ko || "").localeCompare(y.name.ko || "", "ko")).map(x => `<option value="${esc(x.id)}" ${th.shop_id === x.id ? "selected" : ""}>✍️ ${esc(x.name.ko || x.name.en || x.id)}</option>`).join("")}</select>`; })()}
+        const k = th.kind && typeof INQ_KIND !== "undefined" ? INQ_KIND[th.kind] + " · " : "";
+        return `<button type="button" class="cm-shop${th.shop_id || th.kind ? " set" : ""}" data-cshop title="문의 종류 · 업체 · 나라 정리 (문의 기록에 쌓여요)">${esc(k)}${th.shop_id === "-" ? "📝 일반 문의" : th.shop_id ? "🏪 " + esc(nm(th.shop_id)) : au ? "🏪 자동: " + esc(nm(au)) : "🏪 문의 업체 고르기"} ▾</button>`; })()}
         ${b ? `<button class="btn sm" data-bk="${b.id}">📅 ${esc(b.code)}</button>` : ""}
         <button class="btn sm" data-st>${th.status === "open" ? "✓ 대화 끝내기" : "다시 열기"}</button></div></div>
     <div class="cm-trbar">🌐 <b>자동 번역</b> <button type="button" class="tgl ${CTR.on ? "on" : ""}" data-ctr="on">${CTR.on ? "켜짐" : "꺼짐"}</button>
@@ -195,11 +196,7 @@ function drawThread() {
       ${phone ? `<button class="btn sm" data-ping="sms">📱 답장 알림 문자 (${esc(phone)})</button>` : ""}<button class="btn sm" data-ping="copy">📋 알림 메시지 복사 (카톡 등)</button></div>` : ""}`;
   const list = box.querySelector(".cm-list"); list.scrollTop = list.scrollHeight;
   { const d = box.querySelector("details.ch-src"); if (d) d.ontoggle = () => { CH_SRC_OPEN = d.open; }; }
-  { const cs = box.querySelector("[data-cshop]"); if (cs) cs.onchange = async () => {
-    const v = cs.value || null, r = await sb.from("chat_threads").update({ shop_id: v }).eq("id", th.id);
-    if (r.error) { dbErr(r.error, /shop_id/.test(r.error.message || "") ? "업체 지정 (supabase/universe57.sql 실행 필요)" : "업체 지정"); cs.value = th.shop_id || ""; return; }
-    th.shop_id = v; cs.classList.toggle("set", !!v); if (typeof INQ !== "undefined") INQ.rows = null;
-    toast(v === "-" ? "일반 문의로 표시했어요" : v ? `${(shopById(v) || { name: {} }).name.ko || v} 문의로 기록했어요` : "자동으로 되돌렸어요"); }; }
+  { const cs = box.querySelector("[data-cshop]"); if (cs) cs.onclick = () => { const g0 = CHAT_MSGS.find(m => m.sender === "guest"); inqSetChat(th, g0 ? g0.body : th.last_body, b); }; }
   box.querySelector(".cm-back").onclick = () => { CHAT_CUR = null; clearInterval(CHAT_TIMER); drawChat(); NAV_QUIET = true; navSync(); NAV_QUIET = false; };
   const bk = box.querySelector("[data-bk]"); if (bk) bk.onclick = () => openBooking(bk.dataset.bk);
   const setSt = async st => { const r = await sb.from("chat_threads").update({ status: st }).eq("id", th.id); if (r.error) { dbErr(r.error, "상태 변경"); return false; } th.status = st; return true; };
