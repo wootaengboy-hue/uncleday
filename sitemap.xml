@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://www.uncleday.com/</loc><lastmod>2026-11-27</lastmod><priority>1.0</priority></url>
   <url><loc>https://www.uncleday.com/c/hcm/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
-  <url><loc>https://www.uncleday.com/c/hanoi/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
+  <url><loc>https://www.uncleday.com/c/hanoi/</loc><lastmod>2026-11-27</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/c/danang/</loc><lastmod>2026-11-27</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/c/nhatrang/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/c/hcm/luggage/</loc><lastmod>2026-11-08</lastmod><priority>0.8</priority></url>
@@ -17,10 +17,12 @@
   <url><loc>https://www.uncleday.com/en/c/hcm/tipfree/</loc><lastmod>2026-11-08</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/c/hcm/clinic/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/en/c/hcm/clinic/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
-  <url><loc>https://www.uncleday.com/c/hanoi/thai/</loc><lastmod>2026-11-08</lastmod><priority>0.8</priority></url>
-  <url><loc>https://www.uncleday.com/en/c/hanoi/thai/</loc><lastmod>2026-11-08</lastmod><priority>0.8</priority></url>
-  <url><loc>https://www.uncleday.com/c/hanoi/foot/</loc><lastmod>2026-11-08</lastmod><priority>0.8</priority></url>
-  <url><loc>https://www.uncleday.com/en/c/hanoi/foot/</loc><lastmod>2026-11-08</lastmod><priority>0.8</priority></url>
+  <url><loc>https://www.uncleday.com/c/hanoi/hotstone/</loc><lastmod>2026-11-27</lastmod><priority>0.8</priority></url>
+  <url><loc>https://www.uncleday.com/en/c/hanoi/hotstone/</loc><lastmod>2026-11-27</lastmod><priority>0.8</priority></url>
+  <url><loc>https://www.uncleday.com/c/hanoi/thai/</loc><lastmod>2026-11-27</lastmod><priority>0.8</priority></url>
+  <url><loc>https://www.uncleday.com/en/c/hanoi/thai/</loc><lastmod>2026-11-27</lastmod><priority>0.8</priority></url>
+  <url><loc>https://www.uncleday.com/c/hanoi/foot/</loc><lastmod>2026-11-27</lastmod><priority>0.8</priority></url>
+  <url><loc>https://www.uncleday.com/en/c/hanoi/foot/</loc><lastmod>2026-11-27</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/c/hanoi/clinic/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/en/c/hanoi/clinic/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/c/danang/korean/</loc><lastmod>2026-11-27</lastmod><priority>0.8</priority></url>
@@ -755,15 +757,15 @@
   <url><loc>https://www.uncleday.com/blog/danang-foot-48/</loc><lastmod>2026-11-27</lastmod></url>
   <url><loc>https://www.uncleday.com/blog/danang-han-market-49/</loc><lastmod>2026-11-27</lastmod></url>
   <url><loc>https://www.uncleday.com/c/hcm/guide/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
-  <url><loc>https://www.uncleday.com/c/hanoi/guide/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
+  <url><loc>https://www.uncleday.com/c/hanoi/guide/</loc><lastmod>2026-11-27</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/c/danang/guide/</loc><lastmod>2026-11-27</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/c/nhatrang/guide/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/en/c/hcm/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
-  <url><loc>https://www.uncleday.com/en/c/hanoi/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
+  <url><loc>https://www.uncleday.com/en/c/hanoi/</loc><lastmod>2026-11-27</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/en/c/danang/</loc><lastmod>2026-11-27</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/en/c/nhatrang/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/en/c/hcm/guide/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
-  <url><loc>https://www.uncleday.com/en/c/hanoi/guide/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
+  <url><loc>https://www.uncleday.com/en/c/hanoi/guide/</loc><lastmod>2026-11-27</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/en/c/danang/guide/</loc><lastmod>2026-11-27</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/en/c/nhatrang/guide/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/s/ada-tran-spa/</loc><lastmod>2026-11-25</lastmod></url>
@@ -794,7 +796,7 @@
   <url><loc>https://www.uncleday.com/s/j-spa/</loc><lastmod>2026-11-08</lastmod></url>
   <url><loc>https://www.uncleday.com/s/jw-korea-hospital/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/s/la-belle-spa/</loc><lastmod>2026-11-08</lastmod></url>
-  <url><loc>https://www.uncleday.com/s/la-maison-grand-spa/</loc><lastmod>2026-11-08</lastmod></url>
+  <url><loc>https://www.uncleday.com/s/la-maison-grand-spa/</loc><lastmod>2026-11-27</lastmod></url>
   <url><loc>https://www.uncleday.com/s/linh-chau/</loc><lastmod>2026-11-26</lastmod></url>
   <url><loc>https://www.uncleday.com/s/lumi-lux-nail/</loc><lastmod>2026-11-08</lastmod></url>
   <url><loc>https://www.uncleday.com/s/miti-nail-spa/</loc><lastmod>2026-11-25</lastmod></url>
@@ -854,7 +856,7 @@
   <url><loc>https://www.uncleday.com/en/s/j-spa/</loc><lastmod>2026-11-08</lastmod></url>
   <url><loc>https://www.uncleday.com/en/s/jw-korea-hospital/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/en/s/la-belle-spa/</loc><lastmod>2026-11-08</lastmod></url>
-  <url><loc>https://www.uncleday.com/en/s/la-maison-grand-spa/</loc><lastmod>2026-11-08</lastmod></url>
+  <url><loc>https://www.uncleday.com/en/s/la-maison-grand-spa/</loc><lastmod>2026-11-27</lastmod></url>
   <url><loc>https://www.uncleday.com/en/s/linh-chau/</loc><lastmod>2026-11-26</lastmod></url>
   <url><loc>https://www.uncleday.com/en/s/lumi-lux-nail/</loc><lastmod>2026-11-08</lastmod></url>
   <url><loc>https://www.uncleday.com/en/s/miti-nail-spa/</loc><lastmod>2026-11-25</lastmod></url>
@@ -910,7 +912,7 @@
   <url><loc>https://www.uncleday.com/ja/s/villa-aesthetica/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/ja/s/paragon-spa/</loc><lastmod>2026-11-08</lastmod></url>
   <url><loc>https://www.uncleday.com/ja/s/la-belle-spa/</loc><lastmod>2026-11-08</lastmod></url>
-  <url><loc>https://www.uncleday.com/ja/s/la-maison-grand-spa/</loc><lastmod>2026-11-08</lastmod></url>
+  <url><loc>https://www.uncleday.com/ja/s/la-maison-grand-spa/</loc><lastmod>2026-11-27</lastmod></url>
   <url><loc>https://www.uncleday.com/ja/s/vinmec-view/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/ja/s/dong-a-beauty/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/ja/s/white-spa-nail/</loc><lastmod>2026-11-08</lastmod></url>
@@ -946,7 +948,7 @@
   <url><loc>https://www.uncleday.com/ja/s/nguon-spa/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/ja/s/nha-spa/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/ja/c/hcm/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
-  <url><loc>https://www.uncleday.com/ja/c/hanoi/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
+  <url><loc>https://www.uncleday.com/ja/c/hanoi/</loc><lastmod>2026-11-27</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/ja/c/danang/</loc><lastmod>2026-11-27</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/ja/c/nhatrang/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/zh/s/dahan-spa/</loc><lastmod>2026-11-26</lastmod></url>
@@ -972,7 +974,7 @@
   <url><loc>https://www.uncleday.com/zh/s/villa-aesthetica/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/zh/s/paragon-spa/</loc><lastmod>2026-11-08</lastmod></url>
   <url><loc>https://www.uncleday.com/zh/s/la-belle-spa/</loc><lastmod>2026-11-08</lastmod></url>
-  <url><loc>https://www.uncleday.com/zh/s/la-maison-grand-spa/</loc><lastmod>2026-11-08</lastmod></url>
+  <url><loc>https://www.uncleday.com/zh/s/la-maison-grand-spa/</loc><lastmod>2026-11-27</lastmod></url>
   <url><loc>https://www.uncleday.com/zh/s/vinmec-view/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/zh/s/dong-a-beauty/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/zh/s/white-spa-nail/</loc><lastmod>2026-11-08</lastmod></url>
@@ -1008,7 +1010,7 @@
   <url><loc>https://www.uncleday.com/zh/s/nguon-spa/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/zh/s/nha-spa/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/zh/c/hcm/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
-  <url><loc>https://www.uncleday.com/zh/c/hanoi/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
+  <url><loc>https://www.uncleday.com/zh/c/hanoi/</loc><lastmod>2026-11-27</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/zh/c/danang/</loc><lastmod>2026-11-27</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/zh/c/nhatrang/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/zh-tw/s/dahan-spa/</loc><lastmod>2026-11-26</lastmod></url>
@@ -1035,7 +1037,7 @@
   <url><loc>https://www.uncleday.com/zh-tw/s/villa-aesthetica/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/zh-tw/s/paragon-spa/</loc><lastmod>2026-11-08</lastmod></url>
   <url><loc>https://www.uncleday.com/zh-tw/s/la-belle-spa/</loc><lastmod>2026-11-08</lastmod></url>
-  <url><loc>https://www.uncleday.com/zh-tw/s/la-maison-grand-spa/</loc><lastmod>2026-11-08</lastmod></url>
+  <url><loc>https://www.uncleday.com/zh-tw/s/la-maison-grand-spa/</loc><lastmod>2026-11-27</lastmod></url>
   <url><loc>https://www.uncleday.com/zh-tw/s/vinmec-view/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/zh-tw/s/dong-a-beauty/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/zh-tw/s/white-spa-nail/</loc><lastmod>2026-11-08</lastmod></url>
@@ -1071,7 +1073,7 @@
   <url><loc>https://www.uncleday.com/zh-tw/s/nguon-spa/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/zh-tw/s/nha-spa/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/zh-tw/c/hcm/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
-  <url><loc>https://www.uncleday.com/zh-tw/c/hanoi/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
+  <url><loc>https://www.uncleday.com/zh-tw/c/hanoi/</loc><lastmod>2026-11-27</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/zh-tw/c/danang/</loc><lastmod>2026-11-27</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/zh-tw/c/nhatrang/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/ru/s/dahan-spa/</loc><lastmod>2026-11-26</lastmod></url>
@@ -1098,7 +1100,7 @@
   <url><loc>https://www.uncleday.com/ru/s/villa-aesthetica/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/ru/s/paragon-spa/</loc><lastmod>2026-11-08</lastmod></url>
   <url><loc>https://www.uncleday.com/ru/s/la-belle-spa/</loc><lastmod>2026-11-08</lastmod></url>
-  <url><loc>https://www.uncleday.com/ru/s/la-maison-grand-spa/</loc><lastmod>2026-11-08</lastmod></url>
+  <url><loc>https://www.uncleday.com/ru/s/la-maison-grand-spa/</loc><lastmod>2026-11-27</lastmod></url>
   <url><loc>https://www.uncleday.com/ru/s/vinmec-view/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/ru/s/dong-a-beauty/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/ru/s/white-spa-nail/</loc><lastmod>2026-11-08</lastmod></url>
@@ -1134,7 +1136,7 @@
   <url><loc>https://www.uncleday.com/ru/s/nguon-spa/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/ru/s/nha-spa/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/ru/c/hcm/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
-  <url><loc>https://www.uncleday.com/ru/c/hanoi/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
+  <url><loc>https://www.uncleday.com/ru/c/hanoi/</loc><lastmod>2026-11-27</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/ru/c/danang/</loc><lastmod>2026-11-27</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/ru/c/nhatrang/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/fr/s/dahan-spa/</loc><lastmod>2026-11-26</lastmod></url>
@@ -1161,7 +1163,7 @@
   <url><loc>https://www.uncleday.com/fr/s/villa-aesthetica/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/fr/s/paragon-spa/</loc><lastmod>2026-11-08</lastmod></url>
   <url><loc>https://www.uncleday.com/fr/s/la-belle-spa/</loc><lastmod>2026-11-08</lastmod></url>
-  <url><loc>https://www.uncleday.com/fr/s/la-maison-grand-spa/</loc><lastmod>2026-11-08</lastmod></url>
+  <url><loc>https://www.uncleday.com/fr/s/la-maison-grand-spa/</loc><lastmod>2026-11-27</lastmod></url>
   <url><loc>https://www.uncleday.com/fr/s/vinmec-view/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/fr/s/dong-a-beauty/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/fr/s/white-spa-nail/</loc><lastmod>2026-11-08</lastmod></url>
@@ -1197,7 +1199,7 @@
   <url><loc>https://www.uncleday.com/fr/s/nguon-spa/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/fr/s/nha-spa/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/fr/c/hcm/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
-  <url><loc>https://www.uncleday.com/fr/c/hanoi/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
+  <url><loc>https://www.uncleday.com/fr/c/hanoi/</loc><lastmod>2026-11-27</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/fr/c/danang/</loc><lastmod>2026-11-27</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/fr/c/nhatrang/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/de/s/dahan-spa/</loc><lastmod>2026-11-26</lastmod></url>
@@ -1224,7 +1226,7 @@
   <url><loc>https://www.uncleday.com/de/s/villa-aesthetica/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/de/s/paragon-spa/</loc><lastmod>2026-11-08</lastmod></url>
   <url><loc>https://www.uncleday.com/de/s/la-belle-spa/</loc><lastmod>2026-11-08</lastmod></url>
-  <url><loc>https://www.uncleday.com/de/s/la-maison-grand-spa/</loc><lastmod>2026-11-08</lastmod></url>
+  <url><loc>https://www.uncleday.com/de/s/la-maison-grand-spa/</loc><lastmod>2026-11-27</lastmod></url>
   <url><loc>https://www.uncleday.com/de/s/vinmec-view/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/de/s/dong-a-beauty/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/de/s/white-spa-nail/</loc><lastmod>2026-11-08</lastmod></url>
@@ -1260,7 +1262,7 @@
   <url><loc>https://www.uncleday.com/de/s/nguon-spa/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/de/s/nha-spa/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/de/c/hcm/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
-  <url><loc>https://www.uncleday.com/de/c/hanoi/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
+  <url><loc>https://www.uncleday.com/de/c/hanoi/</loc><lastmod>2026-11-27</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/de/c/danang/</loc><lastmod>2026-11-27</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/de/c/nhatrang/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/es/s/dahan-spa/</loc><lastmod>2026-11-26</lastmod></url>
@@ -1287,7 +1289,7 @@
   <url><loc>https://www.uncleday.com/es/s/villa-aesthetica/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/es/s/paragon-spa/</loc><lastmod>2026-11-08</lastmod></url>
   <url><loc>https://www.uncleday.com/es/s/la-belle-spa/</loc><lastmod>2026-11-08</lastmod></url>
-  <url><loc>https://www.uncleday.com/es/s/la-maison-grand-spa/</loc><lastmod>2026-11-08</lastmod></url>
+  <url><loc>https://www.uncleday.com/es/s/la-maison-grand-spa/</loc><lastmod>2026-11-27</lastmod></url>
   <url><loc>https://www.uncleday.com/es/s/vinmec-view/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/es/s/dong-a-beauty/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/es/s/white-spa-nail/</loc><lastmod>2026-11-08</lastmod></url>
@@ -1323,7 +1325,7 @@
   <url><loc>https://www.uncleday.com/es/s/nguon-spa/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/es/s/nha-spa/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/es/c/hcm/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
-  <url><loc>https://www.uncleday.com/es/c/hanoi/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
+  <url><loc>https://www.uncleday.com/es/c/hanoi/</loc><lastmod>2026-11-27</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/es/c/danang/</loc><lastmod>2026-11-27</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/es/c/nhatrang/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/hi/s/dahan-spa/</loc><lastmod>2026-11-26</lastmod></url>
@@ -1350,7 +1352,7 @@
   <url><loc>https://www.uncleday.com/hi/s/villa-aesthetica/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/hi/s/paragon-spa/</loc><lastmod>2026-11-08</lastmod></url>
   <url><loc>https://www.uncleday.com/hi/s/la-belle-spa/</loc><lastmod>2026-11-08</lastmod></url>
-  <url><loc>https://www.uncleday.com/hi/s/la-maison-grand-spa/</loc><lastmod>2026-11-08</lastmod></url>
+  <url><loc>https://www.uncleday.com/hi/s/la-maison-grand-spa/</loc><lastmod>2026-11-27</lastmod></url>
   <url><loc>https://www.uncleday.com/hi/s/vinmec-view/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/hi/s/dong-a-beauty/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/hi/s/white-spa-nail/</loc><lastmod>2026-11-08</lastmod></url>
@@ -1386,7 +1388,7 @@
   <url><loc>https://www.uncleday.com/hi/s/nguon-spa/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/hi/s/nha-spa/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/hi/c/hcm/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
-  <url><loc>https://www.uncleday.com/hi/c/hanoi/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
+  <url><loc>https://www.uncleday.com/hi/c/hanoi/</loc><lastmod>2026-11-27</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/hi/c/danang/</loc><lastmod>2026-11-27</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/hi/c/nhatrang/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/th/s/dahan-spa/</loc><lastmod>2026-11-26</lastmod></url>
@@ -1413,7 +1415,7 @@
   <url><loc>https://www.uncleday.com/th/s/villa-aesthetica/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/th/s/paragon-spa/</loc><lastmod>2026-11-08</lastmod></url>
   <url><loc>https://www.uncleday.com/th/s/la-belle-spa/</loc><lastmod>2026-11-08</lastmod></url>
-  <url><loc>https://www.uncleday.com/th/s/la-maison-grand-spa/</loc><lastmod>2026-11-08</lastmod></url>
+  <url><loc>https://www.uncleday.com/th/s/la-maison-grand-spa/</loc><lastmod>2026-11-27</lastmod></url>
   <url><loc>https://www.uncleday.com/th/s/vinmec-view/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/th/s/dong-a-beauty/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/th/s/white-spa-nail/</loc><lastmod>2026-11-08</lastmod></url>
@@ -1449,7 +1451,7 @@
   <url><loc>https://www.uncleday.com/th/s/nguon-spa/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/th/s/nha-spa/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/th/c/hcm/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
-  <url><loc>https://www.uncleday.com/th/c/hanoi/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
+  <url><loc>https://www.uncleday.com/th/c/hanoi/</loc><lastmod>2026-11-27</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/th/c/danang/</loc><lastmod>2026-11-27</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/th/c/nhatrang/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/id/s/dahan-spa/</loc><lastmod>2026-11-26</lastmod></url>
@@ -1475,7 +1477,7 @@
   <url><loc>https://www.uncleday.com/id/s/villa-aesthetica/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/id/s/paragon-spa/</loc><lastmod>2026-11-08</lastmod></url>
   <url><loc>https://www.uncleday.com/id/s/la-belle-spa/</loc><lastmod>2026-11-08</lastmod></url>
-  <url><loc>https://www.uncleday.com/id/s/la-maison-grand-spa/</loc><lastmod>2026-11-08</lastmod></url>
+  <url><loc>https://www.uncleday.com/id/s/la-maison-grand-spa/</loc><lastmod>2026-11-27</lastmod></url>
   <url><loc>https://www.uncleday.com/id/s/vinmec-view/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/id/s/dong-a-beauty/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/id/s/white-spa-nail/</loc><lastmod>2026-11-08</lastmod></url>
@@ -1511,7 +1513,7 @@
   <url><loc>https://www.uncleday.com/id/s/nguon-spa/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/id/s/nha-spa/</loc><lastmod>2026-11-25</lastmod></url>
   <url><loc>https://www.uncleday.com/id/c/hcm/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
-  <url><loc>https://www.uncleday.com/id/c/hanoi/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
+  <url><loc>https://www.uncleday.com/id/c/hanoi/</loc><lastmod>2026-11-27</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/id/c/danang/</loc><lastmod>2026-11-27</lastmod><priority>0.8</priority></url>
   <url><loc>https://www.uncleday.com/id/c/nhatrang/</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
 </urlset>
