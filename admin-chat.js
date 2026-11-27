@@ -364,16 +364,21 @@ const CC_TEL = [["420", "CZ"], ["421", "SK"], ["353", "IE"], ["358", "FI"], ["35
 const CC_LANG = { ko: "KR", ja: "JP", vi: "VN", zh: "CN", de: "DE", fr: "FR", it: "IT", es: "ES", nl: "NL", sv: "SE", da: "DK", nb: "NO", no: "NO", fi: "FI", pl: "PL", cs: "CZ", sk: "SK", hu: "HU", ro: "RO", ru: "RU", uk: "UA", pt: "PT", el: "GR", tr: "TR", th: "TH" };
 const CC_EU = "GB IE FR DE ES IT NL BE LU CH AT SE NO DK FI PL CZ SK HU PT GR RU UA RO BG HR SI TR".split(" "), CC_AS = "KR JP CN HK TW SG TH VN MY PH ID IN AE IL".split(" "), CC_AM = "US CA MX BR".split(" "), CC_OC = "AU NZ".split(" ");
 function ccName(c) { if (!c) return "알 수 없음"; let n = c; try { n = new Intl.DisplayNames(["ko"], { type: "region" }).of(c) || c; } catch (e) {} return n; }
-function ccFlag(c) { return c && /^[A-Z]{2}$/.test(c) ? String.fromCodePoint(...[...c].map(x => 0x1F1A5 + x.charCodeAt(0))) : "🏳️"; }
+// 윈도우는 국기 이모지가 'RU' 글자로 보여서 작은 국기 그림으로
+function ccFlag(c) { return c && /^[A-Z]{2}$/.test(c) ? `<img class="cc-flag" src="https://flagcdn.com/w40/${c.toLowerCase()}.png" alt="${c}" width="20" height="15" loading="lazy">` : "🏳️"; }
+const CC_PICK = ["GB", "IE", "FR", "DE", "NL", "BE", "CH", "AT", "IT", "ES", "PT", "SE", "NO", "DK", "FI", "PL", "CZ", "RU", "KR", "JP", "CN", "TW", "HK", "SG", "MY", "TH", "PH", "IN", "VN", "US", "CA", "AU", "NZ"];
 function ccArea(c) { return !c ? "알 수 없음" : CC_EU.includes(c) ? "유럽" : CC_AS.includes(c) ? "아시아" : CC_AM.includes(c) ? "미주" : CC_OC.includes(c) ? "오세아니아" : "기타"; }
 function chatGeo(th) {
   const parts = String(th.page || "").split("|"); const g = parts.length >= 5 ? parts[parts.length - 1] : ""; const [tz, bl] = g.split("~");
   const here = CC_TZ[tz] || (tz && /^Europe\//.test(tz) ? "EU" : "");
   let home = "", how = "";
-  const c = String(th.contact || "").replace(/[\s().-]/g, "");
-  if (/^(\+|00)\d{6,}/.test(c)) { const d = c.replace(/^(\+|00)/, ""); const hit = CC_TEL.find(([p]) => d.startsWith(p)); if (hit) { home = hit[1]; how = "연락처 국가번호"; } }
-  else if (/^010\d{7,8}$/.test(c)) { home = "KR"; how = "연락처 (010)"; }
-  else if (/^0[35789]\d{8}$/.test(c)) { home = "VN"; how = "연락처 (베트남 번호)"; }
+  if (th.country) return { home: th.country, how: "관리자 지정", here, tz: tz || "", bl: bl || "" };
+  const c = String(th.contact || "").replace(/[\s().\-\/]/g, ""); let m;
+  if ((m = c.match(/(?:\+|^00)(\d{6,})/))) { const d = m[1]; const hit = CC_TEL.find(([p]) => d.startsWith(p)); if (hit) { home = hit[1]; how = "연락처 국가번호"; } }
+  else if (/(^|\D)010\d{7,8}$/.test(c)) { home = "KR"; how = "연락처 (010)"; }
+  else if (/(^|\D)07\d{9}$/.test(c)) { home = "GB"; how = "연락처 (영국 07 번호)"; }
+  else if (/(^|\D)0[35789]\d{8}$/.test(c)) { home = "VN"; how = "연락처 (베트남 번호)"; }
+  else if (/(^|\D)44(7\d{9})$/.test(c)) { home = "GB"; how = "연락처 (44 국가번호)"; }
   if (!home && bl) { const m = bl.match(/^([a-z]{2,3})(?:-([A-Z]{2}))?/i); if (m) { const r = m[2] && m[2].toUpperCase(); const l = m[1].toLowerCase(); home = r && !(l === "en" && r === "US" && here && here !== "US") ? r : CC_LANG[l] || ""; if (home) how = "브라우저 언어 " + bl; } }
   if (!home && here && here !== "EU") { home = here; how = "기기 시간대"; }
   return { home, how, here, tz: tz || "", bl: bl || "" };
