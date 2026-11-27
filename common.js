@@ -282,6 +282,6 @@ const UD_TRAIL = (() => {
   push(); window.addEventListener("hashchange", push);
   // chat_send 의 page 칸에 넣는 글자: 지금 화면 | 처음 들어온 화면 | 들어온 곳 | 최근 본 화면들
   // 🌍 마지막 칸: 기기 시간대 ~ 브라우저 언어 (나라별 문의 수 세기용 · 개인 정보 아님)
-  const geo = () => { let z = "", l = ""; try { z = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch (e) {} try { l = (navigator.languages && navigator.languages[0]) || navigator.language || ""; } catch (e) {} return (z.slice(0, 40) + "~" + l.slice(0, 12)).replace(/\|/g, ""); };
+  const geo = () => { let z = "", l = ""; try { z = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch (e) {} try { l = (navigator.languages && navigator.languages[0]) || navigator.language || ""; } catch (e) {} let d = "d"; try { d = /iPad|Tablet/i.test(navigator.userAgent) || (matchMedia("(pointer:coarse)").matches && Math.min(screen.width, screen.height) >= 600) ? "t" : matchMedia("(pointer:coarse)").matches ? "m" : "d"; } catch (e) {} return (z.slice(0, 40) + "~" + l.slice(0, 12) + "~" + d).replace(/\|/g, ""); };
   return { pack: () => { push(); const g = geo(); return [here(), t.land, t.src, (t.pages || []).join(",")].join("|").slice(0, 299 - g.length) + "|" + g; } };
 })();

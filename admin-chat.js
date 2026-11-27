@@ -370,12 +370,12 @@ function ccFlag(c) { return c && /^[A-Z]{2}$/.test(c) ? `<img class="cc-flag" sr
 const CC_PICK = ["GB", "IE", "FR", "DE", "NL", "BE", "CH", "AT", "IT", "ES", "PT", "SE", "NO", "DK", "FI", "PL", "CZ", "RU", "KR", "JP", "CN", "TW", "HK", "SG", "MY", "TH", "PH", "IN", "VN", "US", "CA", "AU", "NZ"];
 function ccArea(c) { return !c ? "알 수 없음" : CC_EU.includes(c) ? "유럽" : CC_AS.includes(c) ? "아시아" : CC_AM.includes(c) ? "미주" : CC_OC.includes(c) ? "오세아니아" : "기타"; }
 // 🧪 테스트 채팅 — 이름·연락처에 test / 테스트 / example.com, 또는 관리자가 '테스트'로 지정 (country = ZZ)
-function chatIsTest(th) { return th.country === "ZZ" || /test|테스트|example\.(com|org)/i.test((th.name || "") + " " + (th.contact || "")); }
+function chatIsTest(th) { return th.country === "ZZ" || /test|테스트|テスト|测试|тест|example\.(com|org)/i.test((th.name || "") + " " + (th.contact || "")); }
 function chatGeo(th) {
-  const parts = String(th.page || "").split("|"); const g = parts.length >= 5 ? parts[parts.length - 1] : ""; const [tz, bl] = g.split("~");
+  const parts = String(th.page || "").split("|"); const g = parts.length >= 5 ? parts[parts.length - 1] : ""; const [tz, bl, dv] = g.split("~");
   const here = CC_TZ[tz] || (tz && /^Europe\//.test(tz) ? "EU" : "");
   let home = "", how = "";
-  if (th.country) return { home: th.country, how: "관리자 지정", here, tz: tz || "", bl: bl || "" };
+  if (th.country) return { home: th.country, how: "관리자 지정", here, tz: tz || "", bl: bl || "", dv: dv || "" };
   const c = String(th.contact || "").replace(/[\s().\-\/]/g, ""); let m;
   if ((m = c.match(/(?:\+|^00)(\d{6,})/))) { const d = m[1]; const hit = CC_TEL.find(([p]) => d.startsWith(p)); if (hit) { home = hit[1]; how = "연락처 국가번호"; } }
   else if (/(^|\D)010\d{7,8}$/.test(c)) { home = "KR"; how = "연락처 (010)"; }
@@ -384,7 +384,7 @@ function chatGeo(th) {
   else if (/(^|\D)44(7\d{9})$/.test(c)) { home = "GB"; how = "연락처 (44 국가번호)"; }
   if (!home && bl) { const m = bl.match(/^([a-z]{2,3})(?:-([A-Z]{2}))?/i); if (m) { const r = m[2] && m[2].toUpperCase(); const l = m[1].toLowerCase(); home = r && !(l === "en" && r === "US" && here && here !== "US") ? r : CC_LANG[l] || ""; if (home) how = "브라우저 언어 " + bl; } }
   if (!home && here && here !== "EU") { home = here; how = "기기 시간대"; }
-  return { home, how, here, tz: tz || "", bl: bl || "" };
+  return { home, how, here, tz: tz || "", bl: bl || "", dv: dv || "" };
 }
 function chatGeoHtml(th) {
   if (chatIsTest(th)) return `<br>🧪 <b>테스트 채팅</b> <small>· 나라별 통계에서 빠져요</small>`;

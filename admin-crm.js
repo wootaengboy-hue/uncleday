@@ -42,8 +42,12 @@ const SEGS = [
   ["coupon", "🎟 쿠폰 보유", (c, s) => s.coupons > 0],
   ["new", "🆕 이번 달 처음", c => (c.first_at || "").slice(0, 7) === vnToday().slice(0, 7)]];
 
+let crmView = "cust";
+const crmViewBar = () => `<div class="crm-views"><button class="chip ${crmView === "cust" ? "on" : ""}" data-crmv="cust">👥 예약 손님</button><button class="chip ${crmView === "inq" ? "on" : ""}" data-crmv="inq">💬 문의 기록 <small>채팅 자동 기록</small></button></div>`;
+function crmViewBind(el) { el.querySelectorAll("[data-crmv]").forEach(b => b.onclick = () => { crmView = b.dataset.crmv; drawCrm(); }); }
 async function drawCrm() {
   const el = $("tab-crm");
+  if (crmView === "inq" && typeof drawInq === "function") { await drawInq(el); el.insertAdjacentHTML("afterbegin", crmViewBar()); crmViewBind(el); return; }
   if (CRM_READY === null) { el.innerHTML = `<p class="hint" style="padding:20px">불러오는 중…</p>`; await loadCrm(); }
   if (!CRM_READY) {
     el.innerHTML = `<div class="box" style="margin-top:16px"><h3>👥 고객 관리 준비가 필요해요</h3><p class="hint">사장님이 Supabase SQL Editor에서 <a href="https://raw.githubusercontent.com/wootaengboy-hue/uncleday/main/supabase/crm.sql" target="_blank">crm.sql</a>을 한 번 실행해 주세요. 실행하면 지금까지의 예약이 손님별로 자동으로 묶여요.</p></div>`;
@@ -86,6 +90,7 @@ async function drawCrm() {
       || `<tr><td colspan="8" class="hint" style="padding:24px;text-align:center">${CUSTOMERS.length ? "조건에 맞는 손님이 없어요" : "아직 손님이 없어요. 예약이 들어오면 연락처별로 자동으로 생겨요."}</td></tr>`}</tbody></table></div>
     ${list.length > 500 ? `<p class="hint">앞의 500명만 보여요. 검색이나 조건으로 좁혀 주세요.</p>` : ""}
     <p class="hint" style="margin-top:10px">💡 같은 <b>연락처</b>로 들어온 예약은 한 손님으로 자동으로 묶여요 (010-1234-5678 = +82 10 1234 5678, 카톡 ID는 대소문자·띄어쓰기 무시). 연락처가 없는 예약은 묶이지 않아요.</p>`;
+  el.insertAdjacentHTML("afterbegin", crmViewBar()); crmViewBind(el);
   el.querySelectorAll("[data-seg]").forEach(b => b.onclick = () => { crmSeg = b.dataset.seg; drawCrm(); });
   const qi = $("crmQ"); qi.oninput = () => { crmQ = qi.value; clearTimeout(qi._t); qi._t = setTimeout(() => { drawCrm(); const n = $("crmQ"); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }, 250); };
   $("crmTag").onchange = e => { crmTag = e.target.value; drawCrm(); };
