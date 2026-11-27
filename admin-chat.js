@@ -368,6 +368,8 @@ function ccName(c) { if (!c) return "알 수 없음"; let n = c; try { n = new I
 function ccFlag(c) { return c && /^[A-Z]{2}$/.test(c) ? `<img class="cc-flag" src="https://flagcdn.com/w40/${c.toLowerCase()}.png" alt="${c}" width="20" height="15" loading="lazy">` : "🏳️"; }
 const CC_PICK = ["GB", "IE", "FR", "DE", "NL", "BE", "CH", "AT", "IT", "ES", "PT", "SE", "NO", "DK", "FI", "PL", "CZ", "RU", "KR", "JP", "CN", "TW", "HK", "SG", "MY", "TH", "PH", "IN", "VN", "US", "CA", "AU", "NZ"];
 function ccArea(c) { return !c ? "알 수 없음" : CC_EU.includes(c) ? "유럽" : CC_AS.includes(c) ? "아시아" : CC_AM.includes(c) ? "미주" : CC_OC.includes(c) ? "오세아니아" : "기타"; }
+// 🧪 테스트 채팅 — 이름·연락처에 test / 테스트 / example.com, 또는 관리자가 '테스트'로 지정 (country = ZZ)
+function chatIsTest(th) { return th.country === "ZZ" || /test|테스트|example\.(com|org)/i.test((th.name || "") + " " + (th.contact || "")); }
 function chatGeo(th) {
   const parts = String(th.page || "").split("|"); const g = parts.length >= 5 ? parts[parts.length - 1] : ""; const [tz, bl] = g.split("~");
   const here = CC_TZ[tz] || (tz && /^Europe\//.test(tz) ? "EU" : "");
@@ -384,6 +386,7 @@ function chatGeo(th) {
   return { home, how, here, tz: tz || "", bl: bl || "" };
 }
 function chatGeoHtml(th) {
+  if (chatIsTest(th)) return `<br>🧪 <b>테스트 채팅</b> <small>· 나라별 통계에서 빠져요</small>`;
   const g = chatGeo(th); if (!g.home && !g.tz) return "";
   const where = g.here === "VN" ? "지금 베트남에 있어요 (현지 문의)" : g.here ? `지금 ${g.here === "EU" ? "유럽" : ccName(g.here)} 시간대 (여행 전 문의)` : "";
   return `<br>🌍 손님 나라 (추정): <b>${ccFlag(g.home)} ${esc(ccName(g.home))}</b>${g.how ? ` <small>· ${esc(g.how)}</small>` : ""}${where ? `<br><small>🕒 ${esc(where)}</small>` : ""}`;

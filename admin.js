@@ -1485,7 +1485,7 @@ async function drawCty(box) {
   let r = await get("id,name,created_at,page,contact,lang,last_body,country"); const hasCol = !r.error;
   if (r.error) r = await get("id,name,created_at,page,contact,lang,last_body");
   if (r.error) { box.innerHTML = ""; return; }
-  const rows = (r.data || []);
+  const all = r.data || [], rows = all.filter(t => !chatIsTest(t)), nTest = all.length - rows.length;
   const by = {}, area = {}; let local = 0, before = 0;
   rows.forEach(t => { const g = chatGeo(t); const k = g.home || ""; by[k] = (by[k] || 0) + 1; const a = ccArea(g.home); area[a] = (area[a] || 0) + 1; if (g.here === "VN") local++; else if (g.here) before++; });
   const list = Object.entries(by).sort((a, b) => (a[0] === "") - (b[0] === "") || b[1] - a[1]);
@@ -1494,7 +1494,7 @@ async function drawCty(box) {
   const pct = n => tot ? Math.round(n / tot * 100) + "%" : "";
   box.innerHTML = `<h2 class="sec">🌍 채팅 문의 나라별 <small>추정 · 연락처 국가번호 → 브라우저 언어 → 기기 시간대</small></h2>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px">${[7, 30, 90, 0].map(chip).join("")}</div>
-    ${tot ? `<p class="hint" style="margin:0 0 8px">총 <b>${tot}</b>건 · ${["유럽", "아시아", "미주", "오세아니아", "기타", "알 수 없음"].filter(a => area[a]).map(a => `${a} <b>${area[a]}</b>`).join(" · ")}${local + before ? `<br>🕒 문의할 때 위치: 베트남 현지 <b>${local}</b> · 여행 전 (자기 나라) <b>${before}</b>` : ""}</p>
+    ${nTest ? `<p class="hint" style="margin:0 0 4px">🧪 테스트 채팅 <b>${nTest}</b>건은 빼고 셌어요</p>` : ""}${tot ? `<p class="hint" style="margin:0 0 8px">총 <b>${tot}</b>건 · ${["유럽", "아시아", "미주", "오세아니아", "기타", "알 수 없음"].filter(a => area[a]).map(a => `${a} <b>${area[a]}</b>`).join(" · ")}${local + before ? `<br>🕒 문의할 때 위치: 베트남 현지 <b>${local}</b> · 여행 전 (자기 나라) <b>${before}</b>` : ""}</p>
     <div class="cty-list">${list.map(([c, n]) => `<div class="cty-row${c ? "" : " click"}"${c ? "" : ` data-ctyunk="1" title="눌러서 한 건씩 나라 지정"`}><span class="cty-nm">${c ? ccFlag(c) + " " + esc(ccName(c)) : "❔ 알 수 없음 <small>(눌러서 지정 ▾)</small>"}</span><span class="cty-bar"><i style="width:${Math.max(3, n / max * 100)}%${c && ccArea(c) === "유럽" ? ";background:#6366f1" : ""}"></i></span><b class="cty-n">${n}</b><small class="cty-p">${pct(n)}</small></div>`).join("")}</div>`
       : `<div class="todo"><div class="empty">이 기간에는 채팅 문의가 없어요.</div></div>`}
     <div id="ctyUnk"></div>
@@ -1506,10 +1506,10 @@ async function drawCty(box) {
     if (!hasCol) { ub.innerHTML = `<p class="hint err-text">직접 지정하려면 supabase/universe56.sql 을 먼저 실행해 주세요.</p>`; return; }
     const opt = CC_PICK.map(c => `<option value="${c}">${esc(ccName(c))}</option>`).join("");
     ub.innerHTML = `<div class="cty-unk">${unk.map(t => `<div class="cty-u"><div><b>${esc(t.name || "손님")}</b> <small>${esc(String(t.created_at).slice(5, 10).replace("-", "/"))}${t.lang ? " · " + esc(t.lang) : ""}</small><br><small class="hint">${esc((t.contact || "연락처 없음").slice(0, 40))} · ${esc((t.last_body || "").slice(0, 40))}</small></div>
-      <select data-ctyset="${esc(t.id)}"><option value="">나라 선택</option>${opt}</select> <a class="btn sm" href="#chat/${esc(t.id)}" onclick="showTab('chat')">채팅 보기</a></div>`).join("")}</div>`;
+      <select data-ctyset="${esc(t.id)}"><option value="">나라 선택</option><option value="ZZ">🧪 테스트 (통계에서 빼기)</option>${opt}</select> <a class="btn sm" href="#chat/${esc(t.id)}" onclick="showTab('chat')">채팅 보기</a></div>`).join("")}</div>`;
     ub.querySelectorAll("[data-ctyset]").forEach(sel => sel.onchange = async () => {
       if (!sel.value) return; const x = await sb.from("chat_threads").update({ country: sel.value }).eq("id", sel.dataset.ctyset);
-      if (x.error) { dbErr(x.error, "나라 지정"); return; } toast(`${ccName(sel.value)}(으)로 지정했어요`); drawCty(box).then(() => { const r2 = box.querySelector("[data-ctyunk]"); if (r2) r2.click(); });
+      if (x.error) { dbErr(x.error, "나라 지정"); return; } toast(sel.value === "ZZ" ? "테스트로 표시했어요 · 통계에서 빠져요" : `${ccName(sel.value)}(으)로 지정했어요`); drawCty(box).then(() => { const r2 = box.querySelector("[data-ctyunk]"); if (r2) r2.click(); });
     });
   };
 }
