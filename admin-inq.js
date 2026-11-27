@@ -98,15 +98,17 @@ async function drawInq(el) {
       <div class="kpi"><small>나라</small><b style="font-size:15px">${cTop.map(([k, c]) => `${ccFlag(k)} ${esc(ccName(k))} ${c}`).join("<br>") || "-"}</b></div>
     </div>
     <div class="crm-bar">
-      <div class="crm-segs">${[7, 30, 90, 0].map(d => chip("days", d, d ? d + "일" : "전체")).join("")}
-        <span class="inq-sep"></span>${Object.entries(INQ_RES).map(([k, v]) => `<button class="chip ${INQ.res === k ? "on" : ""}" data-inq="res" data-v="${INQ.res === k ? "" : k}">${v} <small>${base.filter(r => r.res === k).length}</small></button>`).join("")}</div>
-      <div class="crm-segs">${INQ_TOPICS.map(([k, v]) => { const c = base.filter(r => r.topics.includes(k)).length; return c ? `<button class="chip ${INQ.topic === k ? "on" : ""}" data-inq="topic" data-v="${INQ.topic === k ? "" : k}">${v} <small>${c}</small></button>` : ""; }).join("")}</div>
+      <div class="inq-fr"><span class="inq-lb">기간</span><div class="crm-segs">${[7, 30, 90, 0].map(d => chip("days", d, d ? d + "일" : "전체")).join("")}</div></div>
+      <div class="inq-fr"><span class="inq-lb">결과</span><div class="crm-segs"><button class="chip ${!INQ.res ? "on" : ""}" data-inq="res" data-v="">전부</button>${Object.entries(INQ_RES).map(([k, v]) => `<button class="chip ${INQ.res === k ? "on" : ""}" data-inq="res" data-v="${INQ.res === k ? "" : k}">${v} <small>${base.filter(r => r.res === k).length}</small></button>`).join("")}</div></div>
+      <div class="inq-fr"><span class="inq-lb">물어본 것</span><div class="crm-segs"><button class="chip ${!INQ.topic ? "on" : ""}" data-inq="topic" data-v="">전부</button>${INQ_TOPICS.map(([k, v]) => { const c = base.filter(r => r.topics.includes(k)).length; return c ? `<button class="chip ${INQ.topic === k ? "on" : ""}" data-inq="topic" data-v="${INQ.topic === k ? "" : k}">${v} <small>${c}</small></button>` : ""; }).join("")}</div></div>
       <div class="crm-filters"><input id="inqQ" placeholder="🔎 이름 · 연락처 · 문의 내용 · 업체 검색" value="${esc(INQ.q)}">
         <select id="inqCty"><option value="">나라 전체</option>${ctys.map(([k, c]) => `<option value="${k}" ${INQ.cty === k ? "selected" : ""}>${k === "?" ? "알 수 없음" : esc(ccName(k))} (${c})</option>`).join("")}</select>
         <select id="inqShop"><option value="">업체 전체</option>${shopsAll.map(([k, c]) => `<option value="${esc(k)}" ${INQ.shop === k ? "selected" : ""}>${esc(inqShopNm(k))} (${c})</option>`).join("")}</select>
         <label class="inq-ck"><input type="checkbox" id="inqTest" ${INQ.test ? "checked" : ""}> 🧪 테스트도 보기</label>
         <button class="btn sm" id="inqCsv">⬇️ 엑셀(CSV)</button><button class="btn sm" id="inqReload">↻ 새로고침</button></div>
     </div>
+    ${(() => { const on = [INQ.res && ["res", INQ_RES[INQ.res]], INQ.topic && ["topic", tName(INQ.topic)], INQ.cty && ["cty", INQ.cty === "?" ? "나라 모름" : ccName(INQ.cty)], INQ.shop && ["shop", inqShopNm(INQ.shop)], INQ.q && ["q", `"${INQ.q}"`]].filter(Boolean);
+      return `<div class="inq-on"><b>${INQ.days ? `최근 ${INQ.days}일` : "전체 기간"} · ${list.length}건</b>${on.length ? ` 보는 중: ${on.map(([k, v]) => `<button class="inq-x" data-inqx="${k}">${esc(v)} ✕</button>`).join("")}<button class="inq-x all" data-inqx="all">모두 풀기</button>` : ` <span class="hint">· 필터 없이 전부 보는 중</span>`}</div>`; })()}
     ${INQ.err ? `<p class="err-text">불러오기 실패: ${esc(INQ.err)}</p>` : ""}
     <div class="inq-list">${list.slice(0, 400).map(r => { const th = r.th, g = r.geo;
       return `<a class="inq-row${r.test ? " is-test" : ""}" href="#chat/${esc(th.id)}" onclick="showTab('chat')">
@@ -124,6 +126,7 @@ async function drawInq(el) {
       나라 · 기기는 11/27 이후 채팅부터 정확해요. '나중에 예약' = 문의 뒤에 같은 연락처로 들어온 예약이에요. 줄을 누르면 그 채팅이 열려요.</p>`;
   el.querySelectorAll("[data-inq]").forEach(b => b.onclick = () => { const k = b.dataset.inq, v = b.dataset.v; INQ[k] = k === "days" ? +v : v; drawCrm(); });
   const qi = $("inqQ"); qi.oninput = () => { INQ.q = qi.value; clearTimeout(qi._t); qi._t = setTimeout(() => { drawCrm().then(() => { const x = $("inqQ"); if (x) { x.focus(); x.setSelectionRange(x.value.length, x.value.length); } }); }, 250); };
+  el.querySelectorAll("[data-inqx]").forEach(b => b.onclick = () => { const k = b.dataset.inqx; if (k === "all") Object.assign(INQ, { res: "", topic: "", cty: "", shop: "", q: "" }); else INQ[k] = ""; drawCrm(); });
   $("inqCty").onchange = e => { INQ.cty = e.target.value; drawCrm(); };
   $("inqShop").onchange = e => { INQ.shop = e.target.value; drawCrm(); };
   $("inqTest").onchange = e => { INQ.test = e.target.checked; drawCrm(); };
