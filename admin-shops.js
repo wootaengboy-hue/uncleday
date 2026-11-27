@@ -429,6 +429,7 @@ function openEditor(id, preset, opts = {}) {
       let last = null; return order.map(k => { const g = gmap[k], m = s.menu[g[0]], sc = (m.sec && m.sec.ko) || "";
         const h = secs.length && sc !== last ? `<div class="mp-sec">${esc(sc || "기타 (분류 없음)")}</div>` : ""; last = sc;
         return h + `<div class="mp-row"><b>${esc((m.name && m.name.ko) || "(이름 없음)")}</b>${g.map(i => `<span>${s.menu[i].min ? s.menu[i].min + "분 " : ""}₫${(+s.menu[i].price || 0).toLocaleString("en-US")}</span>`).join("")}</div>`; }).join(""); };
+    SHOP_SECM = new Map(); s.menu.forEach(m => shopSecStyle(m.sec && m.sec.ko));   // 분류 색: 메뉴 순서대로 정해요
     const secs = [...new Set(s.menu.map(m => m.sec && m.sec.ko).filter(Boolean))], top = x => String(x).split(/\s*>\s*/)[0].trim();
     const tops0 = [...new Set(secs.map(top))], ord = (s.secOrder || []).filter(t => tops0.includes(t)), tops = ord.concat(tops0.filter(t => !ord.includes(t)));
     $("mBulk").innerHTML = s.menu.length ? `<label class="m-ck"><input type="checkbox" id="mAll"> 전체</label><b>📂 고른 메뉴 분류</b>
@@ -436,10 +437,10 @@ function openEditor(id, preset, opts = {}) {
       <button class="btn sm" type="button" id="mSecGo">적용</button><button class="btn sm" type="button" id="mSecX">분류 지우기</button>
       <small class="hint">'대분류 > 소분류'로 쓰면 손님 화면에 큰 제목(네일) 아래 작은 제목(여성)으로 나뉘고, 대분류가 2개 이상이면 위에 [전체 · 스파 · 네일] 탭이 생겨요. 영어 · 베트남어는 자주 쓰는 낱말이면 자동으로 채워요.</small>
       ${tops.length > 1 ? `<span class="m-ord"><b>손님 화면 순서</b> ${tops.map((t, k) => `<span>${k ? `<button type="button" class="lnk" data-mord="${k}" title="앞으로">◀</button>` : ""}${esc(t)}</span>`).join(" ")}</span>` : ""}
-      ${secs.length ? `<span class="m-secs">${secs.map(x => `<button type="button" data-msel="${esc(x)}" title="이 분류 메뉴를 모두 체크">${esc(x)} <i>${s.menu.filter(m => m.sec && m.sec.ko === x).length}</i></button>`).join("")}<button type="button" class="none" data-msel="" title="분류 없는 메뉴를 모두 체크">분류 없음 <i>${s.menu.filter(m => !(m.sec && m.sec.ko)).length}</i></button><small class="hint" style="flex-basis:auto">← 누르면 그 메뉴들이 체크돼요</small></span>` : ""}` : "";
+      ${secs.length ? `<span class="m-secs">${secs.map(x => `<button type="button" data-msel="${esc(x)}" style="${shopSecStyle(x)}" title="이 분류 메뉴를 모두 체크">${esc(x)} <i>${s.menu.filter(m => m.sec && m.sec.ko === x).length}</i></button>`).join("")}<button type="button" class="none" data-msel="" title="분류 없는 메뉴를 모두 체크">분류 없음 <i>${s.menu.filter(m => !(m.sec && m.sec.ko)).length}</i></button><small class="hint" style="flex-basis:auto">← 누르면 그 메뉴들이 체크돼요</small></span>` : ""}` : "";
     if (s.menu.length) $("mBulk").insertAdjacentHTML("beforeend", `<details class="m-prev" ${s._mprev ? "open" : ""}><summary>👁 손님 화면에서 이렇게 보여요 <span class="hint">메뉴 ${s.menu.length}줄 → ${Object.keys(gmap).length}칸 · 같은 이름 · 같은 분류는 한 칸에 시간 버튼</span></summary><div class="m-prevb">${prev()}</div></details>`);
     const mpv = $("mBulk").querySelector(".m-prev"); if (mpv) mpv.ontoggle = () => { s._mprev = mpv.open; };
-    $("menuList").innerHTML = s.menu.map((m, i) => `<div class="menu-item"><div class="m-head"><label class="m-ck"><input type="checkbox" data-mck="${i}"><span class="m-sectag ${m.sec && m.sec.ko ? "" : "none"}">${m.sec && m.sec.ko ? "📂 " + esc(m.sec.ko) : "📂 분류 없음"}</span></label><span class="m-hr">${gtag(i)}<span class="hint">메뉴 ${i + 1}</span></span></div>
+    $("menuList").innerHTML = s.menu.map((m, i) => `<div class="menu-item" style="${shopSecStyle(m.sec && m.sec.ko)}"><div class="m-head"><label class="m-ck"><input type="checkbox" data-mck="${i}"><span class="m-sectag ${m.sec && m.sec.ko ? "" : "none"}">${m.sec && m.sec.ko ? "📂 " + esc(m.sec.ko) : "📂 분류 없음"}</span></label><span class="m-hr">${gtag(i)}<span class="hint">메뉴 ${i + 1}</span></span></div>
       <div class="three"><input placeholder="메뉴명 (한국어)" data-m="${i}.ko" value="${esc(m.name.ko)}">
         <input placeholder="메뉴명 (영어)" data-m="${i}.en" value="${esc(m.name.en)}">
         <input placeholder="메뉴명 (베트남어)" data-m="${i}.vi" value="${esc(m.name.vi || "")}">
@@ -1023,4 +1024,13 @@ function pmToText(p) {   // 문구 이벤트로: 이름 뒤에 할인율을 붙�
   const tag = p.kind === "pct" ? `${p.v}%` : `₫${Number(p.v || 0).toLocaleString("en-US")}`;
   p.t = Object.fromEntries(Object.entries(p.t || {}).map(([l, v]) => [l, String(v).includes(tag) || /\d+\s*%/.test(v) ? v : `${v} ${tag}`]));
   p.kind = "text"; delete p.v;
+}
+
+// 🎨 메뉴 분류마다 색 (업체 정보 검수와 같은 색 순서) — 분류 칩 · 메뉴 칸 왼쪽 띠
+const SHOP_SECPAL = ["#0ea5e9", "#f97316", "#16a34a", "#a855f7", "#e11d48", "#ca8a04", "#0d9488", "#6366f1"];
+let SHOP_SECM = new Map();
+function shopSecStyle(sec) {
+  sec = String(sec || "").trim(); if (!sec) return "";
+  if (!SHOP_SECM.has(sec)) SHOP_SECM.set(sec, SHOP_SECPAL[SHOP_SECM.size % SHOP_SECPAL.length]);
+  const c = SHOP_SECM.get(sec); return `--sc:${c};--sb:color-mix(in srgb, ${c} 16%, #fff);--sf:color-mix(in srgb, ${c} 70%, #000)`;
 }
