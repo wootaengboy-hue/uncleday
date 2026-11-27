@@ -30,7 +30,10 @@ function gplaceBox(shop) {
     <iframe class="g-map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen
       src="https://www.google.com/maps/embed/v1/place?key=${encodeURIComponent(GMAPS.key)}&q=place_id:${encodeURIComponent(id)}&language=${lang === "zh" ? "zh-CN" : lang}"></iframe></div>`;
   GPLACE.details(id).then(async d => {
-    const el = document.getElementById("gInfo"); if (!el || !d) { if (el) el.remove(); return; }
+    const el = document.getElementById("gInfo"); if (!el) return;
+    // 오늘 무료 횟수(하루 30번)를 다 썼거나 못 불러오면 → 숫자 대신 구글 지도 후기 링크 (링크는 무료 · 횟수 제한 없음 · 구글 정보는 저장하지 않아요)
+    if (!d) { const nm = (shop.name && (shop.name.en || shop.name.vi || shop.name.ko)) || "";
+      el.innerHTML = `<a class="g-rev" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(nm)}&query_place_id=${encodeURIComponent(id)}" target="_blank" rel="noopener">${esc(ui("gRev"))} →</a>`; return; }
     let html = "";
     if (d.rating) html += `<div class="g-rate">★ <b>${d.rating.toFixed(1)}</b> <span>(${(d.userRatingCount || 0).toLocaleString()})</span> <small>Google</small></div>`;
     const days = d.regularOpeningHours && d.regularOpeningHours.weekdayDescriptions;

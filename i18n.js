@@ -129,9 +129,9 @@ Object.assign(UI.vi, { askTitle: "Hỏi qua KakaoTalk", askStep: "Chúng tôi đ
   askCopyBtn: "Sao chép lại", askOpen: "Mở KakaoTalk →", askCopiedShort: "Đã sao chép. Hãy dán vào khung chat KakaoTalk.", askCopyFail: "Không tự sao chép được. Hãy nhấn giữ đoạn chữ phía trên để sao chép." });
 
 /* 구글 지도 정보 */
-Object.assign(UI.ko, { gTitle: "구글 지도 정보", gNote: "Google 제공", gHours: "영업시간 보기 (구글)", gMore: "구글 지도에서 사진·후기 더 보기" });
-Object.assign(UI.en, { gTitle: "On Google Maps", gNote: "Provided by Google", gHours: "Opening hours (Google)", gMore: "More photos & reviews on Google Maps" });
-Object.assign(UI.vi, { gTitle: "Thông tin Google Maps", gNote: "Do Google cung cấp", gHours: "Giờ mở cửa (Google)", gMore: "Xem thêm ảnh & đánh giá trên Google Maps" });
+Object.assign(UI.ko, { gTitle: "구글 지도 정보", gNote: "Google 제공", gHours: "영업시간 보기 (구글)", gMore: "구글 지도에서 사진·후기 더 보기", gRev: "⭐ 구글 지도에서 평점·후기 보기" });
+Object.assign(UI.en, { gTitle: "On Google Maps", gNote: "Provided by Google", gHours: "Opening hours (Google)", gMore: "More photos & reviews on Google Maps", gRev: "⭐ See rating & reviews on Google Maps" });
+Object.assign(UI.vi, { gTitle: "Thông tin Google Maps", gNote: "Do Google cung cấp", gHours: "Giờ mở cửa (Google)", gMore: "Xem thêm ảnh & đánh giá trên Google Maps", gRev: "⭐ Xem điểm & đánh giá trên Google Maps" });
 Object.assign(UI.ko, { gToday: "오늘", gHoursNote: "구글 지도 기준 · 아래에서 요일별 시간 보기" });
 Object.assign(UI.en, { gToday: "Today", gHoursNote: "From Google Maps · see all days below" });
 Object.assign(UI.vi, { gToday: "Hôm nay", gHoursNote: "Theo Google Maps · xem các ngày bên dưới" });

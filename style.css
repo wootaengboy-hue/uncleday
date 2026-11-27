@@ -942,3 +942,6 @@ button.mg-opt:hover, .mg-opt.on { border-color: #B23A1E; background: #fff5f1; }
 .bk-total .bt-r.sum { border-top: 1px dashed #d6d0c4; margin-top: 4px; padding-top: 8px; font-weight: 800; font-size: 15.5px; }
 .bk-total .bt-n { display: block; color: #8a8f98; font-size: 11.5px; margin-top: 6px; line-height: 1.45; }
 @media (max-width: 560px) { .bk-total .bt-r { flex-wrap: wrap; } .bk-total .bt-r span:last-child { margin-left: auto; } }
+
+/* 구글 무료 횟수를 다 쓴 날: 평점 대신 구글 지도 후기 링크 */
+.g-rev{display:inline-flex;align-items:center;gap:6px;margin:4px 0 10px;padding:9px 16px;border-radius:999px;background:#fff;border:1.5px solid #1d4f91;color:#1d4f91;font-weight:800;font-size:14px;text-decoration:none}.g-rev:hover{background:#eef4fb}
