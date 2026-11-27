@@ -90,7 +90,7 @@ function vfDraw() {
   if (VF.open) { const o = el.querySelector(`.vf-row.open`); if (o && VF._scroll !== VF.open) { VF._scroll = VF.open; setTimeout(() => o.scrollIntoView({ block: "start", behavior: "smooth" }), 80); } }
 }
 
-function vfDetail(s, x) {
+function vfDetail(s, x) { VF_SECPAL._m = new Map();   // 업체마다 분류 색을 처음부터
   const c = x.crawled || {}, hrs = vfHours(c.hours), menu = c.menu || [];
   const D = VF._D = vfDraftOf(s, c), tg = vfTargets(D, menu), ch = vfChanges(s, D), on = ch.filter(k => vfOn(D, k.key)).length;
   const addr = vfAddr(D.address), liveAddr = vfAddr(s.address), hc = ch.find(k => k.key === "hours"), ac = ch.find(k => k.key === "addr");
@@ -123,9 +123,10 @@ function vfDetail(s, x) {
     <div class="vf-menu3">
       <div class="vf-mcol"><small><label class="vf-all"><input type="checkbox" id="vfAll" ${menu.length && menu.every((m, i) => vfPick(m, i, tg)) ? "checked" : ""}> 모아 온 정보</label> <span class="hint">· 이름 · 분 · 가격을 고칠 수 있어요</span>
         ${menu.length ? `<span class="vf-cdel"><button type="button" class="btn sm" id="vfCDel" title="체크한 모아 온 메뉴를 지워요">🗑 고른 것 지우기</button><button type="button" class="btn sm" id="vfCClr" title="모아 온 메뉴를 모두 지워요">모두 비우기</button></span>` : ""}</small>
-        ${menu.map((m, i) => { const v = vfP(m), t = tg[i];
-        return `<div class="vf-ci ${vfPick(m, i, tg) ? "on" : ""}"><input type="checkbox" data-vfck="${i}" ${vfPick(m, i, tg) ? "checked" : ""} aria-label="고르기">
-          <div class="vf-cb"><input class="nm" data-vfcn="${i}" value="${esc(m.name_ko || m.name || "")}" aria-label="메뉴 이름">${m.name_ko && m.name && m.name_ko !== m.name ? `<small class="org">원문: ${esc(m.name)}</small>` : ""}${m.price && !/^[\d.,\s]+(vnd|đ|동|k)?$/i.test(m.price) ? `<small class="org">가격 원문: ${esc(m.price)}</small>` : ""}${m.desc && m.desc !== m.desc_ko ? `<small class="org">설명 원문: ${esc(m.desc)}</small>` : ""}
+        ${menu.map((m, i) => { const v = vfP(m), t = tg[i], sc = m.section_ko || m.section || "", pv = i ? (menu[i - 1].section_ko || menu[i - 1].section || "") : null, sn = vfSent(m, D);
+        const head = sc !== pv ? `<div class="vf-sh" style="${vfSecStyle(sc)}">${sc ? esc(sc) : "분류 없음"} <small>${menu.filter(q => (q.section_ko || q.section || "") === sc).length}줄</small></div>` : "";
+        return `${head}<div class="vf-ci ${vfPick(m, i, tg) ? "on" : ""} ${sn ? "sent" : ""}" style="${vfSecStyle(sc)}"><input type="checkbox" data-vfck="${i}" ${vfPick(m, i, tg) ? "checked" : ""} aria-label="고르기">
+          <div class="vf-cb">${sn ? `<em class="tag s">✓ 엉클데이로 넘김</em>` : ""}<input class="nm" data-vfcn="${i}" value="${esc(m.name_ko || m.name || "")}" aria-label="메뉴 이름">${m.name_ko && m.name && m.name_ko !== m.name ? `<small class="org">원문: ${esc(m.name)}</small>` : ""}${m.price && !/^[\d.,\s]+(vnd|đ|동|k)?$/i.test(m.price) ? `<small class="org">가격 원문: ${esc(m.price)}</small>` : ""}${m.desc && m.desc !== m.desc_ko ? `<small class="org">설명 (영어 · 베트남어 칸): ${esc(m.desc)}</small>` : ""}
             <div class="vf-sd"><input data-vfcs="${i}" value="${esc(m.section_ko || m.section || "")}" placeholder="분류 (예: 스파)"><input data-vfcd="${i}" value="${esc(m.desc_ko || m.desc || "")}" placeholder="설명 (손님 화면에 작게)"></div>
             <div class="vf-ed"><input type="number" min="0" data-vfcm="${i}" value="${m.minutes || ""}" placeholder="분">분 <input type="number" min="0" step="1000" data-vfcp="${i}" value="${v || ""}" placeholder="가격 없음" class="${v ? "" : "none"}">동${vfVnd(m.tip) ? ` <span class="tip">+팁 ${vfMoney(vfVnd(m.tip))}</span>` : ""}
               <select data-vfto="${i}" aria-label="어디에 넣을까요"><option value="new" ${t == null ? "selected" : ""}>＋ 새 메뉴로</option>${D.menu.map((x, j) => `<option value="${j}" ${t === j ? "selected" : ""}>→ ${esc(vfTx(x.name).slice(0, 22))}${x.min ? " " + x.min + "분" : ""}</option>`).join("")}</select> <button type="button" class="lnk vf-cx" data-vfcx="${i}" title="이 모아 온 메뉴 지우기 (쓸모없는 것)">🗑</button></div></div></div>`; }).join("") || `<p class="hint">모아 온 메뉴가 없어요${x.fb && !x.web ? " · 페이스북만 있는 곳은 가격표를 캡처해서 붙여 넣어 주세요" : ""}</p>`}</div>
@@ -135,7 +136,7 @@ function vfDetail(s, x) {
         <button class="btn sm" id="vfReplace" title="엉클데이 메뉴를 고른 메뉴로 통째로 바꿔요">♻️ 통째로<br> 바꾸기</button></div>
       <div class="vf-mcol"><small>엉클데이 <span class="hint">· ☑ 표시한 것만 검수 완료 때 손님 화면에 반영돼요</span></small>
         ${D.menu.map((m, j) => { const k = ch.find(q => q.key === m._k);
-        return `<div class="vf-ui ${k ? k.kind : ""}">${k ? `<input type="checkbox" data-vfon="${esc(m._k)}" ${vfOn(D, m._k) ? "checked" : ""} title="검수 완료 때 반영" aria-label="반영">` : `<span class="vf-sp"></span>`}<div class="vf-cb"><input class="nm" data-vfun="${j}" value="${esc(vfTx(m.name))}" aria-label="메뉴 이름">${k && k.kind === "new" ? `<em class="tag n">새 메뉴</em>` : k ? `<em class="tag c">바뀜 · 지금 손님 화면: ${esc(vfTx(k.o.name).slice(0, 24))} ${k.o.min || "?"}분 ${k.o.price ? vfMoney(k.o.price) : "가격 없음"}</em>` : ""}
+        return `<div class="vf-ui ${k ? k.kind : ""}" style="${vfSecStyle(vfTx(m.sec))}">${k ? `<input type="checkbox" data-vfon="${esc(m._k)}" ${vfOn(D, m._k) ? "checked" : ""} title="검수 완료 때 반영" aria-label="반영">` : `<span class="vf-sp"></span>`}<div class="vf-cb"><input class="nm" data-vfun="${j}" value="${esc(vfTx(m.name))}" aria-label="메뉴 이름">${k && k.kind === "new" ? `<em class="tag n">새 메뉴</em>` : k ? `<em class="tag c">바뀜 · 지금 손님 화면: ${esc(vfTx(k.o.name).slice(0, 24))} ${k.o.min || "?"}분 ${k.o.price ? vfMoney(k.o.price) : "가격 없음"}</em>` : ""}
           <div class="vf-sd"><input data-vfus="${j}" value="${esc(vfTx(m.sec))}" placeholder="분류"><input data-vfud="${j}" value="${esc(vfTx(m.desc))}" placeholder="설명 (손님 화면에 작게)"></div>
           <div class="vf-ed"><input type="number" min="0" data-vfmin="${j}" value="${m.min || ""}" placeholder="분">분 <input type="number" min="0" step="1000" data-vfpr="${j}" value="${m.price || ""}" placeholder="가격 없음" class="${m.price ? "" : "none"}">동 <span class="tip">팁</span><input type="number" min="0" step="1000" data-vftip="${j}" value="${m.tip || ""}" placeholder="0" class="tp"> <button type="button" class="lnk" data-vfdel="${j}" title="이 메뉴 빼기">🗑</button></div></div></div>`; }).join("") || `<p class="hint">메뉴가 없어요 · 왼쪽에서 골라 ▶ 를 눌러요</p>`}
         ${ch.filter(k => k.kind === "del").map(k => `<div class="vf-ui del"><input type="checkbox" data-vfon="${k.key}" ${vfOn(D, k.key) ? "checked" : ""} title="검수 완료 때 빼기" aria-label="빼기 반영"><div class="vf-cb"><s>${esc(vfTx(k.o.name))} · ${k.o.min || "?"}분 · ${k.o.price ? vfMoney(k.o.price) : "가격 없음"}</s><em class="tag d">뺄 메뉴 <button type="button" class="lnk" data-vfback="${k.j}">↩ 되살리기</button></em></div></div>`).join("")}
@@ -199,6 +200,19 @@ function vfTargets(D, menu) {
   return t;
 }
 // 기본으로 고를지: 직접 체크했으면 그대로 · 아니면 가격이 있고 엉클데이와 다를 때
+// 🎨 분류마다 다른 색 (같은 분류는 왼쪽 · 오른쪽 같은 색)
+const VF_SECPAL = ["#0ea5e9", "#f97316", "#16a34a", "#a855f7", "#e11d48", "#ca8a04", "#0d9488", "#6366f1"];
+function vfSecStyle(sec) {
+  sec = String(sec || "").trim(); if (!sec) return "";
+  // 화면에 나온 순서대로 서로 다른 색을 줘요 (분류가 8개를 넘으면 다시 처음 색)
+  const M = VF_SECPAL._m || (VF_SECPAL._m = new Map()); if (!M.has(sec)) M.set(sec, VF_SECPAL[M.size % VF_SECPAL.length]);
+  const base = M.get(sec); return `--sc:${base};--sb:color-mix(in srgb, ${base} 14%, #fff)`;
+}
+// 모아 온 메뉴가 이미 엉클데이 쪽으로 넘어갔는지 (▶ 로 보냈거나, 이름 · 시간 · 가격이 같은 줄이 이미 있음)
+function vfSent(m, D) {
+  if (m.sent) return true; const v = vfP(m), nm = [m.name_ko, m.name].filter(Boolean).map(x => String(x).trim().toLowerCase());
+  return !!(D && v && (D.menu || []).some(x => +x.price === v && (+x.min || 0) === (+m.minutes || 0) && [x.name && x.name.ko, x.name && x.name.en, typeof x.name === "string" ? x.name : ""].some(n => n && nm.includes(String(n).trim().toLowerCase()))));
+}
 function vfPick(m, i, tg) { if (m.ck !== undefined) return !!m.ck; const v = vfP(m); if (!v) return false; const j = tg[i]; return j == null || !VF._D || !VF._D.menu[j] || +VF._D.menu[j].price !== v; }
 
 // ⏱ 시간별 가격표 → 메뉴 (종류 × 시간 = 한 줄씩) · 업체 정보 검수 · 업체 편집 둘 다 써요
@@ -332,7 +346,7 @@ function vfBind(el) {
     const tg = vfTargets(D, menu), pick = menu.map((m, i) => ({ m, i })).filter(o => vfPick(o.m, o.i, tg));
     if (!pick.length) return toast("왼쪽에서 보낼 메뉴를 골라 주세요");
     let up = 0, add = 0;
-    pick.forEach(({ m, i }) => { const j = tg[i], t = j != null && D.menu[j];
+    pick.forEach(({ m, i }) => { const j = tg[i], t = j != null && D.menu[j]; menu[i] = { ...m, sent: true, ck: false };
       if (t) { const v = vfP(m); if (v) t.price = v; if (m.minutes) t.min = +m.minutes; const e = extra(m); if (e.tip) t.tip = e.tip; if (e.sec && !t.sec) t.sec = e.sec; if (e.desc && !t.desc) t.desc = e.desc; up++; } else { D.menu.push(toItem(m)); add++; } });
     c.menu = menu.map(m => { const o = { ...m }; delete o.ck; return o; });
     vfSave(id, { crawled: { ...c, draft: D }, review: "todo" }, `엉클데이 쪽에 ${up ? `${up}개 가격 반영` : ""}${up && add ? " · " : ""}${add ? `${add}개 새 메뉴 추가` : ""} · 검수 완료를 누르면 손님 화면에 나가요`); };
