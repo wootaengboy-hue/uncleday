@@ -1454,6 +1454,19 @@ for cid in hubs:
 for cid in hubs:
     mod[f"{SITE}/en/c/{cid}/"] = mod[f"{SITE}/c/{cid}/"]
     if cid in GUIDES_EN: mod[f"{SITE}/en/c/{cid}/guide/"] = mod.get(f"{SITE}/c/{cid}/guide/", BUILT)
+# ---- 🔀 합친 업체의 예전 주소 → 합쳐진 업체로 보내기 (data.aliases · universe71) ----
+#   사이트맵에는 안 넣어요 (검색엔진은 canonical 을 보고 새 주소로 옮겨요)
+def moved_page(to):
+    return f"""<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,follow">
+<title>Uncle Day</title><link rel="canonical" href="{SITE}{to}"><meta http-equiv="refresh" content="0;url={to}">
+<script>location.replace("{to}"+location.search)</script></head><body style="font-family:sans-serif;text-align:center;padding:60px 16px"><p><a href="{to}">→ {to}</a></p></body></html>"""
+for x in live:
+    for a in (x.get("aliases") or []):
+        if not isinstance(a, str) or not re.fullmatch(r"[A-Za-z0-9_-]+", a) or a in keep_s: continue
+        os.makedirs(f"s/{a}", exist_ok=True); open(f"s/{a}/index.html", "w").write(moved_page(f"/s/{x['id']}/"))
+        if x["id"] in keep_en: os.makedirs(f"en/s/{a}", exist_ok=True); open(f"en/s/{a}/index.html", "w").write(moved_page(f"/en/s/{x['id']}/"))
+        for L in ML_LANGS:
+            if x["id"] in ML_S[L]: os.makedirs(f"{mdir(L)}/s/{a}", exist_ok=True); open(f"{mdir(L)}/s/{a}/index.html", "w").write(moved_page(f"/{mdir(L)}/s/{x['id']}/"))
 topic_urls = []
 for cid in hubs:
     for t, xs in city_topics(cid, [x for x in live if x.get("city") == cid]):

@@ -151,6 +151,9 @@ if (shop && typeof LIVE !== "undefined") LIVE.view(shop.id);
 document.querySelectorAll(".cta-bar").forEach(e => e.remove());
 document.body.classList.remove("has-cta");
 
+// 🔀 합친 업체: 예전 주소(id)로 들어오면 합쳐진 업체로 바로 보내요 (data.aliases · universe71)
+const moved = !shop && SHOPS.find(s => Array.isArray(s.aliases) && s.aliases.includes(id));
+if (moved) { if (window.SPA) location.replace("#/shop/" + moved.id); else location.replace(location.pathname + location.search + "#" + moved.id); return; }
 if (!shop) {
   box.innerHTML = `<p class="empty">${ui("notFound")}</p><a href="${window.SPA ? "#" : "/"}">${ui("back")}</a>`;
 } else {
