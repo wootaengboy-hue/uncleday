@@ -256,7 +256,7 @@ function openEditor(id, preset, opts = {}) {
           <div class="err-text" id="geoErr"></div></div>
         ${typeof GMAPS !== "undefined" && GMAPS.key ? `<div class="f"><span>구글 지도 연결 <small style="font-weight:400;color:var(--sub)">상세페이지에 구글 영업시간·평점·사진·지도가 자동으로 나와요</small></span>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <input id="gpIn" style="flex:1;min-width:200px;padding:9px 11px;border:1px solid var(--line);border-radius:9px" placeholder="구글 장소 ID (찾기 버튼으로 넣어요)" value="${esc(s.gplace || "")}">
+            <input id="gpIn" style="flex:1;min-width:200px;padding:9px 11px;border:1px solid var(--line);border-radius:9px" placeholder="찾을 이름을 적거나(예: City International Hospital) 비워 두고 찾기" value="${esc(s.gplace || "")}">
             <button type="button" class="btn sm main" id="gpFind">🔎 구글에서 찾기</button>
             <button type="button" class="btn sm" id="gpClear" ${s.gplace ? "" : "hidden"}>연결 끊기</button>
           </div><div id="gpRes"></div></div>` : ""}
@@ -324,14 +324,19 @@ function openEditor(id, preset, opts = {}) {
   if ($("gpIn")) {
     const showMap = id => `<iframe style="width:100%;height:200px;border:0;border-radius:10px" loading="lazy" src="https://www.google.com/maps/embed/v1/place?key=${encodeURIComponent(GMAPS.key)}&q=place_id:${encodeURIComponent(id)}&language=ko"></iframe>`;
     if (s.gplace) $("gpRes").innerHTML = showMap(s.gplace);
-    $("gpIn").oninput = () => { s.gplace = $("gpIn").value.trim() || undefined; if (!s.gplace) delete s.gplace; };
+    $("gpIn").oninput = () => { const v = $("gpIn").value.trim();   // 장소 ID 모양일 때만 연결로 저장 · 이름 · 링크는 '찾기'에 쓰는 검색어
+      if (/^[A-Za-z0-9_-]{20,}$/.test(v)) s.gplace = v; else if (!v) delete s.gplace; };
     $("gpClear").onclick = () => { delete s.gplace; $("gpIn").value = ""; $("gpRes").innerHTML = ""; $("gpClear").hidden = true; };
     $("gpFind").onclick = async () => {
-      const q = [s.name.vi || s.name.en || s.name.ko, (s.address && (s.address.vi || s.address.en)) || (cityOf(s.city) ? cityOf(s.city).name.en : "")].filter(Boolean).join(", ");
-      $("gpRes").innerHTML = `<div class="hint">"${esc(q)}" 찾는 중…</div>`;
-      const ids = await gplaceSearch(q);
-      if (!ids.length) { $("gpRes").innerHTML = `<div class="err-text">못 찾았어요. 업체 이름(베트남어·영어)이나 주소를 고친 뒤 다시 눌러 주세요.</div>`; return; }
-      $("gpRes").innerHTML = `<div class="hint">맞는 업체의 <b>[이 업체예요]</b>를 눌러 주세요.</div>` + ids.slice(0, 3).map((id, i) => `<div style="margin-top:8px">${showMap(id)}<button type="button" class="btn sm main" data-gp="${esc(id)}" style="margin-top:4px">✅ ${i + 1}번, 이 업체예요</button></div>`).join("");
+      // 찾는 순서: ① 칸에 직접 쓴 이름 · 구글 지도 링크 → ② 업체 이름 + 주소 → ③ 업체 이름만 → ④ 주소만
+      const typed = $("gpIn").value.trim(), isId = /^[A-Za-z0-9_-]{20,}$/.test(typed) && !/\s/.test(typed);
+      const fromUrl = (() => { const m = typed.match(/\/maps\/place\/([^/@?]+)/); return m ? decodeURIComponent(m[1].replace(/\+/g, " ")) : ""; })();
+      const nm = s.name.vi || s.name.en || s.name.ko, ad = (s.address && (s.address.vi || s.address.en)) || "", city = cityOf(s.city) ? cityOf(s.city).name.en : "";
+      const tries = [...new Set([fromUrl || (!isId && !/^https?:/i.test(typed) ? typed : ""), [nm, ad || city].filter(Boolean).join(", "), [nm, city].filter(Boolean).join(", "), ad].filter(Boolean))];
+      let ids = [], q = "";
+      for (q of tries) { $("gpRes").innerHTML = `<div class="hint">"${esc(q)}" 찾는 중…</div>`; ids = await gplaceSearch(q); if (ids.length) break; }
+      if (!ids.length) { $("gpRes").innerHTML = `<div class="err-text">못 찾았어요. 위 칸에 구글 지도에 나오는 이름을 그대로 적고(예: City International Hospital) 다시 눌러 주세요. 구글 지도 공유 링크(전체 주소)를 붙여 넣어도 돼요.</div>`; return; }
+      $("gpRes").innerHTML = `<div class="hint">"${esc(q)}"(으)로 찾았어요 · 맞는 업체의 <b>[이 업체예요]</b>를 눌러 주세요.</div>` + ids.slice(0, 3).map((id, i) => `<div style="margin-top:8px">${showMap(id)}<button type="button" class="btn sm main" data-gp="${esc(id)}" style="margin-top:4px">✅ ${i + 1}번, 이 업체예요</button></div>`).join("");
       $("gpRes").querySelectorAll("[data-gp]").forEach(b => b.onclick = () => { s.gplace = b.dataset.gp; $("gpIn").value = s.gplace; $("gpRes").innerHTML = showMap(s.gplace); $("gpClear").hidden = false; toast("연결했어요. '저장'을 눌러 주세요."); });
     };
   }
