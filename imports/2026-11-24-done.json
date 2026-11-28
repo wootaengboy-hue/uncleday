@@ -962,6 +962,14 @@
       "title": "inDrive · Maxim 버튼을 주신 로고로 교체",
       "note": "inDrive는 어두운 바탕 + 로고, Maxim은 노란 바탕 + 로고 (images/ride/). Xanh SM · Grab은 앱 아이콘 유지",
       "memo": "Xanh SM 로고 파일 주시면 같은 방식으로 교체"
+    },
+    {
+      "group": "업체 페이지",
+      "priority": "normal",
+      "status": "done",
+      "title": "Grab · Xanh SM 버튼도 주신 로고로 교체",
+      "note": "그랩 열기 버튼: 그랩 로고 + 로고 바탕 초록색. Xanh SM: 로고 바탕 하늘색 + 로고. 4개 앱 모두 주신 로고 사용",
+      "memo": "images/ride/ (grab · indrive · maxim · xanhsm)"
     }
   ]
 }

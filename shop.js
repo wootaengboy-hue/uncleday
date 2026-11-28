@@ -85,13 +85,13 @@ function grabLink(dst) {
   return u.href;
 }
 // 🚕 베트남에서 많이 쓰는 다른 차 부르기 앱 (가게 이름 · 로고 그림 없이 글자 버튼만)
-// 앱 로고: inDrive · Maxim 은 대표님이 주신 로고 (images/ride/) · Grab · Xanh SM 은 앱스토어 공식 아이콘 (못 불러오면 이름만)
+// 앱 로고: 주신 로고 파일 (images/ride/ — grab · indrive · maxim · xanhsm)
 const RIDE_ICON = "https://is1-ssl.mzstatic.com/image/thumb/";
 const GRAB_ICON = RIDE_ICON + "Purple211/v4/b6/ba/e8/b6bae876-ebc9-98f4-6024-ea0bf3ef9379/GrabIcon-0-0-1x_U007emarketing-0-6-0-85-220.png/100x100bb.jpg";
 const RIDE_APPS = [
   { id: "indrive", n: "inDrive", c: "#32291E", t: "#fff", logo: 1, pkg: "sinet.startup.inDriver", ios: "https://apps.apple.com/app/id780125801", ic: "Purple221/v4/bf/ae/b6/bfaeb673-c99f-75ce-885d-95c6f9928cd4/AppIcon-0-0-1x_U007ephone-0-1-0-sRGB-85-220.png/100x100bb.jpg" },
   { id: "maxim", n: "Maxim", c: "#F4CD45", t: "#1a1a1a", logo: 1, pkg: "com.taxsee.taxsee", ios: "https://apps.apple.com/app/id579985456", ic: "Purple211/v4/06/38/b1/0638b118-5a7f-96ee-44c8-c3956c0b9d64/AppIcon-0-0-1x_U007epad-0-1-0-sRGB-85-220.png/100x100bb.jpg" },
-  { id: "xanhsm", n: "Xanh SM", c: "#00B5AD", t: "#fff", pkg: "com.gsm.customer", ios: "https://apps.apple.com/app/id6446425595", ic: "Purple221/v4/4d/d7/1e/4dd71ef3-5dee-a3a9-6a78-4cbfa1fdc9f2/AppIcon-0-0-1x_U007emarketing-0-11-0-85-220.png/100x100bb.jpg" }];
+  { id: "xanhsm", n: "Xanh SM", c: "#67BABE", t: "#fff", logo: 1, pkg: "com.gsm.customer", ios: "https://apps.apple.com/app/id6446425595", ic: "Purple221/v4/4d/d7/1e/4dd71ef3-5dee-a3a9-6a78-4cbfa1fdc9f2/AppIcon-0-0-1x_U007emarketing-0-11-0-85-220.png/100x100bb.jpg" }];
 function rideAppLink(a) {
   if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) return a.ios;   // 아이폰: 앱 스토어 화면 (설치돼 있으면 '열기')
   const store = "https://play.google.com/store/apps/details?id=" + a.pkg;   // 안드로이드: 앱 바로 열기 · 없으면 플레이 스토어
@@ -107,7 +107,7 @@ function openRide(shop) {
     <p class="ask-step">${mobile ? ui("rideStep") : ui("ridePc")}</p>
     <p class="ask-st" id="rideSt"></p>
     <div class="ask-btns"><button type="button" class="btn ride-copy">${ui("rideCopy")}</button>
-      ${mobile ? `<a class="btn ride-grab" href="${grabLink(dst)}" rel="noopener"><img class="ride-ic" src="${GRAB_ICON}" alt="" onerror="this.remove()">${ui("rideGrab")}</a>` : `<span></span>`}</div>
+      ${mobile ? `<a class="btn ride-grab" href="${grabLink(dst)}" rel="noopener"><img class="ride-glogo" src="/images/ride/grab.png?v=1" alt="Grab"><span>${ui("rideGrab")}</span></a>` : `<span></span>`}</div>
     ${mobile ? `<div class="ride-apps"><small>${ui("rideOther")}</small><div>${RIDE_APPS.map(a => `<a class="ride-app" style="--c:${a.c};--t:${a.t}" href="${rideAppLink(a)}" rel="noopener" data-app="${a.id}">${a.logo ? `<img class="ride-logo" src="/images/ride/${a.id}.png?v=1" alt="${a.n}">` : `<img class="ride-ic" src="${RIDE_ICON + a.ic}" alt="" onerror="this.remove()"><span>${a.n}</span>`}</a>`).join("")}</div></div>` : ""}
     <p class="ride-etc">${ui(mobile ? "rideEtc2" : "rideEtc")}</p>
     <button type="button" class="ask-close" aria-label="close">✕</button></div>`;
