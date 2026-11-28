@@ -131,12 +131,14 @@ function vfDetail(s, x) { VF_SECPAL._m = new Map();   // 업체마다 분류 색
             <div class="vf-ed"><input type="number" min="0" data-vfcm="${i}" value="${m.minutes || ""}" placeholder="분">분 <input type="number" min="0" step="1000" data-vfcp="${i}" value="${v || ""}" placeholder="가격 없음" class="${v ? "" : "none"}">동${vfVnd(m.tip) ? ` <span class="tip">+팁 ${vfMoney(vfVnd(m.tip))}</span>` : ""}
               <select data-vfto="${i}" aria-label="어디에 넣을까요"><option value="new" ${t == null ? "selected" : ""}>＋ 새 메뉴로</option>${D.menu.map((x, j) => `<option value="${j}" ${t === j ? "selected" : ""}>→ ${esc(vfTx(x.name).slice(0, 22))}${x.min ? " " + x.min + "분" : ""}</option>`).join("")}</select> <button type="button" class="lnk vf-cx" data-vfcx="${i}" title="이 모아 온 메뉴 지우기 (쓸모없는 것)">🗑</button></div></div></div>`; }).join("") || `<p class="hint">모아 온 메뉴가 없어요${x.fb && !x.web ? " · 페이스북만 있는 곳은 가격표를 캡처해서 붙여 넣어 주세요" : ""}</p>`}</div>
       <div class="vf-mid"><button class="btn main" id="vfSend" title="고른 메뉴를 엉클데이 쪽으로 보내요"><span class="ar">▶</span><span>고른 ${menu.filter((m, i) => vfPick(m, i, tg)).length}개<br> 보내기</span></button>
+        <button class="btn sm" id="vfOrig" title="왼쪽 메뉴의 원문 이름을 짝지어진 엉클데이 메뉴에 한 번에 넣어요 (이미 있는 건 그대로)">🔤 원문<br> 옆으로</button>
         <button class="btn sm" id="vfGrid" title="종류 × 시간으로 가격이 정해진 가격표를 한 번에 메뉴로 만들어요">⏱ 시간별<br> 가격표로</button>
         <button class="btn sm" id="vfTime" title="'… 90분' · '… 120분' 처럼 이름에만 시간이 있는 엉클데이 메뉴를 시간 버튼으로 묶어요">🔗 이름 속<br> 시간 묶기</button>
         <button class="btn sm" id="vfReplace" title="엉클데이 메뉴를 고른 메뉴로 통째로 바꿔요">♻️ 통째로<br> 바꾸기</button></div>
       <div class="vf-mcol"><small>엉클데이 <span class="hint">· ☑ 표시한 것만 검수 완료 때 손님 화면에 반영돼요</span></small>
         ${D.menu.map((m, j) => { const k = ch.find(q => q.key === m._k);
         return `<div class="vf-ui ${k ? k.kind : ""}" style="${vfSecStyle(vfTx(m.sec))}">${k ? `<input type="checkbox" data-vfon="${esc(m._k)}" ${vfOn(D, m._k) ? "checked" : ""} title="검수 완료 때 반영" aria-label="반영">` : `<span class="vf-sp"></span>`}<div class="vf-cb"><input class="nm" data-vfun="${j}" value="${esc(vfTx(m.name))}" aria-label="메뉴 이름">${k && k.kind === "new" ? `<em class="tag n">새 메뉴</em>` : k ? `<em class="tag c">바뀜 · 지금 손님 화면: ${esc(vfTx(k.o.name).slice(0, 24))} ${k.o.min || "?"}분 ${k.o.price ? vfMoney(k.o.price) : "가격 없음"}</em>` : ""}
+          <div class="vf-og"><span>원문</span><input data-vfuo="${j}" value="${esc(m.orig || "")}" placeholder="${esc(vfOrigOf(menu, tg, j) || "메뉴판 원래 이름 (영어 · 베트남어)")}">${!m.orig && vfOrigOf(menu, tg, j) ? `<button type="button" class="lnk" data-vfog="${j}" title="왼쪽 원문을 가져와요">⤵ 가져오기</button>` : ""}</div>
           <div class="vf-sd"><input data-vfus="${j}" value="${esc(vfTx(m.sec))}" placeholder="분류"><input data-vfud="${j}" value="${esc(vfTx(m.desc))}" placeholder="설명 (손님 화면에 작게)"></div>
           <div class="vf-ed"><input type="number" min="0" data-vfmin="${j}" value="${m.min || ""}" placeholder="분">분 <input type="number" min="0" step="1000" data-vfpr="${j}" value="${m.price || ""}" placeholder="가격 없음" class="${m.price ? "" : "none"}">동 <span class="tip">팁</span><input type="number" min="0" step="1000" data-vftip="${j}" value="${m.tip || ""}" placeholder="0" class="tp"> <button type="button" class="lnk" data-vfdel="${j}" title="이 메뉴 빼기">🗑</button></div></div></div>`; }).join("") || `<p class="hint">메뉴가 없어요 · 왼쪽에서 골라 ▶ 를 눌러요</p>`}
         ${ch.filter(k => k.kind === "del").map(k => `<div class="vf-ui del"><input type="checkbox" data-vfon="${k.key}" ${vfOn(D, k.key) ? "checked" : ""} title="검수 완료 때 빼기" aria-label="빼기 반영"><div class="vf-cb"><s>${esc(vfTx(k.o.name))} · ${k.o.min || "?"}분 · ${k.o.price ? vfMoney(k.o.price) : "가격 없음"}</s><em class="tag d">뺄 메뉴 <button type="button" class="lnk" data-vfback="${k.j}">↩ 되살리기</button></em></div></div>`).join("")}
@@ -154,7 +156,7 @@ function vfDetail(s, x) { VF_SECPAL._m = new Map();   // 업체마다 분류 색
     </div></div>`;
 }
 // 메뉴 비교용 (이름 · 분 · 가격만)
-const vfMn = m => ({ n: vfTx(m.name), m: +m.min || 0, p: +m.price || 0, t: +m.tip || 0, s: vfTx(m.sec), d: vfTx(m.desc) });
+const vfMn = m => ({ n: vfTx(m.name), m: +m.min || 0, p: +m.price || 0, t: +m.tip || 0, s: vfTx(m.sec), d: vfTx(m.desc), o: String(m.orig || "").trim() });
 const vfAddr = a => (a && (a.vi || a.en || a.ko)) || "";
 // 모아 온 메뉴 가격: 손으로 고친 값(vnd)이 있으면 그걸 써요
 const vfP = m => m.vnd != null ? +m.vnd || 0 : vfVnd(m.price);
@@ -194,6 +196,11 @@ function vfFinal(s, D) {
   return { menu: rows.map(r => r[1]), open: on("hours") ? D.open : s.open, close: on("hours") ? D.close : s.close, address: on("addr") ? D.address : s.address, desc: ch.some(c => c.key === "desc") && on("desc") ? D.desc : s.desc, recommend: ch.some(c => c.key === "reco") && on("reco") ? D.reco : s.recommend, deals: ch.filter(c => c.kind === "deal").map(c => c.t), n: ch.filter(c => on(c.key)).length };
 }
 // 모아 온 메뉴 i → 엉클데이 메뉴 j (이름 · 시간이 비슷하면)
+// 엉클데이 쪽 j번 메뉴와 짝지어진 왼쪽(모아 온) 메뉴의 원문 이름
+function vfOrigOf(menu, tg, j) {
+  const i = Object.keys(tg || {}).find(k => tg[k] === j); const m = i != null && menu[+i];
+  const o = m && String(m.name || "").trim(); return o && o !== String(m.name_ko || "").trim() ? o : "";
+}
 function vfTargets(D, menu) {
   const t = {}; (D.menu || []).forEach((sm, j) => { const r = vfMatch(sm, menu); if (r && t[r.i] == null) t[r.i] = j; });
   menu.forEach((m, i) => { if (m.to !== undefined) t[i] = m.to === "new" ? null : +m.to; });
@@ -347,7 +354,7 @@ function vfBind(el) {
     if (!pick.length) return toast("왼쪽에서 보낼 메뉴를 골라 주세요");
     let up = 0, add = 0;
     pick.forEach(({ m, i }) => { const j = tg[i], t = j != null && D.menu[j]; menu[i] = { ...m, sent: true, ck: false };
-      if (t) { const v = vfP(m); if (v) t.price = v; if (m.minutes) t.min = +m.minutes; const e = extra(m); if (e.tip) t.tip = e.tip; if (e.sec && !t.sec) t.sec = e.sec; if (e.desc && !t.desc) t.desc = e.desc; up++; } else { D.menu.push(toItem(m)); add++; } });
+      if (t) { const v = vfP(m); if (v) t.price = v; if (m.minutes) t.min = +m.minutes; const e = extra(m); if (e.tip) t.tip = e.tip; if (e.sec && !t.sec) t.sec = e.sec; if (e.desc && !t.desc) t.desc = e.desc; if (!t.orig && m.name && m.name !== m.name_ko) t.orig = String(m.name).trim(); up++; } else { D.menu.push(toItem(m)); add++; } });
     c.menu = menu.map(m => { const o = { ...m }; delete o.ck; return o; });
     vfSave(id, { crawled: { ...c, draft: D }, review: "todo" }, `엉클데이 쪽에 ${up ? `${up}개 가격 반영` : ""}${up && add ? " · " : ""}${add ? `${add}개 새 메뉴 추가` : ""} · 검수 완료를 누르면 손님 화면에 나가요`); };
   const rp = row.querySelector("#vfReplace"); if (rp) rp.onclick = () => {
@@ -368,6 +375,12 @@ function vfBind(el) {
   row.querySelectorAll("[data-vfon]").forEach(cb => cb.onchange = () => { D.ck = { ...(D.ck || {}), [cb.dataset.vfon]: cb.checked }; vfSave(id, { crawled: { ...c, draft: D } }); });
   row.querySelectorAll("[data-vfback]").forEach(b => b.onclick = () => { const j = +b.dataset.vfback, o = (s.menu || [])[j]; if (!o) return;
     const at = D.menu.findIndex(m => m._o != null && m._o > j); D.menu.splice(at < 0 ? D.menu.length : at, 0, { ...JSON.parse(JSON.stringify(o)), _o: j, _k: "o" + j }); saveD("되살렸어요"); });
+  // 🔤 원문(메뉴판 원래 이름): 직접 고치기 · ⤵ 하나씩 가져오기 · 🔤 한 번에 옆으로
+  row.querySelectorAll("[data-vfuo]").forEach(inp => inp.onchange = () => { const t = D.menu[+inp.dataset.vfuo], v = inp.value.trim(); if (v) t.orig = v; else delete t.orig; saveD(); });
+  { const tgO = vfTargets(D, menu);
+    row.querySelectorAll("[data-vfog]").forEach(b => b.onclick = () => { const j = +b.dataset.vfog, o = vfOrigOf(menu, tgO, j); if (o) { D.menu[j].orig = o; saveD(); } });
+    const ob = row.querySelector("#vfOrig"); if (ob) ob.onclick = () => { let n = 0; D.menu.forEach((t, j) => { const o = vfOrigOf(menu, tgO, j); if (o && !t.orig) { t.orig = o; n++; } });
+      if (!n) return toast("가져올 원문이 없어요 (이미 다 있거나 짝지어진 메뉴가 없어요)"); saveD(); toast(`🔤 원문 ${n}개를 옆으로 가져왔어요 · 검수 완료를 누르면 손님 화면에 나가요`); }; }
   row.querySelectorAll("[data-vfun]").forEach(inp => inp.onchange = () => { const t = D.menu[+inp.dataset.vfun], v = inp.value.trim(); if (!v) return;
     t.name = { ...(typeof t.name === "object" ? t.name : {}), ko: v }; saveD(); });
   row.querySelectorAll("[data-vfpr],[data-vfmin]").forEach(inp => inp.onchange = () => {
