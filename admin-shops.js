@@ -35,6 +35,10 @@ function notice(kind, html, id, where = "notices") {
 }
 
 /* ===== 데이터베이스 저장 ===== */
+// 🛡️ 덮어쓰기 막기: 이 화면이 불러온 뒤 다른 곳(다른 관리자 · SQL)에서 업체 정보가 바뀌었으면 저장하지 않아요
+//    (예: SQL로 메뉴를 바꿨는데, 그 전에 열어 둔 관리자 화면에서 저장하면 예전 메뉴로 되돌아가던 문제)
+const SHOP_BASE = {};
+const canonJ = v => JSON.stringify(v, (k, x) => x && typeof x === "object" && !Array.isArray(x) ? Object.keys(x).sort().reduce((o, kk) => (o[kk] = x[kk], o), {}) : x);
 const splitShop = s => { const o = clone(s); const notes = {}; ["review", "checks"].forEach(k => { if (o[k] !== undefined) { notes[k] = o[k]; delete o[k]; } }); return [o, notes]; };
 async function dbSaveShop(s, oldId) {
   const [data, notes] = splitShop(s);
@@ -43,7 +47,10 @@ async function dbSaveShop(s, oldId) {
     META[s.id] = META[oldId]; PRIV[s.id] = PRIV[oldId]; delete META[oldId]; delete PRIV[oldId];
   }
   const m = META[s.id] || { published: true, sort: 0 };
-  let r = await sb.from("shops").upsert({ id: s.id, data, published: m.published !== false, sort: m.sort || 0, updated_by: ME.email }); if (r.error) throw r.error;
+  if (SHOP_BASE[s.id] && !oldId) { const cur = await sb.from("shops").select("data").eq("id", s.id).maybeSingle();
+    if (!cur.error && cur.data && canonJ(cur.data.data) !== SHOP_BASE[s.id]) { const e = new Error("이 업체 정보가 다른 곳(다른 관리자 · SQL)에서 바뀌었어요. 지금 저장하면 그 내용이 지워져요 — 새로고침(F5) 후 다시 해 주세요"); e.stale = true; throw e; } }
+  let r = await sb.from("shops").upsert({ id: s.id, data, published: m.published !== false, sort: m.sort || 0, updated_by: ME.email }).select("data").maybeSingle(); if (r.error) throw r.error;
+  SHOP_BASE[s.id] = canonJ(r.data ? r.data.data : data);
   if (typeof IS_FIELD === "function" && IS_FIELD()) return;   // 현장 영업 직원은 계약 · 비공개 메모를 못 봐요 (그대로 둬요)
   const pv = PRIV[s.id] || { commission_rate: 0, contract: {} };
   r = await sb.from("shop_private").upsert({ shop_id: s.id, notes, commission_rate: +pv.commission_rate || 0, contract: pv.contract || {} }); if (r.error) throw r.error;
@@ -55,7 +62,7 @@ async function loadShops() {
     sb.from("settings").select("key,value").eq("key", "cat_imgs")]);
   if (a.error) throw a.error; if (b.error) throw b.error;
   const pv = Object.fromEntries(b.data.map(x => [x.shop_id, x]));
-  shops = a.data.map(x => { META[x.id] = { published: x.published, sort: x.sort }; const p = pv[x.id] || {};
+  shops = a.data.map(x => { SHOP_BASE[x.id] = canonJ(x.data); META[x.id] = { published: x.published, sort: x.sort }; const p = pv[x.id] || {};
     PRIV[x.id] = { commission_rate: +p.commission_rate || 0, contract: p.contract || {} }; return Object.assign(x.data, p.notes || {}); });
   catImgs = (c.data && c.data[0] && c.data[0].value) || {};
 }

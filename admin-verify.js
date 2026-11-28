@@ -160,9 +160,17 @@ const vfMn = m => ({ n: vfTx(m.name), m: +m.min || 0, p: +m.price || 0, t: +m.ti
 const vfAddr = a => (a && (a.vi || a.en || a.ko)) || "";
 // 모아 온 메뉴 가격: 손으로 고친 값(vnd)이 있으면 그걸 써요
 const vfP = m => m.vnd != null ? +m.vnd || 0 : vfVnd(m.price);
+// 초안을 만들 때의 손님 화면 메뉴 (그 뒤 SQL 등으로 메뉴가 바뀌면 이 초안으로 검수 완료하지 않아요)
+const vfMenuSig = s => (s.menu || []).map(m => [vfTx(m.name), +m.min || 0, +m.price || 0].join("|")).join("\n");
+function vfStale(s, D) {
+  if (!D) return false; if (D.base != null) return D.base !== vfMenuSig(s);
+  const live = s.menu || [], old = D.menu.filter(m => m._o != null);   // 예전 초안(base 없음): 원래 자리 메뉴 이름이 많이 다르면 낡은 초안
+  const miss = old.filter(m => !live[m._o] || vfTx(live[m._o].name) !== vfTx(m.name)).length;
+  return old.length > 3 && miss / old.length > 0.3;
+}
 // 엉클데이 쪽 초안 (검수 완료 전까지 손님 화면에 안 나가요) · 줄마다 _o = 원래 몇 번째 메뉴였는지 (새 메뉴는 null)
 function vfDraftOf(s, c) {
-  const D = c.draft || { menu: JSON.parse(JSON.stringify(s.menu || [])).map((m, j) => ({ ...m, _o: j, _k: "o" + j })), open: s.open || "", close: s.close || "", address: s.address || null, ck: {} };
+  const D = c.draft || { menu: JSON.parse(JSON.stringify(s.menu || [])).map((m, j) => ({ ...m, _o: j, _k: "o" + j })), open: s.open || "", close: s.close || "", address: s.address || null, ck: {}, base: vfMenuSig(s) };
   if (D.desc === undefined) D.desc = s.desc ? JSON.parse(JSON.stringify(s.desc)) : null;   // 📝 소개 · 👍 추천 (검수 완료 때 반영)
   if (D.reco === undefined) D.reco = s.recommend ? JSON.parse(JSON.stringify(s.recommend)) : null;
   D.ck = D.ck || {}; const old = !D.menu.some(m => m._k);   // 예전 초안: 순서대로 원래 메뉴로 봐요
@@ -403,6 +411,7 @@ function vfBind(el) {
   const ud = row.querySelector("#vfUndo"); if (ud) ud.onclick = () => confirmBox("엉클데이 쪽 바꾼 것을 모두 되돌릴까요?", () => vfSave(id, { crawled: { ...c, draft: null } }, "되돌렸어요 · 손님 화면과 같아요"), "", "되돌리기", false);
   const rv = row.querySelector("[data-vfrv]"); if (rv) rv.onclick = async () => {
     if (rv.dataset.vfrv !== "done") return vfSave(id, { review: "todo" }, "다시 검수 대기로 돌렸어요");
+    if (c.draft && vfStale(s, D)) return confirmBox("초안을 만든 뒤 손님 화면 메뉴가 바뀌었어요 (SQL · 다른 관리자)", async () => { await vfSave(id, { crawled: { ...c, draft: null } }, "낡은 초안을 버렸어요 · 지금 손님 화면 메뉴로 다시 시작해요"); }, "이 초안으로 검수 완료하면 바뀐 메뉴가 예전으로 돌아가요. 초안을 버리고 지금 메뉴에서 다시 맞춰 주세요", "초안 버리기", true);
     const pub = row.querySelector("#vfPub"), goPub = pub && pub.checked, F = c.draft ? vfFinal(s, D) : null;
     if (F && F.menu.some(m => !vfTx(m.name).trim())) return toast("이름이 빈 메뉴가 있어요 · 이름을 넣거나 🗑 로 빼 주세요");
     const n = F ? F.n : 0, pm = (s.promos || []).concat(s.extras || []).some(p => (p.menus || []).length);
