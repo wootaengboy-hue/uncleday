@@ -53,18 +53,34 @@ const priceRange = shop => {
   return `₫${lo.toLocaleString("en-US")} ~ ₫${hi.toLocaleString("en-US")}` + (r ? ` (${ui("approx")} ${r.symbol}${k(lo).toLocaleString("en-US")} ~ ${r.symbol}${k(hi).toLocaleString("en-US")})` : "");
 };
 
-// 🟢 지금 영업 중? — 베트남 시간(UTC+7) 기준 · 자정 넘어 끝나는 가게(예: 10:00 ~ 02:00)도 맞게
+// 🕒 요일별 영업시간 (shop.hours · 병원처럼 점심시간이 있거나 요일마다 다른 곳)
+//   hours = { "1": [["07:00","12:00"],["13:00","16:30"]], "6": [["07:00","12:00"]] } · 키 0=일 … 6=토 · 없는 요일 = 휴무
+//   hours 가 없으면 예전처럼 open ~ close · closed(쉬는 요일)
+const hmMin = t => { const [h, m] = String(t || "").split(":").map(Number); return (h || 0) * 60 + (m || 0); };
+const minHm = x => { x = ((x % 1440) + 1440) % 1440; return String(Math.floor(x / 60)).padStart(2, "0") + ":" + String(x % 60).padStart(2, "0"); };
+function dayRanges(shop, d) {
+  if (shop && shop.hours && typeof shop.hours === "object") return (shop.hours[d] || shop.hours[String(d)] || []).filter(r => r && r[0] && r[1]);
+  if (!shop || !shop.open || !shop.close || (shop.closed || []).includes(d)) return [];
+  return [[shop.open, shop.close]];
+}
+// "월~금 07:00~12:00, 13:00~16:30" 처럼 같은 시간끼리 묶은 줄들 (월요일부터)
+function hoursLines(shop) {
+  const days = ui("days"), order = [1, 2, 3, 4, 5, 6, 0], txt = d => dayRanges(shop, d).map(r => r[0] + "~" + r[1]).join(", ");
+  const out = []; let i = 0;
+  while (i < 7) { const t = txt(order[i]); let j = i; while (j + 1 < 7 && txt(order[j + 1]) === t) j++;
+    if (t) out.push((i === j ? days[order[i]] : days[order[i]] + "~" + days[order[j]]) + " " + t); i = j + 1; }
+  return out;
+}
+// 🟢 지금 영업 중? — 베트남 시간(UTC+7) 기준 · 자정 넘어 끝나는 가게(예: 10:00 ~ 02:00) · 점심시간(쉬는 시간)도 맞게
 function openInfo(shop) {
-  if (!shop || !shop.open || !shop.close) return null;
-  const pm = t => { const [h, m] = String(t).split(":").map(Number); return (h || 0) * 60 + (m || 0); };
+  if (!shop || !((shop.open && shop.close) || shop.hours)) return null;
   const now = new Date(Date.now() + 7 * 36e5), d = now.getUTCDay(), m = now.getUTCHours() * 60 + now.getUTCMinutes();
-  const o = pm(shop.open); let c = pm(shop.close); if (c <= o) c += 1440;
-  const off = day => (shop.closed || []).includes(day), hm = x => { x = ((x % 1440) + 1440) % 1440; return String(Math.floor(x / 60)).padStart(2, "0") + ":" + String(x % 60).padStart(2, "0"); };
-  if (!off(d) && m >= o && m < c) return { open: true, soon: c - m <= 60, until: hm(c) };
-  const yd = (d + 6) % 7;
-  if (c > 1440 && !off(yd) && m + 1440 < c) return { open: true, soon: c - 1440 - m <= 60, until: hm(c) };
-  if (off(d)) return { open: false, off: true };
-  if (m < o) return { open: false, at: hm(o) };
+  const span = r => { const o = hmMin(r[0]); let c = hmMin(r[1]); if (c <= o) c += 1440; return [o, c]; };
+  for (const r of dayRanges(shop, d)) { const [o, c] = span(r); if (m >= o && m < c) return { open: true, soon: c - m <= 60, until: minHm(c) }; }
+  for (const r of dayRanges(shop, (d + 6) % 7)) { const [o, c] = span(r); if (c > 1440 && m + 1440 < c) return { open: true, soon: c - 1440 - m <= 60, until: minHm(c) }; }
+  const today = dayRanges(shop, d); if (!today.length) return { open: false, off: true };
+  const next = today.map(span).filter(([o]) => o > m).sort((x, y) => x[0] - y[0])[0];
+  if (next) return { open: false, at: minHm(next[0]) };
   return { open: false, done: true };
 }
 function openBadge(shop) {

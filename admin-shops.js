@@ -264,6 +264,8 @@ function openEditor(id, preset, opts = {}) {
           <label class="f"><span>닫는 시간</span><input type="time" data-k="close" value="${esc(s.close)}"></label>
         </div>
         <div class="f"><span>쉬는 요일</span><div class="checks">${DAYS.map((d, i) => `<label><input type="checkbox" data-day="${i}" ${s.closed.includes(i) ? "checked" : ""}>${d}</label>`).join("")}</div></div>
+        <div class="f"><label class="hw-on"><input type="checkbox" id="hwOn" ${s.hours ? "checked" : ""}> 🕒 요일마다 시간이 다르거나 점심시간(쉬는 시간)이 있어요 <small class="hint">병원처럼 · 켜면 위 여는 · 닫는 시간 · 쉬는 요일 대신 아래 표를 써요</small></label>
+          <div id="hwBox" ${s.hours ? "" : "hidden"}></div></div>
         <div class="f"><span>응대 가능 언어</span><div class="checks">${STAFF.map(([k, v]) => `<label><input type="checkbox" data-lang="${k}" ${s.staffLangs.includes(k) ? "checked" : ""}>${v}</label>`).join("")}</div></div>
         <div class="two">
           <label class="f"><span>평점 (0~5, 없으면 0)</span><input type="number" step="0.1" min="0" max="5" data-k="rating" value="${s.rating || 0}"></label>
@@ -354,6 +356,27 @@ function openEditor(id, preset, opts = {}) {
   $("layer").querySelectorAll("[data-day]").forEach(el => el.onchange = () => {
     s.closed = [...$("layer").querySelectorAll("[data-day]:checked")].map(x => +x.dataset.day);
   });
+  // 🕒 요일별 영업시간 (shop.hours) — 요일마다 오전 · 오후 두 칸 (점심시간은 두 칸 사이) · 비운 요일 = 휴무
+  //   저장할 때 여는 시간 = 가장 이른 시간 · 닫는 시간 = 가장 늦은 시간 · 쉬는 요일 = 시간 없는 요일로 맞춰요 (목록 · 정렬용)
+  const HW_ORDER = [1, 2, 3, 4, 5, 6, 0];
+  const hwSync = () => { if (!s.hours) return; const all = Object.values(s.hours).flat();
+    if (all.length) { s.open = all.map(r => r[0]).sort()[0]; s.close = all.map(r => r[1]).sort().slice(-1)[0]; }
+    s.closed = [0, 1, 2, 3, 4, 5, 6].filter(d => !(s.hours[d] || []).length);
+    const oi = $("layer").querySelector('[data-k="open"]'), ci = $("layer").querySelector('[data-k="close"]'); if (oi) oi.value = s.open || ""; if (ci) ci.value = s.close || "";
+    $("layer").querySelectorAll("[data-day]").forEach(x => x.checked = s.closed.includes(+x.dataset.day)); };
+  const hwDraw = () => { const b = $("hwBox"); if (!b || !s.hours) return;
+    const v = (d, k) => ((s.hours[d] || [])[k] || []);
+    b.innerHTML = `<table class="hw-t"><tr><th></th><th>오전 (또는 하루)</th><th>오후 <small>(점심시간 뒤 · 없으면 비워요)</small></th></tr>${HW_ORDER.map(d => `<tr><th>${DAYS[d]}</th>
+      ${[0, 1].map(k => `<td><input type="time" data-hw="${d}.${k}.0" value="${esc(v(d, k)[0] || "")}"> ~ <input type="time" data-hw="${d}.${k}.1" value="${esc(v(d, k)[1] || "")}"></td>`).join("")}</tr>`).join("")}</table>
+      <div class="hw-act"><button type="button" class="btn sm" data-hwcopy>월요일 시간을 화 ~ 금에 복사</button><small class="hint">시간을 비운 요일은 휴무로 나와요</small></div>`;
+    b.querySelectorAll("[data-hw]").forEach(el => el.onchange = () => {
+      const [d, k, e] = el.dataset.hw.split(".").map(Number), cur = [0, 1].map(kk => [...v(d, kk)]); cur[k][e] = el.value;
+      const rows = cur.filter(r => r[0] && r[1]); if (rows.length) s.hours[d] = rows; else delete s.hours[d]; hwSync(); });
+    b.querySelector("[data-hwcopy]").onclick = () => { [2, 3, 4, 5].forEach(d => { if ((s.hours[1] || []).length) s.hours[d] = JSON.parse(JSON.stringify(s.hours[1])); else delete s.hours[d]; }); hwSync(); hwDraw(); }; };
+  if ($("hwOn")) $("hwOn").onchange = () => {
+    if ($("hwOn").checked) { s.hours = {}; [0, 1, 2, 3, 4, 5, 6].forEach(d => { if (s.open && s.close && !(s.closed || []).includes(d)) s.hours[d] = [[s.open, s.close]]; }); $("hwBox").hidden = false; hwDraw(); }
+    else { delete s.hours; $("hwBox").hidden = true; } };
+  hwDraw();
   $("layer").querySelectorAll("[data-lang]").forEach(el => el.onchange = () => {
     s.staffLangs = [...$("layer").querySelectorAll("[data-lang]:checked")].map(x => x.dataset.lang);
   });

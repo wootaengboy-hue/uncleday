@@ -159,7 +159,8 @@ if (!shop) {
     if (!(window.SHOP_ID && lang === "ko")) document.title = main + (other && other.replace(/\s/g, "").toLowerCase() !== main.replace(/\s/g, "").toLowerCase() ? ` (${other})` : "") + " | " + tx(SITE.name); }
   const cat = catGroup(shop.cat);
   const img = shop.img ? `<img class="hero" src="${shop.img}" alt="" decoding="async" data-fit="${shop.imgFit || ""}" style="object-position:${shop.imgPos || "50% 50%"}">` : phCard(shop, true);
-  const closed = shop.closed.length ? shop.closed.map(d => ui("days")[d]).join(", ") : ui("none");
+  const offDays = shop.hours ? [0, 1, 2, 3, 4, 5, 6].filter(d => !dayRanges(shop, d).length) : shop.closed;   // 요일별 시간이 있으면 시간 없는 요일이 휴무
+  const closed = offDays.length ? offDays.map(d => ui("days")[d]).join(", ") : ui("none");
   const staff = shop.staffLangs.length ? shop.staffLangs.map(l => ui("lang_" + l)).join(", ") : ui("tbd");
   const revs = (shop.userReviews || []).slice().sort((a, b) => (b.date || "").localeCompare(a.date || ""));
   const avg = revs.length ? (revs.reduce((t, r) => t + r.stars, 0) / revs.length).toFixed(1) : 0;
@@ -183,7 +184,7 @@ if (!shop) {
   const mDesc = g => (g.d ? `<small class="m-desc">${esc(g.d)}</small>` : "") + mMore(g);
   // 📖 자세히 보기: 가게 정보를 바탕으로 엉클데이가 정리한 메뉴 설명 (m.more) — 누르면 펼쳐져요
   const mMore = g => g.x ? `<details class="m-more"><summary>${ui("mMore")}</summary><div>${esc(g.x).replace(/\n/g, "<br>")}</div></details>` : "";
-  const hoursText = shop.open ? `${shop.open} ~ ${shop.close}` : ui("tbd");
+  const hoursText = shop.hours ? hoursLines(shop).map(esc).join("<br>") : shop.open ? `${shop.open} ~ ${shop.close}` : ui("tbd");
   const closedText = shop.open ? closed : ui("tbd");
 
   const hasPrice = shop.menu.some(m => m.price > 0);
@@ -419,16 +420,18 @@ ${f.text}
   const avWeek = ds => AV && AV.managed && AV.week ? AV.week[(new Date(ds + "T00:00:00").getDay() + 6) % 7] : null;
   const avClosed = (ds, t) => !!AV && (AV.closures || []).some(c => c.day === ds && (t == null ? c.slot == null : c.slot === t));
   if (typeof LIVE !== "undefined" && LIVE.on && shop.id) LIVE.rpc("shop_availability", { shop: shop.id, d1: ymd(first), d2: ymd(last) }).then(r => { AV = r; if (!$("bkPanel").hidden) { drawCal(); drawSlots(); } }).catch(() => {});
-  const dayOff = ds => { const w = avWeek(ds); return (w ? !!w.closed : (shop.closed || []).includes(new Date(ds + "T00:00:00").getDay())) || avClosed(ds, null); };
+  const wdOf = ds => new Date(ds + "T00:00:00").getDay();
+  const dayOff = ds => { const w = avWeek(ds); return (w ? !!w.closed : shop.hours ? !dayRanges(shop, wdOf(ds)).length : (shop.closed || []).includes(wdOf(ds))) || avClosed(ds, null); };
   const fmtTime = t => { const m = toMin(t), h = Math.floor(m / 60), mm = String(m % 60).padStart(2, "0"); return lang === "ko" ? `${h < 12 ? "오전" : "오후"} ${h % 12 || 12}:${mm}` : lang === "vi" ? `${h}:${mm}` : `${h % 12 || 12}:${mm} ${h < 12 ? "AM" : "PM"}`; };
   const fmtDate = ds => { const x = new Date(ds + "T00:00:00"), w = ui("days")[x.getDay()]; return lang === "ko" ? `${x.getMonth() + 1}.${x.getDate()}(${w})` : lang === "vi" ? `${w}, ${x.getDate()}/${x.getMonth() + 1}` : `${w}, ${x.toLocaleString("en-US", { month: "short" })} ${x.getDate()}`; };
   function slotsFor() {
     const dur = shop.menu[fMenu.value].min || 60, out = [], ds = fDate.value, w = ds ? avWeek(ds) : null;
-    const open = w ? w.open : shop.open, close = w ? w.close : shop.close;
-    if (!open || !close || (ds && dayOff(ds))) return out;
+    // 시간대: 사장님 페이지 요일 설정 > 요일별 영업시간(점심시간 빼고 여러 칸) > 여는 ~ 닫는 시간
+    const ranges = w ? [[w.open, w.close]] : shop.hours ? dayRanges(shop, ds ? wdOf(ds) : ([1, 2, 3, 4, 5, 6, 0].find(d => dayRanges(shop, d).length) ?? 1)) : [[shop.open, shop.close]];
+    if (!ranges.length || ranges.some(r => !r[0] || !r[1]) || (ds && dayOff(ds))) return out;
     const ppl = +($("fPeople") ? $("fPeople").value : 1) || 1, cap = AV ? +AV.capacity || 4 : 99;
     const nowVN = Date.now() + 7 * 3600e3, cut = AV ? (+AV.cutoff_min || 0) * 60e3 : 0;
-    for (let t = toMin(open); t + dur <= toMin(close); t += 30) {
+    for (const [open, close] of ranges) for (let t = toMin(open); t + dur <= toMin(close); t += 30) {
       if (ds && AV) {
         if (Date.parse(ds + "T" + toStr(t) + ":00Z") < nowVN + cut) continue;                 // 예약 마감 시간 전
         let ok = true;
