@@ -264,3 +264,8 @@ Object.assign(UI.en, { richHi: "✨ Why guests like it", richGal: "Photos", rich
 Object.assign(UI.vi, { richHi: "✨ Điểm nổi bật", richGal: "Hình ảnh", richTrustH: "🛡️ Đặt lịch qua Uncle Day",
   richT1: "Giá như tại tiệm", richT1d: "Không mất thêm phí cho Uncle Day", richT2: "Tư vấn bằng ngôn ngữ của bạn", richT2d: "13 ngôn ngữ · tự động dịch",
   richT3: "Thông tin đã kiểm tra", richT3d: "Địa chỉ, giờ mở cửa, giá đã được xác nhận", richT4: "Thanh toán tại tiệm", richT4d: "Không cần trả trước — trả sau khi dùng dịch vụ" });
+
+/* 🚕 그랩 말고 다른 차 부르기 앱 */
+Object.assign(UI.ko, { rideBtn: "그랩 · 택시 부르기", rideTitle: "차 불러서 이 업체 가기", rideOther: "다른 앱으로 부르기 (누르면 주소가 복사돼요)", rideEtc2: "inDrive · Maxim · Xanh SM은 앱이 열리면 목적지 칸에 주소를 붙여넣으세요. 앱이 없으면 설치 화면이 열려요. 요금은 각 앱에서 바로 결제해요." });
+Object.assign(UI.en, { rideBtn: "Get a ride (Grab & more)", rideTitle: "Get a ride to this shop", rideOther: "Other ride apps (the address is copied when you tap)", rideEtc2: "For inDrive, Maxim and Xanh SM, paste the address as your destination when the app opens. If you don't have the app, the store page opens. You pay in each app." });
+Object.assign(UI.vi, { rideBtn: "Gọi xe (Grab & khác)", rideTitle: "Gọi xe đến cửa hàng", rideOther: "Ứng dụng khác (nhấn để sao chép địa chỉ)", rideEtc2: "Với inDrive, Maxim và Xanh SM, hãy dán địa chỉ vào điểm đến khi ứng dụng mở. Nếu chưa có ứng dụng, trang cài đặt sẽ mở. Thanh toán trong từng ứng dụng." });

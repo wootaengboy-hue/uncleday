@@ -1006,3 +1006,9 @@ body.udl-on .m-tabs { top: 96px; }
   .rg.big { grid-template-columns: 1fr 1fr; grid-template-rows: 180px 110px 110px; } .rg.big .rg-i:first-child { grid-column: span 2; grid-row: auto; }
   .rt-grid { grid-template-columns: 1fr; }
 }
+
+/* 🚕 다른 차 부르기 앱 */
+.ride-apps { margin: 12px 0 2px; } .ride-apps small { display: block; color: #6b5f50; font-size: 12.5px; margin-bottom: 6px; }
+.ride-apps > div { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.ride-app { display: flex; align-items: center; justify-content: center; min-height: 44px; border-radius: 12px; background: var(--c); color: var(--t); font-weight: 800; font-size: 15px; text-decoration: none; box-shadow: 0 2px 6px #0000001a; }
+.ride-app:active { transform: scale(.97); }

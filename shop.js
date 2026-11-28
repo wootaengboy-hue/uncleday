@@ -84,6 +84,16 @@ function grabLink(dst) {
   u.search = new URLSearchParams({ pid: "organic_web", af_force_deeplink: "true", af_dp: "grab://open?" + p.toString().replace(/\+/g, "%20") }).toString();
   return u.href;
 }
+// 🚕 베트남에서 많이 쓰는 다른 차 부르기 앱 (가게 이름 · 로고 그림 없이 글자 버튼만)
+const RIDE_APPS = [
+  { id: "indrive", n: "inDrive", c: "#C1F11D", t: "#141414", pkg: "sinet.startup.inDriver", ios: "https://apps.apple.com/app/id780125801" },
+  { id: "maxim", n: "Maxim", c: "#FFD200", t: "#1a1a1a", pkg: "com.taxsee.taxsee", ios: "https://apps.apple.com/app/id579985456" },
+  { id: "xanhsm", n: "Xanh SM", c: "#00B5AD", t: "#fff", pkg: "com.gsm.customer", ios: "https://apps.apple.com/app/id6446425595" }];
+function rideAppLink(a) {
+  if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) return a.ios;   // 아이폰: 앱 스토어 화면 (설치돼 있으면 '열기')
+  const store = "https://play.google.com/store/apps/details?id=" + a.pkg;   // 안드로이드: 앱 바로 열기 · 없으면 플레이 스토어
+  return `intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=${a.pkg};S.browser_fallback_url=${encodeURIComponent(store)};end`;
+}
 function openRide(shop) {
   const dst = rideDest(shop), mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   document.querySelectorAll(".ask-sheet").forEach(x => x.remove());
@@ -95,13 +105,16 @@ function openRide(shop) {
     <p class="ask-st" id="rideSt"></p>
     <div class="ask-btns"><button type="button" class="btn ride-copy">${ui("rideCopy")}</button>
       ${mobile ? `<a class="btn ride-grab" href="${grabLink(dst)}" rel="noopener">${ui("rideGrab")}</a>` : `<span></span>`}</div>
-    <p class="ride-etc">${ui("rideEtc")}</p>
+    ${mobile ? `<div class="ride-apps"><small>${ui("rideOther")}</small><div>${RIDE_APPS.map(a => `<a class="ride-app" style="--c:${a.c};--t:${a.t}" href="${rideAppLink(a)}" rel="noopener" data-app="${a.id}">${a.n}</a>`).join("")}</div></div>` : ""}
+    <p class="ride-etc">${ui(mobile ? "rideEtc2" : "rideEtc")}</p>
     <button type="button" class="ask-close" aria-label="close">✕</button></div>`;
   document.body.appendChild(d);
   const st = ok => { const el = d.querySelector("#rideSt"); el.textContent = ok ? "✅ " + ui("rideCopied") : ui("askCopyFail"); el.className = "ask-st " + (ok ? "ok" : "no"); };
   const doCopy = () => { const ok = copyText(dst.addr); st(ok); if (!ok && navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(dst.addr).then(() => st(true), () => {}); };
   d.querySelector(".ride-copy").onclick = doCopy;
   const g = d.querySelector(".ride-grab"); if (g) g.addEventListener("click", () => { doCopy(); if (typeof LIVE !== "undefined" && LIVE.track) LIVE.track("map", shop.id); });
+  // inDrive · Maxim · Xanh SM: 목적지를 채워 여는 공개 방법이 없어서 → 주소를 복사하고 앱을 열어요 (앱이 없으면 스토어)
+  d.querySelectorAll(".ride-app").forEach(a => a.addEventListener("click", () => { doCopy(); if (typeof LIVE !== "undefined" && LIVE.track) LIVE.track("map", shop.id); }));
   d.querySelector(".ask-close").onclick = () => d.remove();
   d.onclick = ev => { if (ev.target === d) d.remove(); };
 }
