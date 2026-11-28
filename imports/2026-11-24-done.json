@@ -1010,6 +1010,14 @@
       "title": "메뉴 이름 밑에 원래 영어 이름 같이 표시",
       "note": "한국어 메뉴 이름 밑에 가게 메뉴판의 원래 이름(영어)을 작게. 가게 직원에게 보여 주기 좋게. 보는 이름과 같으면 생략. 업체 정보 검수에서 넘길 때 원문을 orig로 따로 저장",
       "memo": "shop.js mOrig · admin-verify.js toItem"
+    },
+    {
+      "group": "업체 페이지",
+      "priority": "normal",
+      "status": "done",
+      "title": "이미 넘긴 메뉴에도 원래 이름 채우기 (universe62)",
+      "note": "모아 온 메뉴 원문을 손님 화면 메뉴(한국어 이름이 같은 것)에 orig로 붙이는 SQL. 백업 menu_before_u62 · 되돌리기 SQL 포함",
+      "memo": "사용자: SQL Editor에서 universe62 실행 필요"
     }
   ]
 }
