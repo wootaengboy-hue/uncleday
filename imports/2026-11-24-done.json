@@ -978,6 +978,14 @@
       "title": "차 부르기 버튼 4개를 업체 화면 밖으로 (Grab · inDrive · Maxim · Xanh SM)",
       "note": "'그랩으로 가기' 버튼 하나 → 지도 보기 아래에 로고 버튼 4개. 휴대폰 2×2, PC 한 줄. 휴대폰: Grab은 목적지 채워서 열기, 나머지는 주소 복사 + 앱 열기 + 안내 문구. PC: 주소 복사 창",
       "memo": "ridePaste 문구 13개 언어"
+    },
+    {
+      "group": "사이트 공통",
+      "priority": "normal",
+      "status": "done",
+      "title": "카톡 상담 버튼에 카카오톡 TALK 로고",
+      "note": "상단 노란 카톡 버튼의 말풍선 그림 → 주신 TALK 로고 (images/kakao-talk.png). 휴대폰은 동그란 로고 버튼, PC는 로고 + 카톡 상담",
+      "memo": ""
     }
   ]
 }

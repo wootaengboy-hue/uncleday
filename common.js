@@ -165,7 +165,7 @@ function drawCommon() {
     if (cs) { let k = top.querySelector(".kk-btn");
       if (!k) { k = document.createElement("a"); k.className = "btn kk-btn kakao-link"; k.target = "_blank"; k.rel = "noopener"; cs.after(k); }
       k.title = ui("kkTalkFull"); k.setAttribute("aria-label", ui("kkTalkFull"));
-      k.innerHTML = `<svg class="kk-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2c-5.3 0-9.6 3.4-9.6 7.6 0 2.7 1.8 5.1 4.5 6.4l-.9 3.4c-.1.3.3.6.6.4l4-2.6c.5.1.9.1 1.4.1 5.3 0 9.6-3.4 9.6-7.6S17.3 3.2 12 3.2z"/></svg><span class="kk-l">${esc(ui("kkTalk"))}</span>`; } }
+      k.innerHTML = `<img class="kk-ic" src="/images/kakao-talk.png?v=1" alt="" width="22" height="20"><span class="kk-l">${esc(ui("kkTalk"))}</span>`; } }
   document.querySelectorAll(".kakao-link").forEach(a => a.href = SITE.kakao);
   // 🔗 관리자로 로그인해 둔 브라우저면 바로가기 바를 불러와요 (관리자가 아니면 서버가 빈 목록을 줘서 안 보여요)
   try { const ref = new URL(SUPA.url).hostname.split(".")[0];
