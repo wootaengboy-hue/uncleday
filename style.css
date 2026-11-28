@@ -1037,4 +1037,4 @@ body.udl-on .m-tabs { top: 96px; }
 .m-more summary::-webkit-details-marker { display: none; }
 .m-more summary::after { content: "▾"; font-size: 11px; transition: transform .15s; }
 .m-more[open] summary::after { transform: rotate(180deg); }
-.m-more > div { margin-top: 8px; padding: 10px 12px; border-radius: 12px; background: #FBF8F2; border: 1px solid #F0E6D6; color: #3f4650; line-height: 1.6; }
+.m-more > div { word-break: keep-all; overflow-wrap: anywhere; margin-top: 8px; padding: 10px 12px; border-radius: 12px; background: #FBF8F2; border: 1px solid #F0E6D6; color: #3f4650; line-height: 1.6; }
