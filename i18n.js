@@ -283,3 +283,17 @@ Object.assign(UI["es"] || (UI["es"] = {}), { ridePaste: "Dirección copiada. Pé
 Object.assign(UI["hi"] || (UI["hi"] = {}), { ridePaste: "पता कॉपी हो गया। ऐप खुलने पर इसे गंतव्य में पेस्ट करें" });
 Object.assign(UI["th"] || (UI["th"] = {}), { ridePaste: "คัดลอกที่อยู่แล้ว วางในช่องปลายทางเมื่อแอปเปิด" });
 Object.assign(UI["id"] || (UI["id"] = {}), { ridePaste: "Alamat disalin. Tempel sebagai tujuan saat aplikasi terbuka" });
+// 📖 메뉴 자세히 보기
+Object.assign(UI["ko"] || (UI["ko"] = {}), { mMore: "자세히 보기" });
+Object.assign(UI["en"] || (UI["en"] = {}), { mMore: "More details" });
+Object.assign(UI["vi"] || (UI["vi"] = {}), { mMore: "Xem chi tiết" });
+Object.assign(UI["ja"] || (UI["ja"] = {}), { mMore: "詳しく見る" });
+Object.assign(UI["zh"] || (UI["zh"] = {}), { mMore: "查看详情" });
+Object.assign(UI["zh-TW"] || (UI["zh-TW"] = {}), { mMore: "查看詳情" });
+Object.assign(UI["ru"] || (UI["ru"] = {}), { mMore: "Подробнее" });
+Object.assign(UI["fr"] || (UI["fr"] = {}), { mMore: "Plus de détails" });
+Object.assign(UI["de"] || (UI["de"] = {}), { mMore: "Mehr Details" });
+Object.assign(UI["es"] || (UI["es"] = {}), { mMore: "Más detalles" });
+Object.assign(UI["hi"] || (UI["hi"] = {}), { mMore: "और जानकारी" });
+Object.assign(UI["th"] || (UI["th"] = {}), { mMore: "ดูรายละเอียด" });
+Object.assign(UI["id"] || (UI["id"] = {}), { mMore: "Lihat detail" });

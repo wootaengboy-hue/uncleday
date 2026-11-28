@@ -171,7 +171,7 @@ if (!shop) {
   const mFold = v => String(v || "").toLowerCase().replace(/[^a-z0-9가-힣]+/g, "");
   const mOrig = (m, shown) => { const o = String(m.orig || (m.name && m.name.en) || "").trim(); return o && /[a-z]/i.test(o) && mFold(o) !== mFold(shown) ? o : ""; };
   const mOrigH = g => g.o ? `<small class="m-orig" translate="no">${esc(g.o)}</small>` : "";
-  const mGroups = []; shop.menu.forEach((m, i) => { const n = tx(m.name), sc = tx(m.sec) || ""; let g = mGroups.find(x => x.n === n && x.sc === sc); if (!g) mGroups.push(g = { n, sc, d: "", items: [] }); if (!g.d) g.d = tx(m.desc) || ""; if (!g.o) g.o = mOrig(m, n); g.items.push(i); });
+  const mGroups = []; shop.menu.forEach((m, i) => { const n = tx(m.name), sc = tx(m.sec) || ""; let g = mGroups.find(x => x.n === n && x.sc === sc); if (!g) mGroups.push(g = { n, sc, d: "", items: [] }); if (!g.d) g.d = tx(m.desc) || ""; if (!g.o) g.o = mOrig(m, n); if (!g.x) g.x = tx(m.more) || ""; g.items.push(i); });
   const mHasSec = mGroups.some(g => g.sc);
   mGroups.forEach(g => { [g.top, g.sub] = mSplit(g.sc); if (mHasSec && !g.top) g.top = ui("m_other"); });
   if (mHasSec) { const ord = shop.secOrder || [], ko = g => mSplit((shop.menu[g.items[0]].sec || {}).ko || "")[0];   // 관리자가 정한 분류 순서 (없으면 처음 나온 순서)
@@ -180,7 +180,9 @@ if (!shop) {
   const mTops = mHasSec ? [...new Set(mGroups.map(g => g.top))] : [];
   const mSec = (g, k) => !mHasSec ? "" : (k === 0 || mGroups[k - 1].top !== g.top ? `<h3 class="m-sec" data-top="${esc(g.top)}">${esc(g.top)}</h3>` : "") + (g.sub && (k === 0 || mGroups[k - 1].top !== g.top || mGroups[k - 1].sub !== g.sub) ? `<h4 class="m-sub" data-top="${esc(g.top)}">${esc(g.sub)}</h4>` : "");
   const mTabs = () => mTops.length > 1 ? `<div class="m-tabs" role="tablist"><button type="button" class="on" data-mt="">${ui("m_all")}</button>${mTops.map(t => `<button type="button" data-mt="${esc(t)}">${esc(t)}</button>`).join("")}</div>` : "";
-  const mDesc = g => g.d ? `<small class="m-desc">${esc(g.d)}</small>` : "";
+  const mDesc = g => (g.d ? `<small class="m-desc">${esc(g.d)}</small>` : "") + mMore(g);
+  // 📖 자세히 보기: 가게 정보를 바탕으로 엉클데이가 정리한 메뉴 설명 (m.more) — 누르면 펼쳐져요
+  const mMore = g => g.x ? `<details class="m-more"><summary>${ui("mMore")}</summary><div>${esc(g.x).replace(/\n/g, "<br>")}</div></details>` : "";
   const hoursText = shop.open ? `${shop.open} ~ ${shop.close}` : ui("tbd");
   const closedText = shop.open ? closed : ui("tbd");
 

@@ -1030,3 +1030,11 @@ body.udl-on .m-tabs { top: 96px; }
 @media (max-width: 640px) {
   .top-in > .btn.kakao-link:not(.kk-btn) { display: none; }
 }
+
+/* 📖 메뉴 자세히 보기 */
+.menu-row details.m-more, details.m-more { margin-top: 6px; font-size: 13px; border: 0; padding: 0; background: none; box-shadow: none; border-radius: 0; }
+.m-more summary { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; color: #1f6b4a; font-weight: 700; font-size: 12.5px; list-style: none; padding: 3px 10px; border-radius: 999px; background: #EAF5EE; }
+.m-more summary::-webkit-details-marker { display: none; }
+.m-more summary::after { content: "▾"; font-size: 11px; transition: transform .15s; }
+.m-more[open] summary::after { transform: rotate(180deg); }
+.m-more > div { margin-top: 8px; padding: 10px 12px; border-radius: 12px; background: #FBF8F2; border: 1px solid #F0E6D6; color: #3f4650; line-height: 1.6; }
