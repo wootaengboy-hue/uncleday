@@ -970,6 +970,14 @@
       "title": "Grab · Xanh SM 버튼도 주신 로고로 교체",
       "note": "그랩 열기 버튼: 그랩 로고 + 로고 바탕 초록색. Xanh SM: 로고 바탕 하늘색 + 로고. 4개 앱 모두 주신 로고 사용",
       "memo": "images/ride/ (grab · indrive · maxim · xanhsm)"
+    },
+    {
+      "group": "업체 페이지",
+      "priority": "high",
+      "status": "done",
+      "title": "차 부르기 버튼 4개를 업체 화면 밖으로 (Grab · inDrive · Maxim · Xanh SM)",
+      "note": "'그랩으로 가기' 버튼 하나 → 지도 보기 아래에 로고 버튼 4개. 휴대폰 2×2, PC 한 줄. 휴대폰: Grab은 목적지 채워서 열기, 나머지는 주소 복사 + 앱 열기 + 안내 문구. PC: 주소 복사 창",
+      "memo": "ridePaste 문구 13개 언어"
     }
   ]
 }

@@ -97,6 +97,27 @@ function rideAppLink(a) {
   const store = "https://play.google.com/store/apps/details?id=" + a.pkg;   // 안드로이드: 앱 바로 열기 · 없으면 플레이 스토어
   return `intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=${a.pkg};S.browser_fallback_url=${encodeURIComponent(store)};end`;
 }
+// 🚕 업체 화면에 바로 보이는 차 부르기 버튼 4개 (Grab · inDrive · Maxim · Xanh SM) — 손님이 원하는 앱을 바로 골라요
+//  휴대폰: Grab은 목적지가 채워진 채로 열려요 · 나머지는 주소를 복사하고 앱을 열어요 (없으면 설치 화면)
+//  PC: 앱을 열 수 없어서 누르면 주소 복사 안내 창이 떠요
+const RIDE_ALL = () => [{ id: "grab", n: "Grab", c: "#509A4A" }, ...RIDE_APPS];
+function rideRow(shop) {
+  const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent), dst = rideDest(shop);
+  return `<div class="ride-row"><small class="rr-h">🚕 ${ui("rideTitle")}</small><div class="rr-btns">${RIDE_ALL().map(a => {
+    const inner = `<img src="/images/ride/${a.id}.png?v=1" alt="${a.n}">`, st = `style="--c:${a.c}"`;
+    if (!mobile) return `<button type="button" class="rr-b" ${st} data-ride="${a.id}" aria-label="${a.n}">${inner}</button>`;
+    return `<a class="rr-b" ${st} data-ride="${a.id}" href="${a.id === "grab" ? grabLink(dst) : rideAppLink(a)}" rel="noopener" aria-label="${a.n}">${inner}</a>`;
+  }).join("")}</div></div>`;
+}
+function rideBind(shop) {
+  const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent), dst = rideDest(shop);
+  document.querySelectorAll(".rr-b").forEach(b => b.addEventListener("click", () => {
+    if (typeof LIVE !== "undefined" && LIVE.track) LIVE.track("map", shop.id);
+    if (!mobile) { openRide(shop); return; }
+    let ok = copyText(dst.addr); if (!ok && navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(dst.addr).catch(() => {});
+    if (b.dataset.ride !== "grab") alertBox(ui("ridePaste"));
+  }));
+}
 function openRide(shop) {
   const dst = rideDest(shop), mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   document.querySelectorAll(".ask-sheet").forEach(x => x.remove());
@@ -196,7 +217,8 @@ if (!shop) {
     <div class="facts">${facts.map(f => `
       <div class="fact ${f[3] ? "" : "tbd"}"><span class="fi">${f[0]}</span><div><small>${f[1]}</small><b>${f[2]}</b></div></div>`).join("")}
     </div>
-    <p class="go-row">${shop.map ? `<a class="map-link" href="${shop.map}" target="_blank">🗺️ ${ui("map")}</a>` : ""}<button type="button" class="ride-btn" id="rideBtn">🚕 ${ui("rideBtn")}</button></p>
+    <p class="go-row">${shop.map ? `<a class="map-link" href="${shop.map}" target="_blank">🗺️ ${ui("map")}</a>` : ""}</p>
+    ${rideRow(shop)}
     <div id="gBox"></div>
     ${guideBar(shop.city, "in-shop")}
     <div id="shopHi"></div>
@@ -278,7 +300,7 @@ if (!shop) {
     <div id="done" class="done" hidden></div>`;
   if (typeof gplaceBox === "function") gplaceBox(shop);
   if (typeof shopRich === "function") shopRich(shop);
-  if ($("rideBtn")) $("rideBtn").onclick = () => openRide(shop);
+  rideBind(shop);
   // 메뉴판 크게 보기
   const boards = shop.menuImgs || [];
   function openBoard(i) {

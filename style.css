@@ -496,6 +496,12 @@ h1, h2, h3, .head h1, .cat-title, .partner h2 { font-weight: 800; }
 .go-row { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
 .ride-btn { border: 0; background: #00B14F; color: #fff; font: inherit; font-weight: 700; font-size: 14.5px; padding: 8px 14px; border-radius: 999px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,177,79,.25); }
 .ride-btn:hover { filter: brightness(1.05); }
+.ride-row { margin: 10px 0 4px; } .ride-row .rr-h { display: block; font-weight: 800; font-size: 13.5px; color: #6b5f50; margin-bottom: 6px; }
+.rr-btns { display: grid; grid-template-columns: repeat(4, minmax(0, 150px)); gap: 8px; }
+.rr-b { display: flex; align-items: center; justify-content: center; height: 46px; padding: 6px 8px; border: 0; border-radius: 12px; background: var(--c); cursor: pointer; text-decoration: none; box-shadow: 0 2px 6px #0000001f; overflow: hidden; }
+.rr-b img { display: block; max-width: 100%; max-height: 32px; width: auto; height: auto; }
+.rr-b:hover { filter: brightness(1.05); } .rr-b:active { transform: scale(.97); }
+@media (max-width: 560px) { .rr-btns { grid-template-columns: repeat(2, 1fr); } .rr-b { height: 50px; } }
 .ride-dst { display: grid; gap: 2px; background: #f3faf6; border: 1px solid #cfeedd; border-radius: 12px; padding: 10px 12px; }
 .ride-dst small { color: #2f7a52; font-weight: 700; font-size: 12px; } .ride-dst span { font-size: 14px; color: #33415a; }
 .ride-grab { background: #509A4A !important; color: #fff !important; border-color: #509A4A !important; font-weight: 800; }

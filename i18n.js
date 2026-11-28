@@ -269,3 +269,17 @@ Object.assign(UI.vi, { richHi: "✨ Điểm nổi bật", richGal: "Hình ảnh"
 Object.assign(UI.ko, { rideBtn: "그랩 · 택시 부르기", rideTitle: "차 불러서 이 업체 가기", rideOther: "다른 앱으로 부르기 (누르면 주소가 복사돼요)", rideEtc2: "inDrive · Maxim · Xanh SM은 앱이 열리면 목적지 칸에 주소를 붙여넣으세요. 앱이 없으면 설치 화면이 열려요. 요금은 각 앱에서 바로 결제해요." });
 Object.assign(UI.en, { rideBtn: "Get a ride (Grab & more)", rideTitle: "Get a ride to this shop", rideOther: "Other ride apps (the address is copied when you tap)", rideEtc2: "For inDrive, Maxim and Xanh SM, paste the address as your destination when the app opens. If you don't have the app, the store page opens. You pay in each app." });
 Object.assign(UI.vi, { rideBtn: "Gọi xe (Grab & khác)", rideTitle: "Gọi xe đến cửa hàng", rideOther: "Ứng dụng khác (nhấn để sao chép địa chỉ)", rideEtc2: "Với inDrive, Maxim và Xanh SM, hãy dán địa chỉ vào điểm đến khi ứng dụng mở. Nếu chưa có ứng dụng, trang cài đặt sẽ mở. Thanh toán trong từng ứng dụng." });
+// 🚕 업체 화면의 차 부르기 버튼 4개
+Object.assign(UI["ko"] || (UI["ko"] = {}), { ridePaste: "주소를 복사했어요. 앱이 열리면 목적지 칸에 붙여넣으세요" });
+Object.assign(UI["en"] || (UI["en"] = {}), { ridePaste: "Address copied. Paste it as your destination when the app opens" });
+Object.assign(UI["vi"] || (UI["vi"] = {}), { ridePaste: "Đã sao chép địa chỉ. Hãy dán vào ô điểm đến khi ứng dụng mở" });
+Object.assign(UI["ja"] || (UI["ja"] = {}), { ridePaste: "住所をコピーしました。アプリが開いたら目的地に貼り付けてください" });
+Object.assign(UI["zh"] || (UI["zh"] = {}), { ridePaste: "地址已复制。应用打开后请粘贴到目的地" });
+Object.assign(UI["zh-TW"] || (UI["zh-TW"] = {}), { ridePaste: "地址已複製。App 開啟後請貼到目的地" });
+Object.assign(UI["ru"] || (UI["ru"] = {}), { ridePaste: "Адрес скопирован. Вставьте его в поле «Куда», когда откроется приложение" });
+Object.assign(UI["fr"] || (UI["fr"] = {}), { ridePaste: "Adresse copiée. Collez-la comme destination à l’ouverture de l’appli" });
+Object.assign(UI["de"] || (UI["de"] = {}), { ridePaste: "Adresse kopiert. Füge sie als Ziel ein, wenn die App geöffnet ist" });
+Object.assign(UI["es"] || (UI["es"] = {}), { ridePaste: "Dirección copiada. Pégala como destino cuando se abra la app" });
+Object.assign(UI["hi"] || (UI["hi"] = {}), { ridePaste: "पता कॉपी हो गया। ऐप खुलने पर इसे गंतव्य में पेस्ट करें" });
+Object.assign(UI["th"] || (UI["th"] = {}), { ridePaste: "คัดลอกที่อยู่แล้ว วางในช่องปลายทางเมื่อแอปเปิด" });
+Object.assign(UI["id"] || (UI["id"] = {}), { ridePaste: "Alamat disalin. Tempel sebagai tujuan saat aplikasi terbuka" });
