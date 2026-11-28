@@ -1178,6 +1178,14 @@
       "title": "'카카오톡 없이 한국어 채팅 상담' → '다국어 채팅 상담'으로 바꾸기",
       "note": "홈 소개 문구 · 자주 묻는 질문(화면 + 검색엔진용) · 업체 · 도시 · 안내 페이지 FAQ · llms.txt — '한국어 · 영어 · 일본어 · 중국어 등 13개 언어로 편하게 물어보세요'",
       "memo": "index.html · tools/share-build.py (검색용 페이지는 다음 자동 업데이트 때 반영)"
+    },
+    {
+      "group": "업체 화면",
+      "priority": "normal",
+      "status": "done",
+      "title": "업체 사진 모음에서 '📸 가게 사진' 제목 빼기",
+      "note": "사진만 바로 나와요 · 휴대폰에서 사진이 3장일 때 아래에 생기던 빈 칸도 없앰",
+      "memo": "shop-rich.js · style.css (.rg.big 모바일 grid-auto-rows)"
     }
   ]
 }

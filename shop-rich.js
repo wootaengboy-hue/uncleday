@@ -35,8 +35,7 @@ function shopRich(shop) {
     if (shop.img && !urls.some(u => u === shop.img)) urls.unshift(shop.img);
     if (urls.length < 2) return;
     const more = urls.length > 5 ? urls.length - 5 : 0;
-    ga.innerHTML = `<h2>📸 ${ui("richGal")} <small class="rg-n">${urls.length}</small></h2>
-      <div class="rg ${urls.length >= 3 ? "big" : ""}">${urls.slice(0, 5).map((u, i) => `<button type="button" class="rg-i" data-gi="${i}" aria-label="photo ${i + 1}"><img src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="this.parentNode.style.display='none'">${i === 4 && more ? `<span class="rg-more">+${more}</span>` : ""}</button>`).join("")}</div>`;
+    ga.innerHTML = `<div aria-label="${esc(ui("richGal"))}" class="rg ${urls.length >= 3 ? "big" : ""}">${urls.slice(0, 5).map((u, i) => `<button type="button" class="rg-i" data-gi="${i}" aria-label="photo ${i + 1}"><img src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="this.parentNode.style.display='none'">${i === 4 && more ? `<span class="rg-more">+${more}</span>` : ""}</button>`).join("")}</div>`;
     ga.querySelectorAll("[data-gi]").forEach(b => b.onclick = () => richLightbox(urls, +b.dataset.gi));
   }).catch(() => {});
 }

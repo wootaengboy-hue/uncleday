@@ -1010,7 +1010,7 @@ body.udl-on .m-tabs { top: 96px; }
 .rt-c b { display: block; font-size: 14px; } .rt-c small { color: #7a6b58; font-size: 12.5px; line-height: 1.4; }
 @media (max-width: 640px) {
   .rh-grid { grid-template-columns: repeat(2, 1fr); } .rh-c { padding: 13px 8px 12px; } .rh-ic { width: 44px; height: 44px; font-size: 22px; } .rh-c b { font-size: 13.5px; }
-  .rg.big { grid-template-columns: 1fr 1fr; grid-template-rows: 180px 110px 110px; } .rg.big .rg-i:first-child { grid-column: span 2; grid-row: auto; }
+  .rg.big { grid-template-columns: 1fr 1fr; grid-template-rows: 180px; grid-auto-rows: 110px; } .rg.big .rg-i:first-child { grid-column: span 2; grid-row: auto; }
   .rt-grid { grid-template-columns: 1fr; }
 }
 
