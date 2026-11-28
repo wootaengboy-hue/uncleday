@@ -954,6 +954,14 @@
       "title": "차 부르기 버튼에 앱 로고 (Grab · inDrive · Maxim · Xanh SM)",
       "note": "앱스토어 공식 아이콘을 그대로 보여줌. 못 불러오면 이름만 나옴",
       "memo": "아이콘은 저장하지 않고 애플 앱스토어 주소에서 바로 불러옴"
+    },
+    {
+      "group": "업체 페이지",
+      "priority": "normal",
+      "status": "done",
+      "title": "inDrive · Maxim 버튼을 주신 로고로 교체",
+      "note": "inDrive는 어두운 바탕 + 로고, Maxim은 노란 바탕 + 로고 (images/ride/). Xanh SM · Grab은 앱 아이콘 유지",
+      "memo": "Xanh SM 로고 파일 주시면 같은 방식으로 교체"
     }
   ]
 }

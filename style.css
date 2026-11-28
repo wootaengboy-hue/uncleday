@@ -1010,7 +1010,8 @@ body.udl-on .m-tabs { top: 96px; }
 /* 🚕 다른 차 부르기 앱 */
 .ride-apps { margin: 12px 0 2px; } .ride-apps small { display: block; color: #6b5f50; font-size: 12.5px; margin-bottom: 6px; }
 .ride-apps > div { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.ride-app { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; min-height: 44px; padding: 10px 4px 8px; border-radius: 14px; background: #fff; border: 1.5px solid #ece4d6; color: #1f2937; font-weight: 800; font-size: 13.5px; text-decoration: none; box-shadow: 0 2px 6px #0000000f; }
-.ride-app .ride-ic { width: 44px; height: 44px; border-radius: 11px; box-shadow: 0 1px 3px #00000026; }
+.ride-app { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 58px; padding: 6px; border-radius: 14px; background: var(--c); color: var(--t); font-weight: 800; font-size: 14px; text-decoration: none; box-shadow: 0 2px 6px #0000001f; overflow: hidden; }
+.ride-app .ride-ic { width: 30px; height: 30px; border-radius: 8px; border: 1.5px solid #ffffffcc; box-sizing: border-box; flex: none; }
+.ride-app .ride-logo { display: block; max-width: 100%; max-height: 40px; width: auto; height: auto; }
 .ride-grab { display: inline-flex !important; align-items: center; justify-content: center; gap: 8px; } .ride-grab .ride-ic { width: 28px; height: 28px; border-radius: 8px; border: 2px solid #fff; box-sizing: border-box; }
 .ride-app:active { transform: scale(.97); }
