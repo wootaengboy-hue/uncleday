@@ -797,7 +797,8 @@ html:not([lang="ko"]) .about-ud .about-en { font-size: 14px; color: inherit; }
 .sv-sum dd { margin: 0; font-weight: 700; }
 
 /* 🎁 할인 이벤트 (universe39) */
-.pm-b { background: #FFE8E0; color: #B23A1E; max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+.pm-b { background: #FFE8E0; color: #B23A1E; max-width: 100%; }
+.pm-b .pm-bt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .pm-box { background: #FFF4EF; border: 1px solid #F6CDBE; border-radius: 14px; padding: 12px 14px; margin: 14px 0 6px; }
 .pm-box b.pm-h { display: block; color: #B23A1E; margin-bottom: 4px; }
 .pm-box ul { margin: 0; padding-left: 18px; } .pm-box li { margin: 3px 0; line-height: 1.45; }

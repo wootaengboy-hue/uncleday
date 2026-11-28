@@ -5,6 +5,7 @@
 --  · 시술 후 허브 족욕 · 허브 눈 찜질 · 간단한 간식 무료 → 태그 · 소개
 --  ※ '11월 골든 위크' (7일 한정 · 4인 요금 5인 · 바우처 증정)는 날짜가 안 나와 있어 넣지 않았어요
 --  · 바꾸기 전 값은 shop_sources.crawled.before_u64 에 백업 (되돌리기 SQL 은 맨 아래 주석)
+--  · 2026-11-28 추가: 목록 카드 배지용 짧은 문구(b) · 배지와 겹치는 '사전 예약 최대 30% 할인' 태그 뺌 — 다시 실행하면 반영돼요
 -- Supabase → SQL Editor 에 붙여 넣고 Run (여러 번 실행해도 결과는 같아요)
 -- ===============================================================
 
@@ -22,7 +23,6 @@ update public.shop_sources src
 update public.shops
    set data = data
      || jsonb_build_object('tags', '[
-          {"ko": "사전 예약 최대 30% 할인", "en": "Up to 30% off when booked ahead", "vi": "Giảm đến 30% khi đặt trước"},
           {"ko": "개별 룸", "en": "Private rooms", "vi": "Phòng riêng"},
           {"ko": "허브 족욕 · 눈 찜질 · 간식 무료", "en": "Free herbal foot soak, eye compress & snack", "vi": "Miễn phí ngâm chân, chườm mắt thảo dược & đồ ăn nhẹ"},
           {"ko": "한국어 메뉴판", "en": "Korean menu", "vi": "Menu tiếng Hàn"}
@@ -35,8 +35,8 @@ update public.shops
      || jsonb_build_object('promos',
           coalesce((select jsonb_agg(p) from jsonb_array_elements(coalesce(data->'promos', '[]'::jsonb)) p where p->>'id' not in ('u64-pre30', 'u64-free')), '[]'::jsonb)
           || '[
-            {"id": "u64-pre30", "on": true, "kind": "text", "t": {"ko": "사전 예약 시 마사지 최대 30% 할인 (가게 이벤트 · 메뉴마다 할인율이 달라요)", "en": "Up to 30% off massages when booked ahead (shop offer · rate varies by menu)", "vi": "Giảm đến 30% massage khi đặt trước (ưu đãi của tiệm · tùy dịch vụ)"}},
-            {"id": "u64-free", "on": true, "kind": "text", "t": {"ko": "시술 후 허브 족욕 · 허브 눈 찜질 · 간식 무료", "en": "Free herbal foot soak, eye compress & snack after your treatment", "vi": "Miễn phí ngâm chân, chườm mắt thảo dược & đồ ăn nhẹ sau liệu trình"}}
+            {"id": "u64-pre30", "on": true, "kind": "text", "b": {"ko": "사전 예약 최대 30%", "en": "Up to 30% off", "vi": "Giảm đến 30%"}, "t": {"ko": "사전 예약 시 마사지 최대 30% 할인 (가게 이벤트 · 메뉴마다 할인율이 달라요)", "en": "Up to 30% off massages when booked ahead (shop offer · rate varies by menu)", "vi": "Giảm đến 30% massage khi đặt trước (ưu đãi của tiệm · tùy dịch vụ)"}},
+            {"id": "u64-free", "on": true, "kind": "text", "b": {"ko": "족욕 · 간식 무료", "en": "Free foot soak", "vi": "Ngâm chân miễn phí"}, "t": {"ko": "시술 후 허브 족욕 · 허브 눈 찜질 · 간식 무료", "en": "Free herbal foot soak, eye compress & snack after your treatment", "vi": "Miễn phí ngâm chân, chườm mắt thảo dược & đồ ăn nhẹ sau liệu trình"}}
           ]'::jsonb)
  where id = 'clover-spa';
 

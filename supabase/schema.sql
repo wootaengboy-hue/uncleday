@@ -7430,3 +7430,104 @@ select id, jsonb_array_length(data->'menu') as menus from public.shops where id 
 -- 되돌리기 (필요할 때만):
 -- update public.shops s set data = jsonb_set(s.data, '{menu}', src.crawled->'menu_before_u65')
 --   from public.shop_sources src where src.shop_id = s.id and s.id = 'clover-spa' and src.crawled ? 'menu_before_u65';
+
+-- (u63 · u64 다시: 배지용 짧은 문구)
+-- ===============================================================
+-- universe63: 🏪 빌라 드 스파 (villa-de-spa) 업체 정보 — 가게 안내판 내용 반영 (2026-11-28)
+--  · 첫 방문 10% · 재방문 20% 할인 → '문구 이벤트'(자동 계산 없음 · 업체 화면 🎁 할인 안내에 나와요)
+--  · 무료 짐 보관 (10:30~22:50) · 다낭 시내 무료 픽업·샌딩 (2인 이상) · 무료 공항 샌딩 (2인 이상) · 무료 샤워
+--  · 먼 곳 픽업 · 픽업과 함께 쓰는 공항 샌딩은 소액 추가 요금이 있을 수 있음
+--  · 바꾸기 전 값은 shop_sources.crawled.before_u63 에 백업 (되돌리기 SQL 은 맨 아래 주석)
+--  · 2026-11-28 추가: 목록 카드 배지용 짧은 문구(b) — 다시 실행하면 배지가 짧게 나와요
+-- Supabase → SQL Editor 에 붙여 넣고 Run (여러 번 실행해도 결과는 같아요)
+-- ===============================================================
+
+-- 1) 백업 (처음 한 번만)
+insert into public.shop_sources (shop_id, crawled)
+select 'villa-de-spa', '{}'::jsonb where not exists (select 1 from public.shop_sources where shop_id = 'villa-de-spa');
+update public.shop_sources src
+   set crawled = coalesce(src.crawled, '{}'::jsonb) || jsonb_build_object('before_u63',
+         jsonb_build_object('tags', s.data->'tags', 'desc', s.data->'desc', 'promos', s.data->'promos'))
+  from public.shops s
+ where s.id = src.shop_id and s.id = 'villa-de-spa'
+   and not (coalesce(src.crawled, '{}'::jsonb) ? 'before_u63');
+
+-- 2) 태그 · 소개 · 할인 안내
+update public.shops
+   set data = data
+     || jsonb_build_object('tags', '[
+          {"ko": "롯데마트 맞은편", "en": "Opposite Lotte Mart", "vi": "Đối diện Lotte Mart"},
+          {"ko": "첫 방문 10% · 재방문 20%", "en": "10% first visit · 20% revisit", "vi": "Lần đầu 10% · Quay lại 20%"},
+          {"ko": "무료 짐 보관", "en": "Free luggage storage", "vi": "Giữ hành lý miễn phí"},
+          {"ko": "무료 샤워", "en": "Free shower", "vi": "Tắm miễn phí"},
+          {"ko": "무료 픽업·샌딩 (2인 이상)", "en": "Free pickup & drop (2+ people)", "vi": "Đón & đưa miễn phí (từ 2 người)"},
+          {"ko": "무료 공항 샌딩 (2인 이상)", "en": "Free airport drop (2+ people)", "vi": "Đưa ra sân bay miễn phí (từ 2 người)"}
+        ]'::jsonb)
+     || jsonb_build_object('desc', '{
+          "ko": "롯데마트 바로 앞이라 쇼핑 일정 사이에 들르기 좋아요. 처음 오면 10%, 다시 오면 20% 할인해 줘요. 짐은 10:30~22:50 무료로 맡아 주고, 샤워도 무료예요. 2인 이상이면 다낭 시내 픽업·샌딩과 공항 샌딩이 무료예요 (먼 곳이거나 픽업과 공항 샌딩을 함께 쓰면 소액 추가 요금이 있을 수 있어요). 한국어 가능한 직원이 있어요.",
+          "en": "Right in front of Lotte Mart, handy between shopping stops. 10% off on your first visit and 20% off when you come back. Free luggage storage (10:30–22:50) and free shower. For 2 or more people, pickup & drop-off within Da Nang and airport drop-off are free (a small extra charge may apply for long distances or when combined with pickup). Korean-speaking staff.",
+          "vi": "Nằm ngay trước Lotte Mart, tiện ghé giữa các điểm mua sắm. Giảm 10% lần đầu và 20% khi quay lại. Giữ hành lý miễn phí (10:30–22:50) và tắm miễn phí. Từ 2 người: đón & đưa trong Đà Nẵng và đưa ra sân bay miễn phí (có thể tính thêm một ít nếu đi xa hoặc dùng kèm đón). Có nhân viên nói tiếng Hàn."
+        }'::jsonb)
+     || jsonb_build_object('promos',
+          coalesce((select jsonb_agg(p) from jsonb_array_elements(coalesce(data->'promos', '[]'::jsonb)) p where p->>'id' not in ('u63-first', 'u63-revisit')), '[]'::jsonb)
+          || '[
+            {"id": "u63-first", "on": true, "kind": "text", "b": {"ko": "첫 방문 10%", "en": "10% first visit", "vi": "Lần đầu 10%"}, "t": {"ko": "첫 방문 10% 할인 (가게 안내)", "en": "10% off your first visit (shop offer)", "vi": "Giảm 10% lần đầu (ưu đãi của tiệm)"}},
+            {"id": "u63-revisit", "on": true, "kind": "text", "b": {"ko": "재방문 20%", "en": "20% revisit", "vi": "Quay lại 20%"}, "t": {"ko": "재방문 20% 할인 (가게 안내)", "en": "20% off when you come back (shop offer)", "vi": "Giảm 20% khi quay lại (ưu đãi của tiệm)"}}
+          ]'::jsonb)
+ where id = 'villa-de-spa';
+
+-- 3) 확인
+select id, data->'tags' as tags, data->'promos' as promos from public.shops where id = 'villa-de-spa';
+
+-- 되돌리기 (필요할 때만):
+-- update public.shops s set data = s.data || (src.crawled->'before_u63') - 'promos' || jsonb_build_object('promos', coalesce(src.crawled->'before_u63'->'promos', 'null'::jsonb))
+--   from public.shop_sources src where src.shop_id = s.id and s.id = 'villa-de-spa' and src.crawled ? 'before_u63';
+
+-- ===============================================================
+-- universe64: 🏪 클로버 스파 (clover-spa) — 가게 홈페이지 프로모션 반영 (2026-11-28)
+--  출처: cloverspa.vn/kr/-30-.html (상시 프로모션) — 내용만 뽑아 엉클데이 말투로 새로 썼어요
+--  · 사전 예약 시 마사지 최대 30% 할인 → '문구 이벤트' (최대 몇 %인지 메뉴마다 달라 자동 계산 없음)
+--  · 시술 후 허브 족욕 · 허브 눈 찜질 · 간단한 간식 무료 → 태그 · 소개
+--  ※ '11월 골든 위크' (7일 한정 · 4인 요금 5인 · 바우처 증정)는 날짜가 안 나와 있어 넣지 않았어요
+--  · 바꾸기 전 값은 shop_sources.crawled.before_u64 에 백업 (되돌리기 SQL 은 맨 아래 주석)
+--  · 2026-11-28 추가: 목록 카드 배지용 짧은 문구(b) · 배지와 겹치는 '사전 예약 최대 30% 할인' 태그 뺌 — 다시 실행하면 반영돼요
+-- Supabase → SQL Editor 에 붙여 넣고 Run (여러 번 실행해도 결과는 같아요)
+-- ===============================================================
+
+-- 1) 백업 (처음 한 번만)
+insert into public.shop_sources (shop_id, crawled)
+select 'clover-spa', '{}'::jsonb where not exists (select 1 from public.shop_sources where shop_id = 'clover-spa');
+update public.shop_sources src
+   set crawled = coalesce(src.crawled, '{}'::jsonb) || jsonb_build_object('before_u64',
+         jsonb_build_object('tags', s.data->'tags', 'desc', s.data->'desc', 'promos', s.data->'promos'))
+  from public.shops s
+ where s.id = src.shop_id and s.id = 'clover-spa'
+   and not (coalesce(src.crawled, '{}'::jsonb) ? 'before_u64');
+
+-- 2) 태그 · 소개 · 할인 안내
+update public.shops
+   set data = data
+     || jsonb_build_object('tags', '[
+          {"ko": "개별 룸", "en": "Private rooms", "vi": "Phòng riêng"},
+          {"ko": "허브 족욕 · 눈 찜질 · 간식 무료", "en": "Free herbal foot soak, eye compress & snack", "vi": "Miễn phí ngâm chân, chườm mắt thảo dược & đồ ăn nhẹ"},
+          {"ko": "한국어 메뉴판", "en": "Korean menu", "vi": "Menu tiếng Hàn"}
+        ]'::jsonb)
+     || jsonb_build_object('desc', '{
+          "ko": "다낭 시내 쩐푸 거리에 있는 스파예요. 미리 예약하면 마사지를 최대 30% 할인해 줘요. 마사지룸이 따로 나뉘어 있고, 시술이 끝나면 생강 · 레몬그라스 · 계피를 넣은 허브 족욕, 허브 눈 찜질, 간단한 간식을 무료로 줘요. 한국어 메뉴판으로 건강 상태와 불편한 부위를 먼저 확인해요. 샤워룸이 있고, 마지막 입장은 밤 9시예요.",
+          "en": "A spa on Tran Phu Street downtown. Book ahead for up to 30% off massages. Private massage rooms, and after your treatment a free herbal foot soak (ginger, lemongrass, cinnamon), herbal eye compress and a light snack. A Korean-language menu is used to check your condition first. Shower room available; last entry 9 PM.",
+          "vi": "Spa trên đường Trần Phú, trung tâm thành phố. Đặt trước được giảm đến 30% massage. Phòng massage riêng; sau liệu trình được ngâm chân thảo dược (gừng, sả, quế), chườm mắt thảo dược và đồ ăn nhẹ miễn phí. Có menu tiếng Hàn để hỏi tình trạng sức khỏe trước. Có phòng tắm; nhận khách cuối lúc 21:00."
+        }'::jsonb)
+     || jsonb_build_object('promos',
+          coalesce((select jsonb_agg(p) from jsonb_array_elements(coalesce(data->'promos', '[]'::jsonb)) p where p->>'id' not in ('u64-pre30', 'u64-free')), '[]'::jsonb)
+          || '[
+            {"id": "u64-pre30", "on": true, "kind": "text", "b": {"ko": "사전 예약 최대 30%", "en": "Up to 30% off", "vi": "Giảm đến 30%"}, "t": {"ko": "사전 예약 시 마사지 최대 30% 할인 (가게 이벤트 · 메뉴마다 할인율이 달라요)", "en": "Up to 30% off massages when booked ahead (shop offer · rate varies by menu)", "vi": "Giảm đến 30% massage khi đặt trước (ưu đãi của tiệm · tùy dịch vụ)"}},
+            {"id": "u64-free", "on": true, "kind": "text", "b": {"ko": "족욕 · 간식 무료", "en": "Free foot soak", "vi": "Ngâm chân miễn phí"}, "t": {"ko": "시술 후 허브 족욕 · 허브 눈 찜질 · 간식 무료", "en": "Free herbal foot soak, eye compress & snack after your treatment", "vi": "Miễn phí ngâm chân, chườm mắt thảo dược & đồ ăn nhẹ sau liệu trình"}}
+          ]'::jsonb)
+ where id = 'clover-spa';
+
+-- 3) 확인
+select id, data->'tags' as tags, data->'promos' as promos from public.shops where id = 'clover-spa';
+
+-- 되돌리기 (필요할 때만):
+-- update public.shops s set data = s.data || ((src.crawled->'before_u64') - 'promos') || jsonb_build_object('promos', coalesce(src.crawled->'before_u64'->'promos', 'null'::jsonb))
+--   from public.shop_sources src where src.shop_id = s.id and s.id = 'clover-spa' and src.crawled ? 'before_u64';

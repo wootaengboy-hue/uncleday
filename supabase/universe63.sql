@@ -4,6 +4,7 @@
 --  · 무료 짐 보관 (10:30~22:50) · 다낭 시내 무료 픽업·샌딩 (2인 이상) · 무료 공항 샌딩 (2인 이상) · 무료 샤워
 --  · 먼 곳 픽업 · 픽업과 함께 쓰는 공항 샌딩은 소액 추가 요금이 있을 수 있음
 --  · 바꾸기 전 값은 shop_sources.crawled.before_u63 에 백업 (되돌리기 SQL 은 맨 아래 주석)
+--  · 2026-11-28 추가: 목록 카드 배지용 짧은 문구(b) — 다시 실행하면 배지가 짧게 나와요
 -- Supabase → SQL Editor 에 붙여 넣고 Run (여러 번 실행해도 결과는 같아요)
 -- ===============================================================
 
@@ -36,8 +37,8 @@ update public.shops
      || jsonb_build_object('promos',
           coalesce((select jsonb_agg(p) from jsonb_array_elements(coalesce(data->'promos', '[]'::jsonb)) p where p->>'id' not in ('u63-first', 'u63-revisit')), '[]'::jsonb)
           || '[
-            {"id": "u63-first", "on": true, "kind": "text", "t": {"ko": "첫 방문 10% 할인 (가게 안내)", "en": "10% off your first visit (shop offer)", "vi": "Giảm 10% lần đầu (ưu đãi của tiệm)"}},
-            {"id": "u63-revisit", "on": true, "kind": "text", "t": {"ko": "재방문 20% 할인 (가게 안내)", "en": "20% off when you come back (shop offer)", "vi": "Giảm 20% khi quay lại (ưu đãi của tiệm)"}}
+            {"id": "u63-first", "on": true, "kind": "text", "b": {"ko": "첫 방문 10%", "en": "10% first visit", "vi": "Lần đầu 10%"}, "t": {"ko": "첫 방문 10% 할인 (가게 안내)", "en": "10% off your first visit (shop offer)", "vi": "Giảm 10% lần đầu (ưu đãi của tiệm)"}},
+            {"id": "u63-revisit", "on": true, "kind": "text", "b": {"ko": "재방문 20%", "en": "20% revisit", "vi": "Quay lại 20%"}, "t": {"ko": "재방문 20% 할인 (가게 안내)", "en": "20% off when you come back (shop offer)", "vi": "Giảm 20% khi quay lại (ưu đãi của tiệm)"}}
           ]'::jsonb)
  where id = 'villa-de-spa';
 
