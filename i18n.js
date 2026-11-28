@@ -248,3 +248,8 @@ Object.assign(UI.vi, {"sv_title": "Câu hỏi trước khi đến", "sv_req": "C
 Object.assign(UI.ko, { kkTalk: "카톡 상담", kkTalkFull: "카카오톡으로 상담하기" });
 Object.assign(UI.en, { kkTalk: "KakaoTalk", kkTalkFull: "Chat with us on KakaoTalk" });
 Object.assign(UI.vi, { kkTalk: "KakaoTalk", kkTalkFull: "Nhắn tin qua KakaoTalk" });
+
+/* ⭐ 업체 페이지 구글 리뷰 카드 */
+Object.assign(UI.ko, { gRvTitle: "리뷰", gRvAll: "구글에서 전체 리뷰 보기", gRvNote: "구글 지도에 올라온 리뷰예요 · 다른 언어 리뷰는 구글이 번역해서 보여 줘요" });
+Object.assign(UI.en, { gRvTitle: "Reviews", gRvAll: "See all reviews on Google", gRvNote: "Reviews from Google Maps · translated by Google when written in another language" });
+Object.assign(UI.vi, { gRvTitle: "Đánh giá", gRvAll: "Xem tất cả đánh giá trên Google", gRvNote: "Đánh giá từ Google Maps · Google tự dịch nếu viết bằng ngôn ngữ khác" });
