@@ -169,7 +169,7 @@ function drawCommon() {
   document.querySelectorAll(".kakao-link").forEach(a => a.href = SITE.kakao);
   // 🔗 관리자로 로그인해 둔 브라우저면 바로가기 바를 불러와요 (관리자가 아니면 서버가 빈 목록을 줘서 안 보여요)
   try { const ref = new URL(SUPA.url).hostname.split(".")[0];
-    if (ref && localStorage.getItem(`sb-${ref}-auth-token`) && !window.UDL_BAR && !document.querySelector('script[src^="admin-quick.js"]')) { const sc = document.createElement("script"); sc.src = "admin-quick.js?v=20261128e"; sc.defer = true; document.body.appendChild(sc); } } catch (e) {}
+    if (ref && localStorage.getItem(`sb-${ref}-auth-token`) && !window.UDL_BAR && !document.querySelector('script[src^="admin-quick.js"]')) { const sc = document.createElement("script"); sc.src = "admin-quick.js?v=20261128s"; sc.defer = true; document.body.appendChild(sc); } } catch (e) {}
   // 언어 고르기: 13개라 버튼 대신 펼침 목록 (국기 + 그 나라 말 이름)
   const cur = LANGS.find(l => l.id === lang) || LANGS[0];
   $("langs").innerHTML = `<button type="button" class="lang-btn" aria-haspopup="listbox" aria-expanded="false" title="${esc(ui("langPick"))}"><span class="lg-flag">${langFlag(cur)}</span><span class="lg-full">${cur.label}</span><span class="lg-short">${cur.id.toUpperCase()}</span><span class="lg-caret">▾</span></button>

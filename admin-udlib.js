@@ -39,7 +39,7 @@ function udlDraw() {
 }
 function udlForm(a) {
   return `<div class="ud-form" data-uform="${esc(a.id || "")}">
-    <div class="ud-f2"><input class="br-in" data-uf="icon" value="${esc(a.icon || "")}" placeholder="🔗" maxlength="4" style="width:56px">
+    <div class="ud-f2">${typeof udlIconSel === "function" ? udlIconSel('class="br-in" data-uf="icon" style="width:auto"', a.icon) : `<input class="br-in" data-uf="icon" value="${esc(a.icon || "")}" placeholder="🔗" maxlength="4" style="width:56px">`}
       <input class="br-in" data-uf="title" value="${esc(a.title || "")}" placeholder="${a.kind === "note" ? "메모 제목 (예: 카톡 첫 인사 문구)" : "이름 (예: 엉클데이 네이버 블로그)"}" maxlength="200" style="flex:1">
       <select class="br-in" data-uf="cat">${UDL_CATS.map(([k, l]) => `<option value="${k}" ${a.cat === k ? "selected" : ""}>${l}</option>`).join("")}</select></div>
     ${a.kind === "link" ? `<input class="br-in" data-uf="url" value="${esc(a.url || "")}" placeholder="https://…">` : ""}
@@ -52,7 +52,7 @@ function udlCard(a) {
   const cat = (UDL_CATS.find(c => c[0] === a.cat) || UDL_CATS[4])[1], u = a.path && UDL.urls[a.path];
   const head = a.kind === "file" ? (u ? `<button type="button" class="ud-th" data-uopen="${a.id}"><img src="${esc(u)}" alt="" loading="lazy"></button>` : `<button type="button" class="ud-th ico" data-uopen="${a.id}">${/pdf/.test(a.mime || "") ? "📕" : "📄"}</button>`) : "";
   return `<div class="ud-card ${a.kind}" data-uid="${a.id}">${head}
-    <div class="ud-meta"><b>${a.pinned ? "📌 " : ""}${esc(a.icon || (a.kind === "note" ? "📝" : a.kind === "file" ? "" : "🔗"))} ${esc(a.title)}</b>
+    <div class="ud-meta"><b>${a.pinned ? "📌 " : ""}${typeof udlIcon === "function" ? udlIcon(a.icon, a.kind === "link" ? a.url : "", a.kind === "note" ? "📝" : a.kind === "file" ? "" : "🔗") : esc(a.icon || "")} ${esc(a.title)}</b>
       ${a.kind === "link" ? `<a class="ud-url" href="${esc(a.url)}" target="_blank" rel="noopener">${esc(udlHost(a.url) || a.url)} ↗</a>` : ""}
       ${a.note ? `<div class="ud-note ${a.kind === "note" ? "long" : ""}">${esc(a.note)}</div>` : ""}
       <small class="hint">${cat}${a.on_bar ? " · <b style='color:#0e2843'>🔗 바로가기 바</b>" : ""}${a.created_by ? " · " + esc(a.created_by.split("@")[0]) : ""}</small></div>

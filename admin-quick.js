@@ -3,6 +3,21 @@
  *  · 관리자 화면에서는 sb(로그인된 연결), 손님 사이트에서는 저장된 로그인 표로 직접 읽어요
  *  · 관리자가 아니면 서버가 빈 목록을 돌려줘서 아무것도 안 보여요
  */
+/* 🏷️ 바로가기 아이콘: 네이버 · 카톡은 진짜 로고 그림 (images/logo/) · 아이콘을 안 고르면 주소를 보고 자동
+ *  icon 칸 값: "@naver" · "@kakao" · 이모지 · 비우면 자동 */
+window.UDL_LOGO = {
+  naver: { n: "네이버", src: "/images/logo/naver.png", re: /(^|\.)naver\.(com|me)$/ },
+  kakao: { n: "카카오톡", src: "/images/logo/kakao.png", re: /(^|\.)kakao\.(com|me)$|^pf\.kakao|^open\.kakao/ } };
+window.UDL_ICONS = [["", "자동 (주소 보고)"], ["@naver", "네이버 로고"], ["@kakao", "카톡 로고"], ["🔗", "🔗 링크"], ["🌐", "🌐 사이트"], ["📘", "📘 페이스북"], ["📷", "📷 인스타"], ["▶️", "▶️ 영상"], ["💬", "💬 상담"], ["📁", "📁 자료"], ["⭐", "⭐ 중요"], ["🏪", "🏪 업체"]];
+window.udlIcon = function (icon, url, fb) {
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  let k = /^@(\w+)$/.test(icon || "") ? icon.slice(1) : "";
+  // 비워 둔 아이콘 · 처음 넣어 둔 기본 아이콘(💬 💛 🟢)은 주소가 네이버 · 카톡이면 로고로 보여요
+  if (!k && (!icon || /^(💬|💛|🟢)$/u.test(icon)) && url) { try { const h = new URL(url).hostname.replace(/^www\./, ""); k = Object.keys(UDL_LOGO).find(x => UDL_LOGO[x].re.test(h)) || ""; } catch (x) {} }
+  const L = UDL_LOGO[k];
+  return L ? `<img class="udl-logo" src="${L.src}?v=1" alt="${L.n}" width="16" height="16">` : esc(icon && icon[0] !== "@" ? icon : fb == null ? "🔗" : fb);
+};
+window.udlIconSel = (attr, v) => `<select ${attr} class="udl-ic" title="아이콘">${(UDL_ICONS.some(x => x[0] === (v || "")) ? UDL_ICONS : UDL_ICONS.concat([[v, v]])).map(([k, l]) => `<option value="${k}" ${k === (v || "") ? "selected" : ""}>${l}</option>`).join("")}</select>`;
 (function () {
   if (window.UDL_BAR) return; window.UDL_BAR = true;
   const URL0 = (typeof SUPA !== "undefined" && SUPA.url) || "", KEY = (typeof SUPA !== "undefined" && SUPA.key) || "";
@@ -37,8 +52,9 @@
     .udl-m{position:fixed;inset:0;z-index:9001;background:#0007;display:flex;align-items:center;justify-content:center;padding:16px}
     .udl-m>div{background:#fff;border-radius:16px;padding:18px;width:min(560px,100%);max-height:calc(100vh - 32px);overflow:auto;font:14px/1.4 system-ui,"Noto Sans KR",sans-serif;color:#0f172a}
     .udl-m h3{margin:0 0 4px;font-size:17px}.udl-m p{margin:0 0 12px;color:#64748b;font-size:12.5px}
-    .udl-r{display:grid;grid-template-columns:44px 1fr 28px 28px 28px;gap:6px;align-items:center;margin-bottom:6px}.udl-r input{width:100%;box-sizing:border-box;padding:7px 8px;border:1px solid #d7dee8;border-radius:8px;font:inherit;font-size:13px}
-    .udl-r .udl-u{grid-column:2/3}.udl-r button{border:1px solid #d7dee8;background:#fff;border-radius:8px;height:30px;cursor:pointer}
+    .udl-r{display:grid;grid-template-columns:20px 128px 1fr 28px 28px 28px;gap:6px;align-items:center;margin-bottom:6px}.udl-r input{width:100%;box-sizing:border-box;padding:7px 8px;border:1px solid #d7dee8;border-radius:8px;font:inherit;font-size:13px}
+    .udl-r .udl-u{grid-column:2/4}.udl-r select{width:100%;padding:6px 4px;border:1px solid #d7dee8;border-radius:8px;font:inherit;font-size:12.5px;background:#fff}.udl-pv{display:flex;justify-content:center;font-size:15px}
+    .udl-logo{width:16px;height:16px;border-radius:4px;object-fit:cover;display:inline-block;vertical-align:-3px;flex:none}.udl-r button{border:1px solid #d7dee8;background:#fff;border-radius:8px;height:30px;cursor:pointer}
     .udl-b{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}.udl-b button{border:1px solid #d7dee8;background:#fff;border-radius:10px;padding:8px 14px;font:inherit;font-weight:700;cursor:pointer}.udl-b .p{background:#0e2843;color:#fff;border-color:#0e2843}
     @media (max-width:640px){.udl{left:8px;bottom:8px;max-width:calc(100vw - 84px)}.udl-t{padding:8px 11px}}
     .udl.strip{position:static;max-width:none;width:100%;box-sizing:border-box;display:flex;align-items:center;gap:8px;background:#FFF4E6;border-top:1px solid #F6E2C8;padding:5px 12px;border-radius:0}
@@ -60,22 +76,22 @@
     box.classList.toggle("off", !OPEN);
     const strip = box.classList.contains("strip");
     box.innerHTML = `<button type="button" class="udl-t" title="관리자 바로가기 (관리자에게만 보여요) · 눌러서 접기 / 펴기">${strip ? (OPEN ? `🔗<span class="udl-tx"> 관리자 바로가기</span> ▴` : `🔗<span class="udl-tx"> 관리자 바로가기</span> ${LINKS.length || ""} ▾`) : `🔗${OPEN ? "" : ` 바로가기 ${LINKS.length || ""}`}`}</button>
-      <div class="udl-l">${LINKS.map(l => `<a href="${e(l.url)}" target="_blank" rel="noopener" title="${e(l.url)}">${e(l.icon || "🔗")} ${e(l.title)}</a>`).join("")}<button type="button" class="udl-ed" title="바로가기 고치기">✏️${LINKS.length ? "" : " 바로가기 추가"}</button></div>`;
+      <div class="udl-l">${LINKS.map(l => `<a href="${e(l.url)}" target="_blank" rel="noopener" title="${e(l.url)}">${udlIcon(l.icon, l.url)} ${e(l.title)}</a>`).join("")}<button type="button" class="udl-ed" title="바로가기 고치기">✏️${LINKS.length ? "" : " 바로가기 추가"}</button></div>`;
     box.querySelector(".udl-t").onclick = () => { OPEN = !OPEN; lsSet("udl-open", OPEN ? "1" : "0"); draw(); };
     box.querySelector(".udl-ed").onclick = edit;
   }
   function edit() {
     const rows = LINKS.map(l => ({ ...l })); const m = document.createElement("div"); m.className = "udl-m";
     const paint = () => { m.innerHTML = `<div><h3>🔗 관리자 바로가기</h3><p>관리자로 로그인했을 때만 화면 아래에 보여요. 네이버 블로그 · 카톡 상담함 · 자주 여는 링크를 넣어 두세요. 전체 자료는 포털 → 📁 엉클데이 자료실에 있어요.</p>
-      ${rows.map((r, i) => r.del ? "" : `<div class="udl-r" data-i="${i}"><input data-f="icon" value="${e(r.icon || "")}" placeholder="🔗" maxlength="4"><input data-f="title" value="${e(r.title || "")}" placeholder="이름 (예: 네이버 블로그)" maxlength="40">
+      ${rows.map((r, i) => r.del ? "" : `<div class="udl-r" data-i="${i}"><span class="udl-pv">${udlIcon(r.icon, r.url)}</span>${udlIconSel('data-f="icon"', r.icon)}<input data-f="title" value="${e(r.title || "")}" placeholder="이름 (예: 네이버 블로그)" maxlength="40">
         <button data-up="${i}" title="앞으로">↑</button><button data-dn="${i}" title="뒤로">↓</button><button data-x="${i}" title="바에서 빼기">✕</button>
         <input class="udl-u" data-f="url" value="${e(r.url || "")}" placeholder="https://…"></div>`).join("")}
       <button type="button" data-add style="border:1px dashed #94a3b8;background:#f8fafc;border-radius:10px;padding:8px 12px;cursor:pointer;font:inherit">＋ 링크 추가</button>
       <div class="udl-b"><button data-no>취소</button><button class="p" data-ok>저장</button></div></div>`;
-      m.querySelectorAll("[data-f]").forEach(inp => inp.oninput = () => { rows[+inp.closest("[data-i]").dataset.i][inp.dataset.f] = inp.value; });
+      m.querySelectorAll("[data-f]").forEach(inp => inp.oninput = inp.onchange = () => { const r = rows[+inp.closest("[data-i]").dataset.i]; r[inp.dataset.f] = inp.value; const pv = inp.closest("[data-i]").querySelector(".udl-pv"); if (pv) pv.innerHTML = udlIcon(r.icon, r.url); });
       m.querySelectorAll("[data-up],[data-dn]").forEach(b => b.onclick = () => { const i = +(b.dataset.up ?? b.dataset.dn), j = b.dataset.up != null ? i - 1 : i + 1; if (j < 0 || j >= rows.length) return; [rows[i], rows[j]] = [rows[j], rows[i]]; paint(); });
       m.querySelectorAll("[data-x]").forEach(b => b.onclick = () => { rows[+b.dataset.x].del = true; paint(); });
-      m.querySelector("[data-add]").onclick = () => { rows.push({ icon: "🔗", title: "", url: "https://" }); paint(); const ins = m.querySelectorAll('[data-f="title"]'); ins[ins.length - 1].focus(); };
+      m.querySelector("[data-add]").onclick = () => { rows.push({ icon: "", title: "", url: "https://" }); paint(); const ins = m.querySelectorAll('[data-f="title"]'); ins[ins.length - 1].focus(); };
       m.querySelector("[data-no]").onclick = () => m.remove();
       m.querySelector("[data-ok]").onclick = async () => {
         const keep = rows.filter(r => !r.del && (r.title || "").trim() && /^https?:\/\/\S+\.\S+/.test((r.url || "").trim()));
