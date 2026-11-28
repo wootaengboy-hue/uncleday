@@ -133,6 +133,24 @@ const blankShop = () => ({
 const slug = s => String(s || "").toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "")
   .replace(/đ/g, "d").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
 
+// 🎨 업체 편집 화면 정리: 섹션마다 색 · 위쪽 섹션 바로가기 · 글 칸은 내용만큼 늘어나요
+const ED_SEC = [[/기본 정보/, "basic", "📋 기본 정보"], [/위치|영업/, "where", "📍 위치 · 영업"], [/소개/, "intro", "✍️ 소개"], [/메뉴|가격표 사진/, "menu", "💰 메뉴 · 가격"], [/대표 사진/, "photo", "🖼️ 사진"], [/후기/, "review", "⭐ 후기"], [/계약|정산/, "deal", "💼 계약 · 정산"], [/기타/, "etc", "⚙️ 기타"]];
+function edDecorate() {
+  const body = document.querySelector("#layer .panel-body"), head = document.querySelector("#layer .panel-head"); if (!body || !head) return;
+  const secs = [...body.querySelectorAll(":scope > .box, :scope .box")].filter(b => b.querySelector(":scope > h3"));
+  const nav = [];
+  secs.forEach((b, i) => { const t = b.querySelector(":scope > h3").textContent.trim(), m = ED_SEC.find(([re]) => re.test(t));
+    if (!m) return; b.classList.add("ed-sec", "ed-" + m[1]); b.id = "edSec" + i;
+    if (!nav.some(n => n[1] === m[1])) nav.push(["edSec" + i, m[1], m[2]]); });
+  if (nav.length > 1 && !head.nextElementSibling?.classList.contains("ed-nav")) {
+    head.insertAdjacentHTML("afterend", `<div class="ed-nav" style="top:${head.offsetHeight}px">${nav.map(([id, k, l]) => `<button type="button" class="ed-${k}" data-go="${id}">${esc(l)}</button>`).join("")}</div>`);
+    document.querySelectorAll("#layer .ed-nav [data-go]").forEach(b => b.onclick = () => { const el = document.getElementById(b.dataset.go); const pn = document.querySelector("#layer .panel");
+      if (el && pn) pn.scrollTo({ top: el.offsetTop - (head.offsetHeight + 52), behavior: "smooth" }); });
+  }
+  // 글 칸: 내용 길이만큼 자동으로 늘어나요 (입력할 때도)
+  const fit = t => { t.style.height = "auto"; t.style.height = Math.min(Math.max(t.scrollHeight + 2, 64), 520) + "px"; };
+  body.querySelectorAll("textarea").forEach(t => { t.classList.add("ed-ta"); fit(t); t.addEventListener("input", () => fit(t)); t.addEventListener("focus", () => fit(t)); });
+}
 function openEditor(id, preset, opts = {}) {
   const isNew = !id;
   const orig = isNew ? null : shops.find(s => s.id === id);
@@ -238,7 +256,8 @@ function openEditor(id, preset, opts = {}) {
       <div class="box"><h3>소개</h3>
         ${pair("desc", "소개글", true)}
         ${pair("recommend", "이런 분께 추천", false)}
-        ${pair("notice", "📌 방문 전 참고사항 (손님 화면 영업시간 · 지도 바로 아래 파란 칸으로 나와요 · 한 문장씩 줄을 바꿔 써 주세요 · 비우면 안 나와요)", true)}
+        ${pair("notice", "📌 방문 전 참고사항", true)}
+        <small class="hint" style="margin-top:-6px">📌 손님 화면 영업시간 · 지도 바로 아래 파란 칸으로 나와요 · 한 문장씩 줄을 바꿔 써 주세요 · 비우면 안 나와요</small>
         <div><span class="f"><span>태그</span></span><div id="tagList" style="display:grid;gap:8px;margin-top:4px"></div>
           <button class="btn sm" id="tagAdd" type="button" style="margin-top:8px">＋ 태그 추가</button></div>
       </div>
@@ -583,6 +602,7 @@ function openEditor(id, preset, opts = {}) {
   };
 
   // 닫기·적용
+  edDecorate();
   const close = () => { $("layer").innerHTML = ""; };
   $("pCancel").onclick = close;
   $("ov").onclick = e => { if (e.target.id === "ov") close(); };

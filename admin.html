@@ -923,6 +923,20 @@ button.chip.on::before{content:"✓ "}
 .ud-meta .udl-logo{width:18px;height:18px;border-radius:5px;object-fit:cover;vertical-align:-4px}
 .m-mx-h{display:block;margin:10px 0 4px;font-size:13px}.m-mx-h .hint{font-weight:400}
 .hw-on{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-weight:700}.hw-t{border-collapse:collapse;margin-top:8px;font-size:13px}.hw-t th{text-align:left;padding:4px 8px;font-weight:700;color:#475569}.hw-t td{padding:3px 8px}.hw-t td{white-space:nowrap}.hw-t input[type=time]{width:auto!important;display:inline-block;padding:5px 6px;border:1px solid #d7dee8;border-radius:7px}.hw-on input[type=checkbox]{width:auto!important;margin:0}.hw-act{display:flex;gap:10px;align-items:center;margin-top:8px;flex-wrap:wrap}
+
+/* 🎨 업체 편집: 섹션마다 색 (엉클데이 톤 · 옅은 바탕 + 왼쪽 굵은 선 + 제목 색) · 위 바로가기 */
+.ed-basic{--ec:#3B6FB6;--eb:#F4F8FD}.ed-where{--ec:#2E8B57;--eb:#F2F9F4}.ed-intro{--ec:#D9731A;--eb:#FFF7EE}.ed-menu{--ec:#0E8C8C;--eb:#F0F9F8}
+.ed-photo{--ec:#7B5CC4;--eb:#F7F4FD}.ed-review{--ec:#C49100;--eb:#FFFAEB}.ed-deal{--ec:#0E2843;--eb:#F2F4F8}.ed-etc{--ec:#6B7280;--eb:#F6F6F4}
+.box.ed-sec{background:var(--eb);border:1px solid color-mix(in srgb,var(--ec) 22%,transparent);border-left:6px solid var(--ec);scroll-margin-top:110px}
+.box.ed-sec>h3{color:var(--ec);font-size:16px;display:flex;align-items:center;gap:6px;padding-bottom:8px;border-bottom:1px dashed color-mix(in srgb,var(--ec) 30%,transparent)}
+.box.ed-sec input:not([type=checkbox]):not([type=radio]),.box.ed-sec textarea,.box.ed-sec select{background:#fff}
+.ed-nav{flex:none;position:sticky;top:57px;z-index:2;display:flex;gap:6px;overflow-x:auto;padding:8px 16px;background:#fffdf8;border-bottom:1px solid #eee3d3;scrollbar-width:none}
+.ed-nav::-webkit-scrollbar{display:none}
+.ed-nav button{flex:none;border:1.5px solid color-mix(in srgb,var(--ec) 40%,transparent);background:var(--eb);color:var(--ec);border-radius:999px;padding:5px 11px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
+.ed-nav button:hover{background:var(--ec);color:#fff}
+textarea.ed-ta{resize:vertical;line-height:1.55;overflow:hidden;min-height:64px;transition:height .1s}
+textarea.ed-ta:focus{overflow:auto}
+.box.ed-sec .three{align-items:start}
 </style>
 </head>
 <body>
@@ -1009,7 +1023,7 @@ button.chip.on::before{content:"✓ "}
 <script src="shops.js?v=20261111b"></script>
 <script src="catimgs.js?v=20261111b"></script>
 <script src="admin-notes.js?v=20261111b"></script>
-<script src="admin-shops.js?v=20261128zb"></script>
+<script src="admin-shops.js?v=20261128zd"></script>
 <script src="admin-editor.js?v=20261111b"></script>
 <script src="admin-guide.js?v=20261120c"></script>
 <script src="admin-work.js?v=20261118d"></script>
