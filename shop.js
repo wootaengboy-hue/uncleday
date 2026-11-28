@@ -167,7 +167,11 @@ if (!shop) {
   // 이름이 같은 메뉴(시간만 다른 것)는 하나로 묶어 시간을 골라요 (저장은 시간별 한 줄씩)
   //  분류(m.sec · 예: 스파 / 네일)가 있으면 분류별 제목 아래로 모아요 · 설명(m.desc)은 이름 밑에 작게
   const mSplit = v => { const t = String(v || "").trim(); if (!t) return ["", ""]; const p = t.split(/\s*[>›»]\s*/); return [p[0].trim(), p.slice(1).join(" · ").trim()]; };   // 대분류 · 소분류는 ">"로만 나눠요 ("헤드스파 · 귀 관리"의 "·"는 "와"라서 안 나눠요) · "네일 > 여성" → 대분류 · 소분류
-  const mGroups = []; shop.menu.forEach((m, i) => { const n = tx(m.name), sc = tx(m.sec) || ""; let g = mGroups.find(x => x.n === n && x.sc === sc); if (!g) mGroups.push(g = { n, sc, d: "", items: [] }); if (!g.d) g.d = tx(m.desc) || ""; g.items.push(i); });
+  // 메뉴 원래 이름(가게 메뉴판의 영어 이름)을 한국어 이름 밑에 작게 — 가게 직원에게 보여 주기 좋게 (보는 이름과 같으면 생략)
+  const mFold = v => String(v || "").toLowerCase().replace(/[^a-z0-9가-힣]+/g, "");
+  const mOrig = (m, shown) => { const o = String(m.orig || (m.name && m.name.en) || "").trim(); return o && /[a-z]/i.test(o) && mFold(o) !== mFold(shown) ? o : ""; };
+  const mOrigH = g => g.o ? `<small class="m-orig" translate="no">${esc(g.o)}</small>` : "";
+  const mGroups = []; shop.menu.forEach((m, i) => { const n = tx(m.name), sc = tx(m.sec) || ""; let g = mGroups.find(x => x.n === n && x.sc === sc); if (!g) mGroups.push(g = { n, sc, d: "", items: [] }); if (!g.d) g.d = tx(m.desc) || ""; if (!g.o) g.o = mOrig(m, n); g.items.push(i); });
   const mHasSec = mGroups.some(g => g.sc);
   mGroups.forEach(g => { [g.top, g.sub] = mSplit(g.sc); if (mHasSec && !g.top) g.top = ui("m_other"); });
   if (mHasSec) { const ord = shop.secOrder || [], ko = g => mSplit((shop.menu[g.items[0]].sec || {}).ko || "")[0];   // 관리자가 정한 분류 순서 (없으면 처음 나온 순서)
@@ -231,10 +235,10 @@ if (!shop) {
     ${shop.menu.length ? `<h2>${ui("menu")}</h2>
     ${pms.length ? `<div class="pm-box"><b class="pm-h">${ui("pm_title")}</b><ul>${pms.map(p => `<li>${esc(pmLine(p, shop))}</li>`).join("")}</ul><small>${ui("pm_note")}</small></div>` : ""}
     ${mTabs()}<div id="menuList">${mGroups.map((g, k) => { if (g.items.length > 1) return `${mSec(g, k)}
-      <div class="menu-row menu-grp" data-top="${esc(g.top || "")}"><div class="mg-h"><b>${esc(g.n)}</b><small>${ui("mgPick")}</small></div>${mDesc(g)}
+      <div class="menu-row menu-grp" data-top="${esc(g.top || "")}"><div class="mg-h"><b>${esc(g.n)}</b><small>${ui("mgPick")}</small></div>${mOrigH(g)}${mDesc(g)}
       <div class="mg-opts">${g.items.map(i => { const m = shop.menu[i], pf = promoFor(shop, i), cut = pf && pf.cut; return `<${pending ? "span" : "button type=\"button\""} class="mg-opt${pending ? "" : " pick"}" data-i="${i}"><span class="mg-t">${m.min ? `${m.min} ${ui("min")}` : "-"}</span>${cut ? `<s>₫${m.price.toLocaleString("en-US")}</s>` : ""}${(t => { const k = t.indexOf(" ("); return k < 0 ? `<b>${t}</b>` : `<b>${t.slice(0, k)}</b><small class="mg-ap">${t.slice(k + 1)}</small>`; })(money(cut ? pf.price : m.price))}${cut ? `<span class="pm-tag">${esc(pmTag(pf.p))}</span>` : ""}${extrasFor(shop, i).map(x => `<small class="mg-x">+ ${esc(x.n)} ₫${x.v.toLocaleString("en-US")}</small>`).join("")}</${pending ? "span" : "button"}>`; }).join("")}</div></div>`;
       const i = g.items[0], m = shop.menu[i], pf = promoFor(shop, i); return `${mSec(g, k)}
-      <div class="menu-row${pf && pf.cut ? " pm-row" : ""}" data-top="${esc(g.top || "")}"><div><b>${tx(m.name)}</b>${m.min ? `<br><small>${m.min} ${ui("min")}</small>` : ""}${mDesc(g)}</div>
+      <div class="menu-row${pf && pf.cut ? " pm-row" : ""}" data-top="${esc(g.top || "")}"><div><b>${tx(m.name)}</b>${mOrigH(g)}${m.min ? `<br><small>${m.min} ${ui("min")}</small>` : ""}${mDesc(g)}</div>
       <div class="price${pf && pf.cut ? " pm" : ""}">${pf && pf.cut ? `<s>₫${m.price.toLocaleString("en-US")}</s><span class="pm-tag">${esc(pmTag(pf.p))}</span><br>${money(pf.price)}` : money(m.price)}${extrasFor(shop, i).map(x => `<br><small class="mg-x">+ ${esc(x.n)} ₫${x.v.toLocaleString("en-US")}</small>`).join("")}</div>
       ${pending ? "" : `<button class="chip pick" data-i="${i}">${ui("bookBtn")}</button>`}</div>`; }).join("")}
     </div>` : ""}

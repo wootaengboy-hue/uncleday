@@ -341,7 +341,7 @@ function vfBind(el) {
   const nk = () => "n" + Math.random().toString(36).slice(2, 8);
   const i18 = (o, k) => o ? { ko: k || o, en: o, vi: o } : k ? { ko: k, en: "", vi: "" } : null;   // 원문은 영어 · 베트남어 칸, 한국어는 ko
   const extra = m => { const o = {}, sc = i18(m.section, m.section_ko), ds = i18(m.desc, m.desc_ko); if (sc) o.sec = sc; if (ds) o.desc = ds; if (vfVnd(m.tip)) o.tip = vfVnd(m.tip); return o; };
-  const toItem = m => ({ name: { ko: m.name_ko || m.name, en: m.name || m.name_ko, vi: m.name || m.name_ko }, min: +m.minutes || 0, price: vfP(m), ...extra(m), _o: null, _k: nk() });
+  const toItem = m => ({ name: { ko: m.name_ko || m.name, en: m.name || m.name_ko, vi: m.name || m.name_ko }, ...(m.name && m.name !== m.name_ko ? { orig: String(m.name).trim() } : {}), min: +m.minutes || 0, price: vfP(m), ...extra(m), _o: null, _k: nk() });
   const sd = row.querySelector("#vfSend"); if (sd) sd.onclick = () => {
     const tg = vfTargets(D, menu), pick = menu.map((m, i) => ({ m, i })).filter(o => vfPick(o.m, o.i, tg));
     if (!pick.length) return toast("왼쪽에서 보낼 메뉴를 골라 주세요");
