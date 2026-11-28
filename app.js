@@ -103,9 +103,9 @@ function drawCats() {
 }
 
 // 🔎 검색 동의어: 관리자가 업체 · 카테고리에 붙인 다른 이름 (universe44)
-function synOf(s) {
+function synOf(s, only) {
   const L = window.SEARCH_SYN || []; if (!L.length) return "";
-  return L.filter(x => (x.kind === "shop" && x.target === s.id) || (x.kind === "cat" && x.target === s.cat)).map(x => (x.words || []).join(" ")).join(" ");
+  return L.filter(x => (only !== "cat" && x.kind === "shop" && x.target === s.id) || (only !== "shop" && x.kind === "cat" && x.target === s.cat)).map(x => (x.words || []).join(" ")).join(" ");
 }
 let missT = null, missLast = "";
 function missLater(q) {
@@ -120,19 +120,25 @@ function drawShops() {
   const norm = t => String(t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/\s+/g, "");
   const words = state.q.split(/\s+/).map(norm).filter(Boolean);
   const full = norm(state.q);
-  const textOf = s => {
-    const cat = catDetail(s.cat) || {}, grp = catGroup(s.cat);
-    const city = CITIES.find(c => c.id === s.city) || {};
-    return norm(JSON.stringify([s.name, s.tags, s.menu.map(m => m.name), s.desc, s.recommend, s.address, cat.name, cat.sub, grp.name, city.name, synOf(s)]));
-  };
+  // 업체 자체 글(이름 · 업체 동의어 · 메뉴 · 소개 …)과 업종 글(업종 이름 · 업종 동의어)을 나눠요
+  //  → "그랜드"처럼 업체 이름에 있는 말은 그 업체(이름 · 메뉴 · 소개에 있는 곳)만 · 업종 동의어("그랜드마사지" 같은)로 마사지 업체 전부가 딸려 나오지 않게
+  const TX = new Map();
+  const textOf = s => { let t = TX.get(s.id); if (t) return t;
+    const cat = catDetail(s.cat) || {}, grp = catGroup(s.cat), city = CITIES.find(c => c.id === s.city) || {};
+    const name = norm(JSON.stringify(s.name)), own = norm(JSON.stringify([s.name, s.tags, s.menu.map(m => [m.name, m.orig]), s.desc, s.recommend, s.address, city.name, synOf(s, "shop")]));
+    t = { name, own, all: own + norm(JSON.stringify([cat.name, cat.sub, grp.name, synOf(s, "cat")])) }; TX.set(s.id, t); return t; };
+  const any = (t, k) => full && (t[k].includes(full) || words.every(w => t[k].includes(w)));
+  // 1) 업체 이름에 들어간 말(예: 그랜드 · 다한)이면 업체 자체 글로만 → 2) 아니면(예: 피부과 · 다낭 마사지) 업종까지 넓혀서 찾아요
+  const lvl = full ? (SHOPS.some(s => any(textOf(s), "name")) ? "own" : "all") : "";
   // 검색어 전체가 그대로 들어간 업체가 있으면 그것만, 없으면 단어별로 모두 들어간 업체
-  const wholeHit = full && SHOPS.some(s => textOf(s).includes(full));
-  const list = SHOPS.slice().sort((a, b) => (b.best ? 1 : 0) - (a.best ? 1 : 0)).filter(s => {
-    const text = textOf(s);
+  const whole = full && SHOPS.some(s => textOf(s)[lvl].includes(full));
+  const hit = (t, k) => full && (k === lvl && whole ? t[k].includes(full) : any(t, k));
+  const rank = s => !full ? 0 : hit(textOf(s), "name") ? 0 : 1;   // 이름에 들어간 업체가 맨 앞
+  const list = SHOPS.slice().sort((a, b) => rank(a) - rank(b) || (b.best ? 1 : 0) - (a.best ? 1 : 0)).filter(s => {
     return (!state.cat || catGroup(s.cat).id === state.cat) &&
            (state.city === "all" || s.city === state.city) &&
            (!state.openNow || isOpenNow(s)) && (!state.outcall || s.outcall) &&
-           (!full || (wholeHit ? text.includes(full) : words.every(w => text.includes(w))));
+           (!full || hit(textOf(s), lvl));
   });
   const cur = CATEGORIES.find(c => c.id === state.cat);
   $("shopTitle").textContent = cur ? ui("shopsOf", { n: tx(cur.name) }) : ui("recommend");
@@ -151,7 +157,7 @@ function drawShops() {
   // 도시를 골랐고 그 도시 안내 글이 있으면 목록 위에 띠 하나
   const gb = $("cityGuide"); if (gb) gb.innerHTML = state.city !== "all" ? guideBar(state.city) : "";
   // 🔎 아무 업체에도 없는 말이면 '못 찾은 검색어'로 세요 (관리자 → 검색어 탭에서 동의어로 붙여요)
-  if (full && !SHOPS.some(s => { const t = textOf(s); return t.includes(full) || words.every(w => t.includes(w)); })) missLater(state.q);
+  if (full && !SHOPS.some(s => any(textOf(s), "all"))) missLater(state.q);
   if (!list.length) { $("shopGrid").innerHTML = `<p class="empty">${state.openNow ? ui("op_none") : state.q ? ui("empty") : ui("comingSoon")}</p>`; return; }
   // 카테고리를 고르지 않았으면 카테고리별로 묶어서 보여줘요
   if (state.from) {
