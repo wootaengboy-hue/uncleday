@@ -297,3 +297,17 @@ Object.assign(UI["es"] || (UI["es"] = {}), { mMore: "Más detalles" });
 Object.assign(UI["hi"] || (UI["hi"] = {}), { mMore: "और जानकारी" });
 Object.assign(UI["th"] || (UI["th"] = {}), { mMore: "ดูรายละเอียด" });
 Object.assign(UI["id"] || (UI["id"] = {}), { mMore: "Lihat detail" });
+// 📌 방문 전 참고사항
+Object.assign(UI["ko"] || (UI["ko"] = {}), { visitNote: "방문 전 참고사항" });
+Object.assign(UI["en"] || (UI["en"] = {}), { visitNote: "Before you visit" });
+Object.assign(UI["vi"] || (UI["vi"] = {}), { visitNote: "Lưu ý trước khi đến" });
+Object.assign(UI["ja"] || (UI["ja"] = {}), { visitNote: "ご来店前のご案内" });
+Object.assign(UI["zh"] || (UI["zh"] = {}), { visitNote: "到店前须知" });
+Object.assign(UI["zh-TW"] || (UI["zh-TW"] = {}), { visitNote: "到店前須知" });
+Object.assign(UI["ru"] || (UI["ru"] = {}), { visitNote: "Перед визитом" });
+Object.assign(UI["fr"] || (UI["fr"] = {}), { visitNote: "Avant votre visite" });
+Object.assign(UI["de"] || (UI["de"] = {}), { visitNote: "Vor Ihrem Besuch" });
+Object.assign(UI["es"] || (UI["es"] = {}), { visitNote: "Antes de tu visita" });
+Object.assign(UI["hi"] || (UI["hi"] = {}), { visitNote: "आने से पहले" });
+Object.assign(UI["th"] || (UI["th"] = {}), { visitNote: "ก่อนเข้ารับบริการ" });
+Object.assign(UI["id"] || (UI["id"] = {}), { visitNote: "Sebelum berkunjung" });

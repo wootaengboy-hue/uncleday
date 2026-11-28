@@ -142,7 +142,7 @@ function openEditor(id, preset, opts = {}) {
   if (preset) { pub = false; }
   if (opts.rate != null) pv.commission_rate = +opts.rate || 0;
   if (opts.contract) Object.assign(pv.contract, opts.contract);
-  ["name","desc","recommend","address"].forEach(k => s[k] = s[k] || { ko: "", en: "", vi: "" });
+  ["name","desc","recommend","address","notice"].forEach(k => s[k] = s[k] || { ko: "", en: "", vi: "" });
   s.tags = s.tags || []; s.menu = s.menu || []; s.closed = s.closed || []; s.staffLangs = s.staffLangs || [];
   let idTouched = !isNew;
 
@@ -238,6 +238,7 @@ function openEditor(id, preset, opts = {}) {
       <div class="box"><h3>소개</h3>
         ${pair("desc", "소개글", true)}
         ${pair("recommend", "이런 분께 추천", false)}
+        ${pair("notice", "📌 방문 전 참고사항 (손님 화면 영업시간 · 지도 바로 아래 파란 칸으로 나와요 · 한 문장씩 줄을 바꿔 써 주세요 · 비우면 안 나와요)", true)}
         <div><span class="f"><span>태그</span></span><div id="tagList" style="display:grid;gap:8px;margin-top:4px"></div>
           <button class="btn sm" id="tagAdd" type="button" style="margin-top:8px">＋ 태그 추가</button></div>
       </div>

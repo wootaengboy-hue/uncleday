@@ -226,6 +226,7 @@ if (!shop) {
     </div>
     <p class="go-row">${shop.map ? `<a class="map-link" href="${shop.map}" target="_blank">🗺️ ${ui("map")}</a>` : ""}</p>
     ${rideRow(shop)}
+    ${tx(shop.notice) && tx(shop.notice).trim() ? `<div class="vn-box"><b>📌 ${ui("visitNote")}</b>${(L => L.length > 1 ? `<ul>${L.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : `<div>${esc(L[0] || "")}</div>`)(tx(shop.notice).split("\n").map(x => x.trim()).filter(Boolean))}</div>` : ""}
     <div id="gBox"></div>
     ${guideBar(shop.city, "in-shop")}
     <div id="shopHi"></div>

@@ -1038,3 +1038,8 @@ body.udl-on .m-tabs { top: 96px; }
 .m-more summary::after { content: "▾"; font-size: 11px; transition: transform .15s; }
 .m-more[open] summary::after { transform: rotate(180deg); }
 .m-more > div { word-break: keep-all; overflow-wrap: anywhere; margin-top: 8px; padding: 10px 12px; border-radius: 12px; background: #FBF8F2; border: 1px solid #F0E6D6; color: #3f4650; line-height: 1.6; }
+
+/* 📌 방문 전 참고사항 (shop.notice) */
+.vn-box { margin: 14px 0 4px; padding: 14px 16px; border-radius: 14px; background: #EEF5FF; border: 1px solid #CFE0F7; color: #26364a; line-height: 1.65; font-size: 14px; word-break: keep-all; overflow-wrap: anywhere; }
+.vn-box > b { display: block; color: #1d4f8f; font-size: 15px; margin-bottom: 6px; }
+.vn-box ul { margin: 0; padding-left: 18px; } .vn-box li { margin: 2px 0; } .vn-box li::marker { color: #6b8fbf; }
