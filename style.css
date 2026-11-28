@@ -945,3 +945,11 @@ button.mg-opt:hover, .mg-opt.on { border-color: #B23A1E; background: #fff5f1; }
 
 /* 구글 무료 횟수를 다 쓴 날: 평점 대신 구글 지도 후기 링크 */
 .g-rev{display:inline-flex;align-items:center;gap:6px;margin:4px 0 10px;padding:9px 16px;border-radius:999px;background:#fff;border:1.5px solid #1d4f91;color:#1d4f91;font-weight:800;font-size:14px;text-decoration:none}.g-rev:hover{background:#eef4fb}
+
+/* 💛 카카오톡 상담 버튼 (머리글) */
+.top-in > .btn.kk-btn { background: #FEE500; color: #191919; border: 0; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; font-weight: 800; }
+.top-in > .btn.kk-btn:hover { background: #f5dc00; }
+.kk-ic { width: 18px; height: 18px; fill: #191919; flex: none; }
+@media (max-width: 640px) { .top-in > .btn.kk-btn { width: 36px; height: 36px; padding: 0; justify-content: center; border-radius: 50%; } .top-in > .btn.kk-btn .kk-l { display: none; } }
+@media (max-width: 400px) { .top-in > .btn.kk-btn { width: 32px; height: 32px; } .kk-ic { width: 16px; height: 16px; } }
+@media (max-width: 480px) { .top-in:has(.kk-btn) .lang-btn .lg-short { display: none; } .top-in:has(.kk-btn) .lang-btn { padding: 5px 7px; } }

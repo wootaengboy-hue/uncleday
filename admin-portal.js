@@ -57,7 +57,7 @@ const PORTAL_APPS = [
   ["🧭 운영", [["payback", "💸", "결제 확인 · 페이백", "손님이 알려 준 금액 vs 업체 금액 · 포인트 확정"], ["spaces", "🧭", "공간 바로가기", "손님 사이트 · 사장님 · 직원 화면 주소 · 안내 문구"], ["field", "📒", "현장 영업 매뉴얼", "베트남 영업 담당자용 · 베/한 · 잘로로 보내기 · 인쇄"], ["shops", "🏪", "매장별 관리", "현황판 · 대신 수정 · 직원 PIN · 사장님 계정"], ["audit", "🛠️", "대신 수정 기록", "사장님 화면 '오늘'에도 보여요"], ["sim", "🎬", "운영 시뮬레이션", "입점 영업 · 직원 교육용 데모"], ["ai", "💳", "AI 사용량", "대략 잔액 · 기능별 사용액 · 콘솔 잔액 적기"]]],
   ["🏪 가게 정보", [["verify", "🔍", "업체 정보 검수", "홈페이지 · 페이스북과 비교 · 영업시간 · 가격 넣기"], ["imgqa", "🖼️", "이미지 검수", "원본 | 작업본 | 실제 노출 · 판정 · AI 검사"], ["fill", "📋", "가게 정보 채우기", "업체별 검색 점수 · 빈 칸 · 후기 요청"], ["price", "💰", "가격 채우기", "메뉴 가격을 휴대폰으로 바로"], ["links", "🔗", "가게에 링크 달기", "구글 지도 · 페북 · 잘로 · QR"], ["crawl", "📥", "링크로 가게 가져오기", "홈페이지 · 가격표 링크로 페이지 만들기"]]],
   ["🔎 검색 · 마케팅", [["i18n", "🌐", "다국어 번역", "일본어 · 중국어 · 러시아어 등 10개 언어 AI 번역"], ["blog", "📝", "블로그", "검색어로 글 만들기 · 네이버 요약본"], ["comp", "🔍", "경쟁사 분석", "빠진 검색어 · 소개된 가게"], ["con", "📈", "엉클데이 서치 콘솔", "구글 색인 상태 · URL 검사"], ["seo", "📨", "검색 유입 · 리드", "어디서 왔는지 · 미입점 문의"]]],
-  ["📚 자료", [["guide", "📘", "운영 가이드", "팀원용 설명서 · 자주 묻는 질문"], ["brand", "🎨", "브랜드 자료실 (CI)", "로고 · 색 · 글꼴 · 원본"]]],
+  ["📚 자료", [["guide", "📘", "운영 가이드", "팀원용 설명서 · 자주 묻는 질문"], ["brand", "🎨", "브랜드 자료실 (CI)", "로고 · 색 · 글꼴 · 원본"], ["udlib", "📁", "엉클데이 자료실", "카톡 QR · 참고 링크 · 메모 · 바로가기 바"]]],
 ];
 const FIELD_APPS = ["field", "fill", "price", "links", "verify", "imgqa"];
 // 현장 영업 직원에게는 영업 · 가게 정보 앱만 보여요
@@ -141,6 +141,7 @@ function drawPortal(skip) {
     <section class="pt-sec" data-pv="i18n" id="ptI18nSec"><h3>🌐 다국어 번역 <span class="hint">손님 사이트 13개 언어 — 한 · 영 · 베는 직접, 나머지 10개는 AI 번역</span></h3><div id="ptI18n"></div></section>
     <section class="pt-sec" data-pv="payback" id="ptPaybackSec"><h3>💸 결제 확인 · 페이백 <span class="hint">다녀온 손님이 알려 준 받은 시술 · 결제 금액 · 영수증과 업체가 적은 금액 비교 — 다르면 여기서 확정</span></h3><div id="ptPayback"></div></section>
     <section class="pt-sec" data-pv="seo" id="ptSeoSec"><h3>🔎 검색 유입 · 리드 <span class="hint">구글 · 네이버 · AI 에서 들어온 손님 수 · 미입점 가게 문의 · 영업용 조회수</span></h3><div id="ptSeo"></div></section>
+    <section class="pt-sec" data-pv="udlib"><h3>📁 엉클데이 자료실 <span class="hint">우리 카톡 QR · 채널 주소 · 블로그 · 참고 링크 · 자주 쓰는 문구 · 파일 (관리자만)</span></h3><div id="ptUdlib"></div></section>
     <section class="pt-sec" data-pv="brand"><h3>🎨 브랜드 자료실 (CI) <span class="hint">명함 · 홍보물 · 자료 만들 때 쓰는 로고 · 색 · 글꼴 · 원본 파일</span></h3><div id="ptBrand"></div></section>
     <section class="pt-sec" data-pv="shops"><h3>🏪 매장별 관리 <span class="hint">현황판 쓰는 매장 ${S.length}곳</span></h3>
       ${S.length ? `<div class="pt-shops">${S.map(s => `<div class="pt-shop"><div class="h"><b>${esc(s.name)}</b><span class="uni-chip ${(s.state || {}).is_open ? "ok" : ""}">${stTxt(s.state)}</span></div>
@@ -163,6 +164,7 @@ function drawPortal(skip) {
   portalBind(el);
   portalGo(PORTAL.view || "home", true);
   if (typeof brandDraw === "function") brandDraw();
+  if (typeof udlDraw === "function") udlDraw();
   if (typeof seoDraw === "function") seoDraw();
   if (typeof pbDraw === "function") pbDraw();
   if (typeof i18nDraw === "function" && PORTAL.view === "i18n") i18nDraw();

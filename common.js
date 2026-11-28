@@ -160,7 +160,16 @@ function drawCommon() {
     if (!pl) { pl = document.createElement("a"); pl.id = "footPriv"; pl.className = "foot-priv"; pl.href = "privacy.html"; fi.after(pl); }
     pl.textContent = ui("privacy"); }
   pwaBtn();
+  // 💛 카카오톡 상담 — 사이트 채팅(상담하기)과 따로, 카톡 채널 1:1 채팅으로 바로
+  { const top = document.querySelector(".top-in"), cs = top && top.querySelector(".kakao-link[data-chat]");
+    if (cs) { let k = top.querySelector(".kk-btn");
+      if (!k) { k = document.createElement("a"); k.className = "btn kk-btn kakao-link"; k.target = "_blank"; k.rel = "noopener"; cs.after(k); }
+      k.title = ui("kkTalkFull"); k.setAttribute("aria-label", ui("kkTalkFull"));
+      k.innerHTML = `<svg class="kk-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2c-5.3 0-9.6 3.4-9.6 7.6 0 2.7 1.8 5.1 4.5 6.4l-.9 3.4c-.1.3.3.6.6.4l4-2.6c.5.1.9.1 1.4.1 5.3 0 9.6-3.4 9.6-7.6S17.3 3.2 12 3.2z"/></svg><span class="kk-l">${esc(ui("kkTalk"))}</span>`; } }
   document.querySelectorAll(".kakao-link").forEach(a => a.href = SITE.kakao);
+  // 🔗 관리자로 로그인해 둔 브라우저면 바로가기 바를 불러와요 (관리자가 아니면 서버가 빈 목록을 줘서 안 보여요)
+  try { const ref = new URL(SUPA.url).hostname.split(".")[0];
+    if (ref && localStorage.getItem(`sb-${ref}-auth-token`) && !window.UDL_BAR && !document.querySelector('script[src^="admin-quick.js"]')) { const sc = document.createElement("script"); sc.src = "admin-quick.js?v=20261128a"; sc.defer = true; document.body.appendChild(sc); } } catch (e) {}
   // 언어 고르기: 13개라 버튼 대신 펼침 목록 (국기 + 그 나라 말 이름)
   const cur = LANGS.find(l => l.id === lang) || LANGS[0];
   $("langs").innerHTML = `<button type="button" class="lang-btn" aria-haspopup="listbox" aria-expanded="false" title="${esc(ui("langPick"))}"><span class="lg-flag">${langFlag(cur)}</span><span class="lg-full">${cur.label}</span><span class="lg-short">${cur.id.toUpperCase()}</span><span class="lg-caret">▾</span></button>
