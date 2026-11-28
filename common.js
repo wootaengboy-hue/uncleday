@@ -115,7 +115,7 @@ const pmBadge = shop => { const ps = promosOn(shop); if (!ps.length) return "";
   // 목록 배지: 가장 많은 메뉴에 걸린 % 할인 (키즈 50%처럼 일부 메뉴만 큰 할인이면 대표 할인을 보여요)
   const wide = p => (pmCond(p) ? 0 : 1e7) + (p.menus && p.menus.length ? p.menus.length : 1e6), pp = ps.filter(p => p.kind === "pct").sort((a, b) => wide(b) - wide(a) || b.v - a.v);   // 조건 없는 할인 먼저
   const pct = pp.length ? pp[0].v : 0, amt = ps.find(p => p.kind === "amt");
-  return `<span class="pm-b">🎁 ${pct ? "-" + pct + "%" : amt ? pmTag(amt) : esc(pmName(ps[0]) || ui("pm_title").replace("🎁 ", ""))}</span>`; };
+  return `<span class="pm-b">🎁 ${pct ? "-" + pct + "%" : amt ? pmTag(amt) : esc((pmName(ps[0]) || "").replace(/\s*[(（].*$/, "") || ui("pm_title").replace("🎁 ", ""))}</span>`; };   // 문구 이벤트는 괄호 앞까지만 (카드 배지가 길어지지 않게)
 const ocBadge = shop => shop && shop.outcall ? `<span class="oc-b">${ui("oc_badge")}</span>` : "";
 // ⚡ 업체별 예약 확정 속도 (universe35 shop_speed · 실제 기록 3건 이상인 업체만)
 let SHOP_SPEED = null;
