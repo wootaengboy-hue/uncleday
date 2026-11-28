@@ -149,7 +149,7 @@ def facts(shop):
     en_s = f"{en} is a {SUB_EN.get(sub, 'beauty business')} in {cen}, Vietnam."
     if pr: en_s += f" Prices start from {pr[0]:,} VND (reference price checked by Uncle Day)."
     en_s += " Book through Uncle Day with Korean-language support at the shop's own price — no extra fee."
-    faq = [("엉클데이에서 한국어로 예약할 수 있나요?", "네. 엉클데이 사이트의 채팅이나 카카오톡으로 한국어 상담 후 예약할 수 있어요. 엉클데이가 매장에 확인한 뒤 예약을 확정해 드려요."
+    faq = [("엉클데이에서 한국어로 예약할 수 있나요?", "네. 엉클데이 사이트 채팅에서 한국어로 물어보고 예약할 수 있어요. 영어 · 일본어 · 중국어 등 13개 언어로도 상담돼요. 엉클데이가 매장에 확인한 뒤 예약을 확정해 드려요."
             + (" 매장에도 " + ", ".join({"ko": "한국어", "en": "영어", "vi": "베트남어"}.get(l, l) for l in shop["staffLangs"]) + "가 되는 직원이 있어요." if shop.get("staffLangs") else ""))]
     if pr: faq.append((f"{name} 가격은 얼마예요?", f"엉클데이가 확인한 참고가는 {won(pr[0])}부터{(' ' + won(pr[-1]) + '까지') if len(pr) > 1 else ''}예요. 엉클데이를 통해 예약해도 매장 가격과 같고 추가 요금은 없어요."))
     else: faq.append((f"{name} 가격은 얼마예요?", "메뉴별 가격은 상담할 때 안내해 드려요. 엉클데이를 통해 예약해도 매장 가격과 같고 추가 요금은 없어요."))
@@ -371,7 +371,7 @@ def guide_page(cid, shops_c):
 <h2 id="when">공항 가기 전 마지막 일정이라면</h2><p>{esc(G['when'])} {S([G['when_src']]) if G.get('when_src') else ''}</p>
 <p>엉클데이 업체 중 짐 보관 · 샤워 · 샌딩 되는 곳: {lst([x for x in sp if has(x, "짐 보관|샤워|샌딩")])}</p>
 {f'<h2 id="clinic">성형 · 피부과도 한국어로 상담할 수 있어요</h2><p>{esc(G["clinic"])}</p><p>엉클데이에 등록된 {esc(cko)} 성형 · 피부 · 뷰티 업체: {lst([x for x in shops_c if grp(x) != "spabody"])}</p>' if G.get("clinic") else ''}
-<h2 id="book">엉클데이로 예약하는 방법</h2><ol><li>업체 페이지에서 시간 · 인원 · 코스를 골라 예약을 요청하거나, 사이트 채팅 · 카카오톡으로 한국어 상담을 해요.</li>
+<h2 id="book">엉클데이로 예약하는 방법</h2><ol><li>업체 페이지에서 시간 · 인원 · 코스를 골라 예약을 요청하거나, 사이트 채팅으로 편한 언어로 물어봐요 (13개 언어 · 자동 번역). 카카오톡으로도 상담할 수 있어요.</li>
 <li>엉클데이가 매장에 확인한 뒤 예약을 확정하고, 주소와 찾아가는 법을 한국어로 보내 드려요.</li><li>시간에 맞춰 방문하고, 시술 후 매장에서 매장 가격 그대로 결제해요. 엉클데이에 따로 내는 돈은 없어요.</li>
 <li>다녀온 뒤 테라피스트 후기를 남길 수 있어요. 실제로 방문한 손님만 쓸 수 있어요.</li></ol>
 <p><a class="cta" href="/c/{cid}/">{esc(cko)} 업체 {len(shops_c)}곳 모두 보기</a></p>
@@ -693,7 +693,7 @@ def price_page(cid, t, rows, all_t):
     trs = "".join(f'<tr><td><a data-cta="shop" href="/s/{x["id"]}/">{esc(tx(x.get("name")))}</a><small>{esc(SUB_KO.get(x.get("cat"), ""))}</small></td><td>{esc(tx(m.get("name")))}</td><td>{(str(dur_of(m)) + "분") if dur_of(m) else "-"}</td><td class="n">{won(int(m["price"]))}</td></tr>' for x, m in rows)
     faq = [(q, summ + " 매장 가격 그대로이고 엉클데이로 예약해도 추가 요금은 없어요."),
            ("가격이 바뀔 수도 있나요?", f"이 가격은 엉클데이가 {upd}까지 확인한 참고가예요. 매장 사정으로 바뀔 수 있어서 예약할 때 엉클데이가 다시 확인해 드려요."),
-           ("어떻게 예약해요?", "업체 이름을 눌러 엉클데이 사이트에서 예약 요청을 보내거나, 카카오톡으로 한국어 상담을 받으면 돼요. 결제는 시술 후 매장에서 직접 해요.")]
+           ("어떻게 예약해요?", "업체 이름을 눌러 엉클데이 사이트에서 예약 요청을 보내거나, 사이트 채팅으로 편한 언어로 물어보면 돼요. 결제는 시술 후 매장에서 직접 해요.")]
     others = "".join(f'<a class="chip{" on" if tt["id"] == t["id"] else ""}" href="/c/{cid}/price/{tt["id"]}/">{esc(tt["kw"])} <span>{len({r[0]["id"] for r in rr})}곳</span></a>' for tt, rr in all_t)
     js = lambda o: json.dumps(o, ensure_ascii=False).replace("</", "<\\/")
     lds = [{"@context": "https://schema.org", "@type": "WebPage", "name": title, "url": url, "inLanguage": "ko", "dateModified": upd, "description": summ,
@@ -1416,7 +1416,7 @@ for f in os.listdir("blog"):
 L = ["# 엉클데이 Uncle Day", "",
      "> 베트남 다낭 · 나트랑 · 호치민 · 하노이의 마사지, 스파, 피부관리, 성형 · 피부과, 네일 업체를 한국어로 상담하고 예약하는 서비스예요. "
      "Uncle Day lets travelers book trusted massage, spa and beauty shops in Vietnam with Korean-language support.", "",
-     "- 손님은 엉클데이 사이트 채팅이나 카카오톡으로 한국어 상담을 하고, 엉클데이가 매장에 확인한 뒤 예약을 확정해요.",
+     "- 손님은 엉클데이 사이트 채팅(한국어 · 영어 등 13개 언어 · 자동 번역)이나 카카오톡으로 상담하고, 엉클데이가 매장에 확인한 뒤 예약을 확정해요.",
      "- 엉클데이를 통해도 매장 가격 그대로예요. 손님이 엉클데이에 내는 추가 요금은 없고, 결제는 시술 후 매장에서 직접 해요.",
      "- 후기는 실제로 예약하고 방문한 손님만 남길 수 있어요.",
      f"- 등록 업체 {len(live)}곳 · 정보 업데이트 {BUILT}", "",
