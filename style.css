@@ -953,3 +953,4 @@ button.mg-opt:hover, .mg-opt.on { border-color: #B23A1E; background: #fff5f1; }
 @media (max-width: 640px) { .top-in > .btn.kk-btn { width: 36px; height: 36px; padding: 0; justify-content: center; border-radius: 50%; } .top-in > .btn.kk-btn .kk-l { display: none; } }
 @media (max-width: 400px) { .top-in > .btn.kk-btn { width: 32px; height: 32px; } .kk-ic { width: 16px; height: 16px; } }
 @media (max-width: 480px) { .top-in:has(.kk-btn) .lang-btn .lg-short { display: none; } .top-in:has(.kk-btn) .lang-btn { padding: 5px 7px; } }
+body.udl-on .m-tabs { top: 96px; }

@@ -41,11 +41,25 @@
     .udl-r .udl-u{grid-column:2/3}.udl-r button{border:1px solid #d7dee8;background:#fff;border-radius:8px;height:30px;cursor:pointer}
     .udl-b{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}.udl-b button{border:1px solid #d7dee8;background:#fff;border-radius:10px;padding:8px 14px;font:inherit;font-weight:700;cursor:pointer}.udl-b .p{background:#0e2843;color:#fff;border-color:#0e2843}
     @media (max-width:640px){.udl{left:8px;bottom:8px;max-width:calc(100vw - 84px)}.udl-t{padding:8px 11px}}
+    .udl.strip{position:static;max-width:none;width:100%;box-sizing:border-box;display:flex;align-items:center;gap:8px;background:#0e2843;padding:5px 12px;border-radius:0}
+    .udl.strip .udl-t{background:transparent;box-shadow:none;padding:4px 6px;font-size:12.5px;color:#cbd5e1;white-space:nowrap}
+    .udl.strip .udl-l{flex:1;min-width:0;padding:1px}
+    .udl.strip .udl-l a,.udl.strip .udl-l button{padding:4px 10px;font-size:12.5px;box-shadow:none;border-color:#ffffff30;background:#ffffff14;color:#fff}
+    .udl.strip .udl-l a:hover{background:#ffffff2a;border-color:#ffffff60}
+    .udl.strip.off{justify-content:flex-end;padding:2px 12px}.udl.strip.off .udl-t{font-size:11.5px;padding:2px 6px}
+    @media (max-width:640px){.udl.strip .udl-tx{display:none}}
     @media print{.udl{display:none}}`;
   function draw() {
-    if (!box) { const st = document.createElement("style"); st.textContent = css; document.head.appendChild(st); box = document.createElement("div"); box.className = "udl"; document.body.appendChild(box); }
+    // 머리글(위에 붙어 따라다니는 칸) 맨 아래 줄에 띠처럼 붙여요 — 왼쪽 메뉴 · 채팅 버튼을 가리지 않게
+    if (!box) { const st = document.createElement("style"); st.textContent = css; document.head.appendChild(st); box = document.createElement("div");
+      const hd = document.querySelector("header.top, .top"); if (hd) { box.className = "udl strip"; hd.appendChild(box); document.body.classList.add("udl-on");
+        // 머리글 안쪽 내용과 왼쪽 · 오른쪽 줄을 맞춰요
+        const fit = () => { const inner = [...hd.children].find(c => c !== box && c.offsetWidth > 0); if (!inner) return; const r = inner.getBoundingClientRect(), pad = parseFloat(getComputedStyle(inner).paddingLeft) || 0;
+          box.style.paddingLeft = Math.max(8, r.left + pad) + "px"; box.style.paddingRight = Math.max(8, innerWidth - r.right + pad) + "px"; };
+        fit(); addEventListener("resize", fit); setTimeout(fit, 500); } else { box.className = "udl"; document.body.appendChild(box); } }
     box.classList.toggle("off", !OPEN);
-    box.innerHTML = `<button type="button" class="udl-t" title="관리자 바로가기 (관리자에게만 보여요)">🔗${OPEN ? "" : ` 바로가기 ${LINKS.length || ""}`}</button>
+    const strip = box.classList.contains("strip");
+    box.innerHTML = `<button type="button" class="udl-t" title="관리자 바로가기 (관리자에게만 보여요) · 눌러서 접기 / 펴기">${strip ? (OPEN ? `🔗<span class="udl-tx"> 관리자 바로가기</span> ▴` : `🔗<span class="udl-tx"> 관리자 바로가기</span> ${LINKS.length || ""} ▾`) : `🔗${OPEN ? "" : ` 바로가기 ${LINKS.length || ""}`}`}</button>
       <div class="udl-l">${LINKS.map(l => `<a href="${e(l.url)}" target="_blank" rel="noopener" title="${e(l.url)}">${e(l.icon || "🔗")} ${e(l.title)}</a>`).join("")}<button type="button" class="udl-ed" title="바로가기 고치기">✏️${LINKS.length ? "" : " 바로가기 추가"}</button></div>`;
     box.querySelector(".udl-t").onclick = () => { OPEN = !OPEN; lsSet("udl-open", OPEN ? "1" : "0"); draw(); };
     box.querySelector(".udl-ed").onclick = edit;
