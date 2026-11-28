@@ -80,14 +80,27 @@ function gReviews(d, shop) {
   el.innerHTML = `<div class="gr">
     <div class="gr-h"><div>${G} <b class="gr-t">${esc(ui("gRvTitle"))}</b><div class="gr-sum">${d.rating ? `<b>${d.rating.toFixed(1)}</b> ${star(d.rating)} <small>(${(d.userRatingCount || 0).toLocaleString()})</small>` : ""}</div></div>
       ${all ? `<a class="gr-all" href="${esc(all)}" target="_blank" rel="noopener">${esc(ui("gRvAll"))} ↗</a>` : ""}</div>
-    ${rv.length ? `<div class="gr-list" id="grList">${rv.map(r => { const a = r.authorAttribution || {}, t = (r.text && r.text.text) || (r.originalText && r.originalText.text) || "";
+    ${rv.length ? `<div class="gr-wrap"><button type="button" class="gr-nav prev" aria-label="previous" hidden>‹</button><button type="button" class="gr-nav next" aria-label="next" hidden>›</button><div class="gr-list" id="grList">${rv.map(r => { const a = r.authorAttribution || {}, t = (r.text && r.text.text) || (r.originalText && r.originalText.text) || "";
       return `<article class="gr-c"><div class="gr-a">${a.photoUri ? `<img src="${esc(a.photoUri)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : `<span class="gr-av">${esc((a.displayName || "?").slice(0, 1))}</span>`}
         <div><a href="${esc(a.uri || all || "#")}" target="_blank" rel="noopener"><b>${esc(a.displayName || "Google user")}</b></a><div>${star(r.rating)} <small>${esc(r.relativePublishTimeDescription || "")}</small></div></div></div>
-        <p>${esc(t)}</p></article>`; }).join("")}</div>
+        <p>${esc(t)}</p></article>`; }).join("")}</div></div>
       <div class="gr-dots">${rv.map((_, i) => `<i data-i="${i}" class="${i ? "" : "on"}"></i>`).join("")}</div>` : ""}
     <small class="gr-note">${esc(ui("gRvNote"))}</small></div>`;
   const L = el.querySelector("#grList"); if (!L) return;
-  const dots = [...el.querySelectorAll(".gr-dots i")];
-  L.addEventListener("scroll", () => { const w = L.firstElementChild.offsetWidth + 10, i = Math.round(L.scrollLeft / w); dots.forEach((x, k) => x.classList.toggle("on", k === i)); }, { passive: true });
-  dots.forEach(x => x.onclick = () => L.scrollTo({ left: (+x.dataset.i) * (L.firstElementChild.offsetWidth + 10), behavior: "smooth" }));
+  const dots = [...el.querySelectorAll(".gr-dots i")], pv = el.querySelector(".gr-nav.prev"), nx = el.querySelector(".gr-nav.next");
+  const step = () => L.firstElementChild.offsetWidth + 10;
+  const sync = () => { const max = L.scrollWidth - L.clientWidth - 2, i = Math.round(L.scrollLeft / step());
+    const on = L.scrollLeft >= max ? dots.length - 1 : Math.min(i, dots.length - 1); dots.forEach((x, k) => x.classList.toggle("on", k === on));
+    pv.hidden = L.scrollLeft <= 2; nx.hidden = L.scrollLeft >= max;
+    el.querySelector(".gr-dots").hidden = max <= 0; };
+  L.addEventListener("scroll", sync, { passive: true }); addEventListener("resize", sync); sync();
+  const go = d => L.scrollBy({ left: d * step(), behavior: "smooth" });
+  pv.onclick = () => go(-1); nx.onclick = () => go(1);
+  dots.forEach(x => x.onclick = () => L.scrollTo({ left: (+x.dataset.i) * step(), behavior: "smooth" }));
+  // PC: 마우스로 끌어서 넘기기 · 휠(위아래)로 옆으로
+  let down = null;
+  L.addEventListener("pointerdown", e => { if (e.pointerType !== "mouse") return; down = { x: e.clientX, l: L.scrollLeft, moved: false }; L.classList.add("drag"); });
+  addEventListener("pointermove", e => { if (!down) return; const dx = e.clientX - down.x; if (Math.abs(dx) > 4) down.moved = true; L.scrollLeft = down.l - dx; });
+  addEventListener("pointerup", () => { if (!down) return; const moved = down.moved; down = null; L.classList.remove("drag"); const i = Math.round(L.scrollLeft / step()); L.scrollTo({ left: i * step(), behavior: "smooth" });
+    if (moved) L.addEventListener("click", ev => { ev.preventDefault(); ev.stopPropagation(); }, { capture: true, once: true }); });
 }
