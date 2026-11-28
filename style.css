@@ -1024,3 +1024,8 @@ body.udl-on .m-tabs { top: 96px; }
 
 /* 메뉴 원래 이름 (가게 메뉴판 영어) */
 .m-orig { display: block; color: #8a7f6e; font-size: 12.5px; font-weight: 500; line-height: 1.35; margin-top: 2px; }
+
+/* 📱 휴대폰 머리글: 위쪽 '상담하기'는 빼요 (화면 아래 상담 버튼 · 💬 채팅이 있어요) → 카톡 버튼이 같은 줄 맨 오른쪽에 */
+@media (max-width: 640px) {
+  .top-in > .btn.kakao-link:not(.kk-btn) { display: none; }
+}
