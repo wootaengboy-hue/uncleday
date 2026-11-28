@@ -253,3 +253,14 @@ Object.assign(UI.vi, { kkTalk: "KakaoTalk", kkTalkFull: "Nhắn tin qua KakaoTal
 Object.assign(UI.ko, { gRvTitle: "리뷰", gRvAll: "구글에서 전체 리뷰 보기", gRvNote: "구글 지도에 올라온 리뷰예요 · 다른 언어 리뷰는 구글이 번역해서 보여 줘요" });
 Object.assign(UI.en, { gRvTitle: "Reviews", gRvAll: "See all reviews on Google", gRvNote: "Reviews from Google Maps · translated by Google when written in another language" });
 Object.assign(UI.vi, { gRvTitle: "Đánh giá", gRvAll: "Xem tất cả đánh giá trên Google", gRvNote: "Đánh giá từ Google Maps · Google tự dịch nếu viết bằng ngôn ngữ khác" });
+
+/* ✨ 업체 페이지: 좋은 점 · 사진 · 안심 포인트 */
+Object.assign(UI.ko, { richHi: "✨ 이 가게의 좋은 점", richGal: "가게 사진", richTrustH: "🛡️ 엉클데이로 예약하면",
+  richT1: "가게 가격 그대로", richT1d: "엉클데이에 따로 내는 돈이 없어요", richT2: "내 언어로 채팅 상담", richT2d: "한국어 · 영어 등 13개 언어 · 자동 번역",
+  richT3: "직접 확인한 정보", richT3d: "주소 · 영업시간 · 가격을 엉클데이가 확인해요", richT4: "결제는 가게에서", richT4d: "미리 결제할 필요 없이 받은 뒤에 내요" });
+Object.assign(UI.en, { richHi: "✨ Why guests like it", richGal: "Photos", richTrustH: "🛡️ Booking with Uncle Day",
+  richT1: "Same price as the shop", richT1d: "No extra fee to Uncle Day", richT2: "Chat in your language", richT2d: "13 languages · auto-translated",
+  richT3: "Checked by our team", richT3d: "Address, hours and prices verified", richT4: "Pay at the shop", richT4d: "No prepayment — pay after your treatment" });
+Object.assign(UI.vi, { richHi: "✨ Điểm nổi bật", richGal: "Hình ảnh", richTrustH: "🛡️ Đặt lịch qua Uncle Day",
+  richT1: "Giá như tại tiệm", richT1d: "Không mất thêm phí cho Uncle Day", richT2: "Tư vấn bằng ngôn ngữ của bạn", richT2d: "13 ngôn ngữ · tự động dịch",
+  richT3: "Thông tin đã kiểm tra", richT3d: "Địa chỉ, giờ mở cửa, giá đã được xác nhận", richT4: "Thanh toán tại tiệm", richT4d: "Không cần trả trước — trả sau khi dùng dịch vụ" });

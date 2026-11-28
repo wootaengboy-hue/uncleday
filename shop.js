@@ -183,9 +183,12 @@ if (!shop) {
     <p class="go-row">${shop.map ? `<a class="map-link" href="${shop.map}" target="_blank">🗺️ ${ui("map")}</a>` : ""}<button type="button" class="ride-btn" id="rideBtn">🚕 ${ui("rideBtn")}</button></p>
     <div id="gBox"></div>
     ${guideBar(shop.city, "in-shop")}
+    <div id="shopHi"></div>
+    <div id="shopGal"></div>
 
     <h2>${ui("about")}</h2><p>${tx(shop.desc)}</p>
     ${shop.recommend && tx(shop.recommend) ? `<p class="reco">👍 <b>${ui("recoFor")}</b> ${tx(shop.recommend)}</p>` : ""}
+    <div id="shopTrust"></div>
 
     ${shop.menu.length ? `<h2>${ui("menu")}</h2>
     ${pms.length ? `<div class="pm-box"><b class="pm-h">${ui("pm_title")}</b><ul>${pms.map(p => `<li>${esc(pmLine(p, shop))}</li>`).join("")}</ul><small>${ui("pm_note")}</small></div>` : ""}
@@ -258,6 +261,7 @@ if (!shop) {
     </form>
     <div id="done" class="done" hidden></div>`;
   if (typeof gplaceBox === "function") gplaceBox(shop);
+  if (typeof shopRich === "function") shopRich(shop);
   if ($("rideBtn")) $("rideBtn").onclick = () => openRide(shop);
   // 메뉴판 크게 보기
   const boards = shop.menuImgs || [];
